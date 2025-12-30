@@ -25,6 +25,11 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
+      /* WORKAROUND: shadcn CLI has a bug where it generates "#/lib/lib/utils" instead of "#/lib/utils"
+       * See: https://github.com/shadcn-ui/ui/discussions/6834
+       * This mapping redirects the broken import to the correct file */
+      "#/lib/lib/utils": ["./src/lib/utils.ts"],
+
       "#/lib/*": ["./src/lib/*"],
       "#/components/*": ["./src/components/*"],
       "#/hooks/*": ["./src/hooks/*"],

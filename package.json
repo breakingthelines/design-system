@@ -4,6 +4,9 @@
   "type": "module",
   "sideEffects": false,
   "imports": {
+    "// WORKAROUND": "shadcn CLI bug generates #/lib/lib/utils - see https://github.com/shadcn-ui/ui/discussions/6834",
+    "#/lib/lib/utils": "./src/lib/utils.ts",
+
     "#/lib/*": "./src/lib/*",
     "#/components/*": "./src/components/*",
     "#/hooks/*": "./src/hooks/*",
