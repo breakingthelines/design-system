@@ -18,9 +18,7 @@ export function useTheme(defaultTheme: Theme = 'dark') {
 
     let resolved: 'light' | 'dark';
     if (theme === 'system') {
-      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches
-        ? 'dark'
-        : 'light';
+      resolved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     } else {
       resolved = theme;
     }

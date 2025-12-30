@@ -1,11 +1,5 @@
-import preview from '#.storybook/preview'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarGroup,
-  AvatarGroupCount,
-  AvatarImage,
-} from './avatar'
+import preview from '#.storybook/preview';
+import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from './avatar';
 
 const sampleAvatars = [
   { src: 'https://i.pravatar.cc/150?img=1', fallback: 'JD' },
@@ -14,13 +8,13 @@ const sampleAvatars = [
   { src: 'https://i.pravatar.cc/150?img=4', fallback: 'RW' },
   { src: 'https://i.pravatar.cc/150?img=5', fallback: 'TL' },
   { src: 'https://i.pravatar.cc/150?img=6', fallback: 'NP' },
-]
+];
 
 const meta = preview.meta({
   title: 'UI/AvatarGroup',
   component: AvatarGroup,
   tags: ['autodocs'],
-})
+});
 
 export const Default = meta.story({
   render: () => (
@@ -33,7 +27,7 @@ export const Default = meta.story({
       ))}
     </AvatarGroup>
   ),
-})
+});
 
 export const WithOverflow = meta.story({
   render: () => (
@@ -47,7 +41,7 @@ export const WithOverflow = meta.story({
       <AvatarGroupCount>+2</AvatarGroupCount>
     </AvatarGroup>
   ),
-})
+});
 
 export const SmallSize = meta.story({
   render: () => (
@@ -60,7 +54,7 @@ export const SmallSize = meta.story({
       ))}
     </AvatarGroup>
   ),
-})
+});
 
 export const DefaultSize = meta.story({
   render: () => (
@@ -73,7 +67,7 @@ export const DefaultSize = meta.story({
       ))}
     </AvatarGroup>
   ),
-})
+});
 
 export const LargeSize = meta.story({
   render: () => (
@@ -86,7 +80,7 @@ export const LargeSize = meta.story({
       ))}
     </AvatarGroup>
   ),
-})
+});
 
 export const FallbackOnly = meta.story({
   render: () => (
@@ -98,9 +92,9 @@ export const FallbackOnly = meta.story({
       ))}
     </AvatarGroup>
   ),
-})
+});
 
-const borderColors = ['red', 'cyan', 'white', 'grey'] as const
+const borderColors = ['red', 'cyan', 'white', 'grey'] as const;
 
 export const ColouredBorders = meta.story({
   render: () => (
@@ -113,7 +107,7 @@ export const ColouredBorders = meta.story({
       ))}
     </AvatarGroup>
   ),
-})
+});
 
 export const CollaboratorPresence = meta.story({
   name: 'Collaborator Presence (Editor)',
@@ -134,4 +128,4 @@ export const CollaboratorPresence = meta.story({
       <AvatarGroupCount>+2</AvatarGroupCount>
     </AvatarGroup>
   ),
-})
+});

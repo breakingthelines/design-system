@@ -1,9 +1,9 @@
-import addonDocs from "@storybook/addon-docs";
-import { definePreview } from '@storybook/react-vite'
-import { withThemeByClassName } from '@storybook/addon-themes'
-import addonA11y from '@storybook/addon-a11y'
-import btlTheme from './btl-theme'
-import '#/styles/globals.css'
+import addonDocs from '@storybook/addon-docs';
+import { definePreview } from '@storybook/react-vite';
+import { withThemeByClassName } from '@storybook/addon-themes';
+import addonA11y from '@storybook/addon-a11y';
+import btlTheme from './btl-theme';
+import '#/styles/globals.css';
 
 export default definePreview({
   addons: [addonA11y(), addonDocs()],
@@ -31,4 +31,4 @@ export default definePreview({
       defaultTheme: 'dark',
     }),
   ],
-})
+});

@@ -1,26 +1,23 @@
-import * as React from 'react'
-import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar'
-import { cva, type VariantProps } from 'class-variance-authority'
+import * as React from 'react';
+import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar';
+import { cva, type VariantProps } from 'class-variance-authority';
 
-import { cn } from '#/lib/utils'
+import { cn } from '#/lib/utils';
 
-const avatarBorderVariants = cva(
-  'ring-2',
-  {
-    variants: {
-      borderColor: {
-        default: 'ring-background',
-        red: 'ring-red-100',
-        cyan: 'ring-cyan-500',
-        white: 'ring-white',
-        grey: 'ring-grey-300',
-      },
+const avatarBorderVariants = cva('ring-2', {
+  variants: {
+    borderColor: {
+      default: 'ring-background',
+      red: 'ring-red-100',
+      cyan: 'ring-cyan-500',
+      white: 'ring-white',
+      grey: 'ring-grey-300',
     },
-    defaultVariants: {
-      borderColor: 'default',
-    },
-  }
-)
+  },
+  defaultVariants: {
+    borderColor: 'default',
+  },
+});
 
 function Avatar({
   className,
@@ -28,7 +25,7 @@ function Avatar({
   borderColor,
   ...props
 }: AvatarPrimitive.Root.Props & {
-  size?: 'default' | 'sm' | 'lg'
+  size?: 'default' | 'sm' | 'lg';
 } & VariantProps<typeof avatarBorderVariants>) {
   return (
     <AvatarPrimitive.Root
@@ -43,26 +40,20 @@ function Avatar({
       )}
       {...props}
     />
-  )
+  );
 }
 
 function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
-      className={cn(
-        'aspect-square size-full rounded-full object-cover',
-        className
-      )}
+      className={cn('aspect-square size-full rounded-full object-cover', className)}
       {...props}
     />
-  )
+  );
 }
 
-function AvatarFallback({
-  className,
-  ...props
-}: AvatarPrimitive.Fallback.Props) {
+function AvatarFallback({ className, ...props }: AvatarPrimitive.Fallback.Props) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
@@ -73,7 +64,7 @@ function AvatarFallback({
       )}
       {...props}
     />
-  )
+  );
 }
 
 function AvatarBadge({ className, ...props }: React.ComponentProps<'span'>) {
@@ -89,26 +80,20 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<'span'>) {
       )}
       {...props}
     />
-  )
+  );
 }
 
 function AvatarGroup({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="avatar-group"
-      className={cn(
-        'group/avatar-group flex -space-x-2',
-        className
-      )}
+      className={cn('group/avatar-group flex -space-x-2', className)}
       {...props}
     />
-  )
+  );
 }
 
-function AvatarGroupCount({
-  className,
-  ...props
-}: React.ComponentProps<'div'>) {
+function AvatarGroupCount({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div
       data-slot="avatar-group-count"
@@ -121,7 +106,7 @@ function AvatarGroupCount({
       )}
       {...props}
     />
-  )
+  );
 }
 
 export {
@@ -132,4 +117,4 @@ export {
   AvatarGroupCount,
   AvatarBadge,
   avatarBorderVariants,
-}
+};

@@ -3,11 +3,11 @@
   "plugins": ["typescript", "react", "unicorn"],
   "categories": {
     "correctness": "error",
-    "suspicious": "warn"
+    "suspicious": "warn",
   },
   "rules": {
     "no-unused-vars": "warn",
-    "react/exhaustive-deps": "warn"
+    "react/exhaustive-deps": "warn",
   },
-  "ignorePatterns": ["dist", "node_modules", "*.config.js", "*.config.ts"]
+  "ignorePatterns": ["dist", "node_modules", "*.config.js", "*.config.ts"],
 }

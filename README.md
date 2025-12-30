@@ -4,19 +4,19 @@ The design system for Breaking The Lines — a unified component library powerin
 
 ## Stack
 
-| Layer | Tool |
-|-------|------|
-| Primitives | [Base UI](https://base-ui.com) |
-| Components | [shadcn/ui](https://ui.shadcn.com) (Base UI variant) |
-| Styling | [Tailwind CSS v4](https://tailwindcss.com) |
-| Variants | [CVA](https://cva.style) |
-| Icons | [Phosphor](https://phosphoricons.com) |
-| Animations | [Framer Motion](https://www.framer.com/motion) |
-| Component Dev | [Storybook 10](https://storybook.js.org) |
-| Build | [bunchee](https://github.com/huozhi/bunchee) |
-| Testing | [Vitest](https://vitest.dev) |
-| Linting | [Oxlint](https://oxc.rs/docs/guide/usage/linter.html) |
-| Formatting | [Oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) |
+| Layer         | Tool                                                    |
+| ------------- | ------------------------------------------------------- |
+| Primitives    | [Base UI](https://base-ui.com)                          |
+| Components    | [shadcn/ui](https://ui.shadcn.com) (Base UI variant)    |
+| Styling       | [Tailwind CSS v4](https://tailwindcss.com)              |
+| Variants      | [CVA](https://cva.style)                                |
+| Icons         | [Phosphor](https://phosphoricons.com)                   |
+| Animations    | [Framer Motion](https://www.framer.com/motion)          |
+| Component Dev | [Storybook 10](https://storybook.js.org)                |
+| Build         | [bunchee](https://github.com/huozhi/bunchee)            |
+| Testing       | [Vitest](https://vitest.dev)                            |
+| Linting       | [Oxlint](https://oxc.rs/docs/guide/usage/linter.html)   |
+| Formatting    | [Oxfmt](https://oxc.rs/docs/guide/usage/formatter.html) |
 
 ## Installation
 
@@ -80,16 +80,16 @@ bun run dev
 
 ### Commands
 
-| Command | Description |
-|---------|-------------|
-| `bun run dev` | Vite dev server |
-| `bun run storybook` | Storybook at localhost:6006 |
-| `bun run build` | Build library with bunchee |
-| `bun run lint` | Lint with Oxlint |
-| `bun run format` | Format with Oxfmt |
-| `bun run format:check` | Check formatting |
-| `bun run test` | Run Vitest |
-| `bun run test:ui` | Vitest with UI |
+| Command                | Description                 |
+| ---------------------- | --------------------------- |
+| `bun run dev`          | Vite dev server             |
+| `bun run storybook`    | Storybook at localhost:6006 |
+| `bun run build`        | Build library with bunchee  |
+| `bun run lint`         | Lint with Oxlint            |
+| `bun run format`       | Format with Oxfmt           |
+| `bun run format:check` | Check formatting            |
+| `bun run test`         | Run Vitest                  |
+| `bun run test:ui`      | Vitest with UI              |
 
 ## Project Structure
 
@@ -133,6 +133,7 @@ import { CaretDown, Check, X } from '@phosphor-icons/react';
 ### Component Guidelines
 
 1. **Use CVA for variants**
+
    ```tsx
    import { cva, type VariantProps } from 'class-variance-authority';
 
@@ -158,6 +159,7 @@ import { CaretDown, Check, X } from '@phosphor-icons/react';
    ```
 
 2. **Use cn() for class merging**
+
    ```tsx
    import { cn } from '#lib/utils';
 

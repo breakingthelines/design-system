@@ -13,8 +13,8 @@ export const spacing = {
 
 export const radius = {
   none: '0px',
-  sm: '2px',    // Buttons, inputs (Lyra sharp style)
-  md: '12px',   // Cards, containers
+  sm: '2px', // Buttons, inputs (Lyra sharp style)
+  md: '12px', // Cards, containers
   full: '16px', // Pills, badges
   round: '9999px', // Avatars
 } as const;

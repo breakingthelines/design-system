@@ -1,15 +1,15 @@
 export const fontFamily = {
-  display: '"Le Monde Journal Std", Georgia, serif',      // Headlines
+  display: '"Le Monde Journal Std", Georgia, serif', // Headlines
   body: '"Helvetica Neue", Helvetica, Arial, sans-serif', // UI text
-  mono: '"JetBrains Mono", monospace',                    // Code (if needed)
+  mono: '"JetBrains Mono", monospace', // Code (if needed)
 } as const;
 
 export const fontSize = {
-  xs: '10px',   // Badge text
-  sm: '14px',   // Body, buttons
+  xs: '10px', // Badge text
+  sm: '14px', // Body, buttons
   base: '18px', // Logo text
-  lg: '20px',   // Section headings
-  xl: '32px',   // Page titles
+  lg: '20px', // Section headings
+  xl: '32px', // Page titles
 } as const;
 
 export const fontWeight = {

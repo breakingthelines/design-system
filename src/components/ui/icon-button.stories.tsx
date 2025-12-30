@@ -1,12 +1,6 @@
-import preview from '#.storybook/preview'
-import {
-  CaretLeft,
-  Plus,
-  Heart,
-  DotsThree,
-  PencilSimple,
-} from '@phosphor-icons/react'
-import { IconButton } from './icon-button'
+import preview from '#.storybook/preview';
+import { CaretLeft, Plus, Heart, DotsThree, PencilSimple } from '@phosphor-icons/react';
+import { IconButton } from './icon-button';
 
 const meta = preview.meta({
   title: 'UI/IconButton',
@@ -22,7 +16,7 @@ const meta = preview.meta({
       options: ['sm', 'md', 'lg', 'xl'],
     },
   },
-})
+});
 
 export const Default = meta.story({
   render: () => (
@@ -30,7 +24,7 @@ export const Default = meta.story({
       <Plus weight="bold" />
     </IconButton>
   ),
-})
+});
 
 export const Ghost = meta.story({
   render: () => (
@@ -49,7 +43,7 @@ export const Ghost = meta.story({
       </IconButton>
     </div>
   ),
-})
+});
 
 export const Outline = meta.story({
   render: () => (
@@ -68,7 +62,7 @@ export const Outline = meta.story({
       </IconButton>
     </div>
   ),
-})
+});
 
 export const Solid = meta.story({
   render: () => (
@@ -87,7 +81,7 @@ export const Solid = meta.story({
       </IconButton>
     </div>
   ),
-})
+});
 
 export const AllSizes = meta.story({
   render: () => (
@@ -118,7 +112,7 @@ export const AllSizes = meta.story({
       </div>
     </div>
   ),
-})
+});
 
 export const GoBackButton = meta.story({
   name: 'Go Back',
@@ -130,7 +124,7 @@ export const GoBackButton = meta.story({
       <span className="text-white text-sm font-bold">Go back</span>
     </div>
   ),
-})
+});
 
 export const EditorPlusButton = meta.story({
   name: 'Editor Plus',
@@ -139,7 +133,7 @@ export const EditorPlusButton = meta.story({
       <Plus weight="regular" />
     </IconButton>
   ),
-})
+});
 
 export const Disabled = meta.story({
   render: () => (
@@ -155,4 +149,4 @@ export const Disabled = meta.story({
       </IconButton>
     </div>
   ),
-})
+});

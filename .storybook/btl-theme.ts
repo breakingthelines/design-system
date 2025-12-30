@@ -1,7 +1,7 @@
-import { create } from 'storybook/theming'
-import { colors } from '#/tokens/colors.ts'
-import { fontFamily } from '#/tokens/typography.ts'
-import { radius } from '#/tokens/spacing.ts'
+import { create } from 'storybook/theming';
+import { colors } from '#/tokens/colors.ts';
+import { fontFamily } from '#/tokens/typography.ts';
+import { radius } from '#/tokens/spacing.ts';
 
 export default create({
   base: 'dark',
@@ -42,4 +42,4 @@ export default create({
   inputBorder: colors.grey[300],
   inputTextColor: colors.white,
   inputBorderRadius: parseInt(radius.sm),
-})
+});

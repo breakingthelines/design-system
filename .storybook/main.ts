@@ -1,4 +1,4 @@
-import { defineMain } from '@storybook/react-vite/node'
+import { defineMain } from '@storybook/react-vite/node';
 
 export default defineMain({
   framework: '@storybook/react-vite',
@@ -14,4 +14,4 @@ export default defineMain({
     disableTelemetry: true,
     disableWhatsNewNotifications: true,
   },
-})
+});
