@@ -1,7 +1,9 @@
+/* Adobe Fonts - Le Monde Journal Std + Helvetica Neue */
+@import url("https://use.typekit.net/vfh2lle.css");
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/inter";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -92,15 +94,17 @@
     --color-muted-text: rgba(255, 255, 255, 0.5);
     --color-overlay: rgba(255, 255, 255, 0.1);
 
-    /* BTL Typography */
-    --font-display: "Le Monde Journal Std", Georgia, serif;
-    --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    --font-sans: 'Inter Variable', sans-serif;
+    /* BTL Typography - Adobe Fonts */
+    --font-display: "le-monde-journal-std", Georgia, serif;
+    --font-body: "helvetica-neue", Helvetica, Arial, sans-serif;
+    --font-sans: "helvetica-neue", Helvetica, Arial, sans-serif;
 
     /* BTL Radius - Lyra sharp style */
     --radius-btl-sm: 2px;
     --radius-btl-md: 12px;
     --radius-btl-full: 16px;
+
+    /* shadcn variables mapped to Tailwind */
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -142,13 +146,13 @@
 }
 
 @layer base {
-  * {
-    @apply border-border outline-ring/50;
+    * {
+        @apply border-border outline-ring/50;
     }
-  body {
-    @apply font-sans bg-background text-foreground;
+    body {
+        @apply font-sans bg-background text-foreground;
     }
-  html {
-    @apply font-sans;
+    html {
+        @apply font-sans;
     }
 }
