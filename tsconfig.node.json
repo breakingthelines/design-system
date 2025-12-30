@@ -23,11 +23,11 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "#lib/*": ["./src/lib/*"],
-      "#components/*": ["./src/components/*"],
-      "#hooks/*": ["./src/hooks/*"],
-      "#tokens/*": ["./src/tokens/*"],
-      "#styles/*": ["./src/styles/*"]
+      "#/lib/*": ["./src/lib/*"],
+      "#/components/*": ["./src/components/*"],
+      "#/hooks/*": ["./src/hooks/*"],
+      "#/tokens/*": ["./src/tokens/*"],
+      "#/styles/*": ["./src/styles/*"]
     }
   },
   "include": ["vite.config.ts", ".storybook/**/*.ts"]
