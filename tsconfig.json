@@ -7,12 +7,12 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "#lib/*": ["./src/lib/*"],
-      "#components/*": ["./src/components/*"],
-      "#hooks/*": ["./src/hooks/*"],
-      "#tokens/*": ["./src/tokens/*"],
-      "#utils/*": ["./src/utils/*"],
-      "#styles/*": ["./src/styles/*"]
+      "#/lib/*": ["./src/lib/*"],
+      "#/components/*": ["./src/components/*"],
+      "#/hooks/*": ["./src/hooks/*"],
+      "#/tokens/*": ["./src/tokens/*"],
+      "#/utils/*": ["./src/utils/*"],
+      "#/styles/*": ["./src/styles/*"]
     }
   }
 }
