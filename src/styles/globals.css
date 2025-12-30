@@ -77,6 +77,47 @@
 }
 
 @theme inline {
+  /* BTL Motion Tokens */
+  --motion-duration-instant: 50ms;
+  --motion-duration-micro: 100ms;
+  --motion-duration-swift: 150ms;
+  --motion-duration-standard: 200ms;
+  --motion-duration-entrance: 200ms;
+  --motion-duration-exit: 150ms;
+  --motion-duration-emphasis: 300ms;
+
+  --motion-ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-ease-entrance: cubic-bezier(0, 0, 0.2, 1);
+  --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --motion-ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --motion-ease-snappy: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+  /* Motion duration utilities */
+  --duration-instant: 50ms;
+  --duration-micro: 100ms;
+  --duration-swift: 150ms;
+  --duration-standard: 200ms;
+  --duration-entrance: 200ms;
+  --duration-exit: 150ms;
+  --duration-emphasis: 300ms;
+
+  /* Motion easing utilities */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-entrance: cubic-bezier(0, 0, 0.2, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-snappy: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+  /* Cursor palette colors for collaboration */
+  --color-cursor-coral: #e57373;
+  --color-cursor-sky: #64b5f6;
+  --color-cursor-mint: #81c784;
+  --color-cursor-gold: #ffd54f;
+  --color-cursor-violet: #ba68c8;
+  --color-cursor-teal: #4db6ac;
+  --color-cursor-peach: #ff8a65;
+  --color-cursor-lavender: #9575cd;
+
   /* BTL Brand Colors */
   --color-black: #0d0d0d;
   --color-grey-100: #1f1f1f;
@@ -155,4 +196,47 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Animation keyframes for collaboration components */
+@keyframes pulse-ring {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--pulse-color, currentColor);
+    opacity: 1;
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--pulse-color, currentColor);
+    opacity: 0.5;
+  }
+}
+
+@keyframes typing-dots {
+  0%,
+  20% {
+    opacity: 0.2;
+  }
+  50% {
+    opacity: 1;
+  }
+  80%,
+  100% {
+    opacity: 0.2;
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+.animate-typing-dot {
+  animation: typing-dots 1.4s ease-in-out infinite;
+}
+
+.animate-typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.animate-typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
 }

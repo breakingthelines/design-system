@@ -1,8 +1,12 @@
+'use client';
+
 import * as React from 'react';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
+import { motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
+import { motion as motionTokens } from '#/tokens/motion';
 
 const iconButtonVariants = cva(
   'inline-flex items-center justify-center rounded-full transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
@@ -34,18 +38,45 @@ export interface IconButtonProps
   'aria-label': string;
   className?: string;
   children?: React.ReactNode;
+  /** Enable hover/tap animations (default: true) */
+  animated?: boolean;
 }
 
-function IconButton({ className, variant, size, children, ...props }: IconButtonProps) {
-  return (
+function IconButton({
+  className,
+  variant,
+  size,
+  children,
+  animated = true,
+  disabled,
+  ...props
+}: IconButtonProps) {
+  const button = (
     <ButtonPrimitive
       data-slot="icon-button"
       className={cn(iconButtonVariants({ variant, size, className }))}
+      disabled={disabled}
       {...props}
     >
       {children}
     </ButtonPrimitive>
   );
+
+  // Only apply motion when enabled and not disabled
+  if (animated && !disabled) {
+    return (
+      <motion.span
+        whileHover={motionTokens.presets.iconButton.hover}
+        whileTap={motionTokens.presets.iconButton.tap}
+        transition={motionTokens.spring.snappy}
+        className="inline-flex"
+      >
+        {button}
+      </motion.span>
+    );
+  }
+
+  return button;
 }
 
 export { IconButton, iconButtonVariants };

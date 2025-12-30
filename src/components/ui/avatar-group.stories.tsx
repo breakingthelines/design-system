@@ -1,5 +1,6 @@
 import preview from '#.storybook/preview';
 import { Avatar, AvatarFallback, AvatarGroup, AvatarGroupCount, AvatarImage } from './avatar';
+import { cursorPalette } from '#/tokens/colors';
 
 const sampleAvatars = [
   { src: 'https://i.pravatar.cc/150?img=1', fallback: 'JD' },
@@ -127,5 +128,79 @@ export const CollaboratorPresence = meta.story({
       </Avatar>
       <AvatarGroupCount>+2</AvatarGroupCount>
     </AvatarGroup>
+  ),
+});
+
+export const WithCursorColors = meta.story({
+  name: 'With Cursor Colors',
+  render: () => (
+    <AvatarGroup>
+      {cursorPalette.slice(0, 4).map((color, i) => (
+        <Avatar key={color.name} size="sm" cursorColor={color.hex}>
+          <AvatarImage src={sampleAvatars[i].src} alt={sampleAvatars[i].fallback} />
+          <AvatarFallback fallbackColor={color.hex}>{sampleAvatars[i].fallback}</AvatarFallback>
+        </Avatar>
+      ))}
+    </AvatarGroup>
+  ),
+});
+
+export const WithStatus = meta.story({
+  name: 'Status Indicators',
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">Active</p>
+        <Avatar cursorColor={cursorPalette[0].hex} status="active">
+          <AvatarImage src="https://i.pravatar.cc/150?img=1" alt="Active" />
+          <AvatarFallback>AC</AvatarFallback>
+        </Avatar>
+      </div>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">Typing (pulsing ring)</p>
+        <Avatar cursorColor={cursorPalette[1].hex} status="typing">
+          <AvatarImage src="https://i.pravatar.cc/150?img=2" alt="Typing" />
+          <AvatarFallback>TY</AvatarFallback>
+        </Avatar>
+      </div>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">Idle (60% opacity)</p>
+        <Avatar cursorColor={cursorPalette[2].hex} status="idle">
+          <AvatarImage src="https://i.pravatar.cc/150?img=3" alt="Idle" />
+          <AvatarFallback>ID</AvatarFallback>
+        </Avatar>
+      </div>
+    </div>
+  ),
+});
+
+export const Interactive = meta.story({
+  name: 'Interactive (Hover/Tap)',
+  render: () => (
+    <div className="flex gap-4">
+      <Avatar cursorColor={cursorPalette[0].hex} interactive>
+        <AvatarImage src="https://i.pravatar.cc/150?img=1" alt="Hover me" />
+        <AvatarFallback>HM</AvatarFallback>
+      </Avatar>
+      <Avatar cursorColor={cursorPalette[1].hex} interactive size="lg">
+        <AvatarImage src="https://i.pravatar.cc/150?img=2" alt="Hover me too" />
+        <AvatarFallback>H2</AvatarFallback>
+      </Avatar>
+    </div>
+  ),
+});
+
+export const FallbackWithColors = meta.story({
+  name: 'Fallback with Colors',
+  render: () => (
+    <div className="flex gap-4">
+      {cursorPalette.map((color) => (
+        <Avatar key={color.name} cursorColor={color.hex}>
+          <AvatarFallback fallbackColor={color.hex}>
+            {color.name.charAt(0).toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      ))}
+    </div>
   ),
 });

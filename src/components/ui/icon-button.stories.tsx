@@ -150,3 +150,41 @@ export const Disabled = meta.story({
     </div>
   ),
 });
+
+export const WithAnimation = meta.story({
+  name: 'Motion Animation',
+  render: () => (
+    <div className="flex flex-col gap-6">
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">With animation (default)</p>
+        <div className="flex items-center gap-4">
+          <IconButton aria-label="Animated ghost" variant="ghost" size="lg">
+            <Plus weight="bold" />
+          </IconButton>
+          <IconButton aria-label="Animated outline" variant="outline" size="lg">
+            <Plus weight="bold" />
+          </IconButton>
+          <IconButton aria-label="Animated solid" variant="solid" size="lg">
+            <Heart weight="bold" />
+          </IconButton>
+        </div>
+        <p className="text-xs text-muted-foreground">Hover/click to see scale animation</p>
+      </div>
+      <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">Without animation</p>
+        <div className="flex items-center gap-4">
+          <IconButton aria-label="Static ghost" variant="ghost" size="lg" animated={false}>
+            <Plus weight="bold" />
+          </IconButton>
+          <IconButton aria-label="Static outline" variant="outline" size="lg" animated={false}>
+            <Plus weight="bold" />
+          </IconButton>
+          <IconButton aria-label="Static solid" variant="solid" size="lg" animated={false}>
+            <Heart weight="bold" />
+          </IconButton>
+        </div>
+        <p className="text-xs text-muted-foreground">No motion applied</p>
+      </div>
+    </div>
+  ),
+});
