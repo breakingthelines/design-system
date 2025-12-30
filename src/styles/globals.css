@@ -75,7 +75,32 @@
 }
 
 @theme inline {
+    /* BTL Brand Colors */
+    --color-black: #0d0d0d;
+    --color-grey-100: #1f1f1f;
+    --color-grey-200: #1a1a1a;
+    --color-grey-300: #2b2b2b;
+
+    --color-red-100: #eb0000;
+    --color-red-300: #bf0000;
+    --color-red-500: #990000;
+
+    --color-cyan-100: rgba(0, 235, 235, 0.2);
+    --color-cyan-500: #00ebeb;
+
+    --color-white: #ffffff;
+    --color-muted-text: rgba(255, 255, 255, 0.5);
+    --color-overlay: rgba(255, 255, 255, 0.1);
+
+    /* BTL Typography */
+    --font-display: "Le Monde Journal Std", Georgia, serif;
+    --font-body: "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-sans: 'Inter Variable', sans-serif;
+
+    /* BTL Radius - Lyra sharp style */
+    --radius-btl-sm: 2px;
+    --radius-btl-md: 12px;
+    --radius-btl-full: 16px;
     --color-sidebar-ring: var(--sidebar-ring);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
