@@ -24,12 +24,14 @@ The design system for Breaking The Lines — a unified component library powerin
 bun add @breakingthelines/design-system
 ```
 
-Ensure your `.npmrc` is configured for GitHub Packages:
+Ensure your `bunfig.toml` is configured for GitHub Packages:
 
+```toml
+[install.scopes]
+breakingthelines = { token = "$GITHUB_TOKEN", url = "https://npm.pkg.github.com/" }
 ```
-@breakingthelines:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
+
+Set `GITHUB_TOKEN` env var with a PAT that has `read:packages` scope.
 
 ## Usage
 
@@ -182,8 +184,10 @@ import { CaretDown, Check, X } from '@phosphor-icons/react';
 Builds are published to GitHub Packages via CI on version tags.
 
 ```bash
-# Bump version
-bun version patch  # or minor, major
+# Bump version (creates git tag automatically)
+bun pm version patch   # 0.0.1 → 0.0.2
+bun pm version minor   # 0.0.1 → 0.1.0
+bun pm version major   # 0.0.1 → 1.0.0
 
 # Push with tags
 git push --follow-tags
