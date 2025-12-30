@@ -121,7 +121,7 @@ export const AllSizes = meta.story({
 })
 
 export const GoBackButton = meta.story({
-  name: 'Go Back (from Figma)',
+  name: 'Go Back',
   render: () => (
     <div className="flex items-center gap-2">
       <IconButton aria-label="Go back" variant="ghost" size="sm">
@@ -133,7 +133,7 @@ export const GoBackButton = meta.story({
 })
 
 export const EditorPlusButton = meta.story({
-  name: 'Editor Plus (from Figma)',
+  name: 'Editor Plus',
   render: () => (
     <IconButton aria-label="Add block" variant="ghost" size="lg">
       <Plus weight="regular" />
