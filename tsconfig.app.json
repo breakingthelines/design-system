@@ -35,8 +35,9 @@
       "#/hooks/*": ["./src/hooks/*"],
       "#/tokens/*": ["./src/tokens/*"],
       "#/utils/*": ["./src/utils/*"],
-      "#/styles/*": ["./src/styles/*"]
+      "#/styles/*": ["./src/styles/*"],
+      "#.storybook/*": ["./.storybook/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", ".storybook"]
 }

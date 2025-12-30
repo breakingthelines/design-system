@@ -6,13 +6,20 @@
   "imports": {
     "// WORKAROUND": "shadcn CLI bug generates #/lib/lib/utils - see https://github.com/shadcn-ui/ui/discussions/6834",
     "#/lib/lib/utils": "./src/lib/utils.ts",
-
     "#/lib/*": "./src/lib/*",
     "#/components/*": "./src/components/*",
     "#/hooks/*": "./src/hooks/*",
     "#/tokens/*": "./src/tokens/*",
     "#/utils/*": "./src/utils/*",
-    "#/styles/*": "./src/styles/*"
+    "#/styles/*": "./src/styles/*",
+    "#.storybook/*": "./.storybook/*",
+    "#*": [
+      "./*",
+      "./*.ts",
+      "./*.tsx",
+      "./*.js",
+      "./*.jsx"
+    ]
   },
   "exports": {
     ".": {
@@ -63,6 +70,7 @@
     "@chromatic-com/storybook": "^4.1.3",
     "@storybook/addon-a11y": "^10.1.11",
     "@storybook/addon-docs": "^10.1.11",
+    "@storybook/addon-themes": "^10.1.11",
     "@storybook/addon-vitest": "^10.1.11",
     "@storybook/react-vite": "^10.1.11",
     "@types/node": "^24.10.1",

@@ -32,7 +32,8 @@
       "#/components/*": ["./src/components/*"],
       "#/hooks/*": ["./src/hooks/*"],
       "#/tokens/*": ["./src/tokens/*"],
-      "#/styles/*": ["./src/styles/*"]
+      "#/styles/*": ["./src/styles/*"],
+      "#.storybook/*": ["./.storybook/*"]
     }
   },
   "include": ["vite.config.ts", ".storybook/**/*.ts"]
