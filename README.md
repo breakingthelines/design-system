@@ -175,7 +175,7 @@ import { CaretDown, Check, X } from '@phosphor-icons/react';
 
 3. **Write stories alongside components**
    ```
-   src/components/ui/button/
+   src/components/ui/
    ├── button.tsx
    ├── button.stories.tsx
    └── index.ts
