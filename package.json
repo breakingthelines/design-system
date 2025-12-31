@@ -6,7 +6,8 @@
     "url": "https://github.com/breakingthelines/design-system.git"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/styles"
   ],
   "type": "module",
   "sideEffects": false,
@@ -35,7 +36,8 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
+    },
+    "./styles.css": "./src/styles/globals.css"
   },
   "publishConfig": {
     "access": "restricted",
