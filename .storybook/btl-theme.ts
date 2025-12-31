@@ -9,7 +9,7 @@ export default create({
   // Brand
   brandTitle: 'Breaking The Lines',
   brandUrl: 'https://breakingthelines.com',
-  brandImage: '/storybook/btl-logo.svg',
+  brandImage: './storybook/btl-logo.svg',
   brandTarget: '_self',
 
   // Colors
