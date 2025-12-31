@@ -28,10 +28,29 @@ Ensure your `bunfig.toml` is configured for GitHub Packages:
 
 ```toml
 [install.scopes]
-breakingthelines = { token = "$GITHUB_TOKEN", url = "https://npm.pkg.github.com/" }
+"@breakingthelines" = { token = "$GITHUB_TOKEN", url = "https://npm.pkg.github.com" }
 ```
 
-Set `GITHUB_TOKEN` env var with a PAT that has `read:packages` scope.
+### Authentication
+
+**Option 1: Using GitHub CLI (recommended)**
+
+```bash
+# Add read:packages scope
+gh auth refresh -s read:packages
+
+# Add to ~/.zshrc for persistence
+echo 'export GITHUB_TOKEN=$(gh auth token)' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**Option 2: Personal Access Token**
+
+Create a [PAT](https://github.com/settings/tokens) with `read:packages` scope and export it:
+
+```bash
+export GITHUB_TOKEN=<your-pat>
+```
 
 ## Usage
 
