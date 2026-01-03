@@ -89,21 +89,12 @@ export function Toast({
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
     >
-      {displayIcon && (
-        <div className="shrink-0 mt-0.5">{displayIcon}</div>
-      )}
+      {displayIcon && <div className="shrink-0 mt-0.5">{displayIcon}</div>}
 
       <div className="flex-1 min-w-0">
-        {title && (
-          <p className="text-sm font-medium leading-tight">{title}</p>
-        )}
+        {title && <p className="text-sm font-medium leading-tight">{title}</p>}
         {description && (
-          <p
-            className={cn(
-              'text-xs text-muted-foreground leading-relaxed',
-              title && 'mt-1'
-            )}
-          >
+          <p className={cn('text-xs text-muted-foreground leading-relaxed', title && 'mt-1')}>
             {description}
           </p>
         )}

@@ -6,30 +6,22 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '#/lib/utils';
 import { StatusDot } from './status-dot';
 
-export type ConnectionStatus =
-  | 'connected'
-  | 'connecting'
-  | 'disconnected'
-  | 'reconnecting';
+export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'reconnecting';
 
-const connectionIndicatorVariants = cva(
-  'inline-flex items-center gap-2 text-xs',
-  {
-    variants: {
-      size: {
-        sm: 'text-[10px] gap-1.5',
-        default: 'text-xs gap-2',
-      },
+const connectionIndicatorVariants = cva('inline-flex items-center gap-2 text-xs', {
+  variants: {
+    size: {
+      sm: 'text-[10px] gap-1.5',
+      default: 'text-xs gap-2',
     },
-    defaultVariants: {
-      size: 'default',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    size: 'default',
+  },
+});
 
 export interface ConnectionIndicatorProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof connectionIndicatorVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof connectionIndicatorVariants> {
   /** Current connection status */
   status: ConnectionStatus;
   /** Show text label alongside indicator */
@@ -98,9 +90,7 @@ function ConnectionIndicator({
         pulse={config.pulse}
         size={size === 'sm' ? 'sm' : 'default'}
       />
-      {showLabel && (
-        <span className="text-muted-foreground">{mergedLabels[status]}</span>
-      )}
+      {showLabel && <span className="text-muted-foreground">{mergedLabels[status]}</span>}
     </div>
   );
 }

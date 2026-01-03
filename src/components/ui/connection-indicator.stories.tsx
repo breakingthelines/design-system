@@ -70,32 +70,16 @@ export const Interactive: Story = {
     return (
       <div className="flex flex-col items-center gap-6">
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setStatus('connected')}
-          >
+          <Button variant="outline" size="sm" onClick={() => setStatus('connected')}>
             Connected
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setStatus('connecting')}
-          >
+          <Button variant="outline" size="sm" onClick={() => setStatus('connecting')}>
             Connecting
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setStatus('disconnected')}
-          >
+          <Button variant="outline" size="sm" onClick={() => setStatus('disconnected')}>
             Disconnected
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setStatus('reconnecting')}
-          >
+          <Button variant="outline" size="sm" onClick={() => setStatus('reconnecting')}>
             Reconnecting
           </Button>
         </div>
@@ -127,9 +111,7 @@ export const SimulatedConnection: Story = {
     return (
       <div className="flex flex-col items-center gap-4">
         <ConnectionIndicator status={status} showDelay={300} />
-        <p className="text-muted-foreground text-xs">
-          Watch the connection lifecycle simulation
-        </p>
+        <p className="text-muted-foreground text-xs">Watch the connection lifecycle simulation</p>
       </div>
     );
   },

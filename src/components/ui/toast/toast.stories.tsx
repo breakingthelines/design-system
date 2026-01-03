@@ -27,18 +27,10 @@ function ToastDemo() {
 
   return (
     <div className="flex flex-wrap gap-2">
-      <Button onClick={() => toast.success('Changes saved successfully')}>
-        Success
-      </Button>
-      <Button onClick={() => toast.error('Failed to upload file')}>
-        Error
-      </Button>
-      <Button onClick={() => toast.warning('Your session expires in 5 minutes')}>
-        Warning
-      </Button>
-      <Button onClick={() => toast.info('New version available')}>
-        Info
-      </Button>
+      <Button onClick={() => toast.success('Changes saved successfully')}>Success</Button>
+      <Button onClick={() => toast.error('Failed to upload file')}>Error</Button>
+      <Button onClick={() => toast.warning('Your session expires in 5 minutes')}>Warning</Button>
+      <Button onClick={() => toast.info('New version available')}>Info</Button>
       <Button
         onClick={() =>
           toast.toast({
@@ -86,11 +78,7 @@ function PositionDemo({ position }: { position: ToasterPosition }) {
   const toast = useToast();
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => toast.info(`Toast at ${position}`)}
-    >
+    <Button variant="outline" size="sm" onClick={() => toast.info(`Toast at ${position}`)}>
       {position}
     </Button>
   );
@@ -136,9 +124,7 @@ export const CollaborationToasts: StoryObj = {
 
     return (
       <div className="flex flex-col gap-4 items-center">
-        <p className="text-muted-foreground text-sm">
-          Common toasts for collaboration features
-        </p>
+        <p className="text-muted-foreground text-sm">Common toasts for collaboration features</p>
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
@@ -146,22 +132,14 @@ export const CollaborationToasts: StoryObj = {
           >
             Disconnected
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => toast.success('Reconnected - changes synced')}
-          >
+          <Button variant="outline" onClick={() => toast.success('Reconnected - changes synced')}>
             Reconnected
           </Button>
           <Button
             variant="outline"
             onClick={() =>
               toast.custom({
-                icon: (
-                  <ArrowsClockwise
-                    weight="fill"
-                    className="size-5 text-cursor-sky"
-                  />
-                ),
+                icon: <ArrowsClockwise weight="fill" className="size-5 text-cursor-sky" />,
                 description: 'Your changes were merged with Sarah, Marcus',
               })
             }
@@ -172,9 +150,7 @@ export const CollaborationToasts: StoryObj = {
             variant="outline"
             onClick={() =>
               toast.custom({
-                icon: (
-                  <CloudArrowUp weight="fill" className="size-5 text-cursor-mint" />
-                ),
+                icon: <CloudArrowUp weight="fill" className="size-5 text-cursor-mint" />,
                 description: 'Draft auto-saved',
               })
             }

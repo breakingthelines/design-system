@@ -5,47 +5,36 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '#/lib/utils';
 
-const statusDotVariants = cva(
-  'relative inline-flex shrink-0 rounded-full',
-  {
-    variants: {
-      size: {
-        sm: 'size-1.5',
-        default: 'size-2',
-        lg: 'size-2.5',
-      },
-      variant: {
-        success: 'bg-cursor-mint',
-        warning: 'bg-cursor-gold',
-        error: 'bg-destructive',
-        info: 'bg-cursor-sky',
-        neutral: 'bg-muted-foreground',
-      },
-      pulse: {
-        true: '',
-        false: '',
-      },
+const statusDotVariants = cva('relative inline-flex shrink-0 rounded-full', {
+  variants: {
+    size: {
+      sm: 'size-1.5',
+      default: 'size-2',
+      lg: 'size-2.5',
     },
-    defaultVariants: {
-      size: 'default',
-      variant: 'neutral',
-      pulse: false,
+    variant: {
+      success: 'bg-cursor-mint',
+      warning: 'bg-cursor-gold',
+      error: 'bg-destructive',
+      info: 'bg-cursor-sky',
+      neutral: 'bg-muted-foreground',
     },
-  }
-);
+    pulse: {
+      true: '',
+      false: '',
+    },
+  },
+  defaultVariants: {
+    size: 'default',
+    variant: 'neutral',
+    pulse: false,
+  },
+});
 
 export interface StatusDotProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof statusDotVariants> {}
+  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof statusDotVariants> {}
 
-function StatusDot({
-  className,
-  size,
-  variant,
-  pulse,
-  style,
-  ...props
-}: StatusDotProps) {
+function StatusDot({ className, size, variant, pulse, style, ...props }: StatusDotProps) {
   // Map variant to pulse color CSS variable
   const pulseColorMap: Record<string, string> = {
     success: 'var(--color-cursor-mint)',
@@ -63,11 +52,7 @@ function StatusDot({
       data-variant={variant}
       data-pulse={pulse}
       className={cn(statusDotVariants({ size, variant, pulse }), className)}
-      style={
-        pulse
-          ? ({ ...style, '--pulse-color': pulseColor } as React.CSSProperties)
-          : style
-      }
+      style={pulse ? ({ ...style, '--pulse-color': pulseColor } as React.CSSProperties) : style}
       {...props}
     >
       {pulse && (

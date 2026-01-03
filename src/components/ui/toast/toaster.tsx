@@ -34,11 +34,7 @@ export interface ToasterProps {
   className?: string;
 }
 
-export function Toaster({
-  position = 'bottom-center',
-  maxToasts = 5,
-  className,
-}: ToasterProps) {
+export function Toaster({ position = 'bottom-center', maxToasts = 5, className }: ToasterProps) {
   const { toasts, removeToast } = useToastContext();
   const [mounted, setMounted] = React.useState(false);
 
