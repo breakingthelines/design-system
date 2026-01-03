@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { Toast, ToastInput, ToastContextValue } from './types';
 
 const ToastContext = createContext<ToastContextValue | null>(null);
