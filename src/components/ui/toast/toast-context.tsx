@@ -1,6 +1,6 @@
 'use client';
 
-import React, {
+import {
   createContext,
   useContext,
   useState,
@@ -28,7 +28,6 @@ export function ToastProvider({ children }: ToastProviderProps) {
     const id = generateId();
     const toast: Toast = {
       id,
-      variant: input.variant ?? 'default',
       duration: input.duration ?? 5000,
       dismissible: input.dismissible ?? true,
       ...input,
