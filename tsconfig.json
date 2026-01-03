@@ -2,6 +2,8 @@
   "files": [],
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
     "baseUrl": ".",
     "paths": {
       /* WORKAROUND: shadcn CLI has a bug where it generates "#/lib/lib/utils" instead of "#/lib/utils"
