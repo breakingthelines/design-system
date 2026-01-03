@@ -23,6 +23,31 @@ export * from './components/ui/toggle-group';
 export * from './components/ui/tooltip';
 export * from './components/ui/user-pill';
 
+// StatusDot
+export { StatusDot, statusDotVariants, type StatusDotProps } from './components/ui/status-dot';
+
+// ConnectionIndicator
+export {
+  ConnectionIndicator,
+  connectionIndicatorVariants,
+  type ConnectionIndicatorProps,
+  type ConnectionStatus,
+} from './components/ui/connection-indicator';
+
+// Toast
+export {
+  ToastProvider,
+  useToast,
+  useToastContext,
+  Toast,
+  Toaster,
+  type ToasterPosition,
+  type ToasterProps,
+  type ToastType,
+  type ToastInput,
+  type ToastVariant,
+} from './components/ui/toast/index';
+
 // Hooks
 export * from './hooks/index';
 

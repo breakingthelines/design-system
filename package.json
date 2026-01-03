@@ -48,7 +48,7 @@
     "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "storybook dev -p 6006",
     "build": "bunchee",
     "lint": "oxlint",
     "format": "oxfmt --write .",
