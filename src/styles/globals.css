@@ -5,6 +5,10 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 
+/* Ensure Tailwind scans design-system components when this CSS is imported by consumers */
+@source "../components";
+@source "../lib";
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
