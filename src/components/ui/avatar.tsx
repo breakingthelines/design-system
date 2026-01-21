@@ -38,6 +38,13 @@ interface AvatarProps
   interactive?: boolean;
 }
 
+// Size classes applied directly for reliable Tailwind JIT compilation
+const sizeClasses = {
+  sm: 'size-6',
+  default: 'size-8',
+  lg: 'size-10',
+} as const;
+
 function Avatar({
   className,
   size = 'default',
@@ -69,7 +76,7 @@ function Avatar({
       data-status={status}
       className={cn(
         'relative flex shrink-0 select-none rounded-full group/avatar',
-        'size-8 data-[size=sm]:size-6 data-[size=lg]:size-10',
+        sizeClasses[size],
         'after:absolute after:inset-0 after:rounded-full after:border after:border-border after:mix-blend-darken dark:after:mix-blend-lighten',
         !cursorColor && avatarBorderVariants({ borderColor }),
         cursorColor && 'ring-2',
