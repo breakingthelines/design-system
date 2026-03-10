@@ -30,7 +30,7 @@ export const Interactive = meta.story({
   render: function InteractiveTabs() {
     const [active, setActive] = React.useState('content');
     return (
-      <div className="w-[400px]">
+      <div className="w-[500px]">
         <ProfileTabs tabs={tabs} activeTab={active} onTabChange={setActive} />
         <p className="mt-4 text-sm text-muted-foreground">
           Active tab: <strong className="text-foreground">{active}</strong>

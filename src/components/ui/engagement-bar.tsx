@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
-import { Heart, ChatCircle, ArrowsClockwise, ShareNetwork } from '@phosphor-icons/react';
+import { Heart, Chats, ArrowsClockwise, ShareNetwork } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { formatCount } from '#/lib/format';
@@ -12,7 +12,7 @@ import { motion as motionTokens } from '#/tokens/motion';
 const engagementBarVariants = cva('flex items-center', {
   variants: {
     variant: {
-      compact: 'gap-3',
+      compact: 'gap-2',
       full: 'gap-4',
     },
   },
@@ -37,7 +37,7 @@ interface EngagementBarProps
 
 const iconMap = {
   like: Heart,
-  comment: ChatCircle,
+  comment: Chats,
   repost: ArrowsClockwise,
   share: ShareNetwork,
 } as const;
@@ -64,7 +64,7 @@ function EngagementBar({ className, variant, actions, ...props }: EngagementBarP
             whileTap={motionTokens.presets.engagementAction.tap}
             transition={motionTokens.spring.snappy}
             className={cn(
-              'inline-flex items-center gap-1 text-xs transition-colors select-none',
+              'inline-flex items-center gap-1 transition-colors select-none',
               isActive && isLike
                 ? 'text-red-100'
                 : isActive
@@ -75,12 +75,11 @@ function EngagementBar({ className, variant, actions, ...props }: EngagementBarP
             aria-label={action.type}
             aria-pressed={isActive}
           >
-            <Icon
-              weight={isActive ? 'fill' : 'regular'}
-              className={cn(isFull ? 'size-5' : 'size-4')}
-            />
+            <Icon weight={isActive ? 'fill' : 'regular'} className="size-5" />
             {action.count !== undefined && (
-              <span className={cn(isFull && 'text-sm')}>{formatCount(action.count)}</span>
+              <span className={cn('text-xs', isFull && 'text-sm')}>
+                {formatCount(action.count)}
+              </span>
             )}
           </motion.button>
         );

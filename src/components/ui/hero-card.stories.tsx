@@ -14,9 +14,9 @@ const meta = preview.meta({
 const item: ContentItem = {
   id: '1',
   title:
-    "Cole Palmer has very quickly stopped looking like the punchline to Chelsea's transfer window",
+    "Cole Palmer has very quickly stopped looking like the punchline to Chelsea's frenetic window",
   excerpt:
-    "Lure of London and a persuasive phone call — how Chelsea's approach to the EPL has defining ...",
+    'Lorem Ipsum is simply dummy text of the printing and typesetting industry dummy text ever since the 1500s from an unknown french printer.',
   imageUrl: 'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?w=1200&h=500&fit=crop',
   author: {
     name: 'Zach Lowy',
@@ -27,13 +27,13 @@ const item: ContentItem = {
   },
   publishedAt: '2h ago',
   readTime: '8 min read',
-  stats: { likes: 12400, comments: 342, reposts: 89 },
+  stats: { likes: 3400, comments: 52 },
 };
 
 export const Default = meta.story({
   render: () => (
     <div className="w-full max-w-5xl">
-      <HeroCard item={item} />
+      <HeroCard item={item} totalSlides={6} activeSlide={0} />
     </div>
   ),
 });
@@ -50,6 +50,15 @@ export const NoBanner = meta.story({
   render: () => (
     <div className="w-full max-w-5xl">
       <HeroCard item={{ ...item, imageUrl: undefined }} />
+    </div>
+  ),
+});
+
+export const SecondSlide = meta.story({
+  name: 'Second Slide Active',
+  render: () => (
+    <div className="w-full max-w-5xl">
+      <HeroCard item={item} totalSlides={6} activeSlide={1} />
     </div>
   ),
 });

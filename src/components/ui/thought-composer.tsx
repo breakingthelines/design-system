@@ -1,11 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { Image, Gif, Smiley } from '@phosphor-icons/react';
+import { Image, Gif, SoccerBall } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
-import { IconButton } from '#/components/ui/icon-button';
 import { Button } from '#/components/ui/button';
 
 const MAX_CHARS = 500;
@@ -23,7 +22,7 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
   onImageClick?: () => void;
   /** GIF picker handler */
   onGifClick?: () => void;
-  /** Emoji picker handler */
+  /** Emoji/football picker handler */
   onEmojiClick?: () => void;
   /** Disable the composer */
   disabled?: boolean;
@@ -41,6 +40,7 @@ function ThoughtComposer({
   disabled = false,
   ...props
 }: ThoughtComposerProps) {
+  const [expanded, setExpanded] = React.useState(false);
   const [text, setText] = React.useState('');
   const remaining = MAX_CHARS - text.length;
   const isOverLimit = remaining < 0;
@@ -50,6 +50,7 @@ function ThoughtComposer({
     if (!canSubmit) return;
     onSubmit?.(text.trim());
     setText('');
+    setExpanded(false);
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -63,65 +64,79 @@ function ThoughtComposer({
     <div
       data-slot="thought-composer"
       className={cn(
-        'flex gap-3 rounded-none border border-grey-300 bg-grey-100 p-4',
+        'flex flex-col gap-2 rounded-[4px] border border-grey-300 bg-grey-100 px-8 py-3 backdrop-blur-[15px]',
         disabled && 'opacity-50',
         className
       )}
       {...props}
     >
-      <Avatar size="default">
-        {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
-        <AvatarFallback>{initials ?? '?'}</AvatarFallback>
-      </Avatar>
+      {/* Prompt row — always visible */}
+      <div
+        className="flex items-center gap-2 cursor-text"
+        onClick={() => !disabled && !expanded && setExpanded(true)}
+      >
+        <Avatar size="default" className="shrink-0">
+          {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
+          <AvatarFallback>{initials ?? '?'}</AvatarFallback>
+        </Avatar>
 
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
-        <textarea
-          className="min-h-[60px] w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none field-sizing-content"
-          placeholder={placeholder}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={disabled}
-          rows={1}
-        />
+        {expanded ? (
+          <textarea
+            className="min-h-[60px] w-full resize-none bg-transparent text-sm font-medium leading-6 tracking-[-0.42px] text-foreground placeholder:text-muted-foreground focus:outline-none field-sizing-content"
+            placeholder={placeholder}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            rows={1}
+            autoFocus
+          />
+        ) : (
+          <span className="text-sm font-medium leading-6 tracking-[-0.42px] text-muted-foreground select-none">
+            {placeholder}
+          </span>
+        )}
+      </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            {onImageClick && (
-              <IconButton
-                aria-label="Add image"
-                variant="ghost"
-                size="sm"
-                onClick={onImageClick}
-                disabled={disabled}
-              >
-                <Image weight="regular" />
-              </IconButton>
-            )}
-            {onGifClick && (
-              <IconButton
-                aria-label="Add GIF"
-                variant="ghost"
-                size="sm"
-                onClick={onGifClick}
-                disabled={disabled}
-              >
-                <Gif weight="regular" />
-              </IconButton>
-            )}
-            {onEmojiClick && (
-              <IconButton
-                aria-label="Add emoji"
-                variant="ghost"
-                size="sm"
-                onClick={onEmojiClick}
-                disabled={disabled}
-              >
-                <Smiley weight="regular" />
-              </IconButton>
-            )}
-          </div>
+      {/* Bottom row — action icons + submit */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {onImageClick && (
+            <button
+              type="button"
+              aria-label="Add image"
+              className="flex items-center justify-center p-[9.5px] text-red-100 transition-colors hover:text-red-300 disabled:pointer-events-none disabled:opacity-50"
+              onClick={onImageClick}
+              disabled={disabled}
+            >
+              <Image weight="regular" className="size-[15px]" />
+            </button>
+          )}
+          {onGifClick && (
+            <button
+              type="button"
+              aria-label="Add GIF"
+              className="flex items-center justify-center p-[9.5px] text-red-100 transition-colors hover:text-red-300 disabled:pointer-events-none disabled:opacity-50"
+              onClick={onGifClick}
+              disabled={disabled}
+            >
+              <Gif weight="regular" className="size-[15px]" />
+            </button>
+          )}
+          {onEmojiClick && (
+            <button
+              type="button"
+              aria-label="Add emoji"
+              className="flex items-center justify-center p-[9.5px] text-red-100 transition-colors hover:text-red-300 disabled:pointer-events-none disabled:opacity-50"
+              onClick={onEmojiClick}
+              disabled={disabled}
+            >
+              <SoccerBall weight="regular" className="size-[15px]" />
+            </button>
+          )}
+        </div>
 
+        {expanded && (
           <div className="flex items-center gap-3">
             {text.length > 0 && (
               <span
@@ -141,7 +156,7 @@ function ThoughtComposer({
               Post
             </Button>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

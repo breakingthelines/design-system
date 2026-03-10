@@ -1,10 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
-import { motion as motionTokens } from '#/tokens/motion';
 
 export interface ProfileTab {
   id: string;
@@ -15,24 +13,11 @@ interface ProfileTabsProps extends Omit<React.ComponentProps<'nav'>, 'children'>
   tabs: ProfileTab[];
   activeTab: string;
   onTabChange?: (tabId: string) => void;
-  /** Layout ID namespace for Framer Motion (defaults to "profile-tabs") */
-  layoutId?: string;
 }
 
-function ProfileTabs({
-  className,
-  tabs,
-  activeTab,
-  onTabChange,
-  layoutId = 'profile-tabs',
-  ...props
-}: ProfileTabsProps) {
+function ProfileTabs({ className, tabs, activeTab, onTabChange, ...props }: ProfileTabsProps) {
   return (
-    <nav
-      data-slot="profile-tabs"
-      className={cn('flex items-center gap-0 border-b border-grey-300', className)}
-      {...props}
-    >
+    <nav data-slot="profile-tabs" className={cn('flex items-start', className)} {...props}>
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
         return (
@@ -43,18 +28,13 @@ function ProfileTabs({
             aria-selected={isActive}
             onClick={() => onTabChange?.(tab.id)}
             className={cn(
-              'relative px-6 py-3 text-sm font-medium transition-colors',
-              isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+              'flex h-[35px] w-[148px] flex-col items-center justify-center overflow-clip rounded-[4px] px-4 py-3 text-sm font-semibold tracking-tight transition-colors',
+              isActive
+                ? 'border border-grey-300 bg-grey-200 text-foreground'
+                : 'text-[#807c7c] hover:text-foreground'
             )}
           >
             {tab.label}
-            {isActive && (
-              <motion.div
-                layoutId={layoutId}
-                className="absolute inset-x-0 bottom-0 h-0.5 bg-red-100"
-                transition={motionTokens.spring.snappy}
-              />
-            )}
           </button>
         );
       })}

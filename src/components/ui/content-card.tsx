@@ -6,24 +6,25 @@ import { motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
-import { AuthorLine } from '#/components/ui/author-line';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
 import type { ContentItem } from '#/types/content';
 
-const contentCardVariants = cva(
-  'group/content-card overflow-hidden bg-card text-card-foreground transition-colors',
-  {
-    variants: {
-      variant: {
-        grid: 'flex flex-col',
-        list: 'flex flex-row gap-4',
-      },
+/* ─────────────────────────────────────────────────
+ * Variants
+ * Grid  → tall card, image on top (Figma 80:1052, 366×526)
+ * List  → horizontal card (Figma 720:9926, 559.5×110)
+ * ───────────────────────────────────────────────── */
+const contentCardVariants = cva('group/content-card overflow-hidden text-white transition-colors', {
+  variants: {
+    variant: {
+      grid: 'flex flex-col backdrop-blur-[20px]',
+      list: 'flex flex-col rounded-lg backdrop-blur-[20px] px-8 py-3',
     },
-    defaultVariants: {
-      variant: 'grid',
-    },
-  }
-);
+  },
+  defaultVariants: {
+    variant: 'grid',
+  },
+});
 
 interface ContentCardProps
   extends
@@ -36,6 +37,28 @@ interface ContentCardProps
   onClick?: () => void;
   /** Link href (alternative to onClick) */
   href?: string;
+}
+
+/* ─────────────────────────────────────────────────
+ * Author accent bar — red 5px bar + name
+ * Matches the inline author treatment from Figma
+ * (not using AuthorLine component — Figma shows a
+ *  simpler bar + name pattern without avatar)
+ * ───────────────────────────────────────────────── */
+function AuthorAccent({ name, muted = false }: { name: string; muted?: boolean }) {
+  return (
+    <div data-slot="author-accent" className="inline-flex items-center gap-1">
+      <span className="h-4 w-[5px] shrink-0 rounded-[1px] bg-red-100" />
+      <span
+        className={cn(
+          'text-xs font-semibold leading-4 tracking-[-0.36px]',
+          muted ? 'text-[#ccc4c4]' : 'text-white'
+        )}
+      >
+        {name}
+      </span>
+    </div>
+  );
 }
 
 function ContentCard({
@@ -59,6 +82,59 @@ function ContentCard({
       : []),
   ];
 
+  /* ── LIST variant ─────────────────────────────── */
+  if (isList) {
+    return (
+      <motion.article
+        data-slot="content-card"
+        whileHover={motionTokens.presets.contentCard.hover}
+        transition={motionTokens.spring.gentle}
+        className={cn(contentCardVariants({ variant, className }))}
+        style={{
+          backgroundImage:
+            'linear-gradient(117deg, rgba(64,64,64,0.1) 6.36%, rgba(34,34,34,0.1) 99.92%)',
+        }}
+        onClick={onClick}
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        {...props}
+      >
+        <Wrapper
+          className={cn('flex items-start gap-4', onClick && 'cursor-pointer')}
+          {...wrapperProps}
+        >
+          {/* Thumbnail — 108×86 */}
+          {item.imageUrl && (
+            <div className="h-[86px] w-[108px] shrink-0 overflow-hidden">
+              <img
+                src={item.imageUrl}
+                alt={item.title}
+                className="size-full object-cover transition-transform duration-300 group-hover/content-card:scale-105"
+              />
+            </div>
+          )}
+
+          {/* Content */}
+          <div className="flex min-h-[86px] min-w-0 flex-1 flex-col gap-4">
+            {/* Title + Author */}
+            <div className="flex flex-col gap-2">
+              <h3 className="line-clamp-2 font-sans text-sm font-semibold leading-none tracking-[-0.42px] text-white">
+                {item.title}
+              </h3>
+              <AuthorAccent name={item.author.name} muted />
+            </div>
+
+            {/* Engagement */}
+            <div className="mt-auto">
+              <EngagementBar variant="compact" actions={engagementActions} />
+            </div>
+          </div>
+        </Wrapper>
+      </motion.article>
+    );
+  }
+
+  /* ── GRID variant (default) ───────────────────── */
   return (
     <motion.article
       data-slot="content-card"
@@ -70,18 +146,10 @@ function ContentCard({
       tabIndex={onClick ? 0 : undefined}
       {...props}
     >
-      <Wrapper
-        className={cn('flex', isList ? 'flex-row gap-4' : 'flex-col', onClick && 'cursor-pointer')}
-        {...wrapperProps}
-      >
-        {/* Image */}
+      <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
+        {/* Image — fills width, tall crop (~364px at 366 wide) */}
         {item.imageUrl && (
-          <div
-            className={cn(
-              'overflow-hidden bg-grey-300',
-              isList ? 'h-24 w-36 shrink-0 sm:h-28 sm:w-44' : 'aspect-[16/10] w-full'
-            )}
-          >
+          <div className="aspect-[366/364] w-full shrink-0 overflow-hidden">
             <img
               src={item.imageUrl}
               alt={item.title}
@@ -90,35 +158,28 @@ function ContentCard({
           </div>
         )}
 
-        {/* Content */}
-        <div className={cn('flex min-w-0 flex-1 flex-col', !isList && 'gap-2 pt-3')}>
-          <AuthorLine
-            author={item.author}
-            date={item.publishedAt}
-            readTime={item.readTime}
-            size="sm"
-          />
-          <h3
-            className={cn(
-              'font-display font-bold leading-snug text-foreground',
-              isList ? 'text-sm line-clamp-2' : 'mt-1.5 text-sm line-clamp-2'
+        {/* Content area — 24px gap from image */}
+        <div className="flex flex-col gap-3 pt-6">
+          {/* Author + Title + Excerpt block — pr-4 */}
+          <div className="flex flex-col gap-4 pr-4">
+            {/* Author accent + Title */}
+            <div className="flex flex-col gap-3">
+              <AuthorAccent name={item.author.name} />
+              <h3 className="line-clamp-2 font-sans text-base font-semibold leading-none tracking-[-0.48px] text-white">
+                {item.title}
+              </h3>
+            </div>
+
+            {/* Excerpt */}
+            {item.excerpt && (
+              <p className="line-clamp-2 font-serif text-sm font-normal leading-[18px] tracking-[-0.126px] text-[#ccc4c4]">
+                {item.excerpt}
+              </p>
             )}
-          >
-            {item.title}
-          </h3>
-          {item.excerpt && !isList && (
-            <p className="text-xs leading-relaxed text-muted-foreground line-clamp-2">
-              {item.excerpt}
-            </p>
-          )}
-          {item.excerpt && isList && (
-            <p className="hidden text-xs leading-relaxed text-muted-foreground line-clamp-1 sm:block">
-              {item.excerpt}
-            </p>
-          )}
-          <div className="mt-auto pt-2">
-            <EngagementBar variant="compact" actions={engagementActions} />
           </div>
+
+          {/* Engagement bar */}
+          <EngagementBar variant="compact" actions={engagementActions} />
         </div>
       </Wrapper>
     </motion.article>

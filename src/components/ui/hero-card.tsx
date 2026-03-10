@@ -2,35 +2,54 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
+import { Heart, Chats } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
-import { AuthorLine } from '#/components/ui/author-line';
-import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
+import { formatCount } from '#/lib/format';
 import type { ContentItem } from '#/types/content';
+
+/* ─────────────────────────────────────────────────
+ * HeroCard — full-width featured banner
+ * Figma node 146:6156 — 1144×480px
+ *
+ * Key specs from Figma:
+ *  - Full-bleed image with angled gradient overlay
+ *  - Content overlay positioned bottom-left
+ *  - H2 title: Bold 28px, tracking -0.84px
+ *  - Author accent bar: red 5px + name semibold 12px
+ *  - Excerpt: serif font, 14px, leading 18, grey-400
+ *  - Engagement: 24px icons, semibold 14px counts
+ *  - Progress bar: 6 segments, 4px height
+ *  - Shadow: 0 4px 48px rgba(0,0,0,0.25)
+ * ───────────────────────────────────────────────── */
 
 interface HeroCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
   item: ContentItem;
-  /** Engagement action handlers */
-  actions?: EngagementAction[];
+  /** Total slides for progress indicator */
+  totalSlides?: number;
+  /** Current active slide (0-indexed) */
+  activeSlide?: number;
   /** Card click handler */
   onClick?: () => void;
   /** Link href */
   href?: string;
+  /** Slide change handler */
+  onSlideChange?: (index: number) => void;
 }
 
-function HeroCard({ className, item, actions, onClick, href, ...props }: HeroCardProps) {
+function HeroCard({
+  className,
+  item,
+  totalSlides = 6,
+  activeSlide = 0,
+  onClick,
+  href,
+  onSlideChange,
+  ...props
+}: HeroCardProps) {
   const Wrapper = href ? 'a' : 'div';
   const wrapperProps = href ? { href } : {};
-
-  const engagementActions: EngagementAction[] = actions ?? [
-    { type: 'like', count: item.stats.likes },
-    { type: 'comment', count: item.stats.comments },
-    ...(item.stats.reposts !== undefined
-      ? [{ type: 'repost' as const, count: item.stats.reposts }]
-      : []),
-    { type: 'share' },
-  ];
 
   return (
     <motion.article
@@ -38,7 +57,7 @@ function HeroCard({ className, item, actions, onClick, href, ...props }: HeroCar
       whileHover={motionTokens.presets.heroCard.hover}
       transition={motionTokens.spring.gentle}
       className={cn(
-        'group/hero-card relative w-full overflow-hidden',
+        'group/hero-card relative w-full overflow-hidden shadow-[0_4px_48px_rgba(0,0,0,0.25)]',
         onClick && 'cursor-pointer',
         className
       )}
@@ -48,8 +67,8 @@ function HeroCard({ className, item, actions, onClick, href, ...props }: HeroCar
       {...props}
     >
       <Wrapper className="block relative" {...wrapperProps}>
-        {/* Background image */}
-        <div className="relative aspect-[21/9] w-full overflow-hidden bg-grey-300 sm:aspect-[2.5/1]">
+        {/* ── Background image + gradient overlay ─── */}
+        <div className="relative aspect-[1144/480] w-full overflow-hidden bg-grey-300">
           {item.imageUrl && (
             <img
               src={item.imageUrl}
@@ -57,27 +76,77 @@ function HeroCard({ className, item, actions, onClick, href, ...props }: HeroCar
               className="size-full object-cover transition-transform duration-500 group-hover/hero-card:scale-105"
             />
           )}
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          {/* Angled gradient: transparent top-right → black 0.75 bottom-left */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage:
+                'linear-gradient(235deg, rgba(0,0,0,0) 33.4%, rgba(0,0,0,0.75) 79.17%, rgba(0,0,0,0.75) 100%)',
+            }}
+          />
         </div>
 
-        {/* Content overlay */}
-        <div className="absolute inset-x-0 bottom-0 flex flex-col gap-3 p-6 sm:p-8 lg:p-10">
-          <AuthorLine
-            author={item.author}
-            date={item.publishedAt}
-            readTime={item.readTime}
-            size="sm"
-          />
-          <h2 className="font-display text-xl font-bold leading-tight text-white sm:text-2xl lg:text-3xl max-w-2xl">
-            {item.title}
-          </h2>
-          {item.excerpt && (
-            <p className="hidden text-sm leading-relaxed text-white/70 line-clamp-2 sm:block max-w-xl">
-              {item.excerpt}
-            </p>
-          )}
-          <EngagementBar variant="compact" actions={engagementActions} />
+        {/* ── Content overlay ────────────────────── */}
+        <div className="absolute inset-y-0 left-8 flex w-[340px] flex-col items-start justify-center py-[10px]">
+          <div className="flex flex-col gap-8">
+            {/* Text content block */}
+            <div className="flex flex-col gap-4">
+              {/* Title */}
+              <h2 className="max-w-[331px] font-display text-[28px] font-bold leading-none tracking-[-0.84px] text-white">
+                {item.title}
+              </h2>
+
+              {/* Author accent bar */}
+              <div className="inline-flex items-center gap-1">
+                <span className="h-4 w-[5px] shrink-0 rounded-[1px] bg-red-100" />
+                <span className="text-xs font-semibold leading-4 tracking-[-0.36px] text-white">
+                  {item.author.name}
+                </span>
+              </div>
+
+              {/* Excerpt — Book Antiqua per Figma */}
+              {item.excerpt && (
+                <p className="line-clamp-2 font-serif text-sm font-normal leading-[18px] text-[#ccc4c4]">
+                  {item.excerpt}
+                </p>
+              )}
+
+              {/* Engagement bar — larger variant for hero */}
+              <div className="flex items-center gap-3.5">
+                <div className="inline-flex items-center gap-[5px]">
+                  <Heart weight="fill" className="size-6 text-white" />
+                  <span className="text-sm font-semibold tracking-[-0.42px] text-white">
+                    {formatCount(item.stats.likes)}
+                  </span>
+                </div>
+                <div className="inline-flex items-center gap-2.5 overflow-hidden p-[5px]">
+                  <Chats weight="regular" className="size-3.5 text-white" />
+                  <span className="text-sm font-semibold tracking-[-0.42px] text-white">
+                    {formatCount(item.stats.comments)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Progress bar — 6 segments, 4px height */}
+            <div className="flex w-[172px] gap-2.5">
+              {Array.from({ length: totalSlides }).map((_, i) => (
+                <button
+                  key={i}
+                  type="button"
+                  className={cn(
+                    'h-1 flex-1 rounded-full transition-colors',
+                    i === activeSlide ? 'bg-red-100' : 'bg-white/20'
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSlideChange?.(i);
+                  }}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </Wrapper>
     </motion.article>

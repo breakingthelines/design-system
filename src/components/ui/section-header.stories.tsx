@@ -11,25 +11,28 @@ const meta = preview.meta({
 });
 
 export const Default = meta.story({
-  args: {
-    label: 'Spotlight',
-  },
+  render: () => (
+    <div className="w-[800px]">
+      <SectionHeader label="Spotlight" />
+    </div>
+  ),
 });
 
-export const WithMoreLink = meta.story({
-  args: {
-    label: 'Trending',
-    moreHref: '#',
-  },
+export const WithShowMore = meta.story({
+  render: () => (
+    <div className="w-[800px]">
+      <SectionHeader label="Trending" onMoreClick={() => {}} />
+    </div>
+  ),
 });
 
 export const AllVariants = meta.story({
   render: () => (
-    <div className="flex w-[600px] flex-col gap-8">
+    <div className="flex w-[800px] flex-col gap-10">
       <SectionHeader label="Spotlight" />
-      <SectionHeader label="Trending" moreHref="#" />
-      <SectionHeader label="Podcasts" moreLabel="View all" onMoreClick={() => {}} />
-      <SectionHeader label="Interviews" moreHref="#" moreLabel="See more" />
+      <SectionHeader label="Trending" onMoreClick={() => {}} />
+      <SectionHeader label="Podcasts" moreLabel="View all" moreHref="#" />
+      <SectionHeader label="Interviews" onMoreClick={() => {}} moreLabel="See more" />
     </div>
   ),
 });

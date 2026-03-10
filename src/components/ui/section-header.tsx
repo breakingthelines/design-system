@@ -1,15 +1,16 @@
 import * as React from 'react';
 
 import { cn } from '#/lib/utils';
+import { Button } from '#/components/ui/button';
 
 interface SectionHeaderProps extends React.ComponentProps<'div'> {
   /** Section title text, rendered uppercase */
   label: string;
-  /** Optional "More >" link */
+  /** Show "Show more" button */
   moreHref?: string;
-  /** Custom label for the more link */
+  /** Custom label for the more button */
   moreLabel?: string;
-  /** Click handler for the more link (alternative to moreHref) */
+  /** Click handler for the more button (alternative to moreHref) */
   onMoreClick?: () => void;
 }
 
@@ -17,34 +18,31 @@ function SectionHeader({
   className,
   label,
   moreHref,
-  moreLabel = 'More',
+  moreLabel = 'Show more',
   onMoreClick,
   ...props
 }: SectionHeaderProps) {
-  const MoreTag = moreHref ? 'a' : 'button';
-  const moreProps = moreHref
-    ? { href: moreHref }
-    : { type: 'button' as const, onClick: onMoreClick };
-
   return (
     <div
       data-slot="section-header"
       className={cn('flex items-center justify-between gap-4', className)}
       {...props}
     >
-      <div className="flex flex-col gap-1.5">
-        <h2 className="font-display text-xs tracking-[0.15em] uppercase text-foreground">
+      <div className="flex flex-col gap-2">
+        <h2 className="font-display text-xs font-bold tracking-[6px] uppercase text-foreground">
           {label}
         </h2>
-        <div className="h-0.5 w-8 bg-red-100" />
+        <div className="h-0.5 w-full bg-red-100" />
       </div>
       {(moreHref || onMoreClick) && (
-        <MoreTag
-          className="text-xs text-muted-foreground transition-colors hover:text-foreground"
-          {...moreProps}
+        <Button
+          variant="outline"
+          size="default"
+          render={moreHref ? <a href={moreHref} /> : undefined}
+          onClick={onMoreClick}
         >
-          {moreLabel} &gt;
-        </MoreTag>
+          {moreLabel}
+        </Button>
       )}
     </div>
   );

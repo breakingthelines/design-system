@@ -11,7 +11,7 @@ const meta = preview.meta({
 });
 
 const tabs: NavTab[] = [
-  { label: 'Articles', href: '#', active: false },
+  { label: 'Home', href: '#', active: false },
   { label: 'Thoughts', href: '#', active: true },
   { label: 'Media', href: '#', active: false },
   { label: 'Contact', href: '#', active: false },
@@ -43,7 +43,7 @@ export const WithNotifications = meta.story({
 export const LoggedOut = meta.story({
   args: {
     tabs: [
-      { label: 'Articles', href: '#', active: true },
+      { label: 'Home', href: '#', active: true },
       { label: 'Thoughts', href: '#' },
       { label: 'Media', href: '#' },
       { label: 'Contact', href: '#' },

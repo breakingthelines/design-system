@@ -28,18 +28,48 @@ const defaultLinks: FooterLink[] = [
   { label: 'CONTACT', href: '/contact' },
 ];
 
+/** BTL bracket logo — two offset bracket shapes with red gradient fill (footer size) */
 function BtlLogo() {
   return (
     <svg
-      viewBox="0 0 40 39"
+      viewBox="0 0 40 38.53"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className="size-10"
+      className="w-10 h-[38.53px]"
       aria-label="Breaking The Lines"
     >
-      <rect width="40" height="39" rx="2" className="fill-red-100" />
-      <rect x="8" y="6" width="10" height="12" rx="1" className="fill-white" />
-      <rect x="22" y="21" width="10" height="12" rx="1" className="fill-white" />
+      <defs>
+        <linearGradient
+          id="footer-logo-left"
+          x1="0"
+          y1="19.265"
+          x2="17.142"
+          y2="19.265"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#E20613" />
+          <stop offset="1" stopColor="#E5332A" />
+        </linearGradient>
+        <linearGradient
+          id="footer-logo-right"
+          x1="22.863"
+          y1="19.265"
+          x2="40"
+          y2="19.265"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop stopColor="#E20613" />
+          <stop offset="1" stopColor="#E5332A" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M17.142 0V11.709H12.442V26.83H17.142V38.53H0V0H17.142Z"
+        fill="url(#footer-logo-left)"
+      />
+      <path
+        d="M40 0V38.53H22.863V26.83H27.563V11.709H22.863V0H40Z"
+        fill="url(#footer-logo-right)"
+      />
     </svg>
   );
 }
@@ -57,7 +87,7 @@ function SiteFooter({
     <footer
       data-slot="site-footer"
       className={cn(
-        'border-t border-grey-300 bg-black px-6 py-16 sm:px-12 lg:px-[148px] lg:py-[100px]',
+        'border-t border-grey-100 bg-black px-8 py-20 sm:px-16 lg:px-[148px] lg:py-[100px]',
         className
       )}
       {...props}
@@ -80,8 +110,8 @@ function SiteFooter({
         </div>
 
         {/* Bottom row: contact + copyright */}
-        <div className="flex flex-col gap-4 text-white">
-          <div className="flex flex-col gap-2 text-sm font-medium">
+        <div className="flex flex-col gap-[26px] text-white">
+          <div className="flex flex-col gap-[13px] text-sm font-medium">
             <a href={`mailto:${email}`} className="hover:text-red-100 transition-colors">
               {email}
             </a>
