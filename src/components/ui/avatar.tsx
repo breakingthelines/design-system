@@ -27,7 +27,7 @@ export type AvatarStatus = 'active' | 'typing' | 'idle';
 
 interface AvatarProps
   extends AvatarPrimitive.Root.Props, VariantProps<typeof avatarBorderVariants> {
-  size?: 'default' | 'sm' | 'lg';
+  size?: 'default' | 'sm' | 'lg' | 'xl' | 'xxl';
   /** Collaboration cursor color - overrides borderColor when provided */
   cursorColor?: string;
   /** Background color for fallback initials */
@@ -43,6 +43,8 @@ const sizeClasses = {
   sm: 'size-6',
   default: 'size-8',
   lg: 'size-10',
+  xl: 'size-16',
+  xxl: 'size-[164px]',
 } as const;
 
 function Avatar({
@@ -128,6 +130,8 @@ function AvatarFallback({ className, fallbackColor, style, ...props }: AvatarFal
       className={cn(
         'flex size-full items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground',
         'group-data-[size=sm]/avatar:text-xs',
+        'group-data-[size=xl]/avatar:text-xl',
+        'group-data-[size=xxl]/avatar:text-4xl',
         className
       )}
       style={fallbackColor ? { ...style, backgroundColor: fallbackColor } : style}
@@ -145,6 +149,8 @@ function AvatarBadge({ className, ...props }: React.ComponentProps<'span'>) {
         'group-data-[size=sm]/avatar:size-2 group-data-[size=sm]/avatar:[&>svg]:hidden',
         'group-data-[size=default]/avatar:size-2.5 group-data-[size=default]/avatar:[&>svg]:size-2',
         'group-data-[size=lg]/avatar:size-3 group-data-[size=lg]/avatar:[&>svg]:size-2',
+        'group-data-[size=xl]/avatar:size-4 group-data-[size=xl]/avatar:[&>svg]:size-2.5 group-data-[size=xl]/avatar:ring-[3px]',
+        'group-data-[size=xxl]/avatar:size-6 group-data-[size=xxl]/avatar:[&>svg]:size-4 group-data-[size=xxl]/avatar:ring-4',
         className
       )}
       {...props}

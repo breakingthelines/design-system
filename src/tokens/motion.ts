@@ -70,6 +70,22 @@ export const motion = {
       animate: { opacity: 1, y: 0, scale: 1 },
       exit: { opacity: 0, y: -4, scale: 0.98 },
     },
+    contentCard: {
+      hover: { y: -4 },
+      tap: { scale: 0.98 },
+      initial: { opacity: 0, y: 12 },
+      animate: { opacity: 1, y: 0 },
+    },
+    heroCard: {
+      hover: { scale: 1.02 },
+      imageHover: { scale: 1.05 },
+      initial: { opacity: 0, y: 20 },
+      animate: { opacity: 1, y: 0 },
+    },
+    engagementAction: {
+      hover: { scale: 1.15 },
+      tap: { scale: 0.85 },
+    },
   },
 } as const;
 
