@@ -16,6 +16,8 @@ interface SiteFooterProps extends React.ComponentProps<'footer'> {
   phone?: string;
   /** Copyright year range */
   copyright?: string;
+  /** URL the logo links to (default: '/') */
+  logoHref?: string;
   /** Logo render prop — allows custom SVG/image */
   logo?: React.ReactNode;
 }
@@ -80,6 +82,7 @@ function SiteFooter({
   email = 'hello@breakingthelines.com',
   phone,
   copyright = '© 2013–2026',
+  logoHref = '/',
   logo,
   ...props
 }: SiteFooterProps) {
@@ -95,13 +98,13 @@ function SiteFooter({
       <div className="flex flex-col gap-24 lg:gap-[164px]">
         {/* Top row: logo + nav */}
         <div className="flex flex-col items-start gap-8 sm:flex-row sm:items-center sm:justify-between">
-          {logo ?? <BtlLogo />}
+          <a href={logoHref}>{logo ?? <BtlLogo />}</a>
           <nav className="flex flex-wrap gap-8 lg:gap-12">
             {links.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-xs tracking-[0.1em] text-muted-text transition-colors hover:text-white"
+                className="cursor-pointer text-xs tracking-[0.1em] text-muted-text transition-colors hover:text-white"
               >
                 {link.label}
               </a>
@@ -112,7 +115,7 @@ function SiteFooter({
         {/* Bottom row: contact + copyright */}
         <div className="flex flex-col gap-[26px] text-white">
           <div className="flex flex-col gap-[13px] text-sm font-medium">
-            <a href={`mailto:${email}`} className="hover:text-red-100 transition-colors">
+            <a href={`mailto:${email}`} className="cursor-pointer hover:text-red-100 transition-colors">
               {email}
             </a>
             {phone && <p>{phone}</p>}

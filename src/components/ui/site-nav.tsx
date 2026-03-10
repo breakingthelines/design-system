@@ -37,6 +37,8 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   onLoginClick?: () => void;
   /** Notification count badge */
   notificationCount?: number;
+  /** URL the logo links to (default: '/') */
+  logoHref?: string;
   /** Logo render prop */
   logo?: React.ReactNode;
 }
@@ -134,6 +136,7 @@ function SiteNav({
   onAvatarClick,
   onLoginClick,
   notificationCount,
+  logoHref = '/',
   logo,
   ...props
 }: SiteNavProps) {
@@ -147,7 +150,7 @@ function SiteNav({
       {...props}
     >
       {/* Left: Logo */}
-      <div className="flex items-center">{logo ?? <BtlNavLogo />}</div>
+      <a href={logoHref} className="flex items-center">{logo ?? <BtlNavLogo />}</a>
 
       {/* Center: Pill tab bar (desktop/tablet) */}
       <nav className="hidden sm:flex items-center rounded-full bg-grey-200 p-1">
