@@ -39,6 +39,7 @@ function SectionHeader({
           variant="outline"
           size="default"
           render={moreHref ? <a href={moreHref} /> : undefined}
+          nativeButton={!moreHref}
           onClick={onMoreClick}
         >
           {moreLabel}
