@@ -49,13 +49,27 @@ function IconButton({
   children,
   animated = true,
   disabled,
+  render,
+  nativeButton,
   ...props
 }: IconButtonProps) {
+  const resolvedNativeButton =
+    nativeButton ??
+    (render != null &&
+    typeof render === 'object' &&
+    'type' in render &&
+    typeof render.type === 'string' &&
+    render.type !== 'button'
+      ? false
+      : undefined);
+
   const button = (
     <ButtonPrimitive
       data-slot="icon-button"
       className={cn(iconButtonVariants({ variant, size, className }))}
       disabled={disabled}
+      render={render}
+      nativeButton={resolvedNativeButton}
       {...props}
     >
       {children}

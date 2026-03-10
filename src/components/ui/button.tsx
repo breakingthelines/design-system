@@ -42,12 +42,28 @@ function Button({
   className,
   variant = 'default',
   size = 'default',
+  render,
+  nativeButton,
   ...props
 }: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+  // Auto-detect non-button render elements so consumers don't need to
+  // manually set nativeButton={false} when using render={<a />} etc.
+  const resolvedNativeButton =
+    nativeButton ??
+    (render != null &&
+    typeof render === 'object' &&
+    'type' in render &&
+    typeof render.type === 'string' &&
+    render.type !== 'button'
+      ? false
+      : undefined);
+
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
+      render={render}
+      nativeButton={resolvedNativeButton}
       {...props}
     />
   );
