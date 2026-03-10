@@ -77,9 +77,9 @@ function BtlLogo() {
 function SiteFooter({
   className,
   links = defaultLinks,
-  email = 'contact@breakingthelines.com',
-  phone = '231 + 83752086',
-  copyright = '© 2013–2025',
+  email = 'hello@breakingthelines.com',
+  phone,
+  copyright = '© 2013–2026',
   logo,
   ...props
 }: SiteFooterProps) {
@@ -115,7 +115,7 @@ function SiteFooter({
             <a href={`mailto:${email}`} className="hover:text-red-100 transition-colors">
               {email}
             </a>
-            <p>{phone}</p>
+            {phone && <p>{phone}</p>}
           </div>
           <p className="text-xs">{copyright}</p>
         </div>
