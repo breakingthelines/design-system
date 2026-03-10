@@ -217,10 +217,12 @@ function SiteNav({
         {/* Mobile: Hamburger menu */}
         <div className="sm:hidden">
           <DropdownMenu>
-            <DropdownMenuTrigger className="inline-flex items-center justify-center">
-              <IconButton aria-label="Menu" variant="ghost" size="md" animated={false}>
-                <List weight="bold" />
-              </IconButton>
+            <DropdownMenuTrigger
+              render={
+                <IconButton aria-label="Menu" variant="ghost" size="md" animated={false} />
+              }
+            >
+              <List weight="bold" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8}>
               {tabs.map((tab) => (
