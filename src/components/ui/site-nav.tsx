@@ -224,7 +224,7 @@ function SiteNav({
           <DropdownMenu>
             <DropdownMenuTrigger
               render={
-                <IconButton aria-label="Menu" variant="ghost" size="md" animated={false} />
+                <IconButton aria-label="Menu" variant="ghost" size="lg" animated={false} />
               }
             >
               <List weight="bold" />
