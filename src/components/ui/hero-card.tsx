@@ -95,7 +95,7 @@ function HeroCard({
         </div>
 
         {/* ── Content overlay ────────────────────── */}
-        <div className="absolute inset-y-0 left-4 flex w-[280px] flex-col items-start justify-center py-2 sm:left-8 sm:w-[340px] sm:py-[10px]">
+        <div className="absolute inset-y-0 left-4 flex w-[280px] flex-col items-start justify-end pb-6 sm:left-8 sm:w-[340px] sm:pb-[44px]">
           <div className="flex flex-col gap-4 sm:gap-8">
             {/* Text content block */}
             <div className="flex flex-col gap-2 sm:gap-4">
@@ -131,7 +131,7 @@ function HeroCard({
                   </span>
                 </div>
                 <div className="inline-flex items-center gap-2 overflow-hidden p-[5px] sm:gap-2.5">
-                  <Chats weight="regular" className="size-3 text-white sm:size-3.5" />
+                  <Chats weight="regular" className="size-4 text-white sm:size-5" />
                   <span className="text-xs font-semibold tracking-[-0.42px] text-white sm:text-sm">
                     {formatCount(item.stats.comments ?? 0)}
                   </span>

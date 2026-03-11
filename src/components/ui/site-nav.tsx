@@ -94,7 +94,7 @@ function BtlNavLogo() {
           fill="url(#nav-logo-right)"
         />
       </svg>
-      <div className="hidden sm:flex flex-col gap-0.5 text-[14px] font-medium leading-none tracking-[-0.42px] text-white">
+      <div className="hidden sm:flex flex-col gap-0.5 text-[14px] font-semibold leading-none tracking-[-0.42px] text-white">
         <span>breaking</span>
         <span>the lines</span>
       </div>
