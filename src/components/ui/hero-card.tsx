@@ -100,7 +100,7 @@ function HeroCard({
             {/* Text content block */}
             <div className="flex flex-col gap-2 sm:gap-4">
               {/* Title */}
-              <h2 className="font-display text-lg font-bold leading-tight tracking-[-0.54px] text-white sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
+              <h2 className="font-[family-name:var(--font-content)] text-lg font-bold leading-tight tracking-[-0.54px] text-white sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
                 {item.title}
               </h2>
 
