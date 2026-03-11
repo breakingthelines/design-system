@@ -153,7 +153,7 @@ function SiteNav({
       <a href={logoHref} className="flex items-center">{logo ?? <BtlNavLogo />}</a>
 
       {/* Center: Pill tab bar (desktop/tablet) */}
-      <nav className="hidden sm:flex items-center rounded-full bg-white/[0.06] p-1 backdrop-blur-sm">
+      <nav className="hidden sm:flex items-center rounded-full p-1">
         {tabs.map((tab) => (
           <a
             key={tab.href}
