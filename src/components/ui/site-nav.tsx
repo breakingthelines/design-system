@@ -213,7 +213,7 @@ function SiteNav({
           </button>
         ) : (
           onLoginClick && (
-            <Button onClick={onLoginClick}>
+            <Button onClick={onLoginClick} className="h-auto px-4 py-2.5">
               Login
             </Button>
           )
