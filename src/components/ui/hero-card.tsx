@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, ArrowsClockwise } from '@phosphor-icons/react';
+import { Heart, Chats } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
@@ -114,7 +114,7 @@ function HeroCard({
                 </p>
               )}
 
-              {/* Engagement bar — like + repost per Figma */}
+              {/* Engagement bar — like + comment */}
               <div className="flex items-center gap-3.5">
                 <div className="inline-flex items-center gap-[5px]">
                   <Heart weight="fill" className="size-6 text-white" />
@@ -123,9 +123,9 @@ function HeroCard({
                   </span>
                 </div>
                 <div className="inline-flex items-center gap-2.5 overflow-hidden p-[5px]">
-                  <ArrowsClockwise weight="regular" className="size-3.5 text-white" />
+                  <Chats weight="regular" className="size-3.5 text-white" />
                   <span className="text-sm font-semibold tracking-[-0.42px] text-white">
-                    {formatCount(item.stats.reposts ?? 0)}
+                    {formatCount(item.stats.comments ?? 0)}
                   </span>
                 </div>
               </div>

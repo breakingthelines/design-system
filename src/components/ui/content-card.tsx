@@ -83,7 +83,7 @@ function ContentCard({
 
   const engagementActions: EngagementAction[] = actions ?? [
     { type: 'like', count: item.stats.likes },
-    { type: 'repost', count: item.stats.reposts ?? 0 },
+    { type: 'comment', count: item.stats.comments ?? 0 },
   ];
 
   /* ── LIST variant ─────────────────────────────── */
