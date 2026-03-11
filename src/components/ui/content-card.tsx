@@ -96,7 +96,7 @@ function ContentCard({
       <motion.article
         data-slot="content-card"
         style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
-        whileHover={{ y: -4, scale: 1.01 }}
+        whileHover={{ y: -4 }}
         transition={motionTokens.spring.gentle}
         className={cn(contentCardVariants({ variant, className }))}
         onClick={onClick}
@@ -116,7 +116,7 @@ function ContentCard({
               <img
                 src={item.imageUrl}
                 alt={item.title}
-                className="size-full object-cover transition-transform duration-300 group-hover/content-card:scale-105"
+                className="size-full object-cover transition-transform duration-300"
               />
             </div>
           )}
@@ -147,7 +147,7 @@ function ContentCard({
       <motion.article
         data-slot="content-card"
         style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
-        whileHover={{ y: -8, scale: 1.02 }}
+        whileHover={{ y: -6 }}
         transition={motionTokens.spring.gentle}
         className={cn(contentCardVariants({ variant, className }))}
         onClick={onClick}
@@ -164,7 +164,7 @@ function ContentCard({
               <img
                 src={item.imageUrl}
                 alt={item.title}
-                className="size-full object-cover transition-transform duration-300 group-hover/content-card:scale-105"
+                className="size-full object-cover transition-transform duration-300"
               />
             </div>
           )}
@@ -193,7 +193,7 @@ function ContentCard({
     <motion.article
       data-slot="content-card"
       style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
-      whileHover={{ y: -8, scale: 1.02 }}
+      whileHover={{ y: -6 }}
       transition={motionTokens.spring.gentle}
       className={cn(contentCardVariants({ variant, className }))}
       onClick={onClick}
@@ -210,7 +210,7 @@ function ContentCard({
             <img
               src={item.imageUrl}
               alt={item.title}
-              className="size-full object-cover transition-transform duration-300 group-hover/content-card:scale-105"
+              className="size-full object-cover transition-transform duration-300"
             />
           </div>
         )}

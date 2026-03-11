@@ -60,7 +60,7 @@ function HeroCard({
     <motion.article
       data-slot="hero-card"
       style={{ transformPerspective: 1200, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
-      whileHover={{ scale: 1.008 }}
+      whileHover={{}}
       transition={motionTokens.spring.gentle}
       className={cn(
         'group/hero-card relative w-full overflow-hidden shadow-[0_4px_48px_rgba(0,0,0,0.25)]',
@@ -81,7 +81,7 @@ function HeroCard({
             <img
               src={item.imageUrl}
               alt={item.title}
-              className="size-full object-cover transition-transform duration-500 group-hover/hero-card:scale-105"
+              className="size-full object-cover"
             />
           )}
           {/* Angled gradient: transparent top-right → black 0.75 bottom-left */}

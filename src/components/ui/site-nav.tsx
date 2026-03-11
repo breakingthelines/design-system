@@ -144,7 +144,7 @@ function SiteNav({
     <header
       data-slot="site-nav"
       className={cn(
-        'sticky top-0 z-50 flex h-14 items-center justify-between px-4 backdrop-blur-xl bg-black/80 sm:px-6 lg:px-8',
+        'z-50 flex h-14 items-center justify-between px-4 sm:px-6 lg:px-8',
         className
       )}
       {...props}
