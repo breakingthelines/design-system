@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { cva, type VariantProps } from 'class-variance-authority';
+import { cva } from 'class-variance-authority';
 import { motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
@@ -27,10 +27,12 @@ const contentCardVariants = cva('group/content-card overflow-hidden text-white t
   },
 });
 
+type ContentCardVariant = 'grid' | 'list' | 'portrait';
+
 interface ContentCardProps
-  extends
-    Omit<React.ComponentProps<'article'>, 'children'>,
-    VariantProps<typeof contentCardVariants> {
+  extends Omit<React.ComponentProps<'article'>, 'children'> {
+  /** Card layout variant */
+  variant?: ContentCardVariant;
   item: ContentItem;
   /** Engagement action handlers */
   actions?: EngagementAction[];
@@ -235,4 +237,4 @@ function ContentCard({
   );
 }
 
-export { ContentCard, contentCardVariants, type ContentCardProps };
+export { ContentCard, contentCardVariants, type ContentCardProps, type ContentCardVariant };
