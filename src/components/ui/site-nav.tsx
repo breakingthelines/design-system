@@ -143,14 +143,13 @@ function SiteNav({
   return (
     <header
       data-slot="site-nav"
-      className={cn(
-        'z-50 flex h-14 items-center justify-between',
-        className
-      )}
+      className={cn('z-50 flex h-14 items-center justify-between', className)}
       {...props}
     >
       {/* Left: Logo */}
-      <a href={logoHref} className="flex items-center">{logo ?? <BtlNavLogo />}</a>
+      <a href={logoHref} className="flex items-center">
+        {logo ?? <BtlNavLogo />}
+      </a>
 
       {/* Center: Pill tab bar (desktop/tablet) */}
       <nav className="hidden sm:flex items-center rounded-full p-1">
@@ -160,9 +159,7 @@ function SiteNav({
             href={tab.href}
             className={cn(
               'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
-              tab.active
-                ? 'bg-white/[0.12] text-white'
-                : 'text-white/50 hover:text-white/80'
+              tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
             )}
           >
             {tab.label}
@@ -223,9 +220,7 @@ function SiteNav({
         <div className="sm:hidden">
           <DropdownMenu>
             <DropdownMenuTrigger
-              render={
-                <IconButton aria-label="Menu" variant="ghost" size="lg" animated={false} />
-              }
+              render={<IconButton aria-label="Menu" variant="ghost" size="lg" animated={false} />}
             >
               <List weight="bold" />
             </DropdownMenuTrigger>

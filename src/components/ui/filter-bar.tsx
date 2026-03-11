@@ -58,11 +58,7 @@ function FilterBar({
   ...props
 }: FilterBarProps) {
   return (
-    <div
-      data-slot="filter-bar"
-      className={cn('flex flex-col gap-3', className)}
-      {...props}
-    >
+    <div data-slot="filter-bar" className={cn('flex flex-col gap-3', className)} {...props}>
       {/* Main row — filters + search */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
         {/* Left — label + filter chips, scrollable on mobile */}
@@ -88,9 +84,7 @@ function FilterBar({
                   )}
                 >
                   {filter.icon && (
-                    <span className="flex size-4 items-center justify-center">
-                      {filter.icon}
-                    </span>
+                    <span className="flex size-4 items-center justify-center">{filter.icon}</span>
                   )}
                   {filter.label}
                   {isActive && (

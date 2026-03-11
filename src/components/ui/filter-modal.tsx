@@ -58,9 +58,7 @@ function FilterModal({
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Backdrop
-          className="data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 z-50 bg-black/50 backdrop-blur-xs duration-100"
-        />
+        <DialogPrimitive.Backdrop className="data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 fixed inset-0 z-50 bg-black/50 backdrop-blur-xs duration-100" />
         <DialogPrimitive.Popup
           className={cn(
             'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95',
@@ -72,9 +70,7 @@ function FilterModal({
           {/* Header */}
           <div className="flex items-center gap-2.5 px-5 pt-5 pb-4">
             {icon && (
-              <span className="flex size-5 items-center justify-center text-white/70">
-                {icon}
-              </span>
+              <span className="flex size-5 items-center justify-center text-white/70">{icon}</span>
             )}
             <DialogPrimitive.Title className="text-base font-medium text-white">
               {title}
@@ -111,9 +107,7 @@ function FilterModal({
           {/* Options list */}
           <div className="max-h-[320px] overflow-y-auto px-2 pb-2">
             {filtered.length === 0 ? (
-              <div className="px-3 py-6 text-center text-xs text-white/40">
-                No results found
-              </div>
+              <div className="px-3 py-6 text-center text-xs text-white/40">No results found</div>
             ) : (
               filtered.map((option) => {
                 const selected = selectedValues.includes(option.value);
@@ -132,9 +126,7 @@ function FilterModal({
                     <span
                       className={cn(
                         'flex size-5 shrink-0 items-center justify-center rounded-full transition-colors',
-                        selected
-                          ? 'bg-white'
-                          : 'ring-1 ring-white/30'
+                        selected ? 'bg-white' : 'ring-1 ring-white/30'
                       )}
                     >
                       {selected && <Check weight="bold" size={12} className="text-grey-200" />}
@@ -148,9 +140,7 @@ function FilterModal({
                     )}
 
                     {/* Label */}
-                    <span className="text-sm font-medium text-white/90">
-                      {option.label}
-                    </span>
+                    <span className="text-sm font-medium text-white/90">{option.label}</span>
                   </button>
                 );
               })

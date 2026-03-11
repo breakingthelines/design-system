@@ -78,11 +78,7 @@ function HeroCard({
         {/* ── Background image + gradient overlay ─── */}
         <div className="relative aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]">
           {item.imageUrl && (
-            <img
-              src={item.imageUrl}
-              alt={item.title}
-              className="size-full object-cover"
-            />
+            <img src={item.imageUrl} alt={item.title} className="size-full object-cover" />
           )}
           {/* Angled gradient: transparent top-right → black 0.75 bottom-left */}
           <div

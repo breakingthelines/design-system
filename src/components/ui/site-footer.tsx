@@ -115,7 +115,10 @@ function SiteFooter({
         {/* Bottom row: contact + copyright */}
         <div className="flex flex-col gap-[26px] text-white">
           <div className="flex flex-col gap-[13px] text-sm font-medium">
-            <a href={`mailto:${email}`} className="cursor-pointer hover:text-red-100 transition-colors">
+            <a
+              href={`mailto:${email}`}
+              className="cursor-pointer hover:text-red-100 transition-colors"
+            >
               {email}
             </a>
             {phone && <p>{phone}</p>}

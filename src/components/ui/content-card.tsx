@@ -30,8 +30,7 @@ const contentCardVariants = cva('group/content-card overflow-hidden text-white t
 
 type ContentCardVariant = 'grid' | 'list' | 'portrait';
 
-interface ContentCardProps
-  extends Omit<React.ComponentProps<'article'>, 'children'> {
+interface ContentCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
   /** Card layout variant */
   variant?: ContentCardVariant;
   item: ContentItem;

@@ -19,10 +19,7 @@ interface TiltValues {
  * @param maxTilt - Maximum rotation in degrees (default: 6)
  * @param springConfig - Spring stiffness/damping for smooth return
  */
-function useTilt(
-  maxTilt = 6,
-  springConfig = { stiffness: 300, damping: 30 },
-): TiltValues {
+function useTilt(maxTilt = 6, springConfig = { stiffness: 300, damping: 30 }): TiltValues {
   // Normalised cursor position (0–1), center = 0.5
   const cursorX = useMotionValue(0.5);
   const cursorY = useMotionValue(0.5);
@@ -43,7 +40,7 @@ function useTilt(
       cursorX.set((e.clientX - rect.left) / rect.width);
       cursorY.set((e.clientY - rect.top) / rect.height);
     },
-    [cursorX, cursorY],
+    [cursorX, cursorY]
   );
 
   const onMouseLeave = useCallback(() => {
