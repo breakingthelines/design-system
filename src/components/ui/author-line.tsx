@@ -33,9 +33,9 @@ interface AuthorLineProps
 }
 
 const tierVariantMap = {
-  free: 'secondary',
-  pro: 'default',
-  premium: 'outline',
+  Free: 'secondary',
+  Pro: 'default',
+  'Line Breaker': 'outline',
 } as const;
 
 function AuthorLine({
@@ -99,7 +99,7 @@ function AuthorLine({
       )}
 
       {/* Tier badge */}
-      {author.tier && author.tier !== 'free' && (
+      {author.tier && author.tier !== 'Free' && (
         <Badge variant={tierVariantMap[author.tier]} className="ml-1">
           {author.tier}
         </Badge>

@@ -1,5 +1,7 @@
 /* Adobe Fonts - Le Monde Journal Std + Helvetica Neue */
 @import url('https://use.typekit.net/vfh2lle.css');
+/* Google Fonts - Inter for content typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -135,10 +137,11 @@
   --color-muted-text: rgba(255, 255, 255, 0.5);
   --color-overlay: rgba(255, 255, 255, 0.1);
 
-  /* BTL Typography - Adobe Fonts */
+  /* BTL Typography - Adobe Fonts + Google Fonts */
   --font-display: 'le-monde-journal-std', Georgia, serif;
   --font-body: 'helvetica-neue', Helvetica, Arial, sans-serif;
   --font-sans: 'helvetica-neue', Helvetica, Arial, sans-serif;
+  --font-content: 'Inter', sans-serif;
 
   /* BTL Radius - Lyra sharp style */
   --radius-btl-sm: 2px;

@@ -12,6 +12,7 @@ export * from './components/ui/content-card';
 export * from './components/ui/dropdown-menu';
 export * from './components/ui/engagement-bar';
 export * from './components/ui/field';
+export * from './components/ui/filter-bar';
 export * from './components/ui/hero-card';
 export * from './components/ui/icon-button';
 export * from './components/ui/input-group';

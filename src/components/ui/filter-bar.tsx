@@ -1,0 +1,104 @@
+'use client';
+
+import * as React from 'react';
+import { cn } from '#/lib/utils';
+import { MagnifyingGlass } from '@phosphor-icons/react';
+
+interface FilterChip {
+  label: string;
+  value: string;
+  icon?: React.ReactNode;
+}
+
+interface FilterBarProps extends React.ComponentProps<'div'> {
+  /** Label shown before filters */
+  label?: string;
+  /** Filter chip definitions */
+  filters: FilterChip[];
+  /** Currently active filter values */
+  activeFilters?: string[];
+  /** Called when a filter chip is toggled */
+  onFilterChange?: (value: string) => void;
+  /** Placeholder for the search input */
+  searchPlaceholder?: string;
+  /** Controlled search value */
+  searchValue?: string;
+  /** Called when search input changes */
+  onSearchChange?: (value: string) => void;
+}
+
+function FilterBar({
+  className,
+  label = 'Filter By:',
+  filters,
+  activeFilters = [],
+  onFilterChange,
+  searchPlaceholder = 'Search',
+  searchValue,
+  onSearchChange,
+  ...props
+}: FilterBarProps) {
+  return (
+    <div
+      data-slot="filter-bar"
+      className={cn('flex items-center justify-between gap-4', className)}
+      {...props}
+    >
+      {/* Left — label + filter chips */}
+      <div className="flex items-center gap-3">
+        <span className="font-[family-name:var(--font-content)] text-sm font-medium tracking-[-0.42px] text-white">
+          {label}
+        </span>
+        <div className="flex items-center gap-2">
+          {filters.map((filter) => {
+            const isActive = activeFilters.includes(filter.value);
+            return (
+              <button
+                key={filter.value}
+                type="button"
+                onClick={() => onFilterChange?.(filter.value)}
+                className={cn(
+                  'inline-flex h-[34px] items-center gap-2 rounded-[24px] px-4 py-3',
+                  'font-[family-name:var(--font-content)] text-sm font-medium tracking-[-0.42px]',
+                  'transition-colors',
+                  isActive
+                    ? 'bg-white/20 text-white backdrop-blur-[15px]'
+                    : 'bg-white/10 text-white/80 backdrop-blur-[15px] hover:bg-white/15'
+                )}
+              >
+                {filter.icon && (
+                  <span className="flex size-4 items-center justify-center">
+                    {filter.icon}
+                  </span>
+                )}
+                {filter.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Right — search input */}
+      <div className="relative">
+        <MagnifyingGlass
+          weight="regular"
+          className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-white/50"
+        />
+        <input
+          type="text"
+          placeholder={searchPlaceholder}
+          value={searchValue}
+          onChange={(e) => onSearchChange?.(e.target.value)}
+          className={cn(
+            'h-[34px] w-[240px] rounded-[2px] border border-grey-300 bg-grey-100 pl-9 pr-4',
+            'font-[family-name:var(--font-content)] text-xs font-normal text-white',
+            'placeholder:text-white/40',
+            'outline-none transition-colors focus:border-white/30'
+          )}
+        />
+      </div>
+    </div>
+  );
+}
+
+export { FilterBar, type FilterBarProps, type FilterChip };

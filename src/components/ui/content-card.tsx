@@ -19,6 +19,7 @@ const contentCardVariants = cva('group/content-card overflow-hidden text-white t
     variant: {
       grid: 'flex flex-col backdrop-blur-[20px]',
       list: 'flex flex-col rounded-lg backdrop-blur-[20px] px-8 py-3',
+      portrait: 'flex flex-col backdrop-blur-[20px]',
     },
   },
   defaultVariants: {
@@ -48,7 +49,10 @@ interface ContentCardProps
 function AuthorAccent({ name, muted = false }: { name: string; muted?: boolean }) {
   return (
     <div data-slot="author-accent" className="inline-flex items-center gap-1">
-      <span className="h-4 w-[5px] shrink-0 rounded-[1px] bg-red-100" />
+      <span className="flex gap-[2px]">
+        <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
+        <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
+      </span>
       <span
         className={cn(
           'text-xs font-semibold leading-4 tracking-[-0.36px]',
@@ -71,6 +75,7 @@ function ContentCard({
   ...props
 }: ContentCardProps) {
   const isList = variant === 'list';
+  const isPortrait = variant === 'portrait';
   const Wrapper = href ? 'a' : 'div';
   const wrapperProps = href ? { href } : {};
 
@@ -118,7 +123,7 @@ function ContentCard({
           <div className="flex min-h-[86px] min-w-0 flex-1 flex-col gap-4">
             {/* Title + Author */}
             <div className="flex flex-col gap-2">
-              <h3 className="line-clamp-2 font-sans text-sm font-semibold leading-none tracking-[-0.42px] text-white">
+              <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-semibold leading-none tracking-[-0.42px] text-white">
                 {item.title}
               </h3>
               <AuthorAccent name={item.author.name} muted />
@@ -126,6 +131,50 @@ function ContentCard({
 
             {/* Engagement */}
             <div className="mt-auto">
+              <EngagementBar variant="compact" actions={engagementActions} />
+            </div>
+          </div>
+        </Wrapper>
+      </motion.article>
+    );
+  }
+
+  /* ── PORTRAIT variant ────────────────────────── */
+  if (isPortrait) {
+    return (
+      <motion.article
+        data-slot="content-card"
+        whileHover={motionTokens.presets.contentCard.hover}
+        transition={motionTokens.spring.gentle}
+        className={cn(contentCardVariants({ variant, className }))}
+        onClick={onClick}
+        role={onClick ? 'button' : undefined}
+        tabIndex={onClick ? 0 : undefined}
+        {...props}
+      >
+        <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
+          {/* Portrait image — tall crop */}
+          {item.imageUrl && (
+            <div className="aspect-[2/3] w-full overflow-hidden">
+              <img
+                src={item.imageUrl}
+                alt={item.title}
+                className="size-full object-cover transition-transform duration-300 group-hover/content-card:scale-105"
+              />
+            </div>
+          )}
+
+          {/* Content below image */}
+          <div className="flex flex-col gap-2 pt-6">
+            <h3 className="font-[family-name:var(--font-content)] text-xl font-semibold leading-tight tracking-[-0.6px] text-white">
+              {item.author.name}
+            </h3>
+            {item.excerpt && (
+              <p className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-normal leading-[18px] tracking-[-0.126px] text-[#ccc4c4]">
+                {item.excerpt}
+              </p>
+            )}
+            <div className="mt-1">
               <EngagementBar variant="compact" actions={engagementActions} />
             </div>
           </div>
@@ -149,7 +198,7 @@ function ContentCard({
       <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
         {/* Image — fills width, tall crop (~364px at 366 wide) */}
         {item.imageUrl && (
-          <div className="aspect-[366/364] w-full shrink-0 overflow-hidden">
+          <div className="aspect-[16/10] w-full shrink-0 overflow-hidden">
             <img
               src={item.imageUrl}
               alt={item.title}
@@ -165,7 +214,7 @@ function ContentCard({
             {/* Author accent + Title */}
             <div className="flex flex-col gap-3">
               <AuthorAccent name={item.author.name} />
-              <h3 className="line-clamp-2 font-sans text-base font-semibold leading-none tracking-[-0.48px] text-white">
+              <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-none tracking-[-0.48px] text-white">
                 {item.title}
               </h3>
             </div>

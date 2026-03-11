@@ -20,7 +20,7 @@ const author: ContentAuthor = {
   initials: 'ZL',
   avatarUrl: 'https://i.pravatar.cc/150?u=zach',
   verified: true,
-  tier: 'pro',
+  tier: 'Pro',
 };
 
 export const Default = meta.story({
@@ -57,7 +57,7 @@ export const AllVariants = meta.story({
       <AuthorLine author={author} showAvatar showHandle date="Mar 3" />
       <AuthorLine author={{ name: 'Ben Jacobs', initials: 'BJ', verified: true }} date="1d ago" />
       <AuthorLine
-        author={{ name: 'Guest Writer', initials: 'GW', tier: 'free' }}
+        author={{ name: 'Guest Writer', initials: 'GW', tier: 'Free' }}
         date="3d ago"
         readTime="8 min read"
       />

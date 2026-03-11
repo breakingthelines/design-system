@@ -4,7 +4,7 @@ export interface ContentAuthor {
   initials?: string;
   handle?: string;
   verified?: boolean;
-  tier?: 'free' | 'pro' | 'premium';
+  tier?: 'Free' | 'Pro' | 'Line Breaker';
 }
 
 export interface ContentStats {

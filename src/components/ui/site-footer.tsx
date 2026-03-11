@@ -81,7 +81,7 @@ function SiteFooter({
   links = defaultLinks,
   email = 'hello@breakingthelines.com',
   phone,
-  copyright = '© 2013–2026',
+  copyright = `© ${new Date().getFullYear()}`,
   logoHref = '/',
   logo,
   ...props
