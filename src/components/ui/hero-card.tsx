@@ -131,7 +131,7 @@ function HeroCard({
                   </span>
                 </div>
                 <div className="inline-flex items-center gap-2 overflow-hidden p-[5px] sm:gap-2.5">
-                  <Chats weight="regular" className="size-4 text-white sm:size-5" />
+                  <Chats weight="regular" className="size-3.5 text-white sm:size-4" />
                   <span className="text-xs font-semibold tracking-[-0.42px] text-white sm:text-sm">
                     {formatCount(item.stats.comments ?? 0)}
                   </span>
