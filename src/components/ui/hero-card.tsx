@@ -125,7 +125,7 @@ function HeroCard({
               {/* Engagement bar — like + comment */}
               <div className="flex items-center gap-3.5">
                 <div className="inline-flex items-center gap-[5px]">
-                  <Heart weight="fill" className="size-4 text-white sm:size-5" />
+                  <Heart weight="fill" className="size-3.5 text-white sm:size-4" />
                   <span className="text-xs font-semibold tracking-[-0.42px] text-white sm:text-sm">
                     {formatCount(item.stats.likes)}
                   </span>
