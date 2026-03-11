@@ -76,7 +76,7 @@ function HeroCard({
     >
       <Wrapper className="block relative" {...wrapperProps}>
         {/* ── Background image + gradient overlay ─── */}
-        <div className="relative aspect-[1144/480] w-full overflow-hidden bg-grey-300">
+        <div className="relative aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]">
           {item.imageUrl && (
             <img
               src={item.imageUrl}
@@ -95,12 +95,12 @@ function HeroCard({
         </div>
 
         {/* ── Content overlay ────────────────────── */}
-        <div className="absolute inset-y-0 left-8 flex w-[340px] flex-col items-start justify-center py-[10px]">
-          <div className="flex flex-col gap-8">
+        <div className="absolute inset-y-0 left-4 flex w-[280px] flex-col items-start justify-center py-2 sm:left-8 sm:w-[340px] sm:py-[10px]">
+          <div className="flex flex-col gap-4 sm:gap-8">
             {/* Text content block */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-2 sm:gap-4">
               {/* Title */}
-              <h2 className="max-w-[331px] font-display text-[28px] font-bold leading-none tracking-[-0.84px] text-white">
+              <h2 className="font-display text-lg font-bold leading-tight tracking-[-0.54px] text-white sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
                 {item.title}
               </h2>
 
@@ -115,9 +115,9 @@ function HeroCard({
                 </span>
               </div>
 
-              {/* Excerpt — Book Antiqua per Figma */}
+              {/* Excerpt — hidden on mobile to save space */}
               {item.excerpt && (
-                <p className="line-clamp-2 font-serif text-sm font-normal leading-[18px] text-[#ccc4c4]">
+                <p className="hidden line-clamp-2 font-serif text-sm font-normal leading-[18px] text-[#ccc4c4] sm:block">
                   {item.excerpt}
                 </p>
               )}
@@ -125,14 +125,14 @@ function HeroCard({
               {/* Engagement bar — like + comment */}
               <div className="flex items-center gap-3.5">
                 <div className="inline-flex items-center gap-[5px]">
-                  <Heart weight="fill" className="size-6 text-white" />
-                  <span className="text-sm font-semibold tracking-[-0.42px] text-white">
+                  <Heart weight="fill" className="size-5 text-white sm:size-6" />
+                  <span className="text-xs font-semibold tracking-[-0.42px] text-white sm:text-sm">
                     {formatCount(item.stats.likes)}
                   </span>
                 </div>
-                <div className="inline-flex items-center gap-2.5 overflow-hidden p-[5px]">
-                  <Chats weight="regular" className="size-3.5 text-white" />
-                  <span className="text-sm font-semibold tracking-[-0.42px] text-white">
+                <div className="inline-flex items-center gap-2 overflow-hidden p-[5px] sm:gap-2.5">
+                  <Chats weight="regular" className="size-3 text-white sm:size-3.5" />
+                  <span className="text-xs font-semibold tracking-[-0.42px] text-white sm:text-sm">
                     {formatCount(item.stats.comments ?? 0)}
                   </span>
                 </div>
@@ -140,7 +140,7 @@ function HeroCard({
             </div>
 
             {/* Progress bar — 6 segments, 4px height */}
-            <div className="flex w-[172px] gap-2.5">
+            <div className="flex w-[120px] gap-2 sm:w-[172px] sm:gap-2.5">
               {Array.from({ length: totalSlides }).map((_, i) => (
                 <button
                   key={i}

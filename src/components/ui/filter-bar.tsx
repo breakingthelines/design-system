@@ -41,12 +41,12 @@ function FilterBar({
   return (
     <div
       data-slot="filter-bar"
-      className={cn('flex items-center justify-between gap-4', className)}
+      className={cn('flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4', className)}
       {...props}
     >
-      {/* Left — label + filter chips */}
-      <div className="flex items-center gap-4">
-        <span className="font-sans text-xs font-normal leading-6 text-[#ccc4c4]">
+      {/* Left — label + filter chips, scrollable on mobile */}
+      <div className="flex min-w-0 items-center gap-3 overflow-x-auto sm:gap-4">
+        <span className="shrink-0 font-sans text-xs font-normal leading-6 text-[#ccc4c4]">
           {label}
         </span>
         <div className="flex items-center gap-2">
@@ -58,7 +58,7 @@ function FilterBar({
                 type="button"
                 onClick={() => onFilterChange?.(filter.value)}
                 className={cn(
-                  'inline-flex h-[34px] items-center gap-2 rounded-[24px] px-4 py-3',
+                  'inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[24px] px-4 py-3',
                   'font-[family-name:var(--font-content)] text-sm font-medium tracking-[-0.42px]',
                   'transition-colors',
                   isActive
@@ -78,7 +78,7 @@ function FilterBar({
         </div>
       </div>
 
-      {/* Right — search input */}
+      {/* Right — search input, full-width on mobile */}
       <div className="relative">
         <MagnifyingGlass
           weight="regular"
@@ -90,7 +90,7 @@ function FilterBar({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           className={cn(
-            'h-[34px] w-[300px] rounded-[2px] border border-grey-300 bg-grey-100 pl-9 pr-4',
+            'h-[34px] w-full rounded-[2px] border border-grey-300 bg-grey-100 pl-9 pr-4 sm:w-[300px]',
             'font-[family-name:var(--font-content)] text-xs font-normal text-white',
             'placeholder:text-[#807c7c]',
             'outline-none transition-colors focus:border-white/30'
