@@ -74,40 +74,45 @@ function FilterBar({
             {filters.map((filter) => {
               const isActive = activeFilters.includes(filter.value);
               return (
-                <div key={filter.value} className="relative flex items-center">
-                  <button
-                    type="button"
-                    onClick={() => onFilterChange?.(filter.value)}
-                    className={cn(
-                      'inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[24px] py-3',
-                      isActive ? 'pl-4 pr-2' : 'px-4',
-                      'font-[family-name:var(--font-content)] text-sm font-medium tracking-[-0.42px]',
-                      'transition-colors',
-                      isActive
-                        ? 'bg-white/20 text-white backdrop-blur-[15px]'
-                        : 'bg-white/10 text-[#ccc4c4] backdrop-blur-[15px] hover:bg-white/15'
-                    )}
-                  >
-                    {filter.icon && (
-                      <span className="flex size-4 items-center justify-center">
-                        {filter.icon}
-                      </span>
-                    )}
-                    {filter.label}
-                  </button>
+                <button
+                  key={filter.value}
+                  type="button"
+                  onClick={() => onFilterChange?.(filter.value)}
+                  className={cn(
+                    'inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[24px] px-4 py-3',
+                    'font-[family-name:var(--font-content)] text-sm font-medium tracking-[-0.42px]',
+                    'transition-colors',
+                    isActive
+                      ? 'bg-white/20 text-white backdrop-blur-[15px]'
+                      : 'bg-white/10 text-[#ccc4c4] backdrop-blur-[15px] hover:bg-white/15'
+                  )}
+                >
+                  {filter.icon && (
+                    <span className="flex size-4 items-center justify-center">
+                      {filter.icon}
+                    </span>
+                  )}
+                  {filter.label}
                   {isActive && (
-                    <button
-                      type="button"
+                    <span
+                      role="button"
+                      tabIndex={-1}
                       onClick={(e) => {
                         e.stopPropagation();
                         onFilterClear?.(filter.value);
                       }}
-                      className="ml-[-2px] inline-flex size-[34px] shrink-0 items-center justify-center rounded-r-[24px] bg-white/20 text-white/60 backdrop-blur-[15px] transition-colors hover:text-white"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.stopPropagation();
+                          onFilterClear?.(filter.value);
+                        }
+                      }}
+                      className="flex size-5 items-center justify-center rounded-full text-white/60 transition-colors hover:text-white"
                     >
                       <X weight="bold" size={10} />
-                    </button>
+                    </span>
                   )}
-                </div>
+                </button>
               );
             })}
           </div>
