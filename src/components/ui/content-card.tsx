@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
+import { useTilt } from '#/hooks/use-tilt';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
 import type { ContentItem } from '#/types/content';
 
@@ -81,6 +82,9 @@ function ContentCard({
   const Wrapper = href ? 'a' : 'div';
   const wrapperProps = href ? { href } : {};
 
+  // Mouse-tracking 3D tilt — gentler for list cards
+  const tilt = useTilt(isList ? 3 : 8);
+
   const engagementActions: EngagementAction[] = actions ?? [
     { type: 'like', count: item.stats.likes },
     { type: 'comment', count: item.stats.comments ?? 0 },
@@ -91,13 +95,15 @@ function ContentCard({
     return (
       <motion.article
         data-slot="content-card"
-        style={{ transformPerspective: 1000 }}
-        whileHover={motionTokens.presets.contentCard.hover}
+        style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
+        whileHover={{ y: -4, scale: 1.01 }}
         transition={motionTokens.spring.gentle}
         className={cn(contentCardVariants({ variant, className }))}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
+        onMouseMove={tilt.onMouseMove}
+        onMouseLeave={tilt.onMouseLeave}
         {...props}
       >
         <Wrapper
@@ -140,13 +146,15 @@ function ContentCard({
     return (
       <motion.article
         data-slot="content-card"
-        style={{ transformPerspective: 1000 }}
-        whileHover={motionTokens.presets.contentCard.hover}
+        style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
+        whileHover={{ y: -8, scale: 1.02 }}
         transition={motionTokens.spring.gentle}
         className={cn(contentCardVariants({ variant, className }))}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
+        onMouseMove={tilt.onMouseMove}
+        onMouseLeave={tilt.onMouseLeave}
         {...props}
       >
         <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
@@ -184,12 +192,15 @@ function ContentCard({
   return (
     <motion.article
       data-slot="content-card"
-      whileHover={motionTokens.presets.contentCard.hover}
+      style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
+      whileHover={{ y: -8, scale: 1.02 }}
       transition={motionTokens.spring.gentle}
       className={cn(contentCardVariants({ variant, className }))}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
+      onMouseMove={tilt.onMouseMove}
+      onMouseLeave={tilt.onMouseLeave}
       {...props}
     >
       <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>

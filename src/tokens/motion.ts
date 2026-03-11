@@ -71,13 +71,13 @@ export const motion = {
       exit: { opacity: 0, y: -4, scale: 0.98 },
     },
     contentCard: {
-      hover: { y: -8, rotateX: 1.5, rotateY: -1, scale: 1.02 },
+      hover: { y: -8, scale: 1.02 },
       tap: { scale: 0.98 },
       initial: { opacity: 0, y: 12 },
       animate: { opacity: 1, y: 0 },
     },
     heroCard: {
-      hover: { scale: 1.01, rotateX: 0.5, rotateY: -0.3 },
+      hover: { scale: 1.008 },
       imageHover: { scale: 1.05 },
       initial: { opacity: 0, y: 20 },
       animate: { opacity: 1, y: 0 },

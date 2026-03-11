@@ -6,6 +6,7 @@ import { Heart, Chats } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
+import { useTilt } from '#/hooks/use-tilt';
 import { formatCount } from '#/lib/format';
 import type { ContentItem } from '#/types/content';
 
@@ -22,6 +23,7 @@ import type { ContentItem } from '#/types/content';
  *  - Engagement: 24px icons, semibold 14px counts
  *  - Progress bar: 6 segments, 4px height
  *  - Shadow: 0 4px 48px rgba(0,0,0,0.25)
+ *  - Mouse-tracking 3D tilt on hover
  * ───────────────────────────────────────────────── */
 
 interface HeroCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
@@ -51,11 +53,14 @@ function HeroCard({
   const Wrapper = href ? 'a' : 'div';
   const wrapperProps = href ? { href } : {};
 
+  // Mouse-tracking 3D tilt — gentle for the large hero card
+  const tilt = useTilt(4);
+
   return (
     <motion.article
       data-slot="hero-card"
-      style={{ transformPerspective: 1200 }}
-      whileHover={motionTokens.presets.heroCard.hover}
+      style={{ transformPerspective: 1200, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
+      whileHover={{ scale: 1.008 }}
       transition={motionTokens.spring.gentle}
       className={cn(
         'group/hero-card relative w-full overflow-hidden shadow-[0_4px_48px_rgba(0,0,0,0.25)]',
@@ -65,6 +70,8 @@ function HeroCard({
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
+      onMouseMove={tilt.onMouseMove}
+      onMouseLeave={tilt.onMouseLeave}
       {...props}
     >
       <Wrapper className="block relative" {...wrapperProps}>
@@ -139,11 +146,12 @@ function HeroCard({
                   key={i}
                   type="button"
                   className={cn(
-                    'h-1 flex-1 rounded-full transition-colors',
-                    i === activeSlide ? 'bg-red-100' : 'bg-white/20'
+                    'h-1 flex-1 rounded-full transition-colors cursor-pointer',
+                    i === activeSlide ? 'bg-red-100' : 'bg-white/20 hover:bg-white/40'
                   )}
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     onSlideChange?.(i);
                   }}
                   aria-label={`Go to slide ${i + 1}`}

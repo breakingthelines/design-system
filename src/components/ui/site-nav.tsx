@@ -153,14 +153,16 @@ function SiteNav({
       <a href={logoHref} className="flex items-center">{logo ?? <BtlNavLogo />}</a>
 
       {/* Center: Pill tab bar (desktop/tablet) */}
-      <nav className="hidden sm:flex items-center rounded-full bg-grey-200 p-1">
+      <nav className="hidden sm:flex items-center rounded-full bg-white/[0.06] p-1 backdrop-blur-sm">
         {tabs.map((tab) => (
           <a
             key={tab.href}
             href={tab.href}
             className={cn(
               'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
-              tab.active ? 'bg-grey-300 text-white' : 'text-muted-foreground hover:text-white'
+              tab.active
+                ? 'bg-white/[0.12] text-white'
+                : 'text-white/50 hover:text-white/80'
             )}
           >
             {tab.label}
