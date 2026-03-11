@@ -54,6 +54,7 @@ function HeroCard({
   return (
     <motion.article
       data-slot="hero-card"
+      style={{ transformPerspective: 1200 }}
       whileHover={motionTokens.presets.heroCard.hover}
       transition={motionTokens.spring.gentle}
       className={cn(

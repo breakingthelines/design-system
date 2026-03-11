@@ -91,6 +91,7 @@ function ContentCard({
     return (
       <motion.article
         data-slot="content-card"
+        style={{ transformPerspective: 1000 }}
         whileHover={motionTokens.presets.contentCard.hover}
         transition={motionTokens.spring.gentle}
         className={cn(contentCardVariants({ variant, className }))}
@@ -139,6 +140,7 @@ function ContentCard({
     return (
       <motion.article
         data-slot="content-card"
+        style={{ transformPerspective: 1000 }}
         whileHover={motionTokens.presets.contentCard.hover}
         transition={motionTokens.spring.gentle}
         className={cn(contentCardVariants({ variant, className }))}
