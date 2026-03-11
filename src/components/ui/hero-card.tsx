@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Chats } from '@phosphor-icons/react';
+import { Heart, ArrowsClockwise } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
@@ -96,9 +96,12 @@ function HeroCard({
                 {item.title}
               </h2>
 
-              {/* Author accent bar */}
+              {/* Author accent bar — double red bars */}
               <div className="inline-flex items-center gap-1">
-                <span className="h-4 w-[5px] shrink-0 rounded-[1px] bg-red-100" />
+                <span className="flex gap-[2px]">
+                  <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
+                  <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
+                </span>
                 <span className="text-xs font-semibold leading-4 tracking-[-0.36px] text-white">
                   {item.author.name}
                 </span>
@@ -111,7 +114,7 @@ function HeroCard({
                 </p>
               )}
 
-              {/* Engagement bar — larger variant for hero */}
+              {/* Engagement bar — like + repost per Figma */}
               <div className="flex items-center gap-3.5">
                 <div className="inline-flex items-center gap-[5px]">
                   <Heart weight="fill" className="size-6 text-white" />
@@ -120,9 +123,9 @@ function HeroCard({
                   </span>
                 </div>
                 <div className="inline-flex items-center gap-2.5 overflow-hidden p-[5px]">
-                  <Chats weight="regular" className="size-3.5 text-white" />
+                  <ArrowsClockwise weight="regular" className="size-3.5 text-white" />
                   <span className="text-sm font-semibold tracking-[-0.42px] text-white">
-                    {formatCount(item.stats.comments)}
+                    {formatCount(item.stats.reposts ?? 0)}
                   </span>
                 </div>
               </div>

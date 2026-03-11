@@ -45,8 +45,8 @@ function FilterBar({
       {...props}
     >
       {/* Left — label + filter chips */}
-      <div className="flex items-center gap-3">
-        <span className="font-[family-name:var(--font-content)] text-sm font-medium tracking-[-0.42px] text-white">
+      <div className="flex items-center gap-4">
+        <span className="font-sans text-xs font-normal leading-6 text-[#ccc4c4]">
           {label}
         </span>
         <div className="flex items-center gap-2">
@@ -63,7 +63,7 @@ function FilterBar({
                   'transition-colors',
                   isActive
                     ? 'bg-white/20 text-white backdrop-blur-[15px]'
-                    : 'bg-white/10 text-white/80 backdrop-blur-[15px] hover:bg-white/15'
+                    : 'bg-white/10 text-[#ccc4c4] backdrop-blur-[15px] hover:bg-white/15'
                 )}
               >
                 {filter.icon && (
@@ -90,9 +90,9 @@ function FilterBar({
           value={searchValue}
           onChange={(e) => onSearchChange?.(e.target.value)}
           className={cn(
-            'h-[34px] w-[240px] rounded-[2px] border border-grey-300 bg-grey-100 pl-9 pr-4',
+            'h-[34px] w-[300px] rounded-[2px] border border-grey-300 bg-grey-100 pl-9 pr-4',
             'font-[family-name:var(--font-content)] text-xs font-normal text-white',
-            'placeholder:text-white/40',
+            'placeholder:text-[#807c7c]',
             'outline-none transition-colors focus:border-white/30'
           )}
         />

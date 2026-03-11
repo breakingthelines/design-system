@@ -18,7 +18,7 @@ const contentCardVariants = cva('group/content-card overflow-hidden text-white t
   variants: {
     variant: {
       grid: 'flex flex-col backdrop-blur-[20px]',
-      list: 'flex flex-col rounded-lg backdrop-blur-[20px] px-8 py-3',
+      list: 'flex flex-col backdrop-blur-[20px]',
       portrait: 'flex flex-col backdrop-blur-[20px]',
     },
   },
@@ -83,10 +83,7 @@ function ContentCard({
 
   const engagementActions: EngagementAction[] = actions ?? [
     { type: 'like', count: item.stats.likes },
-    { type: 'comment', count: item.stats.comments },
-    ...(item.stats.reposts !== undefined
-      ? [{ type: 'repost' as const, count: item.stats.reposts }]
-      : []),
+    { type: 'repost', count: item.stats.reposts ?? 0 },
   ];
 
   /* ── LIST variant ─────────────────────────────── */
@@ -97,10 +94,6 @@ function ContentCard({
         whileHover={motionTokens.presets.contentCard.hover}
         transition={motionTokens.spring.gentle}
         className={cn(contentCardVariants({ variant, className }))}
-        style={{
-          backgroundImage:
-            'linear-gradient(117deg, rgba(64,64,64,0.1) 6.36%, rgba(34,34,34,0.1) 99.92%)',
-        }}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
@@ -200,7 +193,7 @@ function ContentCard({
       <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
         {/* Image — fills width, tall crop (~364px at 366 wide) */}
         {item.imageUrl && (
-          <div className="aspect-[16/10] w-full shrink-0 overflow-hidden">
+          <div className="aspect-[328/364] w-full shrink-0 overflow-hidden">
             <img
               src={item.imageUrl}
               alt={item.title}
