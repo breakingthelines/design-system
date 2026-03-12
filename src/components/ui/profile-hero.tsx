@@ -64,18 +64,41 @@ function ProfileHero({
   return (
     <div
       data-slot="profile-hero"
-      className={cn('relative flex w-full flex-col gap-8', className)}
+      className={cn('relative mx-auto w-full max-w-[1144px] px-4', className)}
       {...props}
     >
-      {/* Banner */}
-      <div className="relative h-48 w-full overflow-hidden bg-grey-300 sm:h-56 lg:h-64">
-        {bannerUrl && <img src={bannerUrl} alt="" className="size-full object-cover" />}
+      {/* Banner with golden ambient glow */}
+      <div className="relative">
+        {/* Golden ambient glow — bleeds beneath the banner */}
+        <div
+          className="pointer-events-none absolute -inset-x-20 -bottom-24 top-1/3 -z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 70% 55% at 50% 70%, rgba(180, 130, 40, 0.30) 0%, rgba(160, 100, 20, 0.10) 45%, transparent 75%)',
+            filter: 'blur(70px)',
+          }}
+        />
+        {/* Tighter hot-edge glow along the bottom */}
+        <div
+          className="pointer-events-none absolute -inset-x-8 -bottom-12 top-1/2 -z-10"
+          style={{
+            background:
+              'radial-gradient(ellipse 80% 60% at 50% 85%, rgba(200, 150, 50, 0.25) 0%, transparent 60%)',
+            filter: 'blur(50px)',
+          }}
+        />
+
+        <div className="relative h-[180px] w-full overflow-hidden rounded-lg bg-grey-300 sm:h-[220px]">
+          {bannerUrl && (
+            <img src={bannerUrl} alt="" className="size-full object-cover" />
+          )}
+        </div>
       </div>
 
-      {/* Profile Content Container */}
-      <div className="relative px-4 sm:px-6 lg:px-8">
-        {/* Avatar - overlapping the banner */}
-        <div className="-mt-[calc(82px+2rem)] mb-6">
+      {/* Profile content — avatar overlaps banner bottom */}
+      <div className="relative">
+        {/* Avatar — overlaps the banner by half */}
+        <div className="-mt-[82px] mb-4">
           <Avatar size="xxl" borderColor="default">
             {avatarUrl && <AvatarImage src={avatarUrl} alt={name} />}
             <AvatarFallback>{initials ?? name.charAt(0)}</AvatarFallback>
@@ -83,39 +106,36 @@ function ProfileHero({
         </div>
 
         {/* Profile Main Content: info left, actions right */}
-        <div className="flex items-start justify-between">
-          {/* Profile Info Container */}
-          <div className="flex flex-col gap-6">
-            {/* Profile section: user info + bio + followers */}
-            <div className="flex flex-col gap-4">
-              {/* Profile Info: user identity + bio */}
-              <div className="flex flex-col gap-4">
-                {/* User Info: name + handle */}
-                <div className="flex flex-col gap-2">
-                  {/* User Name Container */}
-                  <div className="flex items-center gap-2">
-                    <h1 className="font-display text-[28px] font-bold leading-normal text-foreground">
-                      {name}
-                    </h1>
-                    {verified && <VerifiedBadge className="size-8" />}
-                  </div>
-                  {/* Handle */}
-                  {handle && (
-                    <p className="text-xs leading-6 text-foreground opacity-50">@{handle}</p>
-                  )}
+        <div className="flex items-start justify-between gap-4">
+          {/* Profile Info */}
+          <div className="flex flex-col gap-5">
+            {/* Name + handle + bio + followers */}
+            <div className="flex flex-col gap-3">
+              {/* Name + handle */}
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center gap-2">
+                  <h1 className="font-display text-[28px] font-bold leading-normal text-foreground">
+                    {name}
+                  </h1>
+                  {verified && <VerifiedBadge className="size-8" />}
                 </div>
-                {/* Bio */}
-                {bio && (
-                  <p className="max-w-[509px] font-serif text-sm leading-[18px] text-foreground">
-                    {bio}
-                  </p>
+                {handle && (
+                  <p className="text-xs leading-6 text-foreground opacity-50">@{handle}</p>
                 )}
               </div>
-              {/* Follower / Subscriber Container */}
+
+              {/* Bio */}
+              {bio && (
+                <p className="max-w-[509px] font-serif text-sm leading-[18px] text-foreground">
+                  {bio}
+                </p>
+              )}
+
+              {/* Follower / Subscriber counts */}
               {(followers !== undefined || subscribers !== undefined) && (
-                <div className="flex items-start gap-8 leading-6 text-foreground">
+                <div className="flex items-baseline gap-8 leading-6 text-foreground">
                   {followers !== undefined && (
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-baseline gap-2">
                       <span className="text-sm font-medium tracking-tight">
                         {formatCount(followers)}
                       </span>
@@ -123,7 +143,7 @@ function ProfileHero({
                     </div>
                   )}
                   {subscribers !== undefined && (
-                    <div className="flex items-start gap-2">
+                    <div className="flex items-baseline gap-2">
                       <span className="text-sm font-medium tracking-tight">
                         {formatCount(subscribers)}
                       </span>
@@ -133,9 +153,10 @@ function ProfileHero({
                 </div>
               )}
             </div>
-            {/* Social Media Links */}
+
+            {/* Social links */}
             {socialLinks && socialLinks.length > 0 && (
-              <div className="flex items-start gap-5">
+              <div className="flex items-center gap-5">
                 {socialLinks.map((link) => (
                   <a
                     key={link.url}
