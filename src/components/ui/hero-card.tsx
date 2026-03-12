@@ -8,6 +8,7 @@ import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
 import { useTilt } from '#/hooks/use-tilt';
 import { formatCount } from '#/lib/format';
+import { useLinkComponent } from '#/components/ui/link-context';
 import type { ContentItem } from '#/types/content';
 
 /* ─────────────────────────────────────────────────
@@ -50,7 +51,8 @@ function HeroCard({
   onSlideChange,
   ...props
 }: HeroCardProps) {
-  const Wrapper = href ? 'a' : 'div';
+  const LinkComponent = useLinkComponent();
+  const Wrapper = href ? LinkComponent : 'div';
   const wrapperProps = href ? { href } : {};
 
   // Mouse-tracking 3D tilt — gentle for the large hero card

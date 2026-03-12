@@ -64,6 +64,14 @@ export {
   type ToastVariant,
 } from './components/ui/toast/index';
 
+// Link context (router-agnostic navigation)
+export {
+  LinkProvider,
+  useLinkComponent,
+  type LinkComponent,
+  type LinkProviderProps,
+} from './components/ui/link-context';
+
 // Types
 export * from './types/content';
 

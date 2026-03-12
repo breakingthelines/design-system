@@ -8,6 +8,7 @@ import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
 import { useTilt } from '#/hooks/use-tilt';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
+import { useLinkComponent } from '#/components/ui/link-context';
 import type { ContentItem } from '#/types/content';
 
 /* ─────────────────────────────────────────────────
@@ -78,7 +79,8 @@ function ContentCard({
 }: ContentCardProps) {
   const isList = variant === 'list';
   const isPortrait = variant === 'portrait';
-  const Wrapper = href ? 'a' : 'div';
+  const LinkComponent = useLinkComponent();
+  const Wrapper = href ? LinkComponent : 'div';
   const wrapperProps = href ? { href } : {};
 
   // Mouse-tracking 3D tilt — gentler for list cards

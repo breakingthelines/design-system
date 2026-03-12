@@ -4,6 +4,7 @@ import * as React from 'react';
 import { List } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import { useLinkComponent } from '#/components/ui/link-context';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { IconButton } from '#/components/ui/icon-button';
@@ -140,6 +141,8 @@ function SiteNav({
   logo,
   ...props
 }: SiteNavProps) {
+  const LinkComponent = useLinkComponent();
+
   return (
     <header
       data-slot="site-nav"
@@ -147,14 +150,14 @@ function SiteNav({
       {...props}
     >
       {/* Left: Logo */}
-      <a href={logoHref} className="flex items-center">
+      <LinkComponent href={logoHref} className="flex items-center">
         {logo ?? <BtlNavLogo />}
-      </a>
+      </LinkComponent>
 
       {/* Center: Pill tab bar (desktop/tablet) */}
       <nav className="hidden sm:flex items-center rounded-full p-1">
         {tabs.map((tab) => (
-          <a
+          <LinkComponent
             key={tab.href}
             href={tab.href}
             className={cn(
@@ -163,7 +166,7 @@ function SiteNav({
             )}
           >
             {tab.label}
-          </a>
+          </LinkComponent>
         ))}
       </nav>
 
@@ -226,7 +229,7 @@ function SiteNav({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8}>
               {tabs.map((tab) => (
-                <DropdownMenuItem key={tab.href} render={<a href={tab.href} />}>
+                <DropdownMenuItem key={tab.href} render={<LinkComponent href={tab.href} />}>
                   {tab.label}
                 </DropdownMenuItem>
               ))}

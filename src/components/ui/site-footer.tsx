@@ -1,6 +1,9 @@
+'use client';
+
 import * as React from 'react';
 
 import { cn } from '#/lib/utils';
+import { useLinkComponent } from '#/components/ui/link-context';
 
 interface FooterLink {
   label: string;
@@ -86,6 +89,8 @@ function SiteFooter({
   logo,
   ...props
 }: SiteFooterProps) {
+  const LinkComponent = useLinkComponent();
+
   return (
     <footer
       data-slot="site-footer"
@@ -98,16 +103,16 @@ function SiteFooter({
       <div className="flex flex-col gap-24 lg:gap-[164px]">
         {/* Top row: logo + nav */}
         <div className="flex flex-col items-start gap-8 sm:flex-row sm:items-center sm:justify-between">
-          <a href={logoHref}>{logo ?? <BtlLogo />}</a>
+          <LinkComponent href={logoHref}>{logo ?? <BtlLogo />}</LinkComponent>
           <nav className="flex flex-wrap gap-8 lg:gap-12">
             {links.map((link) => (
-              <a
+              <LinkComponent
                 key={link.href}
                 href={link.href}
                 className="cursor-pointer text-xs tracking-[0.1em] text-muted-text transition-colors hover:text-white"
               >
                 {link.label}
-              </a>
+              </LinkComponent>
             ))}
           </nav>
         </div>

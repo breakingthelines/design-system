@@ -1,7 +1,10 @@
+'use client';
+
 import * as React from 'react';
 
 import { cn } from '#/lib/utils';
 import { Button } from '#/components/ui/button';
+import { useLinkComponent } from '#/components/ui/link-context';
 
 interface SectionHeaderProps extends React.ComponentProps<'div'> {
   /** Section title text, rendered uppercase */
@@ -22,6 +25,8 @@ function SectionHeader({
   onMoreClick,
   ...props
 }: SectionHeaderProps) {
+  const LinkComponent = useLinkComponent();
+
   return (
     <div
       data-slot="section-header"
@@ -38,7 +43,7 @@ function SectionHeader({
         <Button
           variant="outline"
           size="default"
-          render={moreHref ? <a href={moreHref} /> : undefined}
+          render={moreHref ? <LinkComponent href={moreHref} /> : undefined}
           onClick={onMoreClick}
         >
           {moreLabel}
