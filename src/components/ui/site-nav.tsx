@@ -17,7 +17,8 @@ import {
 
 export interface NavTab {
   label: string;
-  href: string;
+  /** Link target. Optional when the tab has children (acts as dropdown trigger only). */
+  href?: string;
   active?: boolean;
   /** Sub-items rendered as a hover dropdown on desktop, inline on mobile */
   children?: {
@@ -165,7 +166,7 @@ function SiteNav({
       <nav className="hidden sm:flex items-center rounded-full p-1">
         {tabs.map((tab) =>
           tab.children ? (
-            <div key={tab.href} className="group/sub relative">
+            <div key={tab.label} className="group/sub relative">
               <button
                 type="button"
                 className={cn(
@@ -209,8 +210,8 @@ function SiteNav({
             </div>
           ) : (
             <LinkComponent
-              key={tab.href}
-              href={tab.href}
+              key={tab.href ?? tab.label}
+              href={tab.href ?? '#'}
               className={cn(
                 'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
                 tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
@@ -282,7 +283,7 @@ function SiteNav({
             <DropdownMenuContent align="end" sideOffset={8}>
               {tabs.map((tab) =>
                 tab.children ? (
-                  <React.Fragment key={tab.href}>
+                  <React.Fragment key={tab.label}>
                     <div className="px-2 py-1.5 text-[11px] uppercase tracking-[-0.33px] text-white/40">
                       {tab.label}
                     </div>
@@ -303,7 +304,7 @@ function SiteNav({
                     ))}
                   </React.Fragment>
                 ) : (
-                  <DropdownMenuItem key={tab.href} render={<LinkComponent href={tab.href} />}>
+                  <DropdownMenuItem key={tab.href ?? tab.label} render={<LinkComponent href={tab.href ?? '#'} />}>
                     {tab.label}
                   </DropdownMenuItem>
                 )
