@@ -16,6 +16,8 @@ import type { ThoughtItem } from '#/types/content';
 interface PanelThought extends ThoughtItem {
   /** If set, the comment is pinned and shows "Pinned by {name}" */
   pinnedBy?: string;
+  /** True when the thought author is the article/content author (gets pill treatment) */
+  isOriginalAuthor?: boolean;
 }
 
 interface ThoughtsPanelProps {
@@ -164,32 +166,34 @@ function ThoughtsPanel({
                   type="button"
                   onClick={onClose}
                   className="flex size-8 cursor-pointer items-center justify-center text-white/60 transition-colors hover:text-white"
-                  aria-label="Close comments"
+                  aria-label="Close thoughts"
                 >
                   <X size={20} weight="bold" />
                 </button>
               </div>
 
-              {/* Composer — only shown when user is authenticated */}
+              {/* Composer — avatar + minimal input line */}
               {user && (
-                <div className="mt-8 flex items-center gap-3 border-b border-grey-500/50 pb-4">
+                <div className="mt-6 flex items-center gap-6">
                   <Avatar className="size-10 shrink-0">
                     {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt="You" />}
                     <AvatarFallback>{user.initials ?? '?'}</AvatarFallback>
                   </Avatar>
-                  <input
-                    type="text"
-                    value={composerText}
-                    onChange={(e) => setComposerText(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Add a thought..."
-                    className="flex-1 bg-transparent font-content text-sm text-white placeholder:text-[#807c7c] focus:outline-none"
-                  />
+                  <div className="flex-1 border-b border-[#807c7c]/50 pb-2">
+                    <input
+                      type="text"
+                      value={composerText}
+                      onChange={(e) => setComposerText(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Add a thought..."
+                      className="w-full bg-transparent font-body text-[10px] font-medium leading-6 text-white placeholder:text-[#807c7c] focus:outline-none"
+                    />
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* ── Comments list ── */}
+            {/* ── Thoughts list ── */}
             <div className="flex-1 overflow-y-auto px-8 pt-10 pb-[140px] sm:px-[70px] sm:pt-11">
               {isLoading ? (
                 <div className="flex items-center justify-center py-20">
@@ -228,7 +232,11 @@ function ThoughtsPanel({
 }
 
 /* ────────────────────────────────────────────────────────────
- * CommentItem — individual comment inside the panel
+ * CommentItem — individual thought inside the panel
+ *
+ * Two author treatments:
+ *   - isOriginalAuthor → grey pill (bg-[#807c7c]), Inter Regular 12px, verified badge
+ *   - regular commenter → no pill, Inter Semi Bold 14px, no badge
  * ──────────────────────────────────────────────────────────── */
 
 function CommentItem({
@@ -242,6 +250,8 @@ function CommentItem({
   onUnlike?: (id: string) => void;
   onReply?: (id: string) => void;
 }) {
+  const isOP = thought.isOriginalAuthor;
+
   return (
     <motion.div className="flex gap-3" variants={itemVariants}>
       {/* Avatar */}
@@ -253,64 +263,76 @@ function CommentItem({
       </Avatar>
 
       {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col gap-3">
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
         {/* Pinned indicator */}
         {thought.pinnedBy && (
           <div className="flex items-center gap-1">
             <PushPin size={14} className="text-[#807c7c]" />
-            <span className="font-body text-[10px] font-medium text-[#807c7c]">
+            <span className="font-body text-[10px] font-medium leading-6 text-[#807c7c]">
               Pinned by {thought.pinnedBy}
             </span>
           </div>
         )}
 
-        {/* Author + timestamp */}
-        <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c]/20 px-2 py-0.5">
-            <span className="font-content text-sm font-semibold text-white">
-              {thought.author.name}
-            </span>
-            {thought.author.verified && (
-              <span className="[&_g>rect]:!fill-black [&_g>path]:!fill-white">
-                <VerifiedBadge size="sm" />
+        {/* Author + timestamp — two treatments */}
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
+            {isOP ? (
+              /* Original author: grey pill + 12px regular + verified badge */
+              <span className="inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c] px-2 py-1">
+                <span className="font-content text-xs font-normal tracking-[-0.36px] text-white">
+                  {thought.author.name}
+                </span>
+                {thought.author.verified && <VerifiedBadge size="sm" />}
+              </span>
+            ) : (
+              /* Regular commenter: no pill, 14px semibold, no badge */
+              <span className="py-[3.5px] font-content text-sm font-semibold tracking-[-0.42px] text-white">
+                {thought.author.name}
               </span>
             )}
-          </span>
-          {thought.createdAt && (
-            <span className="font-content text-xs text-[#807c7c]">{thought.createdAt}</span>
-          )}
-        </div>
+            {thought.createdAt && (
+              <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
+                {thought.createdAt}
+              </span>
+            )}
+          </div>
 
-        {/* Body */}
-        <p className="font-content text-sm leading-[18px] tracking-[-0.126px] text-white">
-          {thought.body}
-        </p>
+          {/* Body */}
+          <p className="font-content text-sm font-normal leading-[18px] tracking-[-0.126px] text-white">
+            {thought.body}
+          </p>
+        </div>
 
         {/* Actions: Reply + ThumbsUp + count + ThumbsDown */}
         <div className="flex items-center gap-4">
           <button
             type="button"
             onClick={() => onReply?.(thought.id)}
-            className="cursor-pointer font-content text-xs font-medium text-white transition-colors hover:text-red-100"
+            className="cursor-pointer font-content text-xs font-normal leading-[18px] tracking-[-0.36px] text-white transition-colors hover:text-red-100"
           >
             Reply
           </button>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id)
-              }
-              className={cn(
-                'cursor-pointer transition-colors',
-                thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white',
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id)
+                }
+                className={cn(
+                  'cursor-pointer transition-colors',
+                  thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white',
+                )}
+              >
+                <ThumbsUp size={20} weight={thought.liked ? 'fill' : 'regular'} />
+              </button>
+              {(thought.stats.likes ?? 0) > 0 && (
+                <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
+                  {thought.stats.likes}
+                </span>
               )}
-            >
-              <ThumbsUp size={20} weight={thought.liked ? 'fill' : 'regular'} />
-            </button>
-            {(thought.stats.likes ?? 0) > 0 && (
-              <span className="font-content text-xs text-[#807c7c]">{thought.stats.likes}</span>
-            )}
+            </div>
             <button
               type="button"
               className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
