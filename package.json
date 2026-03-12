@@ -1,6 +1,6 @@
 {
   "name": "@breakingthelines/design-system",
-  "version": "0.1.30",
+  "version": "0.1.31",
   "repository": {
     "type": "git",
     "url": "https://github.com/breakingthelines/design-system.git"
@@ -60,11 +60,15 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
+    "@lexical/react": "^0.39.0",
+    "@lexical/selection": "^0.39.0",
+    "@lexical/text": "^0.39.0",
     "@phosphor-icons/react": "^2.1.10",
     "@tailwindcss/vite": "^4.1.17",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
+    "lexical": "^0.39.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "shadcn": "^3.6.2",

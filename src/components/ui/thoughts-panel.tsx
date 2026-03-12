@@ -7,6 +7,7 @@ import { X, PushPin, ThumbsUp, ThumbsDown } from '@phosphor-icons/react';
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
+import { MiniEditor, type MiniEditorHandle } from '#/components/ui/mini-editor/index';
 import type { ThoughtItem } from '#/types/content';
 
 /* ────────────────────────────────────────────────────────────
@@ -94,20 +95,11 @@ function ThoughtsPanel({
   isLoading = false,
   className,
 }: ThoughtsPanelProps) {
-  const [composerText, setComposerText] = React.useState('');
+  const composerRef = React.useRef<MiniEditorHandle>(null);
 
-  function handleSubmit() {
-    const trimmed = composerText.trim();
-    if (!trimmed) return;
-    onSubmit?.(trimmed);
-    setComposerText('');
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
+  function handleSubmit(text: string) {
+    onSubmit?.(text);
+    composerRef.current?.clear();
   }
 
   // Close on Escape
@@ -180,13 +172,12 @@ function ThoughtsPanel({
                     <AvatarFallback>{user.initials ?? '?'}</AvatarFallback>
                   </Avatar>
                   <div className="flex-1 border-b border-[#807c7c]/50 pb-2">
-                    <input
-                      type="text"
-                      value={composerText}
-                      onChange={(e) => setComposerText(e.target.value)}
-                      onKeyDown={handleKeyDown}
+                    <MiniEditor
                       placeholder="Add a thought..."
-                      className="w-full bg-transparent font-body text-[10px] font-medium leading-6 text-white placeholder:text-[#807c7c] focus:outline-none"
+                      submitOn="enter"
+                      editorRef={composerRef}
+                      onSubmit={handleSubmit}
+                      className="font-body text-[10px] font-medium leading-6 text-white placeholder:text-[#807c7c]"
                     />
                   </div>
                 </div>

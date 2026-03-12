@@ -6,6 +6,7 @@ import { Image, Gif, SoccerBall } from '@phosphor-icons/react';
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
+import { MiniEditor, type MiniEditorHandle } from '#/components/ui/mini-editor/index';
 
 const MAX_CHARS = 500;
 
@@ -40,24 +41,27 @@ function ThoughtComposer({
   disabled = false,
   ...props
 }: ThoughtComposerProps) {
+  const editorRef = React.useRef<MiniEditorHandle>(null);
   const [expanded, setExpanded] = React.useState(false);
-  const [text, setText] = React.useState('');
-  const remaining = MAX_CHARS - text.length;
-  const isOverLimit = remaining < 0;
-  const canSubmit = text.trim().length > 0 && !isOverLimit && !disabled;
+  const [remaining, setRemaining] = React.useState(MAX_CHARS);
+  const [hasText, setHasText] = React.useState(false);
 
-  function handleSubmit() {
+  const isOverLimit = remaining < 0;
+  const canSubmit = hasText && !isOverLimit && !disabled;
+
+  function handleSubmit(text: string) {
     if (!canSubmit) return;
-    onSubmit?.(text.trim());
-    setText('');
+    onSubmit?.(text);
+    editorRef.current?.clear();
+    setHasText(false);
     setExpanded(false);
   }
 
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      handleSubmit();
-    }
+  function handleExpand() {
+    if (disabled || expanded) return;
+    setExpanded(true);
+    // Focus the MiniEditor after it mounts
+    requestAnimationFrame(() => editorRef.current?.focus());
   }
 
   return (
@@ -73,7 +77,7 @@ function ThoughtComposer({
       {/* Prompt row — always visible */}
       <div
         className="flex items-center gap-2 cursor-text"
-        onClick={() => !disabled && !expanded && setExpanded(true)}
+        onClick={handleExpand}
       >
         <Avatar size="default" className="shrink-0">
           {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
@@ -81,15 +85,17 @@ function ThoughtComposer({
         </Avatar>
 
         {expanded ? (
-          <textarea
-            className="min-h-[60px] w-full resize-none bg-transparent text-sm font-medium leading-6 tracking-[-0.42px] text-foreground placeholder:text-muted-foreground focus:outline-none field-sizing-content"
+          <MiniEditor
             placeholder={placeholder}
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            onKeyDown={handleKeyDown}
+            submitOn="mod-enter"
+            maxLength={MAX_CHARS}
+            multiline
             disabled={disabled}
-            rows={1}
-            autoFocus
+            editorRef={editorRef}
+            onSubmit={handleSubmit}
+            onChange={(text) => setHasText(text.length > 0)}
+            onRemainingChange={setRemaining}
+            className="text-sm font-medium leading-6 tracking-[-0.42px] text-foreground placeholder:text-muted-foreground"
           />
         ) : (
           <span className="text-sm font-medium leading-6 tracking-[-0.42px] text-muted-foreground select-none">
@@ -138,7 +144,7 @@ function ThoughtComposer({
 
         {expanded && (
           <div className="flex items-center gap-3">
-            {text.length > 0 && (
+            {hasText && (
               <span
                 className={cn(
                   'text-xs tabular-nums',
@@ -152,7 +158,10 @@ function ThoughtComposer({
                 {remaining}
               </span>
             )}
-            <Button size="xs" disabled={!canSubmit} onClick={handleSubmit}>
+            <Button size="xs" disabled={!canSubmit} onClick={() => {
+              const text = editorRef.current?.getText();
+              if (text) handleSubmit(text);
+            }}>
               Post
             </Button>
           </div>
