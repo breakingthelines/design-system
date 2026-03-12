@@ -41,6 +41,8 @@ interface ContentCardProps extends Omit<React.ComponentProps<'article'>, 'childr
   onClick?: () => void;
   /** Link href (alternative to onClick) */
   href?: string;
+  /** CSS view-transition-name for the image container (shared element transitions) */
+  viewTransitionName?: string;
 }
 
 /* ─────────────────────────────────────────────────
@@ -75,6 +77,7 @@ function ContentCard({
   actions,
   onClick,
   href,
+  viewTransitionName,
   ...props
 }: ContentCardProps) {
   const isList = variant === 'list';
@@ -82,6 +85,7 @@ function ContentCard({
   const LinkComponent = useLinkComponent();
   const Wrapper = href ? LinkComponent : 'div';
   const wrapperProps = href ? { href } : {};
+  const vtStyle = viewTransitionName ? { viewTransitionName } : undefined;
 
   // Mouse-tracking 3D tilt — gentler for list cards
   const tilt = useTilt(isList ? 3 : 8);
@@ -113,7 +117,7 @@ function ContentCard({
         >
           {/* Thumbnail — 108×86 */}
           {item.imageUrl && (
-            <div className="h-[86px] w-[108px] shrink-0 overflow-hidden">
+            <div className="h-[86px] w-[108px] shrink-0 overflow-hidden" style={vtStyle}>
               <img
                 src={item.imageUrl}
                 alt={item.title}
@@ -161,7 +165,7 @@ function ContentCard({
         <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
           {/* Portrait image — tall crop */}
           {item.imageUrl && (
-            <div className="aspect-[2/3] w-full overflow-hidden">
+            <div className="aspect-[2/3] w-full overflow-hidden" style={vtStyle}>
               <img
                 src={item.imageUrl}
                 alt={item.title}
@@ -207,7 +211,7 @@ function ContentCard({
       <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
         {/* Image — fills width, tall crop (~364px at 366 wide) */}
         {item.imageUrl && (
-          <div className="aspect-[328/364] w-full shrink-0 overflow-hidden">
+          <div className="aspect-[328/364] w-full shrink-0 overflow-hidden" style={vtStyle}>
             <img
               src={item.imageUrl}
               alt={item.title}

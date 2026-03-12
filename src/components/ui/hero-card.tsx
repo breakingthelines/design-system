@@ -39,6 +39,8 @@ interface HeroCardProps extends Omit<React.ComponentProps<'article'>, 'children'
   href?: string;
   /** Slide change handler */
   onSlideChange?: (index: number) => void;
+  /** CSS view-transition-name for the image container (shared element transitions) */
+  viewTransitionName?: string;
 }
 
 function HeroCard({
@@ -49,6 +51,7 @@ function HeroCard({
   onClick,
   href,
   onSlideChange,
+  viewTransitionName,
   ...props
 }: HeroCardProps) {
   const LinkComponent = useLinkComponent();
@@ -78,7 +81,10 @@ function HeroCard({
     >
       <Wrapper className="block relative" {...wrapperProps}>
         {/* ── Background image + gradient overlay ─── */}
-        <div className="relative aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]">
+        <div
+          className="relative aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
+          style={viewTransitionName ? { viewTransitionName } : undefined}
+        >
           {item.imageUrl && (
             <img src={item.imageUrl} alt={item.title} className="size-full object-cover" />
           )}
