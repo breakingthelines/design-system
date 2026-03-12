@@ -184,15 +184,16 @@ function HeroCard({
               </div>
             </div>
 
-            {/* Progress bar — 6 segments, 4px height */}
+            {/* Progress bar — 6 segments, 4px visual height, generous hit area */}
             <div className="flex w-[120px] gap-2 sm:w-[172px] sm:gap-2.5">
               {Array.from({ length: totalSlides }).map((_, i) => (
                 <button
                   key={i}
                   type="button"
                   className={cn(
-                    'h-1 flex-1 rounded-full transition-colors cursor-pointer relative z-10',
-                    i === activeSlide ? 'bg-red-100' : 'bg-white/20 hover:bg-white/40'
+                    'group/pill relative z-10 flex-1 cursor-pointer py-3',
+                    'before:block before:h-1 before:w-full before:rounded-full before:transition-colors',
+                    i === activeSlide ? 'before:bg-red-100' : 'before:bg-white/20 hover:before:bg-white/40'
                   )}
                   onClick={(e) => {
                     e.stopPropagation();

@@ -75,7 +75,7 @@ function FilterBar({
                   type="button"
                   onClick={() => onFilterChange?.(filter.value)}
                   className={cn(
-                    'inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[24px] px-4 py-3',
+                    'inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[24px] px-4 py-3 cursor-pointer',
                     'font-[family-name:var(--font-content)] text-sm font-medium tracking-[-0.42px]',
                     'transition-colors',
                     isActive
