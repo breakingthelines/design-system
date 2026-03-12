@@ -98,6 +98,7 @@ function ThoughtsPanel({
   const composerRef = React.useRef<MiniEditorHandle>(null);
 
   function handleSubmit(text: string) {
+    if (!user) return;
     onSubmit?.(text);
     composerRef.current?.clear();
   }
@@ -165,23 +166,22 @@ function ThoughtsPanel({
               </div>
 
               {/* Composer — avatar + minimal input line */}
-              {user && (
-                <div className="mt-6 flex items-center gap-6">
-                  <Avatar className="size-10 shrink-0">
-                    {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt="You" />}
-                    <AvatarFallback>{user.initials ?? '?'}</AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 border-b border-[#807c7c]/50 pb-2">
-                    <MiniEditor
-                      placeholder="Add a thought..."
-                      submitOn="enter"
-                      editorRef={composerRef}
-                      onSubmit={handleSubmit}
-                      className="font-body text-[10px] font-medium leading-6 text-white placeholder:text-[#807c7c]"
-                    />
-                  </div>
+              <div className="mt-6 flex items-center gap-6">
+                <Avatar className="size-10 shrink-0">
+                  {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt="You" />}
+                  <AvatarFallback>{user?.initials ?? '?'}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 border-b border-[#807c7c]/50 pb-2">
+                  <MiniEditor
+                    placeholder={user ? 'Add a thought...' : 'Log in to share your thoughts...'}
+                    submitOn="enter"
+                    editorRef={composerRef}
+                    onSubmit={handleSubmit}
+                    disabled={!user}
+                    className="font-body text-[10px] font-medium leading-6 text-white placeholder:text-[#807c7c]"
+                  />
                 </div>
-              )}
+              </div>
             </div>
 
             {/* ── Thoughts list ── */}
