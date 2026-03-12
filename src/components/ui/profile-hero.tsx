@@ -113,15 +113,15 @@ function ProfileHero({
       {/* Profile content — avatar overlaps banner bottom */}
       <div className="relative">
         {/* Avatar — overlaps the banner by half */}
-        <div className="-mt-[82px] mb-4">
-          <Avatar size="xxl" borderColor="default">
+        <div className="-mt-12 mb-4 sm:-mt-[82px]">
+          <Avatar size="xxl" borderColor="default" className="!size-[100px] sm:!size-[164px]">
             {avatarUrl && <AvatarImage src={avatarUrl} alt={name} />}
             <AvatarFallback>{initials ?? name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
 
-        {/* Profile Main Content: info left, actions right */}
-        <div className="flex items-start justify-between gap-4">
+        {/* Profile Main Content: stacked on mobile, side-by-side on desktop */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           {/* Profile Info */}
           <div className="flex flex-col gap-5">
             {/* Name + handle + bio + followers */}
@@ -129,10 +129,10 @@ function ProfileHero({
               {/* Name + handle */}
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-2">
-                  <h1 className="font-display text-[28px] font-bold leading-normal text-foreground">
+                  <h1 className="font-display text-xl font-bold leading-normal text-foreground sm:text-[28px]">
                     {name}
                   </h1>
-                  {verified && <VerifiedBadge className="size-8" />}
+                  {verified && <VerifiedBadge className="size-6 sm:size-8" />}
                 </div>
                 {handle && (
                   <p className="text-xs leading-6 text-foreground opacity-50">@{handle}</p>
@@ -194,14 +194,14 @@ function ProfileHero({
 
           {/* Action Buttons */}
           {(onFollow || onSubscribe) && (
-            <div className="flex shrink-0 items-start gap-4">
+            <div className="flex shrink-0 items-start gap-3">
               {onFollow && (
-                <Button variant="outline" size="lg" onClick={onFollow} className="w-[130px]">
+                <Button variant="outline" size="lg" onClick={onFollow} className="flex-1 sm:w-[130px] sm:flex-none">
                   {isFollowing ? 'Following' : 'Follow'}
                 </Button>
               )}
               {onSubscribe && (
-                <Button size="lg" onClick={onSubscribe} className="w-[130px]">
+                <Button size="lg" onClick={onSubscribe} className="flex-1 sm:w-[130px] sm:flex-none">
                   Subscribe
                 </Button>
               )}
