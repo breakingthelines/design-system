@@ -19,6 +19,13 @@ export interface NavTab {
   label: string;
   href: string;
   active?: boolean;
+  /** Sub-items rendered as a hover dropdown on desktop, inline on mobile */
+  children?: {
+    label: string;
+    href: string;
+    /** Opens in new tab (for external links like Zine) */
+    external?: boolean;
+  }[];
 }
 
 interface SiteNavProps extends React.ComponentProps<'header'> {
@@ -156,18 +163,63 @@ function SiteNav({
 
       {/* Center: Pill tab bar (desktop/tablet) */}
       <nav className="hidden sm:flex items-center rounded-full p-1">
-        {tabs.map((tab) => (
-          <LinkComponent
-            key={tab.href}
-            href={tab.href}
-            className={cn(
-              'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
-              tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
-            )}
-          >
-            {tab.label}
-          </LinkComponent>
-        ))}
+        {tabs.map((tab) =>
+          tab.children ? (
+            <div key={tab.href} className="group/sub relative">
+              <button
+                type="button"
+                className={cn(
+                  'cursor-pointer rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
+                  tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
+                )}
+                aria-haspopup="true"
+              >
+                {tab.label}
+              </button>
+              {/* Dropdown — pt-2 creates an invisible hover bridge between trigger and panel */}
+              <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
+                <div className="min-w-[160px] overflow-hidden rounded-[2px] border border-grey-300 bg-[#202020] backdrop-blur-[15px]">
+                  {tab.children.map((child) => {
+                    const isExternal = child.external;
+                    if (isExternal) {
+                      return (
+                        <a
+                          key={child.href}
+                          href={child.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block border-b border-grey-300 px-4 py-3 text-[12px] uppercase tracking-[-0.36px] text-white transition-colors last:border-b-0 hover:bg-white/[0.05] hover:text-red-100"
+                        >
+                          {child.label}
+                        </a>
+                      );
+                    }
+                    return (
+                      <LinkComponent
+                        key={child.href}
+                        href={child.href}
+                        className="block border-b border-grey-300 px-4 py-3 text-[12px] uppercase tracking-[-0.36px] text-white transition-colors last:border-b-0 hover:bg-white/[0.05] hover:text-red-100"
+                      >
+                        {child.label}
+                      </LinkComponent>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <LinkComponent
+              key={tab.href}
+              href={tab.href}
+              className={cn(
+                'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
+                tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
+              )}
+            >
+              {tab.label}
+            </LinkComponent>
+          )
+        )}
       </nav>
 
       {/* Right: Actions — gap-8 (32px) between icon group and avatar/login per Figma */}
@@ -228,11 +280,34 @@ function SiteNav({
               <List weight="bold" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8}>
-              {tabs.map((tab) => (
-                <DropdownMenuItem key={tab.href} render={<LinkComponent href={tab.href} />}>
-                  {tab.label}
-                </DropdownMenuItem>
-              ))}
+              {tabs.map((tab) =>
+                tab.children ? (
+                  <React.Fragment key={tab.href}>
+                    <div className="px-2 py-1.5 text-[11px] uppercase tracking-[-0.33px] text-white/40">
+                      {tab.label}
+                    </div>
+                    {tab.children.map((child) => (
+                      <DropdownMenuItem
+                        key={child.href}
+                        render={
+                          child.external ? (
+                            <a href={child.href} target="_blank" rel="noopener noreferrer" />
+                          ) : (
+                            <LinkComponent href={child.href} />
+                          )
+                        }
+                        className="pl-4"
+                      >
+                        {child.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </React.Fragment>
+                ) : (
+                  <DropdownMenuItem key={tab.href} render={<LinkComponent href={tab.href} />}>
+                    {tab.label}
+                  </DropdownMenuItem>
+                )
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
