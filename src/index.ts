@@ -31,6 +31,7 @@ export * from './components/ui/squad-role-badge';
 export * from './components/ui/textarea';
 export * from './components/ui/thought-card';
 export * from './components/ui/thought-composer';
+export * from './components/ui/thoughts-panel';
 export * from './components/ui/toggle';
 export * from './components/ui/toggle-group';
 export * from './components/ui/tooltip';
