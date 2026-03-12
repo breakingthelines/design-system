@@ -39,34 +39,51 @@ interface ContentCardProps extends Omit<React.ComponentProps<'article'>, 'childr
   actions?: EngagementAction[];
   /** Card click handler */
   onClick?: () => void;
-  /** Link href (alternative to onClick) */
+  /** Link href for the content (title + image) */
   href?: string;
+  /** Link href for the author profile */
+  authorHref?: string;
   /** CSS view-transition-name for the image container (shared element transitions) */
   viewTransitionName?: string;
 }
 
 /* ─────────────────────────────────────────────────
  * Author accent bar — red 5px bar + name
- * Matches the inline author treatment from Figma
- * (not using AuthorLine component — Figma shows a
- *  simpler bar + name pattern without avatar)
+ * Optionally wraps in a link when authorHref is provided
  * ───────────────────────────────────────────────── */
-function AuthorAccent({ name, muted = false }: { name: string; muted?: boolean }) {
+function AuthorAccent({
+  name,
+  muted = false,
+  href,
+}: {
+  name: string;
+  muted?: boolean;
+  href?: string;
+}) {
+  const LinkComponent = useLinkComponent();
+  const Tag = href ? LinkComponent : 'div';
+  const tagProps = href ? { href } : {};
+
   return (
-    <div data-slot="author-accent" className="inline-flex items-center gap-1">
+    <Tag
+      data-slot="author-accent"
+      className={cn('inline-flex items-center gap-1 group/author', href && 'relative z-10')}
+      {...tagProps}
+    >
       <span className="flex gap-[2px]">
         <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
         <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
       </span>
       <span
         className={cn(
-          'text-xs font-semibold leading-4 tracking-[-0.36px]',
-          muted ? 'text-[#ccc4c4]' : 'text-white'
+          'text-xs font-semibold leading-4 tracking-[-0.36px] transition-colors',
+          muted ? 'text-[#ccc4c4]' : 'text-white',
+          href && 'group-hover/author:text-red-100'
         )}
       >
         {name}
       </span>
-    </div>
+    </Tag>
   );
 }
 
@@ -77,14 +94,13 @@ function ContentCard({
   actions,
   onClick,
   href,
+  authorHref,
   viewTransitionName,
   ...props
 }: ContentCardProps) {
   const isList = variant === 'list';
   const isPortrait = variant === 'portrait';
   const LinkComponent = useLinkComponent();
-  const Wrapper = href ? LinkComponent : 'div';
-  const wrapperProps = href ? { href } : {};
   const vtStyle = viewTransitionName ? { viewTransitionName } : undefined;
 
   // Mouse-tracking 3D tilt — gentler for list cards
@@ -103,7 +119,7 @@ function ContentCard({
         style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
         whileHover={{ y: -4 }}
         transition={motionTokens.spring.gentle}
-        className={cn(contentCardVariants({ variant, className }))}
+        className={cn(contentCardVariants({ variant, className }), 'relative')}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
@@ -111,29 +127,48 @@ function ContentCard({
         onMouseLeave={tilt.onMouseLeave}
         {...props}
       >
-        <Wrapper
-          className={cn('flex items-start gap-4', onClick && 'cursor-pointer')}
-          {...wrapperProps}
-        >
+        <div className={cn('flex items-start gap-4', onClick && 'cursor-pointer')}>
           {/* Thumbnail — 108×86 */}
-          {item.imageUrl && (
-            <div className="h-[86px] w-[108px] shrink-0 overflow-hidden" style={vtStyle}>
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="size-full object-cover transition-transform duration-300"
-              />
-            </div>
-          )}
+          {item.imageUrl &&
+            (href ? (
+              <LinkComponent
+                href={href}
+                className="h-[86px] w-[108px] shrink-0 overflow-hidden"
+                style={vtStyle}
+                tabIndex={-1}
+              >
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="size-full object-cover transition-transform duration-300"
+                />
+              </LinkComponent>
+            ) : (
+              <div className="h-[86px] w-[108px] shrink-0 overflow-hidden" style={vtStyle}>
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="size-full object-cover transition-transform duration-300"
+                />
+              </div>
+            ))}
 
           {/* Content */}
           <div className="flex min-h-[86px] min-w-0 flex-1 flex-col gap-4">
             {/* Title + Author */}
             <div className="flex flex-col gap-2">
-              <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-semibold leading-none tracking-[-0.42px] text-white">
-                {item.title}
-              </h3>
-              <AuthorAccent name={item.author.name} muted />
+              {href ? (
+                <LinkComponent href={href} className="group/title">
+                  <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-semibold leading-none tracking-[-0.42px] text-white transition-colors group-hover/title:text-red-100">
+                    {item.title}
+                  </h3>
+                </LinkComponent>
+              ) : (
+                <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-semibold leading-none tracking-[-0.42px] text-white">
+                  {item.title}
+                </h3>
+              )}
+              <AuthorAccent name={item.author.name} href={authorHref} muted />
             </div>
 
             {/* Engagement */}
@@ -141,7 +176,7 @@ function ContentCard({
               <EngagementBar variant="compact" actions={engagementActions} />
             </div>
           </div>
-        </Wrapper>
+        </div>
       </motion.article>
     );
   }
@@ -154,7 +189,7 @@ function ContentCard({
         style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
         whileHover={{ y: -6 }}
         transition={motionTokens.spring.gentle}
-        className={cn(contentCardVariants({ variant, className }))}
+        className={cn(contentCardVariants({ variant, className }), 'relative')}
         onClick={onClick}
         role={onClick ? 'button' : undefined}
         tabIndex={onClick ? 0 : undefined}
@@ -162,23 +197,45 @@ function ContentCard({
         onMouseLeave={tilt.onMouseLeave}
         {...props}
       >
-        <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
+        <div className={cn('flex flex-col', onClick && 'cursor-pointer')}>
           {/* Portrait image — tall crop */}
-          {item.imageUrl && (
-            <div className="aspect-[2/3] w-full overflow-hidden" style={vtStyle}>
-              <img
-                src={item.imageUrl}
-                alt={item.title}
-                className="size-full object-cover transition-transform duration-300"
-              />
-            </div>
-          )}
+          {item.imageUrl &&
+            (href ? (
+              <LinkComponent
+                href={href}
+                className="aspect-[2/3] w-full overflow-hidden"
+                style={vtStyle}
+                tabIndex={-1}
+              >
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="size-full object-cover transition-transform duration-300"
+                />
+              </LinkComponent>
+            ) : (
+              <div className="aspect-[2/3] w-full overflow-hidden" style={vtStyle}>
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="size-full object-cover transition-transform duration-300"
+                />
+              </div>
+            ))}
 
           {/* Content below image */}
           <div className="flex flex-col gap-2 pt-6">
-            <h3 className="font-[family-name:var(--font-content)] text-xl font-semibold leading-tight tracking-[-0.6px] text-white">
-              {item.author.name}
-            </h3>
+            {authorHref ? (
+              <LinkComponent href={authorHref} className="group/author">
+                <h3 className="font-[family-name:var(--font-content)] text-xl font-semibold leading-tight tracking-[-0.6px] text-white transition-colors group-hover/author:text-red-100">
+                  {item.author.name}
+                </h3>
+              </LinkComponent>
+            ) : (
+              <h3 className="font-[family-name:var(--font-content)] text-xl font-semibold leading-tight tracking-[-0.6px] text-white">
+                {item.author.name}
+              </h3>
+            )}
             {item.excerpt && (
               <p className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-normal leading-[18px] tracking-[-0.126px] text-[#ccc4c4]">
                 {item.excerpt}
@@ -188,7 +245,7 @@ function ContentCard({
               <EngagementBar variant="compact" actions={engagementActions} />
             </div>
           </div>
-        </Wrapper>
+        </div>
       </motion.article>
     );
   }
@@ -200,7 +257,7 @@ function ContentCard({
       style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
       whileHover={{ y: -6 }}
       transition={motionTokens.spring.gentle}
-      className={cn(contentCardVariants({ variant, className }))}
+      className={cn(contentCardVariants({ variant, className }), 'relative')}
       onClick={onClick}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
@@ -208,17 +265,31 @@ function ContentCard({
       onMouseLeave={tilt.onMouseLeave}
       {...props}
     >
-      <Wrapper className={cn('flex flex-col', onClick && 'cursor-pointer')} {...wrapperProps}>
+      <div className={cn('flex flex-col', onClick && 'cursor-pointer')}>
         {/* Image — fills width, tall crop (~364px at 366 wide) */}
-        {item.imageUrl && (
-          <div className="aspect-[328/364] w-full shrink-0 overflow-hidden" style={vtStyle}>
-            <img
-              src={item.imageUrl}
-              alt={item.title}
-              className="size-full object-cover transition-transform duration-300"
-            />
-          </div>
-        )}
+        {item.imageUrl &&
+          (href ? (
+            <LinkComponent
+              href={href}
+              className="aspect-[328/364] w-full shrink-0 overflow-hidden"
+              style={vtStyle}
+              tabIndex={-1}
+            >
+              <img
+                src={item.imageUrl}
+                alt={item.title}
+                className="size-full object-cover transition-transform duration-300"
+              />
+            </LinkComponent>
+          ) : (
+            <div className="aspect-[328/364] w-full shrink-0 overflow-hidden" style={vtStyle}>
+              <img
+                src={item.imageUrl}
+                alt={item.title}
+                className="size-full object-cover transition-transform duration-300"
+              />
+            </div>
+          ))}
 
         {/* Content area — 24px gap from image */}
         <div className="flex flex-col gap-3 pt-6">
@@ -226,10 +297,18 @@ function ContentCard({
           <div className="flex flex-col gap-4 pr-4">
             {/* Author accent + Title */}
             <div className="flex flex-col gap-3">
-              <AuthorAccent name={item.author.name} />
-              <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-none tracking-[-0.48px] text-white">
-                {item.title}
-              </h3>
+              <AuthorAccent name={item.author.name} href={authorHref} />
+              {href ? (
+                <LinkComponent href={href} className="group/title">
+                  <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-none tracking-[-0.48px] text-white transition-colors group-hover/title:text-red-100">
+                    {item.title}
+                  </h3>
+                </LinkComponent>
+              ) : (
+                <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-none tracking-[-0.48px] text-white">
+                  {item.title}
+                </h3>
+              )}
             </div>
 
             {/* Excerpt */}
@@ -243,7 +322,7 @@ function ContentCard({
           {/* Engagement bar */}
           <EngagementBar variant="compact" actions={engagementActions} />
         </div>
-      </Wrapper>
+      </div>
     </motion.article>
   );
 }

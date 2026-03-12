@@ -35,8 +35,10 @@ interface HeroCardProps extends Omit<React.ComponentProps<'article'>, 'children'
   activeSlide?: number;
   /** Card click handler */
   onClick?: () => void;
-  /** Link href */
+  /** Link href for the content */
   href?: string;
+  /** Link href for the author profile */
+  authorHref?: string;
   /** Slide change handler */
   onSlideChange?: (index: number) => void;
   /** CSS view-transition-name for the image container (shared element transitions) */
@@ -50,13 +52,12 @@ function HeroCard({
   activeSlide = 0,
   onClick,
   href,
+  authorHref,
   onSlideChange,
   viewTransitionName,
   ...props
 }: HeroCardProps) {
   const LinkComponent = useLinkComponent();
-  const Wrapper = href ? LinkComponent : 'div';
-  const wrapperProps = href ? { href } : {};
 
   // Mouse-tracking 3D tilt — gentle for the large hero card
   const tilt = useTilt(4);
@@ -79,24 +80,44 @@ function HeroCard({
       onMouseLeave={tilt.onMouseLeave}
       {...props}
     >
-      <Wrapper className="block relative" {...wrapperProps}>
+      <div className="relative block">
         {/* ── Background image + gradient overlay ─── */}
-        <div
-          className="relative aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
-          style={viewTransitionName ? { viewTransitionName } : undefined}
-        >
-          {item.imageUrl && (
-            <img src={item.imageUrl} alt={item.title} className="size-full object-cover" />
-          )}
-          {/* Angled gradient: transparent top-right → black 0.75 bottom-left */}
+        {href ? (
+          <LinkComponent
+            href={href}
+            className="relative block aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
+            style={viewTransitionName ? { viewTransitionName } : undefined}
+            tabIndex={-1}
+          >
+            {item.imageUrl && (
+              <img src={item.imageUrl} alt={item.title} className="size-full object-cover" />
+            )}
+            {/* Angled gradient: transparent top-right → black 0.75 bottom-left */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  'linear-gradient(235deg, rgba(0,0,0,0) 33.4%, rgba(0,0,0,0.75) 79.17%, rgba(0,0,0,0.75) 100%)',
+              }}
+            />
+          </LinkComponent>
+        ) : (
           <div
-            className="absolute inset-0"
-            style={{
-              backgroundImage:
-                'linear-gradient(235deg, rgba(0,0,0,0) 33.4%, rgba(0,0,0,0.75) 79.17%, rgba(0,0,0,0.75) 100%)',
-            }}
-          />
-        </div>
+            className="relative aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
+            style={viewTransitionName ? { viewTransitionName } : undefined}
+          >
+            {item.imageUrl && (
+              <img src={item.imageUrl} alt={item.title} className="size-full object-cover" />
+            )}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  'linear-gradient(235deg, rgba(0,0,0,0) 33.4%, rgba(0,0,0,0.75) 79.17%, rgba(0,0,0,0.75) 100%)',
+              }}
+            />
+          </div>
+        )}
 
         {/* ── Content overlay ────────────────────── */}
         <div className="absolute inset-y-0 left-4 flex w-[280px] flex-col items-start justify-end pb-6 sm:left-8 sm:w-[340px] sm:pb-[44px]">
@@ -104,20 +125,40 @@ function HeroCard({
             {/* Text content block */}
             <div className="flex flex-col gap-2 sm:gap-4">
               {/* Title */}
-              <h2 className="font-[family-name:var(--font-content)] text-lg font-bold leading-tight tracking-[-0.54px] text-white sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
-                {item.title}
-              </h2>
+              {href ? (
+                <LinkComponent href={href} className="group/title">
+                  <h2 className="font-[family-name:var(--font-content)] text-lg font-bold leading-tight tracking-[-0.54px] text-white transition-colors group-hover/title:text-red-100 sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
+                    {item.title}
+                  </h2>
+                </LinkComponent>
+              ) : (
+                <h2 className="font-[family-name:var(--font-content)] text-lg font-bold leading-tight tracking-[-0.54px] text-white sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
+                  {item.title}
+                </h2>
+              )}
 
               {/* Author accent bar — double red bars */}
-              <div className="inline-flex items-center gap-1">
-                <span className="flex gap-[2px]">
-                  <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
-                  <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
-                </span>
-                <span className="text-xs font-semibold leading-4 tracking-[-0.36px] text-white">
-                  {item.author.name}
-                </span>
-              </div>
+              {authorHref ? (
+                <LinkComponent href={authorHref} className="inline-flex items-center gap-1 group/author relative z-10">
+                  <span className="flex gap-[2px]">
+                    <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
+                    <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
+                  </span>
+                  <span className="text-xs font-semibold leading-4 tracking-[-0.36px] text-white transition-colors group-hover/author:text-red-100">
+                    {item.author.name}
+                  </span>
+                </LinkComponent>
+              ) : (
+                <div className="inline-flex items-center gap-1">
+                  <span className="flex gap-[2px]">
+                    <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
+                    <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
+                  </span>
+                  <span className="text-xs font-semibold leading-4 tracking-[-0.36px] text-white">
+                    {item.author.name}
+                  </span>
+                </div>
+              )}
 
               {/* Excerpt — hidden on mobile to save space */}
               {item.excerpt && (
@@ -150,7 +191,7 @@ function HeroCard({
                   key={i}
                   type="button"
                   className={cn(
-                    'h-1 flex-1 rounded-full transition-colors cursor-pointer',
+                    'h-1 flex-1 rounded-full transition-colors cursor-pointer relative z-10',
                     i === activeSlide ? 'bg-red-100' : 'bg-white/20 hover:bg-white/40'
                   )}
                   onClick={(e) => {
@@ -164,7 +205,7 @@ function HeroCard({
             </div>
           </div>
         </div>
-      </Wrapper>
+      </div>
     </motion.article>
   );
 }
