@@ -58,7 +58,6 @@ function IconButton({
     (render != null &&
     typeof render === 'object' &&
     'type' in render &&
-    typeof render.type === 'string' &&
     render.type !== 'button'
       ? false
       : undefined);
