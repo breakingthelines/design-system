@@ -75,7 +75,7 @@ function EngagementBar({ className, variant, actions, ...props }: EngagementBarP
             aria-label={action.type}
             aria-pressed={isActive}
           >
-            <Icon weight={isActive ? 'fill' : 'regular'} className="size-5" />
+            <Icon weight={isActive ? 'fill' : 'regular'} className={isFull ? 'size-5' : 'size-4'} />
             {action.count !== undefined && (
               <span className={cn('text-xs', isFull && 'text-sm')}>
                 {formatCount(action.count)}
