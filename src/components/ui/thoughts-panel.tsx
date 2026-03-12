@@ -158,7 +158,7 @@ function ThoughtsPanel({
               {/* Title row */}
               <div className="flex items-center justify-between">
                 <h2 className="font-content text-xl font-semibold tracking-[-0.6px] text-white">
-                  {count} {count === 1 ? 'Comment' : 'Comments'}
+                  {count} {count === 1 ? 'Thought' : 'Thoughts'}
                 </h2>
                 <button
                   type="button"
@@ -182,7 +182,7 @@ function ThoughtsPanel({
                     value={composerText}
                     onChange={(e) => setComposerText(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    placeholder="Add a comment..."
+                    placeholder="Add a thought..."
                     className="flex-1 bg-transparent font-content text-sm text-white placeholder:text-[#807c7c] focus:outline-none"
                   />
                 </div>
@@ -193,12 +193,12 @@ function ThoughtsPanel({
             <div className="flex-1 overflow-y-auto px-8 pt-10 pb-[140px] sm:px-[70px] sm:pt-11">
               {isLoading ? (
                 <div className="flex items-center justify-center py-20">
-                  <span className="font-content text-sm text-[#807c7c]">Loading comments...</span>
+                  <span className="font-content text-sm text-[#807c7c]">Loading thoughts...</span>
                 </div>
               ) : thoughts.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <p className="font-content text-sm text-[#807c7c]">
-                    No comments yet. Be the first to share your thoughts.
+                    No thoughts yet. Be the first to share yours.
                   </p>
                 </div>
               ) : (
