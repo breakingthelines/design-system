@@ -196,11 +196,15 @@ function ProfileHero({
           {(onFollow || onSubscribe) && (
             <div className="flex shrink-0 items-start gap-4">
               {onFollow && (
-                <Button variant="outline" onClick={onFollow} className="w-[130px]">
+                <Button variant="outline" size="lg" onClick={onFollow} className="w-[130px]">
                   {isFollowing ? 'Following' : 'Follow'}
                 </Button>
               )}
-              {onSubscribe && <Button onClick={onSubscribe}>Subscribe</Button>}
+              {onSubscribe && (
+                <Button size="lg" onClick={onSubscribe} className="px-6">
+                  Subscribe
+                </Button>
+              )}
             </div>
           )}
         </div>
