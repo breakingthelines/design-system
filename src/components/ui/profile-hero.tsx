@@ -201,7 +201,7 @@ function ProfileHero({
                 </Button>
               )}
               {onSubscribe && (
-                <Button size="lg" onClick={onSubscribe} className="px-6">
+                <Button size="lg" onClick={onSubscribe} className="w-[130px]">
                   Subscribe
                 </Button>
               )}
