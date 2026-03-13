@@ -244,3 +244,34 @@
 .animate-typing-dot:nth-child(3) {
   animation-delay: 0.4s;
 }
+
+/* ── Button hover shimmer ─────────────────────────────────────────────── */
+/* Lightweight diagonal light sweep on every [data-slot="button"].
+   Pure CSS — a single pseudo-element, composited on the GPU via translate3d.
+   Skipped for link-variant buttons (no background to shimmer over). */
+
+[data-slot="button"]:not([class*="variant-link"]) {
+  position: relative;
+  overflow: hidden;
+}
+
+[data-slot="button"]:not([class*="variant-link"])::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.12) 45%,
+    rgba(255, 255, 255, 0.12) 55%,
+    transparent 70%
+  );
+  translate: -110% 0 0;
+  pointer-events: none;
+  transition: none;
+}
+
+[data-slot="button"]:not([class*="variant-link"]):hover::after {
+  translate: 110% 0 0;
+  transition: translate 0.5s var(--ease-standard);
+}
