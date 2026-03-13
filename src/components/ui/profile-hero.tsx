@@ -30,8 +30,8 @@ interface ProfileHeroProps extends React.ComponentProps<'div'> {
   handle?: string;
   /** Verified status */
   verified?: boolean;
-  /** Bio text */
-  bio?: string;
+  /** Short one-liner tagline displayed under name */
+  description?: string;
   /** Social links */
   socialLinks?: SocialLink[];
   /** Follower count */
@@ -54,7 +54,7 @@ function ProfileHero({
   name,
   handle,
   verified,
-  bio,
+  description,
   socialLinks,
   followers,
   subscribers,
@@ -139,10 +139,10 @@ function ProfileHero({
                 )}
               </div>
 
-              {/* Bio */}
-              {bio && (
+              {/* Description */}
+              {description && (
                 <p className="max-w-[509px] font-serif text-sm leading-[18px] text-foreground">
-                  {bio}
+                  {description}
                 </p>
               )}
 
