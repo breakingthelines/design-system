@@ -196,7 +196,7 @@ function ProfileHero({
           {(onFollow || onSubscribe) && (
             <div className="flex shrink-0 items-start gap-3">
               {onFollow && (
-                <Button variant="outline" size="lg" onClick={onFollow} className="flex-1 sm:w-[130px] sm:flex-none">
+                <Button variant="outline" size="lg" onClick={onFollow} className="flex-1 sm:w-[130px] sm:flex-none rounded-[2px] bg-grey-200 border-grey-300 backdrop-blur-[15px] hover:bg-grey-200 hover:border-[#807c7c]">
                   {isFollowing ? 'Following' : 'Follow'}
                 </Button>
               )}
