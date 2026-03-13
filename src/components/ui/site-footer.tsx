@@ -38,7 +38,6 @@ const defaultLinks: FooterLink[] = [
       { label: 'BTL PODCASTS', href: '/podcasts' },
     ],
   },
-  { label: 'PODCASTS', href: '/podcasts' },
   { label: 'ZINE', href: '/zine' },
   { label: 'CONTACT', href: '/contact' },
 ];
