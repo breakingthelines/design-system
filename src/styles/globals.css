@@ -123,8 +123,9 @@
   /* BTL Brand Colors */
   --color-black: #0d0d0d;
   --color-grey-100: #1f1f1f;
-  --color-grey-200: #1a1a1a;
+  --color-grey-200: #151515;
   --color-grey-300: #2b2b2b;
+  --color-grey-500: #807c7c;
 
   --color-red-100: #eb0000;
   --color-red-300: #bf0000;
