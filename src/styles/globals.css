@@ -282,3 +282,79 @@
   translate: 110% 0 0;
   transition: translate 0.5s var(--ease-standard);
 }
+
+/* ── Ambient system ──────────────────────────────────────────────────── */
+
+/* Breathing animation for AmbientEmitter — slow, organic opacity pulse */
+@keyframes ambient-breathe {
+  0%,
+  100% {
+    opacity: var(--_emitter-intensity, 0.35);
+  }
+  50% {
+    opacity: calc(var(--_emitter-intensity, 0.35) * 0.7);
+  }
+}
+
+/* Glass pane — apply .btl-glass to a positioned container.
+   A ::before pseudo renders a frosted-glass overlay that diffuses
+   AmbientEmitter blobs behind it.  GPU-composited.
+   A subtle edge-catch gradient on the top border mimics light
+   refracting at the glass edge — the detail that sells the effect. */
+
+.btl-glass {
+  position: relative;
+  isolation: isolate;
+}
+
+.btl-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  backdrop-filter: blur(50px) saturate(1.35) brightness(1.02);
+  -webkit-backdrop-filter: blur(50px) saturate(1.35) brightness(1.02);
+  background:
+    /* Subtle noise grain — two offset dot grids create organic texture */
+    radial-gradient(circle at 20% 50%, rgba(255, 255, 255, 0.015) 0.5px, transparent 0.5px),
+    radial-gradient(circle at 80% 50%, rgba(255, 255, 255, 0.01) 0.5px, transparent 0.5px),
+    /* Vertical gradient — slightly brighter at top to simulate overhead light */
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.03) 0%,
+      rgba(255, 255, 255, 0.005) 30%,
+      transparent 60%,
+      rgba(255, 255, 255, 0.01) 100%
+    );
+  background-size: 4px 4px, 5px 5px, 100% 100%;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Edge-catch — thin bright line at the top of glass panes,
+   like light catching the edge of real frosted glass */
+.btl-glass::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  z-index: -1;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.06) 20%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0.06) 80%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* Reduced motion: hide ambient blobs, disable breathing */
+@media (prefers-reduced-motion: reduce) {
+  [data-slot="ambient-emitter"] {
+    display: none;
+  }
+}
