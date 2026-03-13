@@ -73,6 +73,7 @@ function FilterBar({
                 <button
                   key={filter.value}
                   type="button"
+                  data-slot="filter-chip"
                   onClick={() => onFilterChange?.(filter.value)}
                   className={cn(
                     'inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[24px] px-4 py-3 cursor-pointer',
