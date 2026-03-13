@@ -182,9 +182,9 @@ function ProfileHero({
                     aria-label={link.label ?? link.type}
                   >
                     {link.type === 'x' ? (
-                      <XLogo weight="regular" className="size-6" />
+                      <XLogo weight="regular" className="size-5" />
                     ) : (
-                      <LinkSimple weight="regular" className="size-6" />
+                      <LinkSimple weight="regular" className="size-5" />
                     )}
                   </a>
                 ))}
