@@ -62,7 +62,7 @@ const defaultTabs: NavTab[] = [
 /** BTL bracket logo — two offset bracket shapes with red gradient fill */
 function BtlNavLogo() {
   return (
-    <div data-slot="button" className="flex items-center gap-[10.9px] shrink-0">
+    <div data-slot="button" data-shimmer="slow" className="flex items-center gap-[10.9px] shrink-0">
       <svg
         viewBox="0 0 29.09 28.02"
         fill="none"

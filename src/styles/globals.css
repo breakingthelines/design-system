@@ -283,6 +283,11 @@
   transition: translate 0.5s var(--ease-standard);
 }
 
+/* Slower shimmer for logo / larger elements */
+[data-shimmer="slow"]:hover::after {
+  transition: translate 1s var(--ease-standard);
+}
+
 /* ── Ambient system ──────────────────────────────────────────────────── */
 
 /* Breathing animation for AmbientEmitter — slow, organic opacity pulse */
