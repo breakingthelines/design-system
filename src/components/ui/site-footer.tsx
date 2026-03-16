@@ -14,7 +14,7 @@ interface FooterLink {
 }
 
 interface SiteFooterProps extends React.ComponentProps<'footer'> {
-  /** Navigation links. Defaults to HOME, MEDIA, PODCASTS, ZINE, CONTACT */
+  /** Navigation links. Defaults to HOME, THOUGHTS, MEDIA (BTL TV, PODCASTS, ZINE), CONTACT */
   links?: FooterLink[];
   /** Email address */
   email?: string;
@@ -30,15 +30,16 @@ interface SiteFooterProps extends React.ComponentProps<'footer'> {
 
 const defaultLinks: FooterLink[] = [
   { label: 'HOME', href: '/' },
+  { label: 'THOUGHTS', href: '/thoughts' },
   {
     label: 'MEDIA',
     href: '/media',
     children: [
       { label: 'BTL TV', href: '/btl-tv' },
       { label: 'BTL PODCASTS', href: '/podcasts' },
+      { label: 'ZINE', href: '/zine' },
     ],
   },
-  { label: 'ZINE', href: '/zine' },
   { label: 'CONTACT', href: '/contact' },
 ];
 
