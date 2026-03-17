@@ -192,7 +192,7 @@ function SiteNav({
                           href={child.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block rounded-[2px] px-4 py-2.5 text-xs tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                          className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                         >
                           {child.label}
                         </a>
@@ -202,7 +202,7 @@ function SiteNav({
                       <LinkComponent
                         key={child.href}
                         href={child.href}
-                        className="block rounded-[2px] px-4 py-2.5 text-xs tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                        className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                       >
                         {child.label}
                       </LinkComponent>
