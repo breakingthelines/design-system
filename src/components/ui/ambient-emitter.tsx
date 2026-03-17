@@ -20,6 +20,41 @@ const sizePresets: Record<
   lg: { width: 789, height: 588, blur: 100, opacity: 0.4, scale: 1.3, overlayHeight: 800 },
 };
 
+/**
+ * Measure perceived luminance of an image via a 1×1 canvas.
+ * Returns a CSS brightness multiplier: dark images get boosted,
+ * bright images stay at 1.0. Runs once per src, essentially free.
+ */
+function useBrightnessBoost(src?: string): number {
+  const [boost, setBoost] = React.useState(1);
+
+  React.useEffect(() => {
+    if (!src) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = 1;
+        c.height = 1;
+        const ctx = c.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, 1, 1);
+        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+        // Perceived luminance (ITU-R BT.601)
+        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        // Dark (lum ≈ 0) → boost ≈ 2.0, mid (lum ≈ 0.5) → boost ≈ 1.0, bright → 1.0
+        setBoost(Math.max(1, 2 - lum * 2));
+      } catch {
+        // CORS or canvas taint — fall back to no boost
+      }
+    };
+    img.src = src;
+  }, [src]);
+
+  return boost;
+}
+
 interface AmbientEmitterProps extends React.ComponentProps<'div'> {
   /** Image URL to sample colours from. Preferred — creates a natural, content-aware glow. */
   src?: string;
@@ -41,6 +76,7 @@ interface AmbientEmitterProps extends React.ComponentProps<'div'> {
  *
  * Place inside a `position: relative` parent. When `src` is provided, renders
  * a massively blurred copy of the image for a natural, content-aware glow.
+ * Dark images are automatically brightened so the glow stays visible.
  * Falls back to a radial-gradient colour blob when only `color` is given.
  *
  * ```tsx
@@ -62,6 +98,7 @@ function AmbientEmitter({
   const preset = sizePresets[size];
   const finalOpacity = opacity ?? preset.opacity;
   const finalScale = scale ?? preset.scale;
+  const brightnessBoost = useBrightnessBoost(src);
 
   if (!src && !color) return null;
 
@@ -81,7 +118,7 @@ function AmbientEmitter({
             width: preset.width,
             height: preset.height,
             opacity: finalOpacity,
-            filter: `blur(${preset.blur}px)`,
+            filter: `blur(${preset.blur}px) brightness(${brightnessBoost})`,
             transform: `translateX(-40%) scale(${finalScale})`,
           }}
         />
