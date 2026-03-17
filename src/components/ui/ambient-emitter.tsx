@@ -6,12 +6,6 @@ import { cn } from '#/lib/utils';
 type EmitterSize = 'sm' | 'md' | 'lg';
 type EmitterPosition = 'top' | 'center';
 
-/**
- * Size presets control the image dimensions, blur, base opacity, and overlay.
- * - sm: Subtle glow for heroes and banners
- * - md: Default — balanced for most contexts
- * - lg: Full detail-page glow (video/podcast detail)
- */
 const sizePresets: Record<
   EmitterSize,
   { width: number; height: number; blur: number; opacity: number; scale: number; overlayHeight: number }
@@ -21,30 +15,54 @@ const sizePresets: Record<
   lg: { width: 789, height: 588, blur: 100, opacity: 0.4, scale: 1.3, overlayHeight: 800 },
 };
 
-interface ImageAdaptation {
+/* -------------------------------------------------------------------------- */
+/*  Image analysis — luminance adaptation + dominant colour extraction         */
+/* -------------------------------------------------------------------------- */
+
+interface ImageAnalysis {
   brightness: number;
   opacityMultiplier: number;
   saturation: number;
+  /** Dominant colour as "R, G, B" string for use in rgba(). */
+  dominantColor: string;
 }
 
+const DEFAULT_ANALYSIS: ImageAnalysis = {
+  brightness: 1,
+  opacityMultiplier: 1,
+  saturation: 1,
+  dominantColor: '128, 128, 128',
+};
+
+/** Module-level cache — survives remounts, shared across all emitters. */
+const analysisCache = new Map<string, ImageAnalysis>();
+
 /**
- * Analyse image luminance via a 4×4 canvas (16 pixels — essentially free).
- * Returns adaptive CSS values: dark images get boosted brightness, opacity,
- * and saturation so the glow stays visible against dark backgrounds.
- * Bright images pass through unchanged.
+ * Analyse a 4×4 canvas (16 pixels) for luminance + dominant colour.
  *
- * Runs once per `src` change. No extra network request (browser image cache).
+ * - **Luminance** → adaptive brightness / opacity / saturation boost for dark images
+ * - **Dominant colour** → gradient base layer in center mode (guarantees glow visibility
+ *   even when the blurred image edge is too faint against a dark background)
+ *
+ * Results are cached by URL. Cached values initialise synchronously (no flash).
+ * Fresh URLs compute asynchronously; CSS transitions smooth the visual change.
  */
-function useImageAdaptation(src?: string): ImageAdaptation {
-  // Keep previous values when src changes to avoid flash while new image loads
-  const [adaptation, setAdaptation] = React.useState<ImageAdaptation>({
-    brightness: 1,
-    opacityMultiplier: 1,
-    saturation: 1,
+function useImageAnalysis(src?: string): ImageAnalysis {
+  const [analysis, setAnalysis] = React.useState<ImageAnalysis>(() => {
+    if (src) return analysisCache.get(src) ?? DEFAULT_ANALYSIS;
+    return DEFAULT_ANALYSIS;
   });
 
   React.useEffect(() => {
     if (!src) return;
+
+    // Cache hit — apply synchronously (covers src changes after mount)
+    const cached = analysisCache.get(src);
+    if (cached) {
+      setAnalysis(cached);
+      return;
+    }
+
     let cancelled = false;
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -58,32 +76,49 @@ function useImageAdaptation(src?: string): ImageAdaptation {
         if (!ctx) return;
         ctx.drawImage(img, 0, 0, 4, 4);
         const data = ctx.getImageData(0, 0, 4, 4).data;
-        // Average perceived luminance across 16 samples (ITU-R BT.601)
+
         let totalLum = 0;
+        let rSum = 0, gSum = 0, bSum = 0;
         for (let i = 0; i < data.length; i += 4) {
+          rSum += data[i];
+          gSum += data[i + 1];
+          bSum += data[i + 2];
           totalLum += (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
         }
+
         const lum = totalLum / 16;
-        // darkness factor: 0 for bright images (lum ≥ 0.5), 1 for black
+        // darkness: 0 for bright (lum ≥ 0.5), 1 for black
         const darkness = Math.max(0, 1 - lum * 2);
-        setAdaptation({
-          // Dark → 1.8x brightness, bright → 1.0x
+
+        // Dominant colour — average RGB boosted away from gray for vibrancy
+        const avgR = rSum / 16, avgG = gSum / 16, avgB = bSum / 16;
+        const gray = (avgR + avgG + avgB) / 3;
+        const colorBoost = 1.4; // push colours away from neutral
+        const clamp = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
+
+        const result: ImageAnalysis = {
           brightness: 1 + darkness * 0.8,
-          // Dark → 1.5x opacity boost, bright → 1.0x
           opacityMultiplier: 1 + darkness * 0.5,
-          // Dark → 1.4x saturation, bright → 1.0x
           saturation: 1 + darkness * 0.4,
-        });
+          dominantColor: `${clamp(gray + (avgR - gray) * colorBoost)}, ${clamp(gray + (avgG - gray) * colorBoost)}, ${clamp(gray + (avgB - gray) * colorBoost)}`,
+        };
+
+        analysisCache.set(src, result);
+        if (!cancelled) setAnalysis(result);
       } catch {
-        // CORS or canvas taint — fall back to defaults
+        // CORS or canvas taint — defaults remain
       }
     };
     img.src = src;
     return () => { cancelled = true; };
   }, [src]);
 
-  return adaptation;
+  return analysis;
 }
+
+/* -------------------------------------------------------------------------- */
+/*  Component                                                                  */
+/* -------------------------------------------------------------------------- */
 
 interface AmbientEmitterProps extends React.ComponentProps<'div'> {
   /** Image URL to sample colours from. Preferred — creates a natural, content-aware glow. */
@@ -103,12 +138,21 @@ interface AmbientEmitterProps extends React.ComponentProps<'div'> {
   position?: EmitterPosition;
 }
 
+/** Shared CSS transition — smooths filter/opacity/background changes between images. */
+const TRANSITION = 'filter 0.6s ease-out, opacity 0.6s ease-out, background 0.6s ease-out, transform 0.6s ease-out';
+
 /**
  * Ambient emitter — GPU-composited glow that bleeds colour behind content.
  *
  * Place inside a `position: relative` parent. When `src` is provided, renders
  * a massively blurred copy of the image for a natural, content-aware glow.
  * Dark images are automatically boosted (brightness + opacity + saturation).
+ *
+ * **Center mode** renders two layers:
+ * 1. A radial gradient using the image's dominant colour (guarantees minimum
+ *    glow visibility even when a full-bleed card covers the blurred image)
+ * 2. The blurred image itself (adds natural colour variation)
+ *
  * Falls back to a radial-gradient colour blob when only `color` is given.
  *
  * ```tsx
@@ -130,7 +174,7 @@ function AmbientEmitter({
 }: AmbientEmitterProps) {
   const preset = sizePresets[size];
   const finalScale = scale ?? preset.scale;
-  const { brightness, opacityMultiplier, saturation } = useImageAdaptation(src);
+  const { brightness, opacityMultiplier, saturation, dominantColor } = useImageAnalysis(src);
   const finalOpacity = Math.min(1, (opacity ?? preset.opacity) * opacityMultiplier);
 
   if (!src && !color) return null;
@@ -140,7 +184,7 @@ function AmbientEmitter({
     const filterChain = `blur(${preset.blur}px) brightness(${brightness}) saturate(${saturation})`;
 
     if (isCenter) {
-      // Center mode — fills parent shape, adapts to any aspect ratio
+      // Center mode — dual layer: gradient base + blurred image
       return (
         <div
           data-slot="ambient-emitter"
@@ -148,6 +192,17 @@ function AmbientEmitter({
           className={cn('pointer-events-none absolute inset-0', className)}
           {...props}
         >
+          {/* Layer 1: Gradient base — dominant colour, always vivid, extends beyond via scale */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `radial-gradient(ellipse 70% 55% at 50% 50%, rgba(${dominantColor}, ${Math.min(1, finalOpacity * 1.2)}) 0%, transparent 70%)`,
+              filter: `blur(${Math.round(preset.blur * 0.7)}px) saturate(1.5) brightness(${brightness})`,
+              transform: `scale(${finalScale * 1.3})`,
+              transition: TRANSITION,
+            }}
+          />
+          {/* Layer 2: Blurred image — organic colour variation on top */}
           <img
             src={src}
             alt=""
@@ -156,9 +211,9 @@ function AmbientEmitter({
               opacity: finalOpacity,
               filter: filterChain,
               transform: `scale(${finalScale})`,
+              transition: TRANSITION,
             }}
           />
-          <div className="absolute inset-0 bg-[rgba(8,8,8,0.05)] backdrop-blur-[10px]" />
         </div>
       );
     }
@@ -181,6 +236,7 @@ function AmbientEmitter({
             opacity: finalOpacity,
             filter: filterChain,
             transform: `translateX(-40%) scale(${finalScale})`,
+            transition: TRANSITION,
           }}
         />
         <div
@@ -201,6 +257,7 @@ function AmbientEmitter({
         background: `radial-gradient(ellipse 70% 55% at 50% 50%, ${color} 0%, transparent 70%)`,
         opacity: finalOpacity,
         filter: `blur(${preset.blur}px)`,
+        transition: TRANSITION,
       }}
       {...props}
     />
