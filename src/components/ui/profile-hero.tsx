@@ -94,8 +94,17 @@ function ProfileHero({
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
         >
-          {bannerUrl && (
+          {bannerUrl ? (
             <img src={bannerUrl} alt="" className="size-full object-cover" />
+          ) : (
+            <div
+              className="size-full"
+              style={{
+                background:
+                  'radial-gradient(ellipse 80% 70% at 70% 40%, rgba(229, 51, 42, 0.12) 0%, transparent 70%), ' +
+                  'radial-gradient(ellipse 60% 50% at 30% 60%, rgba(226, 6, 19, 0.08) 0%, transparent 60%)',
+              }}
+            />
           )}
         </motion.div>
       </div>
