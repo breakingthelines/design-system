@@ -133,42 +133,55 @@ function AmbientEmitter({
 
   if (src) {
     const isCenter = position === 'center';
+    const filterChain = `blur(${preset.blur}px) brightness(${brightness}) saturate(${saturation})`;
 
+    if (isCenter) {
+      // Center mode — fills parent shape, adapts to any aspect ratio
+      return (
+        <div
+          data-slot="ambient-emitter"
+          aria-hidden
+          className={cn('pointer-events-none absolute inset-0', className)}
+          {...props}
+        >
+          <img
+            src={src}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            style={{
+              opacity: finalOpacity,
+              filter: filterChain,
+              transform: `scale(${finalScale})`,
+            }}
+          />
+          <div className="absolute inset-0 bg-[rgba(8,8,8,0.05)] backdrop-blur-[10px]" />
+        </div>
+      );
+    }
+
+    // Top mode — fixed dimensions for page-level detail glows
     return (
       <div
         data-slot="ambient-emitter"
         aria-hidden
-        className={cn(
-          'pointer-events-none absolute inset-x-0',
-          isCenter ? 'top-1/2 -translate-y-1/2' : 'top-0',
-          className,
-        )}
+        className={cn('pointer-events-none absolute inset-x-0 top-0', className)}
         {...props}
       >
         <img
           src={src}
           alt=""
-          className={cn(
-            'absolute object-cover',
-            isCenter
-              ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
-              : 'top-0 left-1/2 -translate-x-[40%]',
-          )}
+          className="absolute top-0 left-1/2 object-cover"
           style={{
             width: preset.width,
             height: preset.height,
             opacity: finalOpacity,
-            filter: `blur(${preset.blur}px) brightness(${brightness}) saturate(${saturation})`,
-            ...(!isCenter && { transform: `translateX(-40%) scale(${finalScale})` }),
-            ...(isCenter && { transform: `translate(-50%, -50%) scale(${finalScale})` }),
+            filter: filterChain,
+            transform: `translateX(-40%) scale(${finalScale})`,
           }}
         />
         <div
-          className={cn(
-            'absolute inset-x-0 bg-[rgba(8,8,8,0.05)] backdrop-blur-[10px]',
-            isCenter ? 'top-0 bottom-0' : 'top-0',
-          )}
-          style={isCenter ? undefined : { height: preset.overlayHeight }}
+          className="absolute inset-x-0 top-0 bg-[rgba(8,8,8,0.05)] backdrop-blur-[10px]"
+          style={{ height: preset.overlayHeight }}
         />
       </div>
     );
