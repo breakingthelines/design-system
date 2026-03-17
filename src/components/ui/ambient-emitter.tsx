@@ -264,4 +264,4 @@ function AmbientEmitter({
   );
 }
 
-export { AmbientEmitter, type AmbientEmitterProps, type EmitterSize, type EmitterPosition };
+export { AmbientEmitter, useImageAnalysis, type AmbientEmitterProps, type ImageAnalysis, type EmitterSize, type EmitterPosition };
