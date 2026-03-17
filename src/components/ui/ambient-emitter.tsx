@@ -36,6 +36,7 @@ interface ImageAdaptation {
  * Runs once per `src` change. No extra network request (browser image cache).
  */
 function useImageAdaptation(src?: string): ImageAdaptation {
+  // Keep previous values when src changes to avoid flash while new image loads
   const [adaptation, setAdaptation] = React.useState<ImageAdaptation>({
     brightness: 1,
     opacityMultiplier: 1,
@@ -44,9 +45,11 @@ function useImageAdaptation(src?: string): ImageAdaptation {
 
   React.useEffect(() => {
     if (!src) return;
+    let cancelled = false;
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
+      if (cancelled) return;
       try {
         const c = document.createElement('canvas');
         c.width = 4;
@@ -76,6 +79,7 @@ function useImageAdaptation(src?: string): ImageAdaptation {
       }
     };
     img.src = src;
+    return () => { cancelled = true; };
   }, [src]);
 
   return adaptation;
