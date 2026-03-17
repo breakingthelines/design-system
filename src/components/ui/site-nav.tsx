@@ -179,9 +179,10 @@ function SiteNav({
               </button>
               {/* Dropdown — pt-2 creates an invisible hover bridge between trigger and panel */}
               <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
-                <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-grey-300 bg-[#202020] backdrop-blur-[15px]">
+                <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
                   {/* Subtle bottom accent line */}
                   <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                  <nav className="flex flex-col gap-0.5">
                   {tab.children.map((child) => {
                     const isExternal = child.external;
                     if (isExternal) {
@@ -191,7 +192,7 @@ function SiteNav({
                           href={child.href}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block border-b border-grey-300 px-4 py-3 text-[12px] uppercase tracking-[-0.36px] text-white transition-colors last:border-b-0 hover:bg-white/[0.05] hover:text-red-100"
+                          className="block rounded-[2px] px-4 py-2.5 text-xs tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                         >
                           {child.label}
                         </a>
@@ -201,12 +202,13 @@ function SiteNav({
                       <LinkComponent
                         key={child.href}
                         href={child.href}
-                        className="block border-b border-grey-300 px-4 py-3 text-[12px] uppercase tracking-[-0.36px] text-white transition-colors last:border-b-0 hover:bg-white/[0.05] hover:text-red-100"
+                        className="block rounded-[2px] px-4 py-2.5 text-xs tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                       >
                         {child.label}
                       </LinkComponent>
                     );
                   })}
+                  </nav>
                 </div>
               </div>
             </div>
