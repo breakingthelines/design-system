@@ -179,7 +179,9 @@ function SiteNav({
               </button>
               {/* Dropdown — pt-2 creates an invisible hover bridge between trigger and panel */}
               <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
-                <div className="min-w-[160px] overflow-hidden rounded-[2px] border border-grey-300 bg-[#202020] backdrop-blur-[15px]">
+                <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-grey-300 bg-[#202020] backdrop-blur-[15px]">
+                  {/* Subtle bottom accent line */}
+                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                   {tab.children.map((child) => {
                     const isExternal = child.external;
                     if (isExternal) {

@@ -8,6 +8,7 @@ import { cn } from '#/lib/utils';
 import { Button } from '#/components/ui/button';
 import { formatCount } from '#/lib/format';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
+import { AmbientEmitter } from '#/components/ui/ambient-emitter';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useTilt } from '#/hooks/use-tilt';
 
@@ -71,25 +72,12 @@ function ProfileHero({
       className={cn('relative mx-auto w-full max-w-[1144px] px-4', className)}
       {...props}
     >
-      {/* Banner with golden ambient glow */}
+      {/* Banner with ambient glow */}
       <div className="relative">
-        {/* Golden ambient glow — centered around the entire banner */}
-        <div
-          className="pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10"
-          style={{
-            background:
-              'radial-gradient(ellipse 75% 70% at 50% 50%, rgba(180, 130, 40, 0.32) 0%, rgba(160, 100, 20, 0.10) 50%, transparent 75%)',
-            filter: 'blur(70px)',
-          }}
-        />
-        {/* Tighter hot-edge accent — slightly lower center for depth */}
-        <div
-          className="pointer-events-none absolute -inset-x-10 -inset-y-8 -z-10"
-          style={{
-            background:
-              'radial-gradient(ellipse 60% 50% at 50% 55%, rgba(200, 150, 50, 0.22) 0%, transparent 65%)',
-            filter: 'blur(50px)',
-          }}
+        <AmbientEmitter
+          src={bannerUrl}
+          color="rgba(180, 130, 40, 0.32)"
+          size="sm"
         />
 
         {/* Banner image with 3D tilt */}

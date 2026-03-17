@@ -3,104 +3,102 @@
 import * as React from 'react';
 import { cn } from '#/lib/utils';
 
-type EmitterPosition =
-  | 'top'
-  | 'center'
-  | 'bottom'
-  | 'top-left'
-  | 'top-right'
-  | 'bottom-left'
-  | 'bottom-right';
+type EmitterSize = 'sm' | 'md' | 'lg';
 
-const positionMap: Record<EmitterPosition, string> = {
-  top: '50% 15%',
-  center: '50% 50%',
-  bottom: '50% 85%',
-  'top-left': '25% 20%',
-  'top-right': '75% 20%',
-  'bottom-left': '25% 80%',
-  'bottom-right': '75% 80%',
+/**
+ * Size presets control the image dimensions, blur, opacity, and overlay.
+ * - sm: Subtle glow for heroes and banners
+ * - md: Default — balanced for most contexts
+ * - lg: Full detail-page glow (video/podcast detail)
+ */
+const sizePresets: Record<
+  EmitterSize,
+  { width: number; height: number; blur: number; opacity: number; scale: number; overlayHeight: number }
+> = {
+  sm: { width: 600, height: 400, blur: 80, opacity: 0.25, scale: 1, overlayHeight: 500 },
+  md: { width: 700, height: 500, blur: 90, opacity: 0.32, scale: 1.15, overlayHeight: 650 },
+  lg: { width: 789, height: 588, blur: 100, opacity: 0.4, scale: 1.3, overlayHeight: 800 },
 };
 
 interface AmbientEmitterProps extends React.ComponentProps<'div'> {
+  /** Image URL to sample colours from. Preferred — creates a natural, content-aware glow. */
+  src?: string;
   /**
-   * Opaque colour to emit — e.g. `"#B48228"` or `"rgb(180, 130, 40)"`.
-   * Don't include alpha here; use `intensity` to control opacity.
+   * Fallback colour when no image is available — e.g. `"#B48228"`.
+   * Rendered as a radial gradient. Ignored when `src` is provided.
    */
-  color: string;
-  /** Opacity 0-1, default 0.35 */
-  intensity?: number;
-  /** Blur radius in px, default 90 */
-  blur?: number;
-  /** Gradient focal point within the element, default 'center' */
-  position?: EmitterPosition;
-  /** Size multiplier — 1 = parent size, 1.5 = 150%, default 1.5 */
-  scale?: number;
-  /** Ellipse shape: 'wide' (120% × 80%), 'tall' (80% × 120%), 'round' (100% × 100%) */
-  shape?: 'wide' | 'tall' | 'round';
-  /**
-   * When true, adds a slow 8s breathing animation that subtly pulses
-   * the emitter's opacity. Gives the glow a living quality.
-   */
-  breathing?: boolean;
+  color?: string;
+  /** Glow intensity preset. Default `'md'`. */
+  size?: EmitterSize;
 }
 
-const shapeMap: Record<string, string> = {
-  wide: '120% 80%',
-  tall: '80% 120%',
-  round: '100% 100%',
-};
-
 /**
- * Ambient colour emitter — a zero-interaction, GPU-composited glow blob.
+ * Ambient emitter — GPU-composited glow that bleeds colour behind content.
  *
- * Place inside a `position: relative` parent. The emitter bleeds colour
- * behind sibling content via a large, blurred radial gradient.
- *
- * Expects **opaque** colours; control visibility via `intensity` (opacity).
+ * Place inside a `position: relative` parent. When `src` is provided, renders
+ * a massively blurred copy of the image for a natural, content-aware glow.
+ * Falls back to a radial-gradient colour blob when only `color` is given.
  *
  * ```tsx
  * <div className="relative">
- *   <AmbientEmitter color="#B48228" intensity={0.35} position="top" breathing />
+ *   <AmbientEmitter src={thumbnailUrl} size="lg" />
  *   <YourContent />
  * </div>
  * ```
  */
 function AmbientEmitter({
+  src,
   color,
-  intensity = 0.35,
-  blur = 90,
-  position = 'center',
-  scale = 1.5,
-  shape = 'wide',
-  breathing = false,
+  size = 'md',
   className,
-  style,
   ...props
 }: AmbientEmitterProps) {
-  const overflow = ((scale - 1) / 2) * 100;
+  const preset = sizePresets[size];
 
+  if (!src && !color) return null;
+
+  if (src) {
+    return (
+      <div
+        data-slot="ambient-emitter"
+        aria-hidden
+        className={cn('pointer-events-none absolute inset-x-0 top-0', className)}
+        {...props}
+      >
+        <img
+          src={src}
+          alt=""
+          className="absolute top-0 left-1/2 -translate-x-[40%] object-cover"
+          style={{
+            width: preset.width,
+            height: preset.height,
+            opacity: preset.opacity,
+            filter: `blur(${preset.blur}px)`,
+            transform: `translateX(-40%) scale(${preset.scale})`,
+          }}
+        />
+        <div
+          className="absolute inset-x-0 top-0 bg-[rgba(8,8,8,0.05)] backdrop-blur-[10px]"
+          style={{ height: preset.overlayHeight }}
+        />
+      </div>
+    );
+  }
+
+  // Colour fallback — subtle radial gradient
   return (
     <div
       data-slot="ambient-emitter"
       aria-hidden
-      className={cn(
-        'pointer-events-none absolute',
-        breathing && 'animate-[ambient-breathe_8s_ease-in-out_infinite]',
-        className
-      )}
+      className={cn('pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10', className)}
       style={{
-        inset: `-${overflow}%`,
-        zIndex: -2,
-        background: `radial-gradient(ellipse ${shapeMap[shape]} at ${positionMap[position]}, ${color} 0%, transparent 70%)`,
-        opacity: intensity,
-        filter: `blur(${blur}px)`,
-        willChange: 'filter, opacity',
-        ...style,
+        background: `radial-gradient(ellipse 70% 55% at 50% 50%, ${color} 0%, transparent 70%)`,
+        opacity: preset.opacity,
+        filter: `blur(${preset.blur}px)`,
       }}
       {...props}
     />
   );
 }
 
-export { AmbientEmitter, type AmbientEmitterProps };
+export { AmbientEmitter, type AmbientEmitterProps, type EmitterSize };
