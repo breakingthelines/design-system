@@ -43,8 +43,8 @@ function useBrightnessBoost(src?: string): number {
         const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
         // Perceived luminance (ITU-R BT.601)
         const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        // Dark (lum ≈ 0) → boost ≈ 2.0, mid (lum ≈ 0.5) → boost ≈ 1.0, bright → 1.0
-        setBoost(Math.max(1, 2 - lum * 2));
+        // Dark (lum ≈ 0) → boost ≈ 1.5, mid (lum ≈ 0.3) → boost ≈ 1.2, bright (lum ≈ 0.5+) → 1.0
+        setBoost(Math.max(1, 1.5 - lum));
       } catch {
         // CORS or canvas taint — fall back to no boost
       }
