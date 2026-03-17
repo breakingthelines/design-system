@@ -77,7 +77,9 @@ function ProfileHero({
         <AmbientEmitter
           src={bannerUrl}
           color="rgba(180, 130, 40, 0.32)"
-          size="sm"
+          size="md"
+          position="center"
+          scale={1.3}
         />
 
         {/* Banner image with 3D tilt */}
