@@ -30,6 +30,10 @@ interface AmbientEmitterProps extends React.ComponentProps<'div'> {
   color?: string;
   /** Glow intensity preset. Default `'md'`. */
   size?: EmitterSize;
+  /** Override preset opacity (0–1). Useful for fine-tuning per context. */
+  opacity?: number;
+  /** Override preset scale multiplier. */
+  scale?: number;
 }
 
 /**
@@ -50,10 +54,14 @@ function AmbientEmitter({
   src,
   color,
   size = 'md',
+  opacity,
+  scale,
   className,
   ...props
 }: AmbientEmitterProps) {
   const preset = sizePresets[size];
+  const finalOpacity = opacity ?? preset.opacity;
+  const finalScale = scale ?? preset.scale;
 
   if (!src && !color) return null;
 
@@ -72,9 +80,9 @@ function AmbientEmitter({
           style={{
             width: preset.width,
             height: preset.height,
-            opacity: preset.opacity,
+            opacity: finalOpacity,
             filter: `blur(${preset.blur}px)`,
-            transform: `translateX(-40%) scale(${preset.scale})`,
+            transform: `translateX(-40%) scale(${finalScale})`,
           }}
         />
         <div
@@ -93,7 +101,7 @@ function AmbientEmitter({
       className={cn('pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10', className)}
       style={{
         background: `radial-gradient(ellipse 70% 55% at 50% 50%, ${color} 0%, transparent 70%)`,
-        opacity: preset.opacity,
+        opacity: finalOpacity,
         filter: `blur(${preset.blur}px)`,
       }}
       {...props}
