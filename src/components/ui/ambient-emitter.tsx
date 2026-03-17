@@ -4,9 +4,10 @@ import * as React from 'react';
 import { cn } from '#/lib/utils';
 
 type EmitterSize = 'sm' | 'md' | 'lg';
+type EmitterPosition = 'top' | 'center';
 
 /**
- * Size presets control the image dimensions, blur, opacity, and overlay.
+ * Size presets control the image dimensions, blur, base opacity, and overlay.
  * - sm: Subtle glow for heroes and banners
  * - md: Default — balanced for most contexts
  * - lg: Full detail-page glow (video/podcast detail)
@@ -20,13 +21,26 @@ const sizePresets: Record<
   lg: { width: 789, height: 588, blur: 100, opacity: 0.4, scale: 1.3, overlayHeight: 800 },
 };
 
+interface ImageAdaptation {
+  brightness: number;
+  opacityMultiplier: number;
+  saturation: number;
+}
+
 /**
- * Measure perceived luminance of an image via a 1×1 canvas.
- * Returns a CSS brightness multiplier: dark images get boosted,
- * bright images stay at 1.0. Runs once per src, essentially free.
+ * Analyse image luminance via a 4×4 canvas (16 pixels — essentially free).
+ * Returns adaptive CSS values: dark images get boosted brightness, opacity,
+ * and saturation so the glow stays visible against dark backgrounds.
+ * Bright images pass through unchanged.
+ *
+ * Runs once per `src` change. No extra network request (browser image cache).
  */
-function useBrightnessBoost(src?: string): number {
-  const [boost, setBoost] = React.useState(1);
+function useImageAdaptation(src?: string): ImageAdaptation {
+  const [adaptation, setAdaptation] = React.useState<ImageAdaptation>({
+    brightness: 1,
+    opacityMultiplier: 1,
+    saturation: 1,
+  });
 
   React.useEffect(() => {
     if (!src) return;
@@ -35,24 +49,36 @@ function useBrightnessBoost(src?: string): number {
     img.onload = () => {
       try {
         const c = document.createElement('canvas');
-        c.width = 1;
-        c.height = 1;
+        c.width = 4;
+        c.height = 4;
         const ctx = c.getContext('2d');
         if (!ctx) return;
-        ctx.drawImage(img, 0, 0, 1, 1);
-        const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-        // Perceived luminance (ITU-R BT.601)
-        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        // Dark (lum ≈ 0) → boost ≈ 1.5, mid (lum ≈ 0.3) → boost ≈ 1.2, bright (lum ≈ 0.5+) → 1.0
-        setBoost(Math.max(1, 1.5 - lum));
+        ctx.drawImage(img, 0, 0, 4, 4);
+        const data = ctx.getImageData(0, 0, 4, 4).data;
+        // Average perceived luminance across 16 samples (ITU-R BT.601)
+        let totalLum = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          totalLum += (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
+        }
+        const lum = totalLum / 16;
+        // darkness factor: 0 for bright images (lum ≥ 0.5), 1 for black
+        const darkness = Math.max(0, 1 - lum * 2);
+        setAdaptation({
+          // Dark → 1.8x brightness, bright → 1.0x
+          brightness: 1 + darkness * 0.8,
+          // Dark → 1.5x opacity boost, bright → 1.0x
+          opacityMultiplier: 1 + darkness * 0.5,
+          // Dark → 1.4x saturation, bright → 1.0x
+          saturation: 1 + darkness * 0.4,
+        });
       } catch {
-        // CORS or canvas taint — fall back to no boost
+        // CORS or canvas taint — fall back to defaults
       }
     };
     img.src = src;
   }, [src]);
 
-  return boost;
+  return adaptation;
 }
 
 interface AmbientEmitterProps extends React.ComponentProps<'div'> {
@@ -69,6 +95,8 @@ interface AmbientEmitterProps extends React.ComponentProps<'div'> {
   opacity?: number;
   /** Override preset scale multiplier. */
   scale?: number;
+  /** Glow origin. `'top'` for detail pages, `'center'` for heroes/cards. Default `'top'`. */
+  position?: EmitterPosition;
 }
 
 /**
@@ -76,7 +104,7 @@ interface AmbientEmitterProps extends React.ComponentProps<'div'> {
  *
  * Place inside a `position: relative` parent. When `src` is provided, renders
  * a massively blurred copy of the image for a natural, content-aware glow.
- * Dark images are automatically brightened so the glow stays visible.
+ * Dark images are automatically boosted (brightness + opacity + saturation).
  * Falls back to a radial-gradient colour blob when only `color` is given.
  *
  * ```tsx
@@ -92,39 +120,55 @@ function AmbientEmitter({
   size = 'md',
   opacity,
   scale,
+  position = 'top',
   className,
   ...props
 }: AmbientEmitterProps) {
   const preset = sizePresets[size];
-  const finalOpacity = opacity ?? preset.opacity;
   const finalScale = scale ?? preset.scale;
-  const brightnessBoost = useBrightnessBoost(src);
+  const { brightness, opacityMultiplier, saturation } = useImageAdaptation(src);
+  const finalOpacity = Math.min(1, (opacity ?? preset.opacity) * opacityMultiplier);
 
   if (!src && !color) return null;
 
   if (src) {
+    const isCenter = position === 'center';
+
     return (
       <div
         data-slot="ambient-emitter"
         aria-hidden
-        className={cn('pointer-events-none absolute inset-x-0 top-0', className)}
+        className={cn(
+          'pointer-events-none absolute inset-x-0',
+          isCenter ? 'top-1/2 -translate-y-1/2' : 'top-0',
+          className,
+        )}
         {...props}
       >
         <img
           src={src}
           alt=""
-          className="absolute top-0 left-1/2 -translate-x-[40%] object-cover"
+          className={cn(
+            'absolute object-cover',
+            isCenter
+              ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2'
+              : 'top-0 left-1/2 -translate-x-[40%]',
+          )}
           style={{
             width: preset.width,
             height: preset.height,
             opacity: finalOpacity,
-            filter: `blur(${preset.blur}px) brightness(${brightnessBoost})`,
-            transform: `translateX(-40%) scale(${finalScale})`,
+            filter: `blur(${preset.blur}px) brightness(${brightness}) saturate(${saturation})`,
+            ...(!isCenter && { transform: `translateX(-40%) scale(${finalScale})` }),
+            ...(isCenter && { transform: `translate(-50%, -50%) scale(${finalScale})` }),
           }}
         />
         <div
-          className="absolute inset-x-0 top-0 bg-[rgba(8,8,8,0.05)] backdrop-blur-[10px]"
-          style={{ height: preset.overlayHeight }}
+          className={cn(
+            'absolute inset-x-0 bg-[rgba(8,8,8,0.05)] backdrop-blur-[10px]',
+            isCenter ? 'top-0 bottom-0' : 'top-0',
+          )}
+          style={isCenter ? undefined : { height: preset.overlayHeight }}
         />
       </div>
     );
@@ -146,4 +190,4 @@ function AmbientEmitter({
   );
 }
 
-export { AmbientEmitter, type AmbientEmitterProps, type EmitterSize };
+export { AmbientEmitter, type AmbientEmitterProps, type EmitterSize, type EmitterPosition };
