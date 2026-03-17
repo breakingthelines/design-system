@@ -74,13 +74,14 @@ function ProfileHero({
     >
       {/* Banner with ambient glow */}
       <div className="relative">
-        <AmbientEmitter
-          src={bannerUrl}
-          color="rgba(180, 130, 40, 0.32)"
-          size="md"
-          position="center"
-          scale={1.3}
-        />
+        {bannerUrl && (
+          <AmbientEmitter
+            src={bannerUrl}
+            size="md"
+            position="center"
+            scale={1.3}
+          />
+        )}
 
         {/* Banner image with 3D tilt */}
         <motion.div
@@ -101,8 +102,8 @@ function ProfileHero({
               className="size-full"
               style={{
                 background:
-                  'radial-gradient(ellipse 80% 70% at 70% 40%, rgba(229, 51, 42, 0.12) 0%, transparent 70%), ' +
-                  'radial-gradient(ellipse 60% 50% at 30% 60%, rgba(226, 6, 19, 0.08) 0%, transparent 60%)',
+                  'radial-gradient(ellipse 80% 70% at 70% 40%, rgba(229, 51, 42, 0.15) 0%, transparent 70%), ' +
+                  'radial-gradient(ellipse 60% 50% at 30% 60%, rgba(226, 6, 19, 0.10) 0%, transparent 60%)',
               }}
             />
           )}
