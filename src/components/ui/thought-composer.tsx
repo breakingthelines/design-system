@@ -68,7 +68,7 @@ function ThoughtComposer({
     <div
       data-slot="thought-composer"
       className={cn(
-        'flex flex-col gap-2 rounded-[4px] border border-grey-300 bg-grey-100 px-8 py-3 backdrop-blur-[15px]',
+        'flex flex-col gap-2 rounded-[4px] border border-grey-300 bg-grey-200 px-8 py-3 backdrop-blur-[15px]',
         disabled && 'opacity-50',
         className
       )}
@@ -76,10 +76,10 @@ function ThoughtComposer({
     >
       {/* Prompt row — always visible */}
       <div
-        className="flex items-start gap-2 cursor-text"
+        className="flex items-center gap-2 cursor-text"
         onClick={handleExpand}
       >
-        <Avatar size="default" className="shrink-0 mt-0.5">
+        <Avatar size="default" className="shrink-0">
           {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
           <AvatarFallback>{initials ?? '?'}</AvatarFallback>
         </Avatar>
@@ -87,7 +87,7 @@ function ThoughtComposer({
         {expanded ? (
           <div className="flex-1 min-w-0">
             <MiniEditor
-              placeholder={placeholder}
+              placeholder={`${placeholder}...`}
               submitOn="mod-enter"
               maxLength={MAX_CHARS}
               multiline
@@ -100,8 +100,8 @@ function ThoughtComposer({
             />
           </div>
         ) : (
-          <span className="text-sm font-medium leading-6 tracking-[-0.42px] text-muted-foreground select-none">
-            {placeholder}
+          <span className="text-sm font-medium leading-6 tracking-[-0.42px] text-white/30 select-none">
+            {placeholder}...
           </span>
         )}
       </div>
@@ -161,14 +161,19 @@ function ThoughtComposer({
               </span>
             )}
             <Button
-              variant="outline"
+              variant={canSubmit ? 'default' : 'outline'}
               data-shimmer="slow"
               disabled={!canSubmit}
               onClick={() => {
                 const text = editorRef.current?.getText();
                 if (text) handleSubmit(text);
               }}
-              className="w-[100px] bg-grey-200 border-grey-300 backdrop-blur-[15px] rounded-[2px] px-6 py-2 hover:bg-grey-200 hover:border-[#807c7c]"
+              className={cn(
+                'w-[100px] rounded-[2px] px-6 py-2 backdrop-blur-[15px]',
+                canSubmit
+                  ? 'bg-red-300 border-red-100 hover:bg-red-100'
+                  : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]'
+              )}
             >
               Post
             </Button>
