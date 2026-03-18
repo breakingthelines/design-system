@@ -33,14 +33,14 @@ interface ThoughtsPanelProps {
   thoughts: PanelThought[];
   /** Current user info for the composer — omit to hide composer */
   user?: { avatarUrl?: string; initials?: string };
-  /** New comment submit handler */
-  onSubmit?: (text: string) => void;
+  /** New comment submit handler — parentId is set when replying */
+  onSubmit?: (text: string, parentId?: string) => void;
   /** Like (thumbs up) handler */
   onLike?: (thoughtId: string) => void;
   /** Unlike (remove thumbs up) handler */
   onUnlike?: (thoughtId: string) => void;
-  /** Reply handler — e.g. scroll to or focus reply input */
-  onReply?: (thoughtId: string) => void;
+  /** Load replies for a thought — called when "View replies" is clicked */
+  onLoadReplies?: (thoughtId: string) => void;
   /** GIF picker handler — shows GIF icon in composer when set */
   onGifClick?: () => void;
   /** Emoji/football picker handler — shows icon in composer when set */
@@ -96,7 +96,7 @@ function ThoughtsPanel({
   onSubmit,
   onLike,
   onUnlike,
-  onReply,
+  onLoadReplies,
   onGifClick,
   onEmojiClick,
   isLoading = false,
@@ -104,12 +104,19 @@ function ThoughtsPanel({
 }: ThoughtsPanelProps) {
   const composerRef = React.useRef<MiniEditorHandle>(null);
   const [hasText, setHasText] = React.useState(false);
+  const [replyingTo, setReplyingTo] = React.useState<string | null>(null);
 
   function handleSubmit(text: string) {
     if (!user) return;
     onSubmit?.(text);
     composerRef.current?.clear();
     setHasText(false);
+  }
+
+  function handleReplySubmit(text: string, parentId: string) {
+    if (!user) return;
+    onSubmit?.(text, parentId);
+    setReplyingTo(null);
   }
 
   // Close on Escape
@@ -130,6 +137,11 @@ function ThoughtsPanel({
     return () => {
       document.body.style.overflow = prev;
     };
+  }, [open]);
+
+  // Clear reply state when panel closes
+  React.useEffect(() => {
+    if (!open) setReplyingTo(null);
   }, [open]);
 
   return (
@@ -261,9 +273,14 @@ function ThoughtsPanel({
                     <CommentItem
                       key={thought.id}
                       thought={thought}
+                      user={user}
+                      replyingTo={replyingTo}
+                      onStartReply={(id) => setReplyingTo(id)}
+                      onCancelReply={() => setReplyingTo(null)}
+                      onReplySubmit={handleReplySubmit}
                       onLike={onLike}
                       onUnlike={onUnlike}
-                      onReply={onReply}
+                      onLoadReplies={onLoadReplies}
                     />
                   ))}
                 </motion.div>
@@ -286,107 +303,229 @@ function ThoughtsPanel({
 
 function CommentItem({
   thought,
+  user,
+  replyingTo,
+  onStartReply,
+  onCancelReply,
+  onReplySubmit,
   onLike,
   onUnlike,
-  onReply,
+  onLoadReplies,
+  isReply = false,
 }: {
   thought: PanelThought;
+  user?: { avatarUrl?: string; initials?: string };
+  replyingTo: string | null;
+  onStartReply: (id: string) => void;
+  onCancelReply: () => void;
+  onReplySubmit: (text: string, parentId: string) => void;
   onLike?: (id: string) => void;
   onUnlike?: (id: string) => void;
-  onReply?: (id: string) => void;
+  onLoadReplies?: (id: string) => void;
+  isReply?: boolean;
 }) {
   const isOP = thought.isOriginalAuthor;
+  const isReplying = replyingTo === thought.id;
+  const replyEditorRef = React.useRef<MiniEditorHandle>(null);
+  const [replyHasText, setReplyHasText] = React.useState(false);
+
+  // Auto-focus reply editor when it opens
+  React.useEffect(() => {
+    if (isReplying) {
+      requestAnimationFrame(() => replyEditorRef.current?.focus());
+    }
+  }, [isReplying]);
+
+  const replies = thought.replies ?? [];
+  const replyCount = thought.replyCount ?? 0;
+  const hasUnloadedReplies = replyCount > 0 && replies.length === 0;
 
   return (
-    <motion.div className="flex gap-3" variants={itemVariants}>
-      {/* Avatar */}
-      <Avatar className="size-10 shrink-0">
-        {thought.author.avatarUrl && (
-          <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
-        )}
-        <AvatarFallback>{thought.author.initials ?? thought.author.name.charAt(0)}</AvatarFallback>
-      </Avatar>
+    <motion.div className="flex flex-col" variants={itemVariants}>
+      <div className={cn('flex gap-3', isReply && 'pl-[52px]')}>
+        {/* Avatar */}
+        <Avatar className={cn(isReply ? 'size-8' : 'size-10', 'shrink-0')}>
+          {thought.author.avatarUrl && (
+            <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
+          )}
+          <AvatarFallback>{thought.author.initials ?? thought.author.name.charAt(0)}</AvatarFallback>
+        </Avatar>
 
-      {/* Content */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
-        {/* Pinned indicator */}
-        {thought.pinnedBy && (
-          <div className="flex items-center gap-1">
-            <PushPin size={14} className="text-[#807c7c]" />
-            <span className="font-body text-[10px] font-medium leading-6 text-[#807c7c]">
-              Pinned by {thought.pinnedBy}
-            </span>
-          </div>
-        )}
+        {/* Content */}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          {/* Pinned indicator */}
+          {thought.pinnedBy && (
+            <div className="flex items-center gap-1">
+              <PushPin size={14} className="text-[#807c7c]" />
+              <span className="font-body text-[10px] font-medium leading-6 text-[#807c7c]">
+                Pinned by {thought.pinnedBy}
+              </span>
+            </div>
+          )}
 
-        {/* Author + timestamp — two treatments */}
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-2">
-            {isOP ? (
-              /* Original author: grey pill + 12px regular + verified badge */
-              <span className="inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c] px-2 py-1">
-                <span className="font-content text-xs font-normal tracking-[-0.36px] text-white">
+          {/* Author + timestamp — two treatments */}
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              {isOP ? (
+                /* Original author: grey pill + 12px regular + verified badge */
+                <span className="inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c] px-2 py-1">
+                  <span className="font-content text-xs font-normal tracking-[-0.36px] text-white">
+                    {thought.author.name}
+                  </span>
+                  {thought.author.verified && <VerifiedBadge size="sm" />}
+                </span>
+              ) : (
+                /* Regular commenter: no pill, 14px semibold, no badge */
+                <span className={cn(
+                  'font-content font-semibold tracking-[-0.42px] text-white',
+                  isReply ? 'py-[2px] text-xs' : 'py-[3.5px] text-sm',
+                )}>
                   {thought.author.name}
                 </span>
-                {thought.author.verified && <VerifiedBadge size="sm" />}
-              </span>
-            ) : (
-              /* Regular commenter: no pill, 14px semibold, no badge */
-              <span className="py-[3.5px] font-content text-sm font-semibold tracking-[-0.42px] text-white">
-                {thought.author.name}
-              </span>
-            )}
-            {thought.createdAt && (
-              <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-                {thought.createdAt}
-              </span>
-            )}
-          </div>
-
-          {/* Body */}
-          <p className="font-content text-sm font-normal leading-[18px] tracking-[-0.126px] text-white">
-            {thought.body}
-          </p>
-        </div>
-
-        {/* Actions: Reply + ThumbsUp + count + ThumbsDown */}
-        <div className="flex items-center gap-4">
-          <button
-            type="button"
-            onClick={() => onReply?.(thought.id)}
-            className="cursor-pointer font-content text-xs font-normal leading-[18px] tracking-[-0.36px] text-white transition-colors hover:text-red-100"
-          >
-            Reply
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id)
-                }
-                className={cn(
-                  'cursor-pointer transition-colors',
-                  thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white',
-                )}
-              >
-                <ThumbsUp size={20} weight={thought.liked ? 'fill' : 'regular'} />
-              </button>
-              {(thought.stats.likes ?? 0) > 0 && (
+              )}
+              {thought.createdAt && (
                 <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-                  {thought.stats.likes}
+                  {thought.createdAt}
                 </span>
               )}
             </div>
-            <button
-              type="button"
-              className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
-            >
-              <ThumbsDown size={20} />
-            </button>
+
+            {/* Body */}
+            <p className={cn(
+              'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
+              isReply ? 'text-xs' : 'text-sm',
+            )}>
+              {thought.body}
+            </p>
+          </div>
+
+          {/* Actions: Reply + ThumbsUp + count + ThumbsDown */}
+          <div className="flex items-center gap-4">
+            {!isReply && (
+              <button
+                type="button"
+                onClick={() => onStartReply(thought.id)}
+                className="cursor-pointer font-content text-xs font-normal leading-[18px] tracking-[-0.36px] text-white transition-colors hover:text-red-100"
+              >
+                Reply{replyCount > 0 ? ` (${replyCount})` : ''}
+              </button>
+            )}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id)
+                  }
+                  className={cn(
+                    'cursor-pointer transition-colors',
+                    thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white',
+                  )}
+                >
+                  <ThumbsUp size={isReply ? 16 : 20} weight={thought.liked ? 'fill' : 'regular'} />
+                </button>
+                {(thought.stats.likes ?? 0) > 0 && (
+                  <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
+                    {thought.stats.likes}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
+              >
+                <ThumbsDown size={isReply ? 16 : 20} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* Inline reply composer — shown when replying to this thought */}
+      {isReplying && user && (
+        <div className="mt-4 pl-[52px] flex flex-col gap-2">
+          <div className="flex items-start gap-3">
+            <Avatar className="size-8 shrink-0">
+              {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt="You" />}
+              <AvatarFallback>{user.initials ?? '?'}</AvatarFallback>
+            </Avatar>
+            <div className="flex-1 min-w-0 border-b border-[#807c7c]/50 pb-2">
+              <MiniEditor
+                placeholder={`Reply to ${thought.author.name}...`}
+                submitOn="mod-enter"
+                editorRef={replyEditorRef}
+                onSubmit={(text) => {
+                  onReplySubmit(text, thought.id);
+                  setReplyHasText(false);
+                }}
+                onChange={(text) => setReplyHasText(text.length > 0)}
+                className="font-body text-sm font-medium leading-6 text-white"
+                placeholderClassName="text-[#807c7c] font-medium"
+              />
+            </div>
+          </div>
+          <div className="flex items-center justify-end gap-2 pl-11">
+            <Button
+              variant="outline"
+              onClick={onCancelReply}
+              className="rounded-[2px] px-4 py-1.5 text-xs bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant={replyHasText ? 'default' : 'outline'}
+              data-shimmer="slow"
+              disabled={!replyHasText}
+              onClick={() => {
+                const text = replyEditorRef.current?.getText();
+                if (text) {
+                  onReplySubmit(text, thought.id);
+                  setReplyHasText(false);
+                }
+              }}
+              className={cn(
+                'rounded-[2px] px-4 py-1.5 text-xs',
+                replyHasText
+                  ? 'bg-red-300 border-red-100 hover:bg-red-100'
+                  : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]',
+              )}
+            >
+              Reply
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* "View replies" link — when replies exist but aren't loaded */}
+      {hasUnloadedReplies && !isReplying && (
+        <button
+          type="button"
+          onClick={() => onLoadReplies?.(thought.id)}
+          className="mt-2 pl-[52px] cursor-pointer font-content text-xs font-medium text-red-100 transition-colors hover:text-red-300 text-left"
+        >
+          View {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+        </button>
+      )}
+
+      {/* Replies — flat, 1 level deep, no nested reply button */}
+      {replies.length > 0 && (
+        <div className="mt-4 flex flex-col gap-4">
+          {replies.map((reply) => (
+            <CommentItem
+              key={reply.id}
+              thought={reply as PanelThought}
+              user={user}
+              replyingTo={replyingTo}
+              onStartReply={onStartReply}
+              onCancelReply={onCancelReply}
+              onReplySubmit={onReplySubmit}
+              onLike={onLike}
+              onUnlike={onUnlike}
+              isReply
+            />
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }

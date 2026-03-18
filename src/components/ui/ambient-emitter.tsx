@@ -177,6 +177,22 @@ function AmbientEmitter({
   const { brightness, opacityMultiplier, saturation, dominantColor } = useImageAnalysis(src);
   const finalOpacity = Math.min(1, (opacity ?? preset.opacity) * opacityMultiplier);
 
+  // Suppress transitions when src changes to avoid bloom/flicker on image swap.
+  // Re-enable after two frames so steady-state adjustments still animate smoothly.
+  const [transitionEnabled, setTransitionEnabled] = React.useState(true);
+  const prevSrcRef = React.useRef(src);
+  React.useEffect(() => {
+    if (prevSrcRef.current !== src) {
+      prevSrcRef.current = src;
+      setTransitionEnabled(false);
+      const id = requestAnimationFrame(() => {
+        requestAnimationFrame(() => setTransitionEnabled(true));
+      });
+      return () => cancelAnimationFrame(id);
+    }
+  }, [src]);
+  const transition = transitionEnabled ? TRANSITION : 'none';
+
   if (!src && !color) return null;
 
   if (src) {
@@ -199,7 +215,7 @@ function AmbientEmitter({
               background: `radial-gradient(ellipse 70% 55% at 50% 50%, rgba(${dominantColor}, ${Math.min(1, finalOpacity * 1.2)}) 0%, transparent 70%)`,
               filter: `blur(${Math.round(preset.blur * 0.7)}px) saturate(1.5) brightness(${brightness})`,
               transform: `scale(${finalScale * 1.3})`,
-              transition: TRANSITION,
+              transition,
             }}
           />
           {/* Layer 2: Blurred image — organic colour variation on top */}
@@ -211,7 +227,7 @@ function AmbientEmitter({
               opacity: finalOpacity,
               filter: filterChain,
               transform: `scale(${finalScale})`,
-              transition: TRANSITION,
+              transition,
             }}
           />
         </div>
