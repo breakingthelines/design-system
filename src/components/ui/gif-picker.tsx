@@ -18,26 +18,20 @@ interface GifFile {
 interface GifMediaSet {
   gif?: GifFile;
   webp?: GifFile;
-  jpg?: GifFile;
   mp4?: GifFile;
 }
 
-interface KlipyGifItem {
-  id: number;
-  slug: string;
+interface ProxyGifItem {
+  id: string;
   title: string;
-  file: {
-    hd?: GifMediaSet;
-    md?: GifMediaSet;
-    sm?: GifMediaSet;
-  };
+  slug: string;
+  hd?: GifMediaSet;
+  md?: GifMediaSet;
+  sm?: GifMediaSet;
 }
 
-interface KlipyResponse {
-  result: boolean;
-  data: {
-    data: KlipyGifItem[];
-  };
+interface ProxyResponse {
+  gifs: ProxyGifItem[];
 }
 
 interface GifSelection {
@@ -50,12 +44,10 @@ interface GifSelection {
 }
 
 interface GifPickerProps {
-  /** KLIPY API key */
-  apiKey: string;
+  /** Base URL for the GIF proxy (e.g. "http://localhost:9090/api/v1/gifs") */
+  apiBaseUrl: string;
   /** Called when a user selects a GIF */
   onGifSelect?: (gif: GifSelection) => void;
-  /** Unique user identifier for KLIPY analytics */
-  userId?: string;
   className?: string;
 }
 
@@ -63,16 +55,16 @@ interface GifPickerProps {
  * Helpers
  * ──────────────────────────────────────────────────────────── */
 
-function getBestUrl(item: KlipyGifItem, size: 'sm' | 'md' | 'hd'): GifFile | undefined {
-  const set = item.file[size];
+function getBestUrl(item: ProxyGifItem, size: 'sm' | 'md' | 'hd'): GifFile | undefined {
+  const set = item[size];
   return set?.webp ?? set?.gif;
 }
 
-function toSelection(item: KlipyGifItem): GifSelection {
+function toSelection(item: ProxyGifItem): GifSelection {
   const hd = getBestUrl(item, 'hd') ?? getBestUrl(item, 'md');
   const preview = getBestUrl(item, 'sm') ?? getBestUrl(item, 'md');
   return {
-    id: String(item.id),
+    id: item.id,
     url: hd?.url ?? preview?.url ?? '',
     previewUrl: preview?.url ?? hd?.url ?? '',
     title: item.title,
@@ -86,13 +78,12 @@ function toSelection(item: KlipyGifItem): GifSelection {
  * ──────────────────────────────────────────────────────────── */
 
 function GifPicker({
-  apiKey,
+  apiBaseUrl,
   onGifSelect,
-  userId = 'anonymous',
   className,
 }: GifPickerProps) {
   const [query, setQuery] = React.useState('');
-  const [gifs, setGifs] = React.useState<KlipyGifItem[]>([]);
+  const [gifs, setGifs] = React.useState<ProxyGifItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState(false);
   const debounceRef = React.useRef<ReturnType<typeof setTimeout>>(null);
@@ -104,26 +95,19 @@ function GifPicker({
       setError(false);
 
       try {
-        const endpoint = searchQuery.trim()
-          ? `https://api.klipy.com/api/v1/${apiKey}/gifs/search`
-          : `https://api.klipy.com/api/v1/${apiKey}/gifs/trending`;
+        const trimmed = searchQuery.trim();
+        const endpoint = trimmed
+          ? `${apiBaseUrl}/search`
+          : `${apiBaseUrl}/trending`;
 
-        const params = new URLSearchParams({
-          per_page: '24',
-          customer_id: userId,
-          content_filter: 'medium',
-          format_filter: 'webp,gif',
-        });
-
-        if (searchQuery.trim()) {
-          params.set('q', searchQuery.trim());
-        }
+        const params = new URLSearchParams({ per_page: '24' });
+        if (trimmed) params.set('query', trimmed);
 
         const res = await fetch(`${endpoint}?${params}`);
         if (!res.ok) throw new Error(`${res.status}`);
 
-        const json: KlipyResponse = await res.json();
-        setGifs(json.data?.data ?? []);
+        const json: ProxyResponse = await res.json();
+        setGifs(json.gifs ?? []);
       } catch {
         setError(true);
         setGifs([]);
@@ -131,7 +115,7 @@ function GifPicker({
         setLoading(false);
       }
     },
-    [apiKey, userId]
+    [apiBaseUrl]
   );
 
   React.useEffect(() => {

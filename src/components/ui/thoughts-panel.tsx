@@ -46,12 +46,12 @@ interface ThoughtsPanelProps {
   onUnlike?: (thoughtId: string) => void;
   /** Load replies for a thought — called when "View replies" is clicked */
   onLoadReplies?: (thoughtId: string) => void;
-  /** Legacy: external GIF click handler (used when gifApiKey is not set) */
+  /** Legacy: external GIF click handler (used when gifApiBaseUrl is not set) */
   onGifClick?: () => void;
   /** Legacy: external emoji click handler (used when emojiEnabled is not set) */
   onEmojiClick?: () => void;
-  /** KLIPY API key — enables built-in GIF picker in composer */
-  gifApiKey?: string;
+  /** GIF proxy base URL — enables built-in GIF picker in composer */
+  gifApiBaseUrl?: string;
   /** Enables built-in emoji picker in composer */
   emojiEnabled?: boolean;
   /** User ID for KLIPY analytics */
@@ -110,7 +110,7 @@ function ThoughtsPanel({
   onLoadReplies,
   onGifClick,
   onEmojiClick,
-  gifApiKey,
+  gifApiBaseUrl,
   emojiEnabled = false,
   userId,
   isLoading = false,
@@ -122,7 +122,7 @@ function ThoughtsPanel({
   const [panelPicker, setPanelPicker] = React.useState<PanelActivePicker>(null);
   const [selectedGif, setSelectedGif] = React.useState<GifSelection | null>(null);
 
-  const useBuiltInGif = !!gifApiKey;
+  const useBuiltInGif = !!gifApiBaseUrl;
   const useBuiltInEmoji = emojiEnabled;
   const showGifBtn = useBuiltInGif || !!onGifClick;
   const showEmojiBtn = useBuiltInEmoji || !!onEmojiClick;
@@ -323,10 +323,9 @@ function ThoughtsPanel({
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden pl-14"
                     >
-                      {panelPicker === 'gif' && gifApiKey && (
+                      {panelPicker === 'gif' && gifApiBaseUrl && (
                         <GifPicker
-                          apiKey={gifApiKey}
-                          userId={userId}
+                          apiBaseUrl={gifApiBaseUrl}
                           onGifSelect={(gif) => {
                             setSelectedGif(gif);
                             setPanelPicker(null);

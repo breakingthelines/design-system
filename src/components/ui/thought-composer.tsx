@@ -30,15 +30,14 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
   onSubmit?: (text: string, media?: ThoughtComposerMedia) => void;
   /** Image attachment handler (opens external upload flow) */
   onImageClick?: () => void;
-  /** KLIPY API key — enables built-in GIF picker when set */
-  gifApiKey?: string;
-  /** Legacy: external GIF click handler (used when gifApiKey is not set) */
+  /** GIF proxy base URL — enables built-in GIF picker when set */
+  gifApiBaseUrl?: string;
+  /** Legacy: external GIF click handler (used when gifApiBaseUrl is not set) */
   onGifClick?: () => void;
   /** Enables built-in emoji picker */
   emojiEnabled?: boolean;
   /** Legacy: external emoji click handler (used when emojiEnabled is not set) */
   onEmojiClick?: () => void;
-  /** Current user ID for KLIPY analytics */
   userId?: string;
   disabled?: boolean;
 }
@@ -50,7 +49,7 @@ function ThoughtComposer({
   placeholder = 'Share your thoughts',
   onSubmit,
   onImageClick,
-  gifApiKey,
+  gifApiBaseUrl,
   onGifClick,
   emojiEnabled = false,
   onEmojiClick,
@@ -69,7 +68,7 @@ function ThoughtComposer({
   const hasContent = hasText || selectedGif !== null;
   const canSubmit = hasContent && !isOverLimit && !disabled;
 
-  const useBuiltInGif = !!gifApiKey;
+  const useBuiltInGif = !!gifApiBaseUrl;
   const useBuiltInEmoji = emojiEnabled;
   const showGifButton = useBuiltInGif || !!onGifClick;
   const showEmojiButton = useBuiltInEmoji || !!onEmojiClick;
@@ -278,10 +277,9 @@ function ThoughtComposer({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            {activePicker === 'gif' && gifApiKey && (
+            {activePicker === 'gif' && gifApiBaseUrl && (
               <GifPicker
-                apiKey={gifApiKey}
-                userId={userId}
+                apiBaseUrl={gifApiBaseUrl}
                 onGifSelect={handleGifSelect}
                 className="w-full border-0 shadow-none"
               />
