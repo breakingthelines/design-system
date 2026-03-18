@@ -34,6 +34,7 @@ export interface ThoughtContentContext {
   title: string;
   slug: string;
   creatorHandle: string;
+  href: string;
 }
 
 export interface ThoughtItem {

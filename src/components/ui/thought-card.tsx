@@ -6,6 +6,7 @@ import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
+import { useLinkComponent } from '#/components/ui/link-context';
 import type { ThoughtItem } from '#/types/content';
 
 interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
@@ -17,6 +18,7 @@ interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'childr
 }
 
 function ThoughtCard({ className, thought, actions, onClick, ...props }: ThoughtCardProps) {
+  const Link = useLinkComponent();
   const engagementActions: EngagementAction[] = actions ?? [
     { type: 'comment', count: thought.stats.comments },
     { type: 'like', count: thought.stats.likes, active: thought.liked },
@@ -52,7 +54,13 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
         {thought.replyingTo && (
           <span className="text-xs leading-5 text-foreground/50">
             Replying to{' '}
-            <span className="text-primary font-medium">@{thought.replyingTo.username}</span>
+            <Link
+              href={`/@${thought.replyingTo.username}`}
+              className="text-primary font-medium hover:underline"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              @{thought.replyingTo.username}
+            </Link>
           </span>
         )}
 
@@ -88,7 +96,13 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
         {thought.contentContext && (
           <span className="text-xs leading-5 text-foreground/50">
             on{' '}
-            <span className="font-medium text-foreground/70">{thought.contentContext.title}</span>
+            <Link
+              href={thought.contentContext.href}
+              className="font-medium text-foreground/70 hover:text-foreground hover:underline"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              {thought.contentContext.title}
+            </Link>
           </span>
         )}
 
