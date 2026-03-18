@@ -76,27 +76,29 @@ function ThoughtComposer({
     >
       {/* Prompt row — always visible */}
       <div
-        className="flex items-center gap-2 cursor-text"
+        className="flex items-start gap-2 cursor-text"
         onClick={handleExpand}
       >
-        <Avatar size="default" className="shrink-0">
+        <Avatar size="default" className="shrink-0 mt-0.5">
           {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
           <AvatarFallback>{initials ?? '?'}</AvatarFallback>
         </Avatar>
 
         {expanded ? (
-          <MiniEditor
-            placeholder={placeholder}
-            submitOn="mod-enter"
-            maxLength={MAX_CHARS}
-            multiline
-            disabled={disabled}
-            editorRef={editorRef}
-            onSubmit={handleSubmit}
-            onChange={(text) => setHasText(text.length > 0)}
-            onRemainingChange={setRemaining}
-            className="text-sm font-medium leading-6 tracking-[-0.42px] text-foreground placeholder:text-muted-foreground"
-          />
+          <div className="flex-1 min-w-0">
+            <MiniEditor
+              placeholder={placeholder}
+              submitOn="mod-enter"
+              maxLength={MAX_CHARS}
+              multiline
+              disabled={disabled}
+              editorRef={editorRef}
+              onSubmit={handleSubmit}
+              onChange={(text) => setHasText(text.length > 0)}
+              onRemainingChange={setRemaining}
+              className="text-sm font-medium leading-6 tracking-[-0.42px] text-foreground placeholder:text-muted-foreground"
+            />
+          </div>
         ) : (
           <span className="text-sm font-medium leading-6 tracking-[-0.42px] text-muted-foreground select-none">
             {placeholder}
@@ -158,10 +160,16 @@ function ThoughtComposer({
                 {remaining}
               </span>
             )}
-            <Button size="xs" disabled={!canSubmit} onClick={() => {
-              const text = editorRef.current?.getText();
-              if (text) handleSubmit(text);
-            }}>
+            <Button
+              variant="outline"
+              data-shimmer="slow"
+              disabled={!canSubmit}
+              onClick={() => {
+                const text = editorRef.current?.getText();
+                if (text) handleSubmit(text);
+              }}
+              className="w-[100px] bg-grey-200 border-grey-300 backdrop-blur-[15px] rounded-[2px] px-6 py-2 hover:bg-grey-200 hover:border-[#807c7c]"
+            >
               Post
             </Button>
           </div>

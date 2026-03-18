@@ -227,42 +227,39 @@ function SiteNav({
         )}
       </nav>
 
-      {/* Right: Actions — gap-6 (24px) logged-in, gap-8 (32px) logged-out per Figma */}
-      <div className={cn('flex items-center', avatarUrl || initials ? 'gap-6' : 'gap-8')}>
-        {/* Icons: search + notifications (16px gap) */}
-        <div className="flex items-center gap-4">
-          {onSearchClick && (
+      {/* Right: Actions — uniform gap, all items on the same level */}
+      <div className={cn('flex items-center', avatarUrl || initials ? 'gap-5' : 'gap-8')}>
+        {onSearchClick && (
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={onSearchClick}
+            className="flex items-center justify-center text-white hover:text-white/80 transition-colors cursor-pointer"
+          >
+            <SearchIcon className="size-6" />
+          </button>
+        )}
+        {onNotificationsClick && (
+          <div className="relative flex items-center justify-center">
             <button
               type="button"
-              aria-label="Search"
-              onClick={onSearchClick}
-              className="text-white hover:text-white/80 transition-colors cursor-pointer"
+              aria-label="Notifications"
+              onClick={onNotificationsClick}
+              className="flex items-center justify-center text-white hover:text-white/80 transition-colors cursor-pointer"
             >
-              <SearchIcon className="size-6" />
+              <NotificationIcon className="size-6" />
             </button>
-          )}
-          {onNotificationsClick && (
-            <div className="relative">
-              <button
-                type="button"
-                aria-label="Notifications"
-                onClick={onNotificationsClick}
-                className="text-white hover:text-white/80 transition-colors cursor-pointer"
-              >
-                <NotificationIcon className="size-6" />
-              </button>
-              {notificationCount !== undefined && notificationCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white">
-                  {notificationCount > 9 ? '9+' : notificationCount}
-                </span>
-              )}
-            </div>
-          )}
-        </div>
+            {notificationCount !== undefined && notificationCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white">
+                {notificationCount > 9 ? '9+' : notificationCount}
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Avatar (logged in) or Login button (logged out) */}
         {avatarUrl || initials ? (
-          <button type="button" onClick={onAvatarClick} className="cursor-pointer">
+          <button type="button" onClick={onAvatarClick} className="flex items-center justify-center cursor-pointer">
             <Avatar size="default" className="size-[34px]">
               {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
               <AvatarFallback>{initials ?? '?'}</AvatarFallback>
