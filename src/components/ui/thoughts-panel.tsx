@@ -2,10 +2,11 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, PushPin, ThumbsUp, ThumbsDown } from '@phosphor-icons/react';
+import { X, PushPin, ThumbsUp, ThumbsDown, Gif, SoccerBall } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
+import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { MiniEditor, type MiniEditorHandle } from '#/components/ui/mini-editor/index';
 import type { ThoughtItem } from '#/types/content';
@@ -40,6 +41,10 @@ interface ThoughtsPanelProps {
   onUnlike?: (thoughtId: string) => void;
   /** Reply handler — e.g. scroll to or focus reply input */
   onReply?: (thoughtId: string) => void;
+  /** GIF picker handler — shows GIF icon in composer when set */
+  onGifClick?: () => void;
+  /** Emoji/football picker handler — shows icon in composer when set */
+  onEmojiClick?: () => void;
   /** Loading state */
   isLoading?: boolean;
   /** Additional class names on the panel container */
@@ -92,15 +97,19 @@ function ThoughtsPanel({
   onLike,
   onUnlike,
   onReply,
+  onGifClick,
+  onEmojiClick,
   isLoading = false,
   className,
 }: ThoughtsPanelProps) {
   const composerRef = React.useRef<MiniEditorHandle>(null);
+  const [hasText, setHasText] = React.useState(false);
 
   function handleSubmit(text: string) {
     if (!user) return;
     onSubmit?.(text);
     composerRef.current?.clear();
+    setHasText(false);
   }
 
   // Close on Escape
@@ -165,21 +174,66 @@ function ThoughtsPanel({
                 </button>
               </div>
 
-              {/* Composer — avatar + minimal input line */}
-              <div className="mt-6 flex items-center gap-6">
-                <Avatar className="size-10 shrink-0">
-                  {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt="You" />}
-                  <AvatarFallback>{user?.initials ?? '?'}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 border-b border-[#807c7c]/50 pb-2">
-                  <MiniEditor
-                    placeholder={user ? 'Add a thought...' : 'Log in to share your thoughts...'}
-                    submitOn="enter"
-                    editorRef={composerRef}
-                    onSubmit={handleSubmit}
-                    disabled={!user}
-                    className="font-body text-[10px] font-medium leading-6 text-white placeholder:text-[#807c7c]"
-                  />
+              {/* Composer — avatar + input + actions */}
+              <div className="mt-6 flex flex-col gap-2">
+                <div className="flex items-center gap-4">
+                  <Avatar className="size-10 shrink-0">
+                    {user?.avatarUrl && <AvatarImage src={user.avatarUrl} alt="You" />}
+                    <AvatarFallback>{user?.initials ?? '?'}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0 border-b border-[#807c7c]/50 pb-2">
+                    <MiniEditor
+                      placeholder={user ? 'Add a thought...' : 'Log in to share your thoughts...'}
+                      submitOn="mod-enter"
+                      editorRef={composerRef}
+                      onSubmit={handleSubmit}
+                      onChange={(text) => setHasText(text.length > 0)}
+                      disabled={!user}
+                      className="font-body text-sm font-medium leading-6 text-white"
+                      placeholderClassName="text-[#807c7c] font-medium"
+                    />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pl-14">
+                  <div className="flex items-center gap-2">
+                    {onGifClick && (
+                      <button
+                        type="button"
+                        aria-label="Add GIF"
+                        className="flex items-center justify-center p-[9.5px] text-red-100 transition-colors hover:text-red-300"
+                        onClick={onGifClick}
+                      >
+                        <Gif weight="regular" className="size-[15px]" />
+                      </button>
+                    )}
+                    {onEmojiClick && (
+                      <button
+                        type="button"
+                        aria-label="Add emoji"
+                        className="flex items-center justify-center p-[9.5px] text-red-100 transition-colors hover:text-red-300"
+                        onClick={onEmojiClick}
+                      >
+                        <SoccerBall weight="regular" className="size-[15px]" />
+                      </button>
+                    )}
+                  </div>
+                  <Button
+                    variant={hasText ? 'default' : 'outline'}
+                    data-shimmer="slow"
+                    disabled={!hasText || !user}
+                    onClick={() => {
+                      const text = composerRef.current?.getText();
+                      if (text) handleSubmit(text);
+                    }}
+                    className={cn(
+                      'w-[100px] rounded-[2px] px-6 py-2',
+                      hasText
+                        ? 'bg-red-300 border-red-100 hover:bg-red-100'
+                        : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]'
+                    )}
+                  >
+                    Post
+                  </Button>
                 </div>
               </div>
             </div>
