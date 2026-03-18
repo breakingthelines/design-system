@@ -10,7 +10,11 @@ import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { MiniEditor, type MiniEditorHandle } from '#/components/ui/mini-editor/index';
+import { EmojiPicker } from '#/components/ui/emoji-picker';
+import { GifPicker, type GifSelection } from '#/components/ui/gif-picker';
 import type { ThoughtItem } from '#/types/content';
+
+type PanelActivePicker = 'gif' | 'emoji' | null;
 
 /* ────────────────────────────────────────────────────────────
  * Types
@@ -42,10 +46,16 @@ interface ThoughtsPanelProps {
   onUnlike?: (thoughtId: string) => void;
   /** Load replies for a thought — called when "View replies" is clicked */
   onLoadReplies?: (thoughtId: string) => void;
-  /** GIF picker handler — shows GIF icon in composer when set */
+  /** Legacy: external GIF click handler (used when gifApiKey is not set) */
   onGifClick?: () => void;
-  /** Emoji/football picker handler — shows icon in composer when set */
+  /** Legacy: external emoji click handler (used when emojiEnabled is not set) */
   onEmojiClick?: () => void;
+  /** KLIPY API key — enables built-in GIF picker in composer */
+  gifApiKey?: string;
+  /** Enables built-in emoji picker in composer */
+  emojiEnabled?: boolean;
+  /** User ID for KLIPY analytics */
+  userId?: string;
   /** Loading state */
   isLoading?: boolean;
   /** Additional class names on the panel container */
@@ -100,12 +110,22 @@ function ThoughtsPanel({
   onLoadReplies,
   onGifClick,
   onEmojiClick,
+  gifApiKey,
+  emojiEnabled = false,
+  userId,
   isLoading = false,
   className,
 }: ThoughtsPanelProps) {
   const composerRef = React.useRef<MiniEditorHandle>(null);
   const [hasText, setHasText] = React.useState(false);
   const [replyingTo, setReplyingTo] = React.useState<string | null>(null);
+  const [panelPicker, setPanelPicker] = React.useState<PanelActivePicker>(null);
+  const [selectedGif, setSelectedGif] = React.useState<GifSelection | null>(null);
+
+  const useBuiltInGif = !!gifApiKey;
+  const useBuiltInEmoji = emojiEnabled;
+  const showGifBtn = useBuiltInGif || !!onGifClick;
+  const showEmojiBtn = useBuiltInEmoji || !!onEmojiClick;
 
   function handleSubmit(text: string) {
     if (!user) return;
@@ -207,40 +227,84 @@ function ThoughtsPanel({
                     />
                   </div>
                 </div>
+                {/* GIF preview */}
+                <AnimatePresence>
+                  {selectedGif && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="relative mt-2 overflow-hidden rounded-[4px] pl-14"
+                    >
+                      <img
+                        src={selectedGif.previewUrl}
+                        alt={selectedGif.title}
+                        className="w-full max-h-[160px] rounded-[4px] object-cover"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedGif(null)}
+                        className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+                        aria-label="Remove GIF"
+                      >
+                        <X weight="bold" className="size-3" />
+                      </button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="flex items-center justify-between pl-14">
-                  <div className="flex items-center gap-2">
-                    {onGifClick && (
+                  <div className="flex items-center gap-1">
+                    {showGifBtn && (
                       <button
                         type="button"
                         aria-label="Add GIF"
-                        className="flex items-center justify-center p-[9.5px] text-red-100 transition-colors hover:text-red-300"
-                        onClick={onGifClick}
+                        className={cn(
+                          'flex cursor-pointer items-center justify-center rounded-[4px] p-[9.5px] transition-colors',
+                          panelPicker === 'gif'
+                            ? 'bg-red-100/15 text-red-300'
+                            : 'text-red-100 hover:bg-red-100/10 hover:text-red-300'
+                        )}
+                        onClick={() => {
+                          if (useBuiltInGif) setPanelPicker(p => p === 'gif' ? null : 'gif');
+                          else onGifClick?.();
+                        }}
                       >
                         <Gif weight="regular" className="size-[15px]" />
                       </button>
                     )}
-                    {onEmojiClick && (
+                    {showEmojiBtn && (
                       <button
                         type="button"
                         aria-label="Add emoji"
-                        className="flex items-center justify-center p-[9.5px] text-red-100 transition-colors hover:text-red-300"
-                        onClick={onEmojiClick}
+                        className={cn(
+                          'flex cursor-pointer items-center justify-center rounded-[4px] p-[9.5px] transition-colors',
+                          panelPicker === 'emoji'
+                            ? 'bg-red-100/15 text-red-300'
+                            : 'text-red-100 hover:bg-red-100/10 hover:text-red-300'
+                        )}
+                        onClick={() => {
+                          if (useBuiltInEmoji) setPanelPicker(p => p === 'emoji' ? null : 'emoji');
+                          else onEmojiClick?.();
+                        }}
                       >
                         <SoccerBall weight="regular" className="size-[15px]" />
                       </button>
                     )}
                   </div>
                   <Button
-                    variant={hasText ? 'default' : 'outline'}
+                    variant={(hasText || selectedGif) ? 'default' : 'outline'}
                     data-shimmer="slow"
-                    disabled={!hasText || !user}
+                    disabled={(!hasText && !selectedGif) || !user}
                     onClick={() => {
-                      const text = composerRef.current?.getText();
-                      if (text) handleSubmit(text);
+                      const text = composerRef.current?.getText() ?? '';
+                      handleSubmit(text);
+                      setSelectedGif(null);
+                      setPanelPicker(null);
                     }}
                     className={cn(
                       'w-[100px] rounded-[2px] px-6 py-2',
-                      hasText
+                      (hasText || selectedGif)
                         ? 'bg-red-300 border-red-100 hover:bg-red-100'
                         : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]'
                     )}
@@ -248,6 +312,40 @@ function ThoughtsPanel({
                     Post
                   </Button>
                 </div>
+
+                {/* Built-in picker panel */}
+                <AnimatePresence>
+                  {panelPicker && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden pl-14"
+                    >
+                      {panelPicker === 'gif' && gifApiKey && (
+                        <GifPicker
+                          apiKey={gifApiKey}
+                          userId={userId}
+                          onGifSelect={(gif) => {
+                            setSelectedGif(gif);
+                            setPanelPicker(null);
+                          }}
+                          className="w-full border-0 shadow-none"
+                        />
+                      )}
+                      {panelPicker === 'emoji' && (
+                        <EmojiPicker
+                          onEmojiSelect={(emoji) => {
+                            composerRef.current?.insertText(emoji);
+                            setHasText(true);
+                          }}
+                          className="w-full border-0 shadow-none"
+                        />
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 

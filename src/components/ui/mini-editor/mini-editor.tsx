@@ -6,7 +6,7 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getRoot, $createParagraphNode, $createTextNode, type EditorState } from 'lexical';
+import { $getRoot, $getSelection, $createParagraphNode, $createTextNode, type EditorState } from 'lexical';
 
 import { cn } from '#/lib/utils';
 import { SubmitPlugin } from './submit-plugin';
@@ -20,6 +20,7 @@ interface MiniEditorHandle {
   clear: () => void;
   focus: () => void;
   getText: () => string;
+  insertText: (text: string) => void;
 }
 
 interface MiniEditorProps {
@@ -69,6 +70,25 @@ const EditorRefPlugin = React.forwardRef<MiniEditorHandle>(function EditorRefPlu
     },
     getText() {
       return editor.getEditorState().read(() => $getRoot().getTextContent());
+    },
+    insertText(text: string) {
+      editor.update(() => {
+        const selection = $getSelection();
+        if (selection) {
+          selection.insertText(text);
+        } else {
+          const root = $getRoot();
+          const lastChild = root.getLastChild();
+          if (lastChild) {
+            lastChild.append($createTextNode(text));
+          } else {
+            const p = $createParagraphNode();
+            p.append($createTextNode(text));
+            root.append(p);
+          }
+        }
+      });
+      editor.focus();
     },
   }));
 

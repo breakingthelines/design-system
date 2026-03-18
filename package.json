@@ -1,6 +1,6 @@
 {
   "name": "@breakingthelines/design-system",
-  "version": "0.1.86",
+  "version": "0.1.87",
   "repository": {
     "type": "git",
     "url": "https://github.com/breakingthelines/design-system.git"
@@ -68,6 +68,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
+    "frimousse": "^0.3.0",
     "lexical": "^0.39.0",
     "shadcn": "^3.6.2",
     "tailwind-merge": "^3.4.0",
