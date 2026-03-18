@@ -67,15 +67,29 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
         {/* Author header */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
-            <span className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap">
-              {thought.author.name}
-            </span>
+            {thought.author.handle ? (
+              <Link
+                href={`/@${thought.author.handle}`}
+                className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap transition-colors hover:text-red-100"
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              >
+                {thought.author.name}
+              </Link>
+            ) : (
+              <span className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap">
+                {thought.author.name}
+              </span>
+            )}
             {thought.author.verified && <VerifiedBadge size="sm" />}
           </div>
           {thought.author.handle && (
-            <span className="text-xs leading-6 text-foreground/50 whitespace-nowrap">
+            <Link
+              href={`/@${thought.author.handle}`}
+              className="text-xs leading-6 text-foreground/50 whitespace-nowrap transition-colors hover:text-foreground/80"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
               @{thought.author.handle}
-            </span>
+            </Link>
           )}
           {thought.createdAt && (
             <>
