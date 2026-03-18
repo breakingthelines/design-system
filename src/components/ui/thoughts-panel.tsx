@@ -367,7 +367,7 @@ function CommentItem({
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center gap-2">
               {isOP ? (
-                /* Original author: grey pill + 12px regular + verified badge */
+                /* Original author: grey pill + regular weight + verified badge */
                 <span className="inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c] px-2 py-1">
                   <span className="font-content text-xs font-normal tracking-[-0.36px] text-white">
                     {thought.author.name}
@@ -375,12 +375,12 @@ function CommentItem({
                   {thought.author.verified && <VerifiedBadge size="sm" />}
                 </span>
               ) : (
-                /* Regular commenter: no pill, 14px semibold, no badge */
                 <span className={cn(
-                  'font-content font-semibold tracking-[-0.42px] text-white',
+                  'inline-flex items-center gap-1 font-content font-semibold tracking-[-0.42px] text-white',
                   isReply ? 'py-[2px] text-xs' : 'py-[3.5px] text-sm',
                 )}>
                   {thought.author.name}
+                  {thought.author.verified && <VerifiedBadge size="sm" />}
                 </span>
               )}
               {thought.createdAt && (

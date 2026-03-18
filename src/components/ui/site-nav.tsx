@@ -55,7 +55,14 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
 const defaultTabs: NavTab[] = [
   { label: 'Home', href: '/' },
   { label: 'Thoughts', href: '/thoughts' },
-  { label: 'Media', href: '/media' },
+  {
+    label: 'Media',
+    children: [
+      { label: 'BTL TV', href: '/btl-tv' },
+      { label: 'BTL Podcasts', href: '/podcasts' },
+      { label: 'Zine', href: 'https://zine.breakingthelines.com', external: true },
+    ],
+  },
   { label: 'Contact', href: '/contact' },
 ];
 

@@ -64,7 +64,7 @@ function EngagementBar({ className, variant, actions, ...props }: EngagementBarP
             whileTap={motionTokens.presets.engagementAction.tap}
             transition={motionTokens.spring.snappy}
             className={cn(
-              'inline-flex items-center gap-1 transition-colors select-none',
+              'inline-flex cursor-pointer items-center gap-1 transition-colors select-none',
               isActive && isLike
                 ? 'text-red-100'
                 : isActive

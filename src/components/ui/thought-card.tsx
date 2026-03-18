@@ -98,7 +98,7 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
             on{' '}
             <Link
               href={thought.contentContext.href}
-              className="font-medium text-foreground/70 hover:text-foreground hover:underline"
+              className="font-medium text-foreground/70 transition-colors hover:text-red-100"
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               {thought.contentContext.title}
