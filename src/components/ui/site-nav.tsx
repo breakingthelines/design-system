@@ -228,7 +228,7 @@ function SiteNav({
       </nav>
 
       {/* Right: Actions — uniform gap, all items on the same level */}
-      <div className={cn('flex items-center', avatarUrl || initials ? 'gap-5' : 'gap-8')}>
+      <div className={cn('flex items-center', avatarUrl || initials ? 'gap-4' : 'gap-8')}>
         {onSearchClick && (
           <button
             type="button"
