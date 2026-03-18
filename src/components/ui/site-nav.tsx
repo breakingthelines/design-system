@@ -227,8 +227,8 @@ function SiteNav({
         )}
       </nav>
 
-      {/* Right: Actions — gap-8 (32px) between icon group and avatar/login per Figma */}
-      <div className="flex items-center gap-8">
+      {/* Right: Actions — gap-6 (24px) logged-in, gap-8 (32px) logged-out per Figma */}
+      <div className={cn('flex items-center', avatarUrl || initials ? 'gap-6' : 'gap-8')}>
         {/* Icons: search + notifications (16px gap) */}
         <div className="flex items-center gap-4">
           {onSearchClick && (
