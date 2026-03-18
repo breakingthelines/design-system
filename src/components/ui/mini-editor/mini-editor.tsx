@@ -45,6 +45,8 @@ interface MiniEditorProps {
   multiline?: boolean;
   /** Additional class on the contenteditable container */
   className?: string;
+  /** Override class for the placeholder (defaults to text-muted-foreground) */
+  placeholderClassName?: string;
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -103,6 +105,7 @@ function MiniEditor({
   disabled = false,
   multiline = false,
   className,
+  placeholderClassName,
 }: MiniEditorProps) {
   const initialConfig = React.useMemo(
     () => ({
@@ -143,8 +146,8 @@ function MiniEditor({
           placeholder={
             <div
               className={cn(
-                'pointer-events-none absolute top-0 left-0 text-sm leading-6 text-muted-foreground select-none',
-                className,
+                'pointer-events-none absolute top-0 left-0 text-sm leading-6 select-none',
+                placeholderClassName ?? 'text-muted-foreground',
               )}
             >
               {placeholder}

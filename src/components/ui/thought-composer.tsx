@@ -96,7 +96,8 @@ function ThoughtComposer({
               onSubmit={handleSubmit}
               onChange={(text) => setHasText(text.length > 0)}
               onRemainingChange={setRemaining}
-              className="text-sm font-medium leading-6 tracking-[-0.42px] text-foreground placeholder:text-muted-foreground"
+              className="text-sm font-medium leading-6 tracking-[-0.42px] text-foreground min-h-0"
+              placeholderClassName="text-white/30 font-medium tracking-[-0.42px]"
             />
           </div>
         ) : (
