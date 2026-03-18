@@ -56,7 +56,7 @@ function Button({
     'type' in render &&
     render.type !== 'button'
       ? false
-      : undefined);
+      : true);
 
   return (
     <ButtonPrimitive
