@@ -234,7 +234,7 @@ function SiteNav({
             type="button"
             aria-label="Search"
             onClick={onSearchClick}
-            className="flex items-center justify-center text-white hover:text-white/80 transition-colors cursor-pointer"
+            className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
           >
             <SearchIcon className="size-6" />
           </button>
@@ -245,9 +245,9 @@ function SiteNav({
               type="button"
               aria-label="Notifications"
               onClick={onNotificationsClick}
-              className="flex items-center justify-center text-white hover:text-white/80 transition-colors cursor-pointer"
+              className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
             >
-              <NotificationIcon className="size-6" />
+              <NotificationIcon className="size-[22px]" />
             </button>
             {notificationCount !== undefined && notificationCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white">
