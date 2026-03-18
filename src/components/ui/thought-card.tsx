@@ -48,7 +48,15 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
 
       {/* Right: Content */}
       <div className="flex min-w-0 flex-1 flex-col gap-4">
-        {/* Comment Header */}
+        {/* Reply context */}
+        {thought.replyingTo && (
+          <span className="text-xs leading-5 text-foreground/50">
+            Replying to{' '}
+            <span className="text-primary font-medium">@{thought.replyingTo.username}</span>
+          </span>
+        )}
+
+        {/* Author header */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             <span className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap">
@@ -75,6 +83,14 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
         <p className="font-serif text-sm leading-[18px] text-foreground whitespace-pre-line">
           {thought.body}
         </p>
+
+        {/* Content context */}
+        {thought.contentContext && (
+          <span className="text-xs leading-5 text-foreground/50">
+            on{' '}
+            <span className="font-medium text-foreground/70">{thought.contentContext.title}</span>
+          </span>
+        )}
 
         {/* Optional image */}
         {thought.imageUrl && (

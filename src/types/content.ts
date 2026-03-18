@@ -25,6 +25,17 @@ export interface ContentItem {
   contentType?: 'article' | 'video' | 'podcast';
 }
 
+export interface ReplyContext {
+  username: string;
+  displayName: string;
+}
+
+export interface ThoughtContentContext {
+  title: string;
+  slug: string;
+  creatorHandle: string;
+}
+
 export interface ThoughtItem {
   id: string;
   body: string;
@@ -36,4 +47,6 @@ export interface ThoughtItem {
   reposted?: boolean;
   replies?: ThoughtItem[];
   replyCount?: number;
+  replyingTo?: ReplyContext;
+  contentContext?: ThoughtContentContext;
 }
