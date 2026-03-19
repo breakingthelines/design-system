@@ -1,6 +1,8 @@
 'use client';
 
 import * as React from 'react';
+import { CaretUp } from '@phosphor-icons/react';
+
 import { cn } from '#/lib/utils';
 import { useLinkComponent } from '#/components/ui/link-context';
 
@@ -128,6 +130,13 @@ function FooterNavItem({ link }: { link: FooterLink }) {
         aria-expanded={open}
       >
         {link.label}
+        <CaretUp
+          weight="bold"
+          className={cn(
+            'size-3 transition-transform duration-200',
+            open ? 'rotate-0' : 'rotate-180'
+          )}
+        />
       </button>
 
       {/* Popover — opens upward from footer */}
@@ -155,10 +164,6 @@ function FooterNavItem({ link }: { link: FooterLink }) {
               </LinkComponent>
             ))}
           </nav>
-        </div>
-        {/* Caret */}
-        <div className="flex justify-center">
-          <div className="size-2 rotate-45 border-b border-r border-white/10 bg-grey-200/90" />
         </div>
       </div>
     </div>
