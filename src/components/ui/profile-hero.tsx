@@ -73,7 +73,7 @@ function ProfileHero({
       {...props}
     >
       {/* Banner with ambient glow */}
-      <div className="relative">
+      <div className="relative overflow-hidden">
         {bannerUrl && (
           <AmbientEmitter
             src={bannerUrl}

@@ -17,7 +17,14 @@ interface ProfileTabsProps extends Omit<React.ComponentProps<'nav'>, 'children'>
 
 function ProfileTabs({ className, tabs, activeTab, onTabChange, ...props }: ProfileTabsProps) {
   return (
-    <nav data-slot="profile-tabs" className={cn('flex items-start', className)} {...props}>
+    <nav
+      data-slot="profile-tabs"
+      className={cn(
+        'flex items-start gap-1 overflow-x-auto scrollbar-none sm:overflow-x-visible sm:flex-wrap',
+        className,
+      )}
+      {...props}
+    >
       {tabs.map((tab) => {
         const isActive = tab.id === activeTab;
         return (
@@ -28,7 +35,7 @@ function ProfileTabs({ className, tabs, activeTab, onTabChange, ...props }: Prof
             aria-selected={isActive}
             onClick={() => onTabChange?.(tab.id)}
             className={cn(
-              'flex h-[35px] w-[148px] flex-col items-center justify-center overflow-clip rounded-[4px] px-4 py-3 text-sm font-semibold tracking-tight transition-colors',
+              'flex h-[35px] shrink-0 items-center justify-center rounded-[4px] px-4 py-3 text-sm font-semibold tracking-tight transition-colors sm:min-w-[120px]',
               isActive
                 ? 'border border-grey-300 bg-grey-200 text-foreground'
                 : 'text-[#807c7c] hover:text-foreground'
