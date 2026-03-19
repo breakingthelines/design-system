@@ -102,9 +102,23 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
         </div>
 
         {/* Body text — Book Antiqua 14px / 18px per Figma */}
-        <p className="font-serif text-sm leading-[18px] text-foreground whitespace-pre-line">
-          {thought.body}
-        </p>
+        {thought.body && (
+          <p className="font-serif text-sm leading-[18px] text-foreground whitespace-pre-line">
+            {thought.body}
+          </p>
+        )}
+
+        {/* GIF / image attachment */}
+        {(thought.gifUrl || thought.imageUrl) && (
+          <div className="max-w-[280px] overflow-hidden rounded-[6px] border border-grey-300">
+            <img
+              src={thought.gifUrl || thought.imageUrl}
+              alt=""
+              className="block max-h-[220px] w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
 
         {/* Content context */}
         {thought.contentContext && (
@@ -118,13 +132,6 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
               {thought.contentContext.title}
             </Link>
           </span>
-        )}
-
-        {/* Optional image */}
-        {thought.imageUrl && (
-          <div className="overflow-hidden rounded-sm border border-grey-300">
-            <img src={thought.imageUrl} alt="" className="w-full object-cover max-h-80" />
-          </div>
         )}
 
         {/* Engagement — compact variant, gap-2 between actions */}

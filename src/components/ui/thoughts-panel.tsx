@@ -536,12 +536,26 @@ function CommentItem({
             </div>
 
             {/* Body */}
-            <p className={cn(
-              'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
-              isReply ? 'text-xs' : 'text-sm',
-            )}>
-              {thought.body}
-            </p>
+            {thought.body && (
+              <p className={cn(
+                'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
+                isReply ? 'text-xs' : 'text-sm',
+              )}>
+                {thought.body}
+              </p>
+            )}
+
+            {/* GIF / Image attachment */}
+            {(thought.gifUrl || thought.imageUrl) && (
+              <div className="mt-1.5 max-w-[240px] overflow-hidden rounded-[6px] border border-white/[0.06]">
+                <img
+                  src={thought.gifUrl || thought.imageUrl}
+                  alt=""
+                  className="block max-h-[180px] w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            )}
           </div>
 
           {/* Actions: Reply + ThumbsUp + count + ThumbsDown */}

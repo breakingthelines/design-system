@@ -40,6 +40,7 @@ export interface ThoughtContentContext {
 export interface ThoughtItem {
   id: string;
   body: string;
+  gifUrl?: string;
   imageUrl?: string;
   author: ContentAuthor;
   createdAt: string;
