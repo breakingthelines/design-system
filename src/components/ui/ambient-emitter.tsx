@@ -177,21 +177,37 @@ function AmbientEmitter({
   const { brightness, opacityMultiplier, saturation, dominantColor } = useImageAnalysis(src);
   const finalOpacity = Math.min(1, (opacity ?? preset.opacity) * opacityMultiplier);
 
-  // Suppress transitions when src changes to avoid bloom/flicker on image swap.
-  // Re-enable after two frames so steady-state adjustments still animate smoothly.
+  // Fade in from opacity 0 on mount so the blurred image doesn't flash bright
+  // before the GPU composites the filter chain. Also suppress transitions on
+  // src changes to avoid bloom/flicker on image swap.
+  const [mounted, setMounted] = React.useState(false);
   const [transitionEnabled, setTransitionEnabled] = React.useState(true);
   const prevSrcRef = React.useRef(src);
+
+  React.useEffect(() => {
+    // Delay mount fade-in by two frames so filter is composited before opacity rises
+    const id = requestAnimationFrame(() => {
+      requestAnimationFrame(() => setMounted(true));
+    });
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   React.useEffect(() => {
     if (prevSrcRef.current !== src) {
       prevSrcRef.current = src;
       setTransitionEnabled(false);
+      setMounted(false);
       const id = requestAnimationFrame(() => {
-        requestAnimationFrame(() => setTransitionEnabled(true));
+        requestAnimationFrame(() => {
+          setTransitionEnabled(true);
+          setMounted(true);
+        });
       });
       return () => cancelAnimationFrame(id);
     }
   }, [src]);
   const transition = transitionEnabled ? TRANSITION : 'none';
+  const mountedOpacity = mounted ? finalOpacity : 0;
 
   if (!src && !color) return null;
 
@@ -212,7 +228,7 @@ function AmbientEmitter({
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse 70% 55% at 50% 50%, rgba(${dominantColor}, ${Math.min(1, finalOpacity * 1.2)}) 0%, transparent 70%)`,
+              background: `radial-gradient(ellipse 70% 55% at 50% 50%, rgba(${dominantColor}, ${Math.min(1, mountedOpacity * 1.2)}) 0%, transparent 70%)`,
               filter: `blur(${Math.round(preset.blur * 0.7)}px) saturate(1.5) brightness(${brightness})`,
               transform: `scale(${finalScale * 1.3})`,
               transition,
@@ -224,7 +240,7 @@ function AmbientEmitter({
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
             style={{
-              opacity: finalOpacity,
+              opacity: mountedOpacity,
               filter: filterChain,
               transform: `scale(${finalScale})`,
               transition,
@@ -249,7 +265,7 @@ function AmbientEmitter({
           style={{
             width: preset.width,
             height: preset.height,
-            opacity: finalOpacity,
+            opacity: mountedOpacity,
             filter: filterChain,
             transform: `translateX(-40%) scale(${finalScale})`,
             transition: TRANSITION,
@@ -271,7 +287,7 @@ function AmbientEmitter({
       className={cn('pointer-events-none absolute -inset-x-24 -inset-y-16 -z-10', className)}
       style={{
         background: `radial-gradient(ellipse 70% 55% at 50% 50%, ${color} 0%, transparent 70%)`,
-        opacity: finalOpacity,
+        opacity: mountedOpacity,
         filter: `blur(${preset.blur}px)`,
         transition: TRANSITION,
       }}
