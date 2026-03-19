@@ -385,7 +385,7 @@ function ThoughtsPanel({
                         <SoccerBall weight="regular" className="size-[15px]" />
                       </button>
                     )}
-                    {onImageUpload && (
+                    {onImageUpload && user && (
                       <button
                         type="button"
                         aria-label="Add image"
