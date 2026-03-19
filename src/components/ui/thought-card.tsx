@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import { ArrowsClockwise } from '@phosphor-icons/react';
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
@@ -31,7 +32,7 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
     <article
       data-slot="thought-card"
       className={cn(
-        'flex gap-3 border-b border-grey-300 px-4 py-5',
+        'border-b border-grey-300',
         onClick && 'cursor-pointer hover:bg-grey-100/50 transition-colors',
         className
       )}
@@ -40,6 +41,17 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
       tabIndex={onClick ? 0 : undefined}
       {...props}
     >
+      {/* Repost banner */}
+      {thought.repostedBy && (
+        <div className="flex items-center gap-2 px-4 pt-3 pl-[76px]">
+          <ArrowsClockwise weight="bold" className="size-3.5 text-foreground/40" />
+          <span className="text-xs font-medium text-foreground/40">
+            {thought.repostedBy.displayName || thought.repostedBy.username} reposted
+          </span>
+        </div>
+      )}
+
+      <div className={cn('flex gap-3 px-4', thought.repostedBy ? 'pt-2 pb-5' : 'py-5')}>
       {/* Left: Avatar — 48px per Figma */}
       <Avatar className="size-[48px] shrink-0">
         {thought.author.avatarUrl && (
@@ -136,6 +148,7 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
 
         {/* Engagement — compact variant, gap-2 between actions */}
         <EngagementBar variant="compact" actions={engagementActions} />
+      </div>
       </div>
     </article>
   );
