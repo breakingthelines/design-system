@@ -290,6 +290,14 @@
 
 /* ── Ambient system ──────────────────────────────────────────────────── */
 
+/* Skeleton shimmer — a refined horizontal light sweep.
+   Dual-band gradient: a soft primary highlight + faint secondary,
+   so it reads as a glossy surface catching light, not a loading bar. */
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Breathing animation for AmbientEmitter — slow, organic opacity pulse */
 @keyframes ambient-breathe {
   0%,
@@ -351,9 +359,12 @@
   pointer-events: none;
 }
 
-/* Reduced motion: hide ambient blobs, disable breathing */
+/* Reduced motion: hide ambient blobs, disable breathing + shimmer */
 @media (prefers-reduced-motion: reduce) {
   [data-slot="ambient-emitter"] {
     display: none;
+  }
+  [data-slot="skeleton"] {
+    animation: none;
   }
 }
