@@ -46,7 +46,14 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
         <div className="flex items-center gap-2 px-4 pt-3 pl-[76px]">
           <ArrowsClockwise weight="bold" className="size-3.5 text-foreground/40" />
           <span className="text-xs font-medium text-foreground/40">
-            {thought.repostedBy.displayName || thought.repostedBy.username} reposted
+            <Link
+              href={`/@${thought.repostedBy.username}`}
+              className="transition-colors hover:text-red-100"
+              onClick={(e: React.MouseEvent) => e.stopPropagation()}
+            >
+              {thought.repostedBy.displayName || thought.repostedBy.username}
+            </Link>
+            {' '}reposted
           </span>
         </div>
       )}
