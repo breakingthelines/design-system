@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, PushPin, ThumbsUp, ThumbsDown, Gif, SoccerBall } from '@phosphor-icons/react';
+import { X, PushPin, ThumbsUp, ThumbsDown, Gif, SoccerBall, Image as ImageIcon, SpinnerGap } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
@@ -67,6 +67,8 @@ interface ThoughtsPanelProps {
   onGifSearch?: (query: string) => void;
   /** Called when the user wants to retry after a GIF error */
   onGifRetry?: () => void;
+  /** Image upload handler — enables image button when provided. Returns public URL. */
+  onImageUpload?: (file: File) => Promise<string>;
   /** Enables built-in emoji picker in composer */
   emojiEnabled?: boolean;
   /** User ID */
@@ -130,6 +132,7 @@ function ThoughtsPanel({
   gifsError,
   onGifSearch,
   onGifRetry,
+  onImageUpload,
   emojiEnabled = false,
   userId,
   isLoading = false,
@@ -140,21 +143,54 @@ function ThoughtsPanel({
   const [replyingTo, setReplyingTo] = React.useState<string | null>(null);
   const [panelPicker, setPanelPicker] = React.useState<PanelActivePicker>(null);
   const [selectedGif, setSelectedGif] = React.useState<GifSelection | null>(null);
+  const [imagePreview, setImagePreview] = React.useState<string | null>(null);
+  const [imageUrl, setImageUrl] = React.useState<string | null>(null);
+  const [imageUploading, setImageUploading] = React.useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const useBuiltInGif = gifs !== undefined;
   const useBuiltInEmoji = emojiEnabled;
   const showGifBtn = useBuiltInGif || !!onGifClick;
   const showEmojiBtn = useBuiltInEmoji || !!onEmojiClick;
 
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !onImageUpload) return;
+    // Reset input so same file can be re-selected
+    e.target.value = '';
+    // Client-side 10 MB limit
+    if (file.size > 10 * 1024 * 1024) return;
+    // Clear GIF (mutual exclusivity)
+    setSelectedGif(null);
+    setPanelPicker(null);
+    // Show local preview
+    const preview = URL.createObjectURL(file);
+    setImagePreview(preview);
+    setImageUploading(true);
+    onImageUpload(file)
+      .then((url) => { setImageUrl(url); setImageUploading(false); })
+      .catch(() => { setImagePreview(null); setImageUrl(null); setImageUploading(false); });
+  }
+
+  function clearImage() {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+    setImageUrl(null);
+    setImageUploading(false);
+  }
+
   function handleSubmit(text: string) {
     if (!user) return;
     const media: PanelMedia | undefined = selectedGif
       ? { gifUrl: selectedGif.url, gifId: selectedGif.id, gifPlatform: 'klipy' }
-      : undefined;
+      : imageUrl
+        ? { imageUrl }
+        : undefined;
     onSubmit?.(text, undefined, media);
     composerRef.current?.clear();
     setHasText(false);
     setSelectedGif(null);
+    clearImage();
     setPanelPicker(null);
   }
 
@@ -278,6 +314,38 @@ function ThoughtsPanel({
                     </motion.div>
                   )}
                 </AnimatePresence>
+                {/* Image preview */}
+                <AnimatePresence>
+                  {imagePreview && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-2 overflow-hidden pl-14"
+                    >
+                      <div className="relative inline-block max-w-[200px] overflow-hidden rounded-[6px] border border-white/[0.06]">
+                        <img
+                          src={imagePreview}
+                          alt=""
+                          className="block max-h-[140px] w-full object-cover"
+                        />
+                        {imageUploading && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                            <SpinnerGap className="size-5 animate-spin text-white" />
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={clearImage}
+                          className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/90 hover:text-white"
+                          aria-label="Remove image"
+                        >
+                          <X weight="bold" className="size-2.5" />
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <div className="flex items-center justify-between pl-14">
                   <div className="flex items-center gap-1">
@@ -317,18 +385,35 @@ function ThoughtsPanel({
                         <SoccerBall weight="regular" className="size-[15px]" />
                       </button>
                     )}
+                    {onImageUpload && (
+                      <button
+                        type="button"
+                        aria-label="Add image"
+                        className="flex cursor-pointer items-center justify-center rounded-[4px] p-[9.5px] text-red-100 transition-colors hover:bg-red-100/10 hover:text-red-300"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <ImageIcon weight="regular" className="size-[15px]" />
+                      </button>
+                    )}
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
                   <Button
-                    variant={(hasText || selectedGif) ? 'default' : 'outline'}
+                    variant={(hasText || selectedGif || imageUrl) ? 'default' : 'outline'}
                     data-shimmer="slow"
-                    disabled={(!hasText && !selectedGif) || !user}
+                    disabled={(!hasText && !selectedGif && !imageUrl) || imageUploading || !user}
                     onClick={() => {
                       const text = composerRef.current?.getText() ?? '';
                       handleSubmit(text);
                     }}
                     className={cn(
                       'w-[100px] rounded-[2px] px-6 py-2',
-                      (hasText || selectedGif)
+                      (hasText || selectedGif || imageUrl)
                         ? 'bg-red-300 border-red-100 hover:bg-red-100'
                         : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]'
                     )}
@@ -356,6 +441,7 @@ function ThoughtsPanel({
                           onRetry={onGifRetry}
                           onGifSelect={(gif) => {
                             setSelectedGif(gif);
+                            clearImage();
                             setPanelPicker(null);
                           }}
                           className="w-full border-0 shadow-none"
