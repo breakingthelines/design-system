@@ -43,7 +43,7 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
     >
       {/* Repost banner */}
       {thought.repostedBy && (
-        <div className="flex items-center gap-2 px-4 pt-3 pl-[76px]">
+        <div className="flex items-center gap-1 px-4 pt-3 pl-[76px]">
           <ArrowsClockwise weight="bold" className="size-3.5 text-foreground/40" />
           <span className="text-xs font-medium text-foreground/40">
             <Link
