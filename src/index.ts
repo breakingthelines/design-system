@@ -1,6 +1,7 @@
 // Components
 export * from './components/ui/alert-dialog';
 export * from './components/ui/ambient-emitter';
+export * from './components/ui/audio-player';
 export * from './components/ui/author-line';
 export * from './components/ui/avatar';
 export * from './components/ui/skeleton';
