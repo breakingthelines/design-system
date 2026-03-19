@@ -169,21 +169,23 @@ function ThoughtComposer({
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="relative overflow-hidden rounded-[4px]"
+            className="overflow-hidden"
           >
-            <img
-              src={selectedGif.previewUrl}
-              alt={selectedGif.title}
-              className="w-full max-h-[200px] rounded-[4px] object-cover"
-            />
-            <button
-              type="button"
-              onClick={() => setSelectedGif(null)}
-              className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
-              aria-label="Remove GIF"
-            >
-              <X weight="bold" className="size-3" />
-            </button>
+            <div className="relative inline-block max-w-[240px] overflow-hidden rounded-[6px] border border-white/[0.06]">
+              <img
+                src={selectedGif.previewUrl}
+                alt={selectedGif.title}
+                className="block max-h-[180px] w-full object-cover"
+              />
+              <button
+                type="button"
+                onClick={() => setSelectedGif(null)}
+                className="absolute top-1.5 right-1.5 flex size-5 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/90 hover:text-white"
+                aria-label="Remove GIF"
+              >
+                <X weight="bold" className="size-2.5" />
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

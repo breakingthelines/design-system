@@ -16,6 +16,13 @@ import type { ThoughtItem } from '#/types/content';
 
 type PanelActivePicker = 'gif' | 'emoji' | null;
 
+interface PanelMedia {
+  gifUrl?: string;
+  gifId?: string;
+  gifPlatform?: 'klipy' | 'giphy';
+  imageUrl?: string;
+}
+
 /* ────────────────────────────────────────────────────────────
  * Types
  * ──────────────────────────────────────────────────────────── */
@@ -38,8 +45,8 @@ interface ThoughtsPanelProps {
   thoughts: PanelThought[];
   /** Current user info for the composer — omit to hide composer */
   user?: { avatarUrl?: string; initials?: string };
-  /** New comment submit handler — parentId is set when replying */
-  onSubmit?: (text: string, parentId?: string) => void;
+  /** New comment submit handler — parentId is set when replying, media when GIF/image attached */
+  onSubmit?: (text: string, parentId?: string, media?: PanelMedia) => void;
   /** Like (thumbs up) handler */
   onLike?: (thoughtId: string) => void;
   /** Unlike (remove thumbs up) handler */
@@ -141,9 +148,14 @@ function ThoughtsPanel({
 
   function handleSubmit(text: string) {
     if (!user) return;
-    onSubmit?.(text);
+    const media: PanelMedia | undefined = selectedGif
+      ? { gifUrl: selectedGif.url, gifId: selectedGif.id, gifPlatform: 'klipy' }
+      : undefined;
+    onSubmit?.(text, undefined, media);
     composerRef.current?.clear();
     setHasText(false);
+    setSelectedGif(null);
+    setPanelPicker(null);
   }
 
   function handleReplySubmit(text: string, parentId: string) {
@@ -246,21 +258,23 @@ function ThoughtsPanel({
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
-                      className="relative mt-2 overflow-hidden rounded-[4px] pl-14"
+                      className="mt-2 overflow-hidden pl-14"
                     >
-                      <img
-                        src={selectedGif.previewUrl}
-                        alt={selectedGif.title}
-                        className="w-full max-h-[160px] rounded-[4px] object-cover"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setSelectedGif(null)}
-                        className="absolute top-1.5 right-1.5 flex size-6 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
-                        aria-label="Remove GIF"
-                      >
-                        <X weight="bold" className="size-3" />
-                      </button>
+                      <div className="relative inline-block max-w-[200px] overflow-hidden rounded-[6px] border border-white/[0.06]">
+                        <img
+                          src={selectedGif.previewUrl}
+                          alt={selectedGif.title}
+                          className="block max-h-[140px] w-full object-cover"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setSelectedGif(null)}
+                          className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/90 hover:text-white"
+                          aria-label="Remove GIF"
+                        >
+                          <X weight="bold" className="size-2.5" />
+                        </button>
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -311,8 +325,6 @@ function ThoughtsPanel({
                     onClick={() => {
                       const text = composerRef.current?.getText() ?? '';
                       handleSubmit(text);
-                      setSelectedGif(null);
-                      setPanelPicker(null);
                     }}
                     className={cn(
                       'w-[100px] rounded-[2px] px-6 py-2',

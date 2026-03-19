@@ -50,13 +50,15 @@ function EmojiPicker({ onEmojiSelect, className }: EmojiPickerProps) {
             '[&_[frimousse-row]]:flex [&_[frimousse-row]]:justify-between',
             '[&_[frimousse-emoji]]:flex [&_[frimousse-emoji]]:size-9 [&_[frimousse-emoji]]:cursor-pointer',
             '[&_[frimousse-emoji]]:items-center [&_[frimousse-emoji]]:justify-center',
-            '[&_[frimousse-emoji]]:rounded-[4px] [&_[frimousse-emoji]]:text-xl',
-            '[&_[frimousse-emoji]]:transition-colors hover:[&_[frimousse-emoji]]:bg-red-100/15',
+            '[&_[frimousse-emoji]]:rounded-full [&_[frimousse-emoji]]:text-xl',
+            '[&_[frimousse-emoji]]:transition-all [&_[frimousse-emoji]]:duration-150 [&_[frimousse-emoji]]:ease-out',
+            'hover:[&_[frimousse-emoji]]:scale-125 hover:[&_[frimousse-emoji]]:bg-white/[0.08]',
+            'active:[&_[frimousse-emoji]]:scale-110',
             '[&_[frimousse-category-header]]:mb-1 [&_[frimousse-category-header]]:mt-3',
             '[&_[frimousse-category-header]]:first:mt-0',
             '[&_[frimousse-category-header]]:px-0.5 [&_[frimousse-category-header]]:text-[10px]',
             '[&_[frimousse-category-header]]:font-semibold [&_[frimousse-category-header]]:uppercase',
-            '[&_[frimousse-category-header]]:tracking-[0.08em] [&_[frimousse-category-header]]:text-white/30'
+            '[&_[frimousse-category-header]]:tracking-[0.08em] [&_[frimousse-category-header]]:text-white/20'
           )}
         />
       </Frimousse.Viewport>
