@@ -11,7 +11,7 @@ import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { MiniEditor, type MiniEditorHandle } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
-import { GifPicker, type GifSelection } from '#/components/ui/gif-picker';
+import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
 import type { ThoughtItem } from '#/types/content';
 
 type PanelActivePicker = 'gif' | 'emoji' | null;
@@ -46,15 +46,23 @@ interface ThoughtsPanelProps {
   onUnlike?: (thoughtId: string) => void;
   /** Load replies for a thought — called when "View replies" is clicked */
   onLoadReplies?: (thoughtId: string) => void;
-  /** Legacy: external GIF click handler (used when gifApiBaseUrl is not set) */
+  /** Legacy: external GIF click handler (used when gifs prop is not set) */
   onGifClick?: () => void;
   /** Legacy: external emoji click handler (used when emojiEnabled is not set) */
   onEmojiClick?: () => void;
-  /** GIF proxy base URL — enables built-in GIF picker in composer */
-  gifApiBaseUrl?: string;
+  /** GIF items — enables built-in GIF picker when provided */
+  gifs?: GifItem[];
+  /** Whether GIFs are loading */
+  gifsLoading?: boolean;
+  /** Whether the GIF fetch errored */
+  gifsError?: boolean;
+  /** Called when the GIF search query changes */
+  onGifSearch?: (query: string) => void;
+  /** Called when the user wants to retry after a GIF error */
+  onGifRetry?: () => void;
   /** Enables built-in emoji picker in composer */
   emojiEnabled?: boolean;
-  /** User ID for KLIPY analytics */
+  /** User ID */
   userId?: string;
   /** Loading state */
   isLoading?: boolean;
@@ -110,7 +118,11 @@ function ThoughtsPanel({
   onLoadReplies,
   onGifClick,
   onEmojiClick,
-  gifApiBaseUrl,
+  gifs,
+  gifsLoading,
+  gifsError,
+  onGifSearch,
+  onGifRetry,
   emojiEnabled = false,
   userId,
   isLoading = false,
@@ -122,7 +134,7 @@ function ThoughtsPanel({
   const [panelPicker, setPanelPicker] = React.useState<PanelActivePicker>(null);
   const [selectedGif, setSelectedGif] = React.useState<GifSelection | null>(null);
 
-  const useBuiltInGif = !!gifApiBaseUrl;
+  const useBuiltInGif = gifs !== undefined;
   const useBuiltInEmoji = emojiEnabled;
   const showGifBtn = useBuiltInGif || !!onGifClick;
   const showEmojiBtn = useBuiltInEmoji || !!onEmojiClick;
@@ -323,9 +335,13 @@ function ThoughtsPanel({
                       transition={{ duration: 0.2 }}
                       className="overflow-hidden pl-14"
                     >
-                      {panelPicker === 'gif' && gifApiBaseUrl && (
+                      {panelPicker === 'gif' && gifs !== undefined && (
                         <GifPicker
-                          apiBaseUrl={gifApiBaseUrl}
+                          gifs={gifs}
+                          loading={gifsLoading}
+                          error={gifsError}
+                          onSearch={onGifSearch}
+                          onRetry={onGifRetry}
                           onGifSelect={(gif) => {
                             setSelectedGif(gif);
                             setPanelPicker(null);

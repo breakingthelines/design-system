@@ -21,17 +21,13 @@ interface GifMediaSet {
   mp4?: GifFile;
 }
 
-interface ProxyGifItem {
+interface GifItem {
   id: string;
   title: string;
   slug: string;
   hd?: GifMediaSet;
   md?: GifMediaSet;
   sm?: GifMediaSet;
-}
-
-interface ProxyResponse {
-  gifs: ProxyGifItem[];
 }
 
 interface GifSelection {
@@ -44,8 +40,16 @@ interface GifSelection {
 }
 
 interface GifPickerProps {
-  /** Base URL for the GIF proxy (e.g. "http://localhost:9090/api/v1/gifs") */
-  apiBaseUrl: string;
+  /** GIF items to display (provided by the consumer via data-fetching hooks) */
+  gifs: GifItem[];
+  /** Whether gifs are currently loading */
+  loading?: boolean;
+  /** Whether the last fetch errored */
+  error?: boolean;
+  /** Called when the search query changes (debounced by consumer or internally) */
+  onSearch?: (query: string) => void;
+  /** Called when the user wants to retry after an error */
+  onRetry?: () => void;
   /** Called when a user selects a GIF */
   onGifSelect?: (gif: GifSelection) => void;
   className?: string;
@@ -55,12 +59,12 @@ interface GifPickerProps {
  * Helpers
  * ──────────────────────────────────────────────────────────── */
 
-function getBestUrl(item: ProxyGifItem, size: 'sm' | 'md' | 'hd'): GifFile | undefined {
+function getBestUrl(item: GifItem, size: 'sm' | 'md' | 'hd'): GifFile | undefined {
   const set = item[size];
   return set?.webp ?? set?.gif;
 }
 
-function toSelection(item: ProxyGifItem): GifSelection {
+function toSelection(item: GifItem): GifSelection {
   const hd = getBestUrl(item, 'hd') ?? getBestUrl(item, 'md');
   const preview = getBestUrl(item, 'sm') ?? getBestUrl(item, 'md');
   return {
@@ -78,54 +82,22 @@ function toSelection(item: ProxyGifItem): GifSelection {
  * ──────────────────────────────────────────────────────────── */
 
 function GifPicker({
-  apiBaseUrl,
+  gifs,
+  loading = false,
+  error = false,
+  onSearch,
+  onRetry,
   onGifSelect,
   className,
 }: GifPickerProps) {
   const [query, setQuery] = React.useState('');
-  const [gifs, setGifs] = React.useState<ProxyGifItem[]>([]);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(false);
   const debounceRef = React.useRef<ReturnType<typeof setTimeout>>(null);
   const inputRef = React.useRef<HTMLInputElement>(null);
-
-  const fetchGifs = React.useCallback(
-    async (searchQuery: string) => {
-      setLoading(true);
-      setError(false);
-
-      try {
-        const trimmed = searchQuery.trim();
-        const endpoint = trimmed
-          ? `${apiBaseUrl}/search`
-          : `${apiBaseUrl}/trending`;
-
-        const params = new URLSearchParams({ per_page: '24' });
-        if (trimmed) params.set('query', trimmed);
-
-        const res = await fetch(`${endpoint}?${params}`);
-        if (!res.ok) throw new Error(`${res.status}`);
-
-        const json: ProxyResponse = await res.json();
-        setGifs(json.gifs ?? []);
-      } catch {
-        setError(true);
-        setGifs([]);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [apiBaseUrl]
-  );
-
-  React.useEffect(() => {
-    fetchGifs('');
-  }, [fetchGifs]);
 
   function handleSearchChange(value: string) {
     setQuery(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => fetchGifs(value), 350);
+    debounceRef.current = setTimeout(() => onSearch?.(value), 350);
   }
 
   React.useEffect(() => {
@@ -184,7 +156,7 @@ function GifPicker({
             </span>
             <button
               type="button"
-              onClick={() => fetchGifs(query)}
+              onClick={() => onRetry?.()}
               className="text-xs text-red-100 transition-colors hover:text-red-300"
             >
               Try again
@@ -246,4 +218,4 @@ function GifPicker({
 }
 
 export { GifPicker };
-export type { GifPickerProps, GifSelection };
+export type { GifPickerProps, GifSelection, GifItem, GifFile, GifMediaSet };

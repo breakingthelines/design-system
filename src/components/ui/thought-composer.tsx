@@ -9,7 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { MiniEditor, type MiniEditorHandle } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
-import { GifPicker, type GifSelection } from '#/components/ui/gif-picker';
+import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
 
 const MAX_CHARS = 500;
 
@@ -30,9 +30,17 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
   onSubmit?: (text: string, media?: ThoughtComposerMedia) => void;
   /** Image attachment handler (opens external upload flow) */
   onImageClick?: () => void;
-  /** GIF proxy base URL — enables built-in GIF picker when set */
-  gifApiBaseUrl?: string;
-  /** Legacy: external GIF click handler (used when gifApiBaseUrl is not set) */
+  /** GIF items to display — enables built-in GIF picker when provided */
+  gifs?: GifItem[];
+  /** Whether GIFs are loading */
+  gifsLoading?: boolean;
+  /** Whether the GIF fetch errored */
+  gifsError?: boolean;
+  /** Called when the GIF search query changes */
+  onGifSearch?: (query: string) => void;
+  /** Called when the user wants to retry after a GIF error */
+  onGifRetry?: () => void;
+  /** Legacy: external GIF click handler (used when gifs prop is not set) */
   onGifClick?: () => void;
   /** Enables built-in emoji picker */
   emojiEnabled?: boolean;
@@ -49,7 +57,11 @@ function ThoughtComposer({
   placeholder = 'Share your thoughts',
   onSubmit,
   onImageClick,
-  gifApiBaseUrl,
+  gifs,
+  gifsLoading,
+  gifsError,
+  onGifSearch,
+  onGifRetry,
   onGifClick,
   emojiEnabled = false,
   onEmojiClick,
@@ -68,7 +80,7 @@ function ThoughtComposer({
   const hasContent = hasText || selectedGif !== null;
   const canSubmit = hasContent && !isOverLimit && !disabled;
 
-  const useBuiltInGif = !!gifApiBaseUrl;
+  const useBuiltInGif = gifs !== undefined;
   const useBuiltInEmoji = emojiEnabled;
   const showGifButton = useBuiltInGif || !!onGifClick;
   const showEmojiButton = useBuiltInEmoji || !!onEmojiClick;
@@ -277,9 +289,13 @@ function ThoughtComposer({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            {activePicker === 'gif' && gifApiBaseUrl && (
+            {activePicker === 'gif' && gifs !== undefined && (
               <GifPicker
-                apiBaseUrl={gifApiBaseUrl}
+                gifs={gifs}
+                loading={gifsLoading}
+                error={gifsError}
+                onSearch={onGifSearch}
+                onRetry={onGifRetry}
                 onGifSelect={handleGifSelect}
                 className="w-full border-0 shadow-none"
               />

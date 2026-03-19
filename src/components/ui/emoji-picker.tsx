@@ -35,7 +35,7 @@ function EmojiPicker({ onEmojiSelect, className }: EmojiPickerProps) {
         />
       </div>
 
-      <Frimousse.Viewport className="flex-1 overflow-y-auto px-1 py-1.5">
+      <Frimousse.Viewport className="flex-1 overflow-y-auto px-2 py-1.5">
         <Frimousse.Loading className="flex h-full items-center justify-center">
           <span className="text-xs text-white/30">Loading…</span>
         </Frimousse.Loading>
@@ -47,12 +47,14 @@ function EmojiPicker({ onEmojiSelect, className }: EmojiPickerProps) {
         <Frimousse.List
           className={cn(
             'select-none',
-            '[&_[frimousse-emoji]]:flex [&_[frimousse-emoji]]:size-8 [&_[frimousse-emoji]]:cursor-pointer',
+            '[&_[frimousse-row]]:flex [&_[frimousse-row]]:justify-between',
+            '[&_[frimousse-emoji]]:flex [&_[frimousse-emoji]]:size-9 [&_[frimousse-emoji]]:cursor-pointer',
             '[&_[frimousse-emoji]]:items-center [&_[frimousse-emoji]]:justify-center',
-            '[&_[frimousse-emoji]]:rounded-[4px] [&_[frimousse-emoji]]:text-lg',
+            '[&_[frimousse-emoji]]:rounded-[4px] [&_[frimousse-emoji]]:text-xl',
             '[&_[frimousse-emoji]]:transition-colors hover:[&_[frimousse-emoji]]:bg-red-100/15',
-            '[&_[frimousse-category-header]]:mb-0.5 [&_[frimousse-category-header]]:mt-2',
-            '[&_[frimousse-category-header]]:px-1.5 [&_[frimousse-category-header]]:text-[10px]',
+            '[&_[frimousse-category-header]]:mb-1 [&_[frimousse-category-header]]:mt-3',
+            '[&_[frimousse-category-header]]:first:mt-0',
+            '[&_[frimousse-category-header]]:px-0.5 [&_[frimousse-category-header]]:text-[10px]',
             '[&_[frimousse-category-header]]:font-semibold [&_[frimousse-category-header]]:uppercase',
             '[&_[frimousse-category-header]]:tracking-[0.08em] [&_[frimousse-category-header]]:text-white/30'
           )}
