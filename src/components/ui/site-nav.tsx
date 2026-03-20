@@ -155,61 +155,6 @@ function NotificationIcon({ className }: { className?: string }) {
   );
 }
 
-/** Bell icon with click-toggled popover — same positioning pattern as Avatar/Media dropdowns. */
-function NotificationBell({
-  notificationCount,
-  popover,
-}: {
-  notificationCount?: number;
-  popover: React.ReactNode;
-}) {
-  const [open, setOpen] = React.useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  // Close on outside click or Escape
-  React.useEffect(() => {
-    if (!open) return;
-    function onClickOutside(e: MouseEvent) {
-      if (ref.current?.contains(e.target as Node)) return;
-      setOpen(false);
-    }
-    function onEscape(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
-    }
-    document.addEventListener('mousedown', onClickOutside);
-    document.addEventListener('keydown', onEscape);
-    return () => {
-      document.removeEventListener('mousedown', onClickOutside);
-      document.removeEventListener('keydown', onEscape);
-    };
-  }, [open]);
-
-  return (
-    <div ref={ref} className="relative flex items-center justify-center">
-      <button
-        type="button"
-        aria-label="Notifications"
-        aria-expanded={open}
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
-      >
-        <NotificationIcon className="size-[22px]" />
-      </button>
-      {notificationCount !== undefined && notificationCount > 0 && (
-        <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
-          {notificationCount > 9 ? '9+' : notificationCount}
-        </span>
-      )}
-      {/* Dropdown — same absolute pattern as Avatar/Media menus */}
-      {open && (
-        <div className="absolute right-0 top-full pt-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-          {popover}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function SiteNav({
   className,
   tabs = defaultTabs,
@@ -317,28 +262,28 @@ function SiteNav({
           </button>
         )}
         {(onNotificationsClick || notificationPopover) && (
-          notificationPopover ? (
-            <NotificationBell
-              notificationCount={notificationCount}
-              popover={notificationPopover}
-            />
-          ) : (
-            <div className="relative flex items-center justify-center">
+          <div className={cn('relative', notificationPopover && 'group/notif')}>
+            <div className="flex items-center justify-center">
               <button
                 type="button"
                 aria-label="Notifications"
-                onClick={onNotificationsClick}
+                onClick={notificationPopover ? undefined : onNotificationsClick}
                 className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
               >
                 <NotificationIcon className="size-[22px]" />
               </button>
               {notificationCount !== undefined && notificationCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white">
+                <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
                   {notificationCount > 9 ? '9+' : notificationCount}
                 </span>
               )}
             </div>
-          )
+            {notificationPopover && (
+              <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/notif:opacity-100 group-hover/notif:visible group-hover/notif:translate-y-0 transition-all duration-150 ease-out">
+                {notificationPopover}
+              </div>
+            )}
+          </div>
         )}
 
         {/* Avatar (logged in) or Login button (logged out) */}
