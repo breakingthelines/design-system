@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import ReactDOM from 'react-dom';
 import { List } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
@@ -156,9 +155,7 @@ function NotificationIcon({ className }: { className?: string }) {
   );
 }
 
-/** Bell icon with popover — click toggles on desktop & mobile.
- *  Uses a portal so the dropdown escapes any paint containment
- *  (e.g. view-transition-name on the header). */
+/** Bell icon with click-toggled popover — same positioning pattern as Avatar/Media dropdowns. */
 function NotificationBell({
   notificationCount,
   popover,
@@ -167,29 +164,13 @@ function NotificationBell({
   popover: React.ReactNode;
 }) {
   const [open, setOpen] = React.useState(false);
-  const buttonRef = React.useRef<HTMLButtonElement>(null);
-  const dropdownRef = React.useRef<HTMLDivElement>(null);
-  const [pos, setPos] = React.useState({ top: 0, right: 0 });
-
-  // Position the portal dropdown below the bell button
-  React.useEffect(() => {
-    if (!open || !buttonRef.current) return;
-    const rect = buttonRef.current.getBoundingClientRect();
-    setPos({
-      top: rect.bottom + 8,
-      right: window.innerWidth - rect.right,
-    });
-  }, [open]);
+  const ref = React.useRef<HTMLDivElement>(null);
 
   // Close on outside click or Escape
   React.useEffect(() => {
     if (!open) return;
     function onClickOutside(e: MouseEvent) {
-      const target = e.target as Node;
-      if (
-        buttonRef.current?.contains(target) ||
-        dropdownRef.current?.contains(target)
-      ) return;
+      if (ref.current?.contains(e.target as Node)) return;
       setOpen(false);
     }
     function onEscape(e: KeyboardEvent) {
@@ -204,36 +185,28 @@ function NotificationBell({
   }, [open]);
 
   return (
-    <>
-      <div className="relative flex items-center justify-center">
-        <button
-          ref={buttonRef}
-          type="button"
-          aria-label="Notifications"
-          aria-expanded={open}
-          onClick={() => setOpen((prev) => !prev)}
-          className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
-        >
-          <NotificationIcon className="size-[22px]" />
-        </button>
-        {notificationCount !== undefined && notificationCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
-            {notificationCount > 9 ? '9+' : notificationCount}
-          </span>
-        )}
-      </div>
-      {open && typeof document !== 'undefined' &&
-        ReactDOM.createPortal(
-          <div
-            ref={dropdownRef}
-            className="fixed z-[9999] animate-in fade-in slide-in-from-top-1 duration-150"
-            style={{ top: pos.top, right: pos.right }}
-          >
-            {popover}
-          </div>,
-          document.body,
-        )}
-    </>
+    <div ref={ref} className="relative flex items-center justify-center">
+      <button
+        type="button"
+        aria-label="Notifications"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
+      >
+        <NotificationIcon className="size-[22px]" />
+      </button>
+      {notificationCount !== undefined && notificationCount > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+          {notificationCount > 9 ? '9+' : notificationCount}
+        </span>
+      )}
+      {/* Dropdown — same absolute pattern as Avatar/Media menus */}
+      {open && (
+        <div className="absolute right-0 top-full pt-2 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+          {popover}
+        </div>
+      )}
+    </div>
   );
 }
 
