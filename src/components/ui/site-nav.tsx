@@ -46,7 +46,7 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   initials?: string;
   /** Search click handler */
   onSearchClick?: () => void;
-  /** Notifications click handler */
+  /** Notifications click handler (used as fallback when notificationPopover is not set) */
   onNotificationsClick?: () => void;
   /** @deprecated Use avatarMenu instead */
   onAvatarClick?: () => void;
@@ -56,6 +56,9 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   onLoginClick?: () => void;
   /** Notification count badge */
   notificationCount?: number;
+  /** Popover content shown on bell hover (desktop) / click (mobile).
+   *  When provided, replaces the simple onNotificationsClick behavior. */
+  notificationPopover?: React.ReactNode;
   /** URL the logo links to (default: '/') */
   logoHref?: string;
   /** Logo render prop */
@@ -152,6 +155,61 @@ function NotificationIcon({ className }: { className?: string }) {
   );
 }
 
+/** Bell icon with popover — hover on desktop, click-toggle on mobile */
+function NotificationBell({
+  notificationCount,
+  popover,
+}: {
+  notificationCount?: number;
+  popover: React.ReactNode;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  // Close on outside click
+  React.useEffect(() => {
+    if (!open) return;
+    function onClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, [open]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="group/notif relative flex items-center justify-center"
+    >
+      <button
+        type="button"
+        aria-label="Notifications"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
+      >
+        <NotificationIcon className="size-[22px]" />
+      </button>
+      {notificationCount !== undefined && notificationCount > 0 && (
+        <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+          {notificationCount > 9 ? '9+' : notificationCount}
+        </span>
+      )}
+      <div
+        className={cn(
+          'absolute right-0 top-full z-50 pt-2 transition-all duration-150 ease-out',
+          open
+            ? 'opacity-100 visible translate-y-0'
+            : 'opacity-0 invisible translate-y-1 group-hover/notif:opacity-100 group-hover/notif:visible group-hover/notif:translate-y-0',
+        )}
+      >
+        {popover}
+      </div>
+    </div>
+  );
+}
+
 function SiteNav({
   className,
   tabs = defaultTabs,
@@ -163,6 +221,7 @@ function SiteNav({
   avatarMenu,
   onLoginClick,
   notificationCount,
+  notificationPopover,
   logoHref = '/',
   logo,
   ...props
@@ -257,22 +316,29 @@ function SiteNav({
             <SearchIcon className="size-6" />
           </button>
         )}
-        {onNotificationsClick && (
-          <div className="relative flex items-center justify-center">
-            <button
-              type="button"
-              aria-label="Notifications"
-              onClick={onNotificationsClick}
-              className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
-            >
-              <NotificationIcon className="size-[22px]" />
-            </button>
-            {notificationCount !== undefined && notificationCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white">
-                {notificationCount > 9 ? '9+' : notificationCount}
-              </span>
-            )}
-          </div>
+        {(onNotificationsClick || notificationPopover) && (
+          notificationPopover ? (
+            <NotificationBell
+              notificationCount={notificationCount}
+              popover={notificationPopover}
+            />
+          ) : (
+            <div className="relative flex items-center justify-center">
+              <button
+                type="button"
+                aria-label="Notifications"
+                onClick={onNotificationsClick}
+                className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
+              >
+                <NotificationIcon className="size-[22px]" />
+              </button>
+              {notificationCount !== undefined && notificationCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white">
+                  {notificationCount > 9 ? '9+' : notificationCount}
+                </span>
+              )}
+            </div>
+          )
         )}
 
         {/* Avatar (logged in) or Login button (logged out) */}
