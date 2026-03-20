@@ -33,7 +33,7 @@ function useRenderMentions() {
           <Link
             key={`${username}-${match.index}`}
             href={`/@${username}`}
-            className="font-medium text-red-100 transition-colors hover:text-red-200 hover:underline"
+            className="text-red-100 transition-colors hover:text-red-200 hover:[text-shadow:_0_0_0.5px_currentColor]"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             @{username}
