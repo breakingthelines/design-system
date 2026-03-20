@@ -37,6 +37,8 @@ interface ProfileHeroProps extends React.ComponentProps<'div'> {
   socialLinks?: SocialLink[];
   /** Follower count */
   followers?: number;
+  /** Following count */
+  following?: number;
   /** Subscriber count */
   subscribers?: number;
   /** Follow button handler */
@@ -45,6 +47,10 @@ interface ProfileHeroProps extends React.ComponentProps<'div'> {
   onSubscribe?: () => void;
   /** Whether the current user is following this profile */
   isFollowing?: boolean;
+  /** Click handler for followers count */
+  onFollowersClick?: () => void;
+  /** Click handler for following count */
+  onFollowingClick?: () => void;
 }
 
 function ProfileHero({
@@ -58,10 +64,13 @@ function ProfileHero({
   description,
   socialLinks,
   followers,
+  following,
   subscribers,
   onFollow,
   onSubscribe,
   isFollowing,
+  onFollowersClick,
+  onFollowingClick,
   ...props
 }: ProfileHeroProps) {
   const { rotateX, rotateY, onMouseMove, onMouseLeave } = useTilt(4);
@@ -146,17 +155,49 @@ function ProfileHero({
                 </p>
               )}
 
-              {/* Follower / Subscriber counts */}
-              {(followers !== undefined || subscribers !== undefined) && (
+              {/* Follower / Following / Subscriber counts */}
+              {(followers !== undefined || following !== undefined || subscribers !== undefined) && (
                 <div className="flex items-baseline gap-8 leading-6 text-foreground">
-                  {followers !== undefined && (
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-sm font-medium tracking-tight">
-                        {formatCount(followers)}
-                      </span>
-                      <span className="text-xs opacity-50">Followers</span>
-                    </div>
-                  )}
+                  {followers !== undefined &&
+                    (onFollowersClick ? (
+                      <button
+                        type="button"
+                        onClick={onFollowersClick}
+                        className="flex cursor-pointer items-baseline gap-2 transition-opacity hover:opacity-70"
+                      >
+                        <span className="text-sm font-medium tracking-tight">
+                          {formatCount(followers)}
+                        </span>
+                        <span className="text-xs opacity-50">Followers</span>
+                      </button>
+                    ) : (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-sm font-medium tracking-tight">
+                          {formatCount(followers)}
+                        </span>
+                        <span className="text-xs opacity-50">Followers</span>
+                      </div>
+                    ))}
+                  {following !== undefined &&
+                    (onFollowingClick ? (
+                      <button
+                        type="button"
+                        onClick={onFollowingClick}
+                        className="flex cursor-pointer items-baseline gap-2 transition-opacity hover:opacity-70"
+                      >
+                        <span className="text-sm font-medium tracking-tight">
+                          {formatCount(following)}
+                        </span>
+                        <span className="text-xs opacity-50">Following</span>
+                      </button>
+                    ) : (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-sm font-medium tracking-tight">
+                          {formatCount(following)}
+                        </span>
+                        <span className="text-xs opacity-50">Following</span>
+                      </div>
+                    ))}
                   {subscribers !== undefined && (
                     <div className="flex items-baseline gap-2">
                       <span className="text-sm font-medium tracking-tight">
