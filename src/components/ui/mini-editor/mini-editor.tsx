@@ -11,6 +11,8 @@ import { $getRoot, $getSelection, $createParagraphNode, $createTextNode, type Ed
 import { cn } from '#/lib/utils';
 import { SubmitPlugin } from './submit-plugin';
 import { MaxLengthPlugin } from './max-length-plugin';
+import { MentionNode, $isMentionNode } from './mention-node';
+import { MentionPlugin, type MentionSuggestion } from './mention-plugin';
 
 /* ────────────────────────────────────────────────────────────
  * Types
@@ -21,6 +23,7 @@ interface MiniEditorHandle {
   focus: () => void;
   getText: () => string;
   insertText: (text: string) => void;
+  getMentionedUserIds: () => string[];
 }
 
 interface MiniEditorProps {
@@ -38,8 +41,10 @@ interface MiniEditorProps {
   onRemainingChange?: (remaining: number) => void;
   /** Imperative ref: clear(), focus(), getText() */
   editorRef?: React.Ref<MiniEditorHandle>;
-  /** Slot for additional Lexical plugins (e.g. future @mentions) */
+  /** Slot for additional Lexical plugins */
   plugins?: React.ReactNode;
+  /** @mention search callback — when provided, enables @mention support */
+  onMentionSearch?: (query: string) => Promise<MentionSuggestion[]>;
   /** Disabled state */
   disabled?: boolean;
   /** Allow multi-line input (default: single-line) */
@@ -70,6 +75,19 @@ const EditorRefPlugin = React.forwardRef<MiniEditorHandle>(function EditorRefPlu
     },
     getText() {
       return editor.getEditorState().read(() => $getRoot().getTextContent());
+    },
+    getMentionedUserIds() {
+      return editor.getEditorState().read(() => {
+        const ids: string[] = [];
+        const root = $getRoot();
+        const textContent = root.getAllTextNodes();
+        for (const node of textContent) {
+          if ($isMentionNode(node)) {
+            ids.push(node.getUserId());
+          }
+        }
+        return ids;
+      });
     },
     insertText(text: string) {
       editor.update(() => {
@@ -122,6 +140,7 @@ function MiniEditor({
   onRemainingChange,
   editorRef,
   plugins,
+  onMentionSearch,
   disabled = false,
   multiline = false,
   className,
@@ -132,7 +151,7 @@ function MiniEditor({
       namespace: 'MiniEditor',
       onError: (error: Error) => console.error('[MiniEditor]', error),
       editable: !disabled,
-      nodes: [],
+      nodes: [MentionNode],
     }),
     // Only used for initial render — intentionally excluding disabled
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -191,6 +210,9 @@ function MiniEditor({
 
         {/* Disabled state sync */}
         <DisabledPlugin disabled={disabled} />
+
+        {/* @mention autocomplete */}
+        {onMentionSearch && <MentionPlugin onSearch={onMentionSearch} />}
 
         {/* Extension slot */}
         {plugins}

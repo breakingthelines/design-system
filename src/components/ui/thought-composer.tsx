@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
-import { MiniEditor, type MiniEditorHandle } from '#/components/ui/mini-editor/index';
+import { MiniEditor, type MiniEditorHandle, type MentionSuggestion } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
 
@@ -22,6 +22,7 @@ interface ThoughtComposerMedia {
   gifId?: string;
   gifPlatform?: 'klipy' | 'giphy';
   imageUrl?: string;
+  mentionedUserIds?: string[];
 }
 
 interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubmit'> {
@@ -46,6 +47,8 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
   onGifRetry?: () => void;
   /** Legacy: external GIF click handler (used when gifs prop is not set) */
   onGifClick?: () => void;
+  /** @mention search callback — enables @mention autocomplete when provided */
+  onMentionSearch?: (query: string) => Promise<MentionSuggestion[]>;
   /** Enables built-in emoji picker */
   emojiEnabled?: boolean;
   /** Legacy: external emoji click handler (used when emojiEnabled is not set) */
@@ -68,6 +71,7 @@ function ThoughtComposer({
   onGifSearch,
   onGifRetry,
   onGifClick,
+  onMentionSearch,
   emojiEnabled = false,
   onEmojiClick,
   userId,
@@ -151,11 +155,18 @@ function ThoughtComposer({
   function handleSubmit(text: string) {
     if (!canSubmit) return;
 
+    const mentionedUserIds = editorRef.current?.getMentionedUserIds() ?? [];
+
     let media: ThoughtComposerMedia | undefined;
     if (selectedGif) {
       media = { gifUrl: selectedGif.url, gifId: selectedGif.id, gifPlatform: 'klipy' };
     } else if (imageUrl) {
       media = { imageUrl };
+    }
+
+    // Attach mentions if any were found
+    if (mentionedUserIds.length > 0) {
+      media = { ...media, mentionedUserIds };
     }
 
     onSubmit?.(text, media);
@@ -244,6 +255,7 @@ function ThoughtComposer({
               onSubmit={handleSubmit}
               onChange={(text) => setHasText(text.length > 0)}
               onRemainingChange={setRemaining}
+              onMentionSearch={onMentionSearch}
               className="text-sm font-medium leading-6 tracking-[-0.42px] text-foreground min-h-0"
               placeholderClassName="text-white/30 font-medium tracking-[-0.42px]"
             />

@@ -9,7 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useLinkComponent } from '#/components/ui/link-context';
-import { MiniEditor, type MiniEditorHandle } from '#/components/ui/mini-editor/index';
+import { MiniEditor, type MiniEditorHandle, type MentionSuggestion } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
 import type { ThoughtItem } from '#/types/content';
@@ -21,6 +21,7 @@ interface PanelMedia {
   gifId?: string;
   gifPlatform?: 'klipy' | 'giphy';
   imageUrl?: string;
+  mentionedUserIds?: string[];
 }
 
 /* ────────────────────────────────────────────────────────────
@@ -69,6 +70,8 @@ interface ThoughtsPanelProps {
   onGifRetry?: () => void;
   /** Image upload handler — enables image button when provided. Returns public URL. */
   onImageUpload?: (file: File) => Promise<string>;
+  /** @mention search callback — enables @mention autocomplete when provided */
+  onMentionSearch?: (query: string) => Promise<MentionSuggestion[]>;
   /** Enables built-in emoji picker in composer */
   emojiEnabled?: boolean;
   /** User ID */
@@ -132,6 +135,7 @@ function ThoughtsPanel({
   gifsError,
   onGifSearch,
   onGifRetry,
+  onMentionSearch,
   onImageUpload,
   emojiEnabled = false,
   userId,
@@ -181,11 +185,15 @@ function ThoughtsPanel({
 
   function handleSubmit(text: string) {
     if (!user) return;
-    const media: PanelMedia | undefined = selectedGif
+    const mentionedUserIds = composerRef.current?.getMentionedUserIds() ?? [];
+    let media: PanelMedia | undefined = selectedGif
       ? { gifUrl: selectedGif.url, gifId: selectedGif.id, gifPlatform: 'klipy' }
       : imageUrl
         ? { imageUrl }
         : undefined;
+    if (mentionedUserIds.length > 0) {
+      media = { ...media, mentionedUserIds };
+    }
     onSubmit?.(text, undefined, media);
     composerRef.current?.clear();
     setHasText(false);
@@ -281,6 +289,7 @@ function ThoughtsPanel({
                       editorRef={composerRef}
                       onSubmit={handleSubmit}
                       onChange={(text) => setHasText(text.length > 0)}
+                      onMentionSearch={onMentionSearch}
                       disabled={!user}
                       className="font-body text-sm font-medium leading-6 text-white"
                       placeholderClassName="text-[#807c7c] font-medium"
@@ -500,6 +509,7 @@ function ThoughtsPanel({
                       onGifRetry={onGifRetry}
                       onGifClick={onGifClick}
                       onImageUpload={onImageUpload}
+                      onMentionSearch={onMentionSearch}
                       emojiEnabled={emojiEnabled}
                     />
                   ))}
@@ -539,6 +549,7 @@ function CommentItem({
   onGifRetry,
   onGifClick,
   onImageUpload,
+  onMentionSearch,
   emojiEnabled = false,
 }: {
   thought: PanelThought;
@@ -558,6 +569,7 @@ function CommentItem({
   onGifRetry?: () => void;
   onGifClick?: () => void;
   onImageUpload?: (file: File) => Promise<string>;
+  onMentionSearch?: (query: string) => Promise<MentionSuggestion[]>;
   emojiEnabled?: boolean;
 }) {
   const Link = useLinkComponent();
@@ -760,15 +772,20 @@ function CommentItem({
                 submitOn="mod-enter"
                 editorRef={replyEditorRef}
                 onSubmit={(text) => {
-                  const media: PanelMedia | undefined = replyGif
+                  const mentionedIds = replyEditorRef.current?.getMentionedUserIds() ?? [];
+                  let media: PanelMedia | undefined = replyGif
                     ? { gifUrl: replyGif.url, gifId: replyGif.id, gifPlatform: 'klipy' }
                     : replyImageUrl
                       ? { imageUrl: replyImageUrl }
                       : undefined;
+                  if (mentionedIds.length > 0) {
+                    media = { ...media, mentionedUserIds: mentionedIds };
+                  }
                   onReplySubmit(text, thought.id, media);
                   resetReplyMedia();
                 }}
                 onChange={(text) => setReplyHasText(text.length > 0)}
+                onMentionSearch={onMentionSearch}
                 className="font-body text-sm font-medium leading-6 text-white"
                 placeholderClassName="text-[#807c7c] font-medium"
               />
@@ -897,11 +914,15 @@ function CommentItem({
                 disabled={(!replyHasText && !replyGif && !replyImageUrl) || replyImageUploading}
                 onClick={() => {
                   const text = replyEditorRef.current?.getText() ?? '';
-                  const media: PanelMedia | undefined = replyGif
+                  const mentionedIds = replyEditorRef.current?.getMentionedUserIds() ?? [];
+                  let media: PanelMedia | undefined = replyGif
                     ? { gifUrl: replyGif.url, gifId: replyGif.id, gifPlatform: 'klipy' }
                     : replyImageUrl
                       ? { imageUrl: replyImageUrl }
                       : undefined;
+                  if (mentionedIds.length > 0) {
+                    media = { ...media, mentionedUserIds: mentionedIds };
+                  }
                   if (text || media) {
                     onReplySubmit(text, thought.id, media);
                     resetReplyMedia();
@@ -992,6 +1013,7 @@ function CommentItem({
               onGifRetry={onGifRetry}
               onGifClick={onGifClick}
               onImageUpload={onImageUpload}
+              onMentionSearch={onMentionSearch}
               emojiEnabled={emojiEnabled}
             />
           ))}
