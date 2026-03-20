@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
+  $createTextNode,
   $getSelection,
   $isRangeSelection,
   $isTextNode,
@@ -12,7 +13,6 @@ import {
   KEY_ENTER_COMMAND,
   KEY_ESCAPE_COMMAND,
   KEY_TAB_COMMAND,
-  TextNode,
 } from 'lexical';
 
 import { $createMentionNode } from './mention-node';
@@ -41,7 +41,6 @@ function useMentionTrigger() {
   const [trigger, setTrigger] = React.useState<{
     query: string;
     matchStart: number;
-    anchorRect: DOMRect | null;
   } | null>(null);
 
   React.useEffect(() => {
@@ -74,18 +73,9 @@ function useMentionTrigger() {
           return;
         }
 
-        // Get cursor position for popover anchoring
-        const nativeSelection = window.getSelection();
-        let anchorRect: DOMRect | null = null;
-        if (nativeSelection && nativeSelection.rangeCount > 0) {
-          const range = nativeSelection.getRangeAt(0);
-          anchorRect = range.getBoundingClientRect();
-        }
-
         setTrigger({
           query: match[1],
           matchStart: anchor.offset - match[0].length,
-          anchorRect,
         });
       });
     });
@@ -103,30 +93,17 @@ function useMentionTrigger() {
 function MentionAutocomplete({
   suggestions,
   selectedIndex,
-  anchorRect,
   onSelect,
 }: {
   suggestions: MentionSuggestion[];
   selectedIndex: number;
-  anchorRect: DOMRect | null;
   onSelect: (suggestion: MentionSuggestion) => void;
 }) {
-  const ref = React.useRef<HTMLDivElement>(null);
-
-  if (!anchorRect || suggestions.length === 0) return null;
-
-  const style: React.CSSProperties = {
-    position: 'fixed',
-    top: anchorRect.bottom + 4,
-    left: anchorRect.left,
-    zIndex: 50,
-  };
+  if (suggestions.length === 0) return null;
 
   return (
     <div
-      ref={ref}
-      className="min-w-[200px] max-w-[300px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-      style={style}
+      className="absolute left-0 top-full z-50 mt-1 min-w-[200px] max-w-[300px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
     >
       {suggestions.map((suggestion, index) => (
         <button
@@ -194,13 +171,6 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
     return () => clearTimeout(timer);
   }, [trigger?.query, onSearch]);
 
-  // Clear suggestions when trigger disappears
-  React.useEffect(() => {
-    if (!trigger) {
-      setSuggestions([]);
-    }
-  }, [trigger]);
-
   // Insert mention node
   const insertMention = React.useCallback(
     (suggestion: MentionSuggestion) => {
@@ -218,7 +188,7 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
 
         // Replace the @query with the mention node
         const mentionNode = $createMentionNode(suggestion.userId, suggestion.username);
-        const afterNode = new TextNode(after || ' ');
+        const afterNode = $createTextNode(after || ' ');
 
         if (before) {
           node.setTextContent(before);
@@ -310,7 +280,6 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
     <MentionAutocomplete
       suggestions={suggestions}
       selectedIndex={selectedIndex}
-      anchorRect={trigger?.anchorRect ?? null}
       onSelect={insertMention}
     />
   );
