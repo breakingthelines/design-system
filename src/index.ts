@@ -83,6 +83,7 @@ export * from './types/content';
 
 // Utilities
 export * from './lib/format';
+export * from './lib/render-mentions';
 
 // Hooks
 export * from './hooks/index';

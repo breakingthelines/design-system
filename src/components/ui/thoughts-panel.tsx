@@ -9,6 +9,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useLinkComponent } from '#/components/ui/link-context';
+import { useRenderMentions } from '#/lib/render-mentions';
 import { MiniEditor, type MiniEditorHandle, type MentionSuggestion } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
@@ -573,6 +574,7 @@ function CommentItem({
   emojiEnabled?: boolean;
 }) {
   const Link = useLinkComponent();
+  const renderMentions = useRenderMentions();
   const isOP = thought.isOriginalAuthor;
   const isReplying = replyingTo === thought.id;
   const replyEditorRef = React.useRef<MiniEditorHandle>(null);
@@ -707,7 +709,7 @@ function CommentItem({
                 'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
                 isReply ? 'text-xs' : 'text-sm',
               )}>
-                {thought.body}
+                {renderMentions(thought.body)}
               </p>
             )}
 
@@ -746,7 +748,7 @@ function CommentItem({
                   thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white',
                 )}
               >
-                <ThumbsUp size={isReply ? 10 : 14} weight={thought.liked ? 'fill' : 'regular'} />
+                <ThumbsUp size={14} weight={thought.liked ? 'fill' : 'regular'} />
               </button>
               {(thought.stats.likes ?? 0) > 0 && (
                 <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
