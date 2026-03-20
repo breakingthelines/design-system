@@ -194,9 +194,9 @@ function ThoughtsPanel({
     setPanelPicker(null);
   }
 
-  function handleReplySubmit(text: string, parentId: string) {
+  function handleReplySubmit(text: string, parentId: string, media?: PanelMedia) {
     if (!user) return;
-    onSubmit?.(text, parentId);
+    onSubmit?.(text, parentId, media);
     setReplyingTo(null);
   }
 
@@ -493,6 +493,14 @@ function ThoughtsPanel({
                       onLike={onLike}
                       onUnlike={onUnlike}
                       onLoadReplies={onLoadReplies}
+                      gifs={gifs}
+                      gifsLoading={gifsLoading}
+                      gifsError={gifsError}
+                      onGifSearch={onGifSearch}
+                      onGifRetry={onGifRetry}
+                      onGifClick={onGifClick}
+                      onImageUpload={onImageUpload}
+                      emojiEnabled={emojiEnabled}
                     />
                   ))}
                 </motion.div>
@@ -524,17 +532,33 @@ function CommentItem({
   onUnlike,
   onLoadReplies,
   isReply = false,
+  gifs,
+  gifsLoading,
+  gifsError,
+  onGifSearch,
+  onGifRetry,
+  onGifClick,
+  onImageUpload,
+  emojiEnabled = false,
 }: {
   thought: PanelThought;
   user?: { avatarUrl?: string; initials?: string };
   replyingTo: string | null;
   onStartReply: (id: string) => void;
   onCancelReply: () => void;
-  onReplySubmit: (text: string, parentId: string) => void;
+  onReplySubmit: (text: string, parentId: string, media?: PanelMedia) => void;
   onLike?: (id: string) => void;
   onUnlike?: (id: string) => void;
   onLoadReplies?: (id: string) => void;
   isReply?: boolean;
+  gifs?: GifItem[];
+  gifsLoading?: boolean;
+  gifsError?: boolean;
+  onGifSearch?: (query: string) => void;
+  onGifRetry?: () => void;
+  onGifClick?: () => void;
+  onImageUpload?: (file: File) => Promise<string>;
+  emojiEnabled?: boolean;
 }) {
   const Link = useLinkComponent();
   const isOP = thought.isOriginalAuthor;
@@ -542,10 +566,54 @@ function CommentItem({
   const replyEditorRef = React.useRef<MiniEditorHandle>(null);
   const [replyHasText, setReplyHasText] = React.useState(false);
 
+  // Reply media state
+  const [replyPicker, setReplyPicker] = React.useState<PanelActivePicker>(null);
+  const [replyGif, setReplyGif] = React.useState<GifSelection | null>(null);
+  const [replyImagePreview, setReplyImagePreview] = React.useState<string | null>(null);
+  const [replyImageUrl, setReplyImageUrl] = React.useState<string | null>(null);
+  const [replyImageUploading, setReplyImageUploading] = React.useState(false);
+  const replyFileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const useBuiltInGif = gifs !== undefined;
+  const useBuiltInEmoji = emojiEnabled;
+  const showReplyGifBtn = useBuiltInGif || !!onGifClick;
+  const showReplyEmojiBtn = useBuiltInEmoji;
+
+  function clearReplyImage() {
+    if (replyImagePreview) URL.revokeObjectURL(replyImagePreview);
+    setReplyImagePreview(null);
+    setReplyImageUrl(null);
+    setReplyImageUploading(false);
+  }
+
+  function handleReplyFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file || !onImageUpload) return;
+    e.target.value = '';
+    if (file.size > 10 * 1024 * 1024) return;
+    setReplyGif(null);
+    setReplyPicker(null);
+    const preview = URL.createObjectURL(file);
+    setReplyImagePreview(preview);
+    setReplyImageUploading(true);
+    onImageUpload(file)
+      .then((url) => { setReplyImageUrl(url); setReplyImageUploading(false); })
+      .catch(() => { setReplyImagePreview(null); setReplyImageUrl(null); setReplyImageUploading(false); });
+  }
+
+  function resetReplyMedia() {
+    setReplyGif(null);
+    clearReplyImage();
+    setReplyPicker(null);
+    setReplyHasText(false);
+  }
+
   // Auto-focus reply editor when it opens
   React.useEffect(() => {
     if (isReplying) {
       requestAnimationFrame(() => replyEditorRef.current?.focus());
+    } else {
+      resetReplyMedia();
     }
   }, [isReplying]);
 
@@ -692,8 +760,13 @@ function CommentItem({
                 submitOn="mod-enter"
                 editorRef={replyEditorRef}
                 onSubmit={(text) => {
-                  onReplySubmit(text, thought.id);
-                  setReplyHasText(false);
+                  const media: PanelMedia | undefined = replyGif
+                    ? { gifUrl: replyGif.url, gifId: replyGif.id, gifPlatform: 'klipy' }
+                    : replyImageUrl
+                      ? { imageUrl: replyImageUrl }
+                      : undefined;
+                  onReplySubmit(text, thought.id, media);
+                  resetReplyMedia();
                 }}
                 onChange={(text) => setReplyHasText(text.length > 0)}
                 className="font-body text-sm font-medium leading-6 text-white"
@@ -701,35 +774,188 @@ function CommentItem({
               />
             </div>
           </div>
-          <div className="flex items-center justify-end gap-2 pl-11">
-            <Button
-              variant="outline"
-              onClick={onCancelReply}
-              className="rounded-[2px] px-4 py-1.5 text-xs bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]"
-            >
-              Cancel
-            </Button>
-            <Button
-              variant={replyHasText ? 'default' : 'outline'}
-              data-shimmer="slow"
-              disabled={!replyHasText}
-              onClick={() => {
-                const text = replyEditorRef.current?.getText();
-                if (text) {
-                  onReplySubmit(text, thought.id);
-                  setReplyHasText(false);
-                }
-              }}
-              className={cn(
-                'rounded-[2px] px-4 py-1.5 text-xs',
-                replyHasText
-                  ? 'bg-red-300 border-red-100 hover:bg-red-100'
-                  : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]',
+
+          {/* Reply GIF preview */}
+          <AnimatePresence>
+            {replyGif && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden pl-11"
+              >
+                <div className="relative inline-block max-w-[160px] overflow-hidden rounded-[6px] border border-white/[0.06]">
+                  <img src={replyGif.previewUrl} alt={replyGif.title} className="block max-h-[100px] w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => setReplyGif(null)}
+                    className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/90 hover:text-white"
+                    aria-label="Remove GIF"
+                  >
+                    <X weight="bold" className="size-2.5" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Reply image preview */}
+          <AnimatePresence>
+            {replyImagePreview && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="overflow-hidden pl-11"
+              >
+                <div className="relative inline-block max-w-[160px] overflow-hidden rounded-[6px] border border-white/[0.06]">
+                  <img src={replyImagePreview} alt="" className="block max-h-[100px] w-full object-cover" />
+                  {replyImageUploading && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                      <SpinnerGap className="size-4 animate-spin text-white" />
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={clearReplyImage}
+                    className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-black/70 text-white/80 backdrop-blur-sm transition-colors hover:bg-black/90 hover:text-white"
+                    aria-label="Remove image"
+                  >
+                    <X weight="bold" className="size-2.5" />
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="flex items-center justify-between pl-11">
+            <div className="flex items-center gap-1">
+              {showReplyGifBtn && (
+                <button
+                  type="button"
+                  aria-label="Add GIF"
+                  className={cn(
+                    'flex cursor-pointer items-center justify-center rounded-[4px] p-[7px] transition-colors',
+                    replyPicker === 'gif'
+                      ? 'bg-red-100/15 text-red-300'
+                      : 'text-red-100 hover:bg-red-100/10 hover:text-red-300',
+                  )}
+                  onClick={() => {
+                    if (useBuiltInGif) setReplyPicker(p => p === 'gif' ? null : 'gif');
+                    else onGifClick?.();
+                  }}
+                >
+                  <Gif weight="regular" className="size-[13px]" />
+                </button>
               )}
-            >
-              Reply
-            </Button>
+              {showReplyEmojiBtn && (
+                <button
+                  type="button"
+                  aria-label="Add emoji"
+                  className={cn(
+                    'flex cursor-pointer items-center justify-center rounded-[4px] p-[7px] transition-colors',
+                    replyPicker === 'emoji'
+                      ? 'bg-red-100/15 text-red-300'
+                      : 'text-red-100 hover:bg-red-100/10 hover:text-red-300',
+                  )}
+                  onClick={() => {
+                    if (useBuiltInEmoji) setReplyPicker(p => p === 'emoji' ? null : 'emoji');
+                  }}
+                >
+                  <SoccerBall weight="regular" className="size-[13px]" />
+                </button>
+              )}
+              {onImageUpload && (
+                <button
+                  type="button"
+                  aria-label="Add image"
+                  className="flex cursor-pointer items-center justify-center rounded-[4px] p-[7px] text-red-100 transition-colors hover:bg-red-100/10 hover:text-red-300"
+                  onClick={() => replyFileInputRef.current?.click()}
+                >
+                  <ImageIcon weight="regular" className="size-[13px]" />
+                </button>
+              )}
+            </div>
+            <input
+              ref={replyFileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp,image/gif,image/avif"
+              className="hidden"
+              onChange={handleReplyFileSelect}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={() => { resetReplyMedia(); onCancelReply(); }}
+                className="rounded-[2px] px-4 py-1.5 text-xs bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant={(replyHasText || replyGif || replyImageUrl) ? 'default' : 'outline'}
+                data-shimmer="slow"
+                disabled={(!replyHasText && !replyGif && !replyImageUrl) || replyImageUploading}
+                onClick={() => {
+                  const text = replyEditorRef.current?.getText() ?? '';
+                  const media: PanelMedia | undefined = replyGif
+                    ? { gifUrl: replyGif.url, gifId: replyGif.id, gifPlatform: 'klipy' }
+                    : replyImageUrl
+                      ? { imageUrl: replyImageUrl }
+                      : undefined;
+                  if (text || media) {
+                    onReplySubmit(text, thought.id, media);
+                    resetReplyMedia();
+                  }
+                }}
+                className={cn(
+                  'rounded-[2px] px-4 py-1.5 text-xs',
+                  (replyHasText || replyGif || replyImageUrl)
+                    ? 'bg-red-300 border-red-100 hover:bg-red-100'
+                    : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]',
+                )}
+              >
+                Reply
+              </Button>
+            </div>
           </div>
+
+          {/* Reply picker panel */}
+          <AnimatePresence>
+            {replyPicker && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden pl-11"
+              >
+                {replyPicker === 'gif' && gifs !== undefined && (
+                  <GifPicker
+                    gifs={gifs}
+                    loading={gifsLoading}
+                    error={gifsError}
+                    onSearch={onGifSearch}
+                    onRetry={onGifRetry}
+                    onGifSelect={(gif) => {
+                      setReplyGif(gif);
+                      clearReplyImage();
+                      setReplyPicker(null);
+                    }}
+                    className="w-full border-0 shadow-none"
+                  />
+                )}
+                {replyPicker === 'emoji' && (
+                  <EmojiPicker
+                    onEmojiSelect={(emoji) => {
+                      replyEditorRef.current?.insertText(emoji);
+                      setReplyHasText(true);
+                    }}
+                    className="w-full border-0 shadow-none"
+                  />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       )}
 
@@ -759,6 +985,14 @@ function CommentItem({
               onLike={onLike}
               onUnlike={onUnlike}
               isReply
+              gifs={gifs}
+              gifsLoading={gifsLoading}
+              gifsError={gifsError}
+              onGifSearch={onGifSearch}
+              onGifRetry={onGifRetry}
+              onGifClick={onGifClick}
+              onImageUpload={onImageUpload}
+              emojiEnabled={emojiEnabled}
             />
           ))}
         </div>
