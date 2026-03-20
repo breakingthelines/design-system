@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, PushPin, ThumbsUp, ThumbsDown, Gif, SoccerBall, Image as ImageIcon, SpinnerGap } from '@phosphor-icons/react';
+import { X, PushPin, ThumbsUp, Gif, SoccerBall, Image as ImageIcon, SpinnerGap } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
@@ -644,7 +644,7 @@ function CommentItem({
             )}
           </div>
 
-          {/* Actions: Reply + ThumbsUp + count + ThumbsDown */}
+          {/* Actions: Reply + ThumbsUp + count */}
           <div className="flex items-center gap-4">
             {!isReply && (
               <button
@@ -655,32 +655,24 @@ function CommentItem({
                 Reply{replyCount > 0 ? ` (${replyCount})` : ''}
               </button>
             )}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id)
-                  }
-                  className={cn(
-                    'cursor-pointer transition-colors',
-                    thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white',
-                  )}
-                >
-                  <ThumbsUp size={isReply ? 16 : 20} weight={thought.liked ? 'fill' : 'regular'} />
-                </button>
-                {(thought.stats.likes ?? 0) > 0 && (
-                  <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-                    {thought.stats.likes}
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
+                onClick={() =>
+                  thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id)
+                }
+                className={cn(
+                  'cursor-pointer transition-colors',
+                  thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white',
+                )}
               >
-                <ThumbsDown size={isReply ? 16 : 20} />
+                <ThumbsUp size={isReply ? 10 : 14} weight={thought.liked ? 'fill' : 'regular'} />
               </button>
+              {(thought.stats.likes ?? 0) > 0 && (
+                <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
+                  {thought.stats.likes}
+                </span>
+              )}
             </div>
           </div>
         </div>

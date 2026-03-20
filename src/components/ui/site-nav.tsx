@@ -29,6 +29,14 @@ export interface NavTab {
   }[];
 }
 
+export interface AvatarMenuItem {
+  label: string;
+  /** Internal link href */
+  href?: string;
+  /** Click handler (for actions like logout) */
+  onClick?: () => void;
+}
+
 interface SiteNavProps extends React.ComponentProps<'header'> {
   /** Navigation tabs */
   tabs?: NavTab[];
@@ -40,8 +48,10 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   onSearchClick?: () => void;
   /** Notifications click handler */
   onNotificationsClick?: () => void;
-  /** Avatar/profile click handler */
+  /** @deprecated Use avatarMenu instead */
   onAvatarClick?: () => void;
+  /** Dropdown menu items shown on avatar hover */
+  avatarMenu?: AvatarMenuItem[];
   /** Login click handler (shown when no avatarUrl) */
   onLoginClick?: () => void;
   /** Notification count badge */
@@ -150,6 +160,7 @@ function SiteNav({
   onSearchClick,
   onNotificationsClick,
   onAvatarClick,
+  avatarMenu,
   onLoginClick,
   notificationCount,
   logoHref = '/',
@@ -266,12 +277,51 @@ function SiteNav({
 
         {/* Avatar (logged in) or Login button (logged out) */}
         {avatarUrl || initials ? (
-          <button type="button" onClick={onAvatarClick} className="flex items-center justify-center cursor-pointer">
-            <Avatar size="default" className="size-[34px]">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
-              <AvatarFallback>{initials ?? '?'}</AvatarFallback>
-            </Avatar>
-          </button>
+          avatarMenu?.length ? (
+            <div className="group/avatar relative">
+              <div className="flex items-center justify-center cursor-pointer">
+                <Avatar size="default" className="size-[34px]">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                  <AvatarFallback>{initials ?? '?'}</AvatarFallback>
+                </Avatar>
+              </div>
+              {/* Dropdown — same pattern as Media dropdown */}
+              <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
+                <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
+                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                  <nav className="flex flex-col gap-0.5">
+                    {avatarMenu.map((item) =>
+                      item.href ? (
+                        <LinkComponent
+                          key={item.label}
+                          href={item.href}
+                          className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                        >
+                          {item.label}
+                        </LinkComponent>
+                      ) : (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={item.onClick}
+                          className="block w-full cursor-pointer rounded-[2px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                        >
+                          {item.label}
+                        </button>
+                      )
+                    )}
+                  </nav>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button type="button" onClick={onAvatarClick} className="flex items-center justify-center cursor-pointer">
+              <Avatar size="default" className="size-[34px]">
+                {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                <AvatarFallback>{initials ?? '?'}</AvatarFallback>
+              </Avatar>
+            </button>
+          )
         ) : (
           onLoginClick && (
             <Button onClick={onLoginClick} className="h-auto px-4 py-2.5">
