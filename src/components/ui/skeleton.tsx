@@ -35,9 +35,10 @@ const skeletonVariants = cva(
   },
 );
 
-interface SkeletonProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof skeletonVariants> {}
+interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
+  /** Shape variant — defaults to 'rect' */
+  variant?: 'rect' | 'circle' | 'text';
+}
 
 function Skeleton({ variant = 'rect', className, style, ...props }: SkeletonProps) {
   return (
