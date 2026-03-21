@@ -79,6 +79,8 @@ interface ThoughtsPanelProps {
   userId?: string;
   /** Loading state */
   isLoading?: boolean;
+  /** When set, scrolls to and highlights the thought with this ID on open */
+  scrollToThoughtId?: string;
   /** Additional class names on the panel container */
   className?: string;
 }
@@ -141,6 +143,7 @@ function ThoughtsPanel({
   emojiEnabled = false,
   userId,
   isLoading = false,
+  scrollToThoughtId,
   className,
 }: ThoughtsPanelProps) {
   const composerRef = React.useRef<MiniEditorHandle>(null);
@@ -233,6 +236,21 @@ function ThoughtsPanel({
   React.useEffect(() => {
     if (!open) setReplyingTo(null);
   }, [open]);
+
+  // Scroll to and highlight a specific thought when deep-linked
+  React.useEffect(() => {
+    if (!scrollToThoughtId || !open) return;
+    // Small delay to let the panel animation settle and thoughts render
+    const timer = setTimeout(() => {
+      const el = document.querySelector(`[data-thought-id="${scrollToThoughtId}"]`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('ring-1', 'ring-red-100/50');
+        setTimeout(() => el.classList.remove('ring-1', 'ring-red-100/50'), 2000);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [scrollToThoughtId, open]);
 
   return (
     <AnimatePresence>
@@ -636,7 +654,7 @@ function CommentItem({
   const hasUnloadedReplies = replyCount > 0 && replies.length === 0;
 
   return (
-    <motion.div className="flex flex-col" variants={itemVariants}>
+    <motion.div className="flex flex-col" variants={itemVariants} data-thought-id={thought.id}>
       <div className={cn('flex gap-3', isReply && 'pl-[52px]')}>
         {/* Avatar */}
         <Avatar className={cn(isReply ? 'size-8' : 'size-10', 'shrink-0')}>
