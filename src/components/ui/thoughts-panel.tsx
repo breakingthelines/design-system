@@ -237,10 +237,11 @@ function ThoughtsPanel({
     if (!open) setReplyingTo(null);
   }, [open]);
 
-  // Scroll to and highlight a specific thought when deep-linked
+  // Scroll to and highlight a specific thought when deep-linked.
+  // Re-runs when thoughts change (e.g. after async load) so the target
+  // is found even if the panel opens before data arrives.
   React.useEffect(() => {
-    if (!scrollToThoughtId || !open) return;
-    // Small delay to let the panel animation settle and thoughts render
+    if (!scrollToThoughtId || !open || isLoading) return;
     const timer = setTimeout(() => {
       const el = document.querySelector(`[data-thought-id="${scrollToThoughtId}"]`);
       if (el) {
@@ -250,7 +251,7 @@ function ThoughtsPanel({
       }
     }, 350);
     return () => clearTimeout(timer);
-  }, [scrollToThoughtId, open]);
+  }, [scrollToThoughtId, open, isLoading, thoughts.length]);
 
   return (
     <AnimatePresence>
