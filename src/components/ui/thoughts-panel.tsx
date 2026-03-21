@@ -248,10 +248,17 @@ function ThoughtsPanel({
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
         el.classList.add('ring-1', 'ring-red-100/50');
         setTimeout(() => el.classList.remove('ring-1', 'ring-red-100/50'), 2000);
+      } else if (onLoadReplies) {
+        // Target not found — it's likely a reply that's collapsed.
+        // Auto-expand replies for all thoughts that have unloaded replies.
+        for (const t of thoughts) {
+          const hasUnloaded = (t.replyCount ?? 0) > 0 && (!t.replies || t.replies.length === 0);
+          if (hasUnloaded) onLoadReplies(t.id);
+        }
       }
     }, 350);
     return () => clearTimeout(timer);
-  }, [scrollToThoughtId, open, isLoading, thoughts.length]);
+  }, [scrollToThoughtId, open, isLoading, thoughts, onLoadReplies]);
 
   return (
     <AnimatePresence>
