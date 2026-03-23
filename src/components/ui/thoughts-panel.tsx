@@ -729,6 +729,15 @@ function CommentItem({
               )}
             </div>
 
+            {/* Content anchor quote */}
+            {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (
+              <div className="rounded-md border-l-2 border-red-100/40 bg-white/[0.03] py-1.5 pl-3 pr-2">
+                <p className="font-content text-[11px] leading-relaxed text-white/40 italic line-clamp-3">
+                  &ldquo;{thought.anchor.text.selectedText}&rdquo;
+                </p>
+              </div>
+            )}
+
             {/* Body */}
             {thought.body && (
               <p className={cn(

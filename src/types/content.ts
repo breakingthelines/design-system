@@ -37,6 +37,17 @@ export interface ThoughtContentContext {
   href: string;
 }
 
+export interface ThoughtTextAnchor {
+  selectedText: string;
+  blockId: string;
+  textOffset: number;
+}
+
+export interface ThoughtAnchor {
+  type: 'text' | 'timestamp' | 'region';
+  text?: ThoughtTextAnchor;
+}
+
 export interface ThoughtItem {
   id: string;
   body: string;
@@ -52,4 +63,5 @@ export interface ThoughtItem {
   replyCount?: number;
   replyingTo?: ReplyContext;
   contentContext?: ThoughtContentContext;
+  anchor?: ThoughtAnchor;
 }
