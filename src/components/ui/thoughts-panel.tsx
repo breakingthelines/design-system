@@ -246,8 +246,8 @@ function ThoughtsPanel({
       const el = document.querySelector(`[data-thought-id="${scrollToThoughtId}"]`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('ring-1', 'ring-red-100/50');
-        setTimeout(() => el.classList.remove('ring-1', 'ring-red-100/50'), 2000);
+        el.classList.add('ring-1', 'ring-red-100/50', 'ring-offset-4', 'ring-offset-background', 'rounded-lg');
+        setTimeout(() => el.classList.remove('ring-1', 'ring-red-100/50', 'ring-offset-4', 'ring-offset-background', 'rounded-lg'), 2000);
       } else if (onLoadReplies) {
         // Target not found — it's likely a reply that's collapsed.
         // Auto-expand replies for all thoughts that have unloaded replies.

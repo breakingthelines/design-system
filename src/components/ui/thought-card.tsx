@@ -122,6 +122,15 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
           )}
         </div>
 
+        {/* Quoted passage anchor */}
+        {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (
+          <div className="rounded-md border-l-2 border-red-100/40 bg-foreground/[0.03] py-1.5 pl-3 pr-2">
+            <p className="font-serif text-xs leading-relaxed text-foreground/40 italic line-clamp-3">
+              &ldquo;{thought.anchor.text.selectedText}&rdquo;
+            </p>
+          </div>
+        )}
+
         {/* Body text — Book Antiqua 14px / 18px per Figma */}
         {thought.body && (
           <p className="font-serif text-sm leading-[18px] text-foreground whitespace-pre-line">
