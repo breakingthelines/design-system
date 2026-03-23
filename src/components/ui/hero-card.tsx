@@ -120,19 +120,19 @@ function HeroCard({
         )}
 
         {/* ── Content overlay ────────────────────── */}
-        <div className="absolute inset-y-0 left-4 flex w-[280px] flex-col items-start justify-end pb-6 sm:left-8 sm:w-[340px] sm:pb-[44px]">
-          <div className="flex flex-col gap-4 sm:gap-8">
+        <div className="absolute inset-y-0 left-4 flex w-[65%] max-w-[340px] flex-col items-start justify-end pb-4 sm:left-8 sm:w-[340px] sm:pb-6 lg:pb-[44px]">
+          <div className="flex flex-col gap-3 sm:gap-4 lg:gap-8">
             {/* Text content block */}
-            <div className="flex flex-col gap-2 sm:gap-4">
+            <div className="flex flex-col gap-2 sm:gap-3 lg:gap-4">
               {/* Title */}
               {href ? (
                 <LinkComponent href={href} className="group/title">
-                  <h2 className="font-[family-name:var(--font-content)] text-lg font-bold leading-tight tracking-[-0.54px] text-white transition-colors group-hover/title:text-red-100 sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
+                  <h2 className="font-[family-name:var(--font-content)] text-lg font-bold leading-tight tracking-[-0.54px] text-white transition-colors line-clamp-3 lg:line-clamp-none group-hover/title:text-red-100 sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
                     {item.title}
                   </h2>
                 </LinkComponent>
               ) : (
-                <h2 className="font-[family-name:var(--font-content)] text-lg font-bold leading-tight tracking-[-0.54px] text-white sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
+                <h2 className="font-[family-name:var(--font-content)] text-lg font-bold leading-tight tracking-[-0.54px] text-white line-clamp-3 lg:line-clamp-none sm:max-w-[331px] sm:text-[28px] sm:leading-none sm:tracking-[-0.84px]">
                   {item.title}
                 </h2>
               )}
@@ -162,7 +162,7 @@ function HeroCard({
 
               {/* Excerpt — hidden on mobile to save space */}
               {item.excerpt && (
-                <p className="hidden line-clamp-2 font-serif text-sm font-normal leading-[18px] text-[#ccc4c4] sm:block">
+                <p className="hidden line-clamp-2 font-serif text-sm font-normal leading-[18px] text-[#ccc4c4] lg:block">
                   {item.excerpt}
                 </p>
               )}
