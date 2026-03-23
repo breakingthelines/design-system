@@ -162,7 +162,7 @@ function HeroCard({
 
               {/* Excerpt — hidden on mobile to save space */}
               {item.excerpt && (
-                <p className="hidden line-clamp-2 font-serif text-sm font-normal leading-[18px] text-[#ccc4c4] sm:block">
+                <p className="hidden font-serif text-sm font-normal leading-[18px] text-[#ccc4c4] sm:block sm:line-clamp-1 lg:line-clamp-2">
                   {item.excerpt}
                 </p>
               )}
