@@ -32,8 +32,6 @@ interface PanelMedia {
 interface PanelThought extends ThoughtItem {
   /** If set, the comment is pinned and shows "Pinned by {name}" */
   pinnedBy?: string;
-  /** True when the thought author is the article/content author (gets pill treatment) */
-  isOriginalAuthor?: boolean;
 }
 
 interface ThoughtsPanelProps {

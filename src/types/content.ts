@@ -67,6 +67,7 @@ export interface ThoughtItem {
   liked?: boolean;
   reposted?: boolean;
   repostedBy?: { username: string; displayName?: string };
+  isOriginalAuthor?: boolean;
   replies?: ThoughtItem[];
   replyCount?: number;
   replyingTo?: ReplyContext;
