@@ -43,9 +43,17 @@ export interface ThoughtTextAnchor {
   textOffset: number;
 }
 
+export interface ThoughtTimestampAnchor {
+  startSeconds: number;
+  endSeconds?: number;
+  label: string;
+}
+
 export interface ThoughtAnchor {
   type: 'text' | 'timestamp' | 'region';
   text?: ThoughtTextAnchor;
+  startSeconds?: number;
+  label?: string;
 }
 
 export interface ThoughtItem {
