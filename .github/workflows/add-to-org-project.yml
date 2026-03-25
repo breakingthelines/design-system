@@ -10,14 +10,24 @@ jobs:
   add-to-project:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/create-github-app-token@v1
+      - uses: actions/create-github-app-token@v2
         id: app-token
         with:
           app-id: ${{ secrets.BTL_GAFFER_APP_ID }}
           private-key: ${{ secrets.BTL_GAFFER_PRIVATE_KEY }}
           owner: breakingthelines
+          permission-organization-projects: write
+          permission-issues: read
 
-      - uses: actions/add-to-project@v1.0.2
+      - name: Add to repo project
+        if: vars.REPO_PROJECT_URL != ''
+        uses: actions/add-to-project@v1.0.2
+        with:
+          project-url: ${{ vars.REPO_PROJECT_URL }}
+          github-token: ${{ steps.app-token.outputs.token }}
+
+      - name: Add to org project
+        uses: actions/add-to-project@v1.0.2
         with:
           project-url: https://github.com/orgs/breakingthelines/projects/4
           github-token: ${{ steps.app-token.outputs.token }}
