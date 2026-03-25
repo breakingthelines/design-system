@@ -13,7 +13,7 @@ import { useRenderMentions } from '#/lib/render-mentions';
 import { MiniEditor, type MiniEditorHandle, type MentionSuggestion } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
-import type { ThoughtItem } from '../../types/content';
+import type { ThoughtItem } from '#/types/content';
 
 type PanelActivePicker = 'gif' | 'emoji' | null;
 
