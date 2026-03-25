@@ -27,6 +27,8 @@ interface ImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'lo
   rootMargin?: string;
   /** Duration of the cross-fade in ms. Defaults to 300. Set to 0 to disable. */
   fadeDuration?: number;
+  /** Extra classes applied to the inner <img> element (e.g. hover transitions). */
+  imgClassName?: string;
   /** Callback when the image finishes loading. */
   onLoad?: React.ReactEventHandler<HTMLImageElement>;
   /** Callback on load error. */
@@ -39,6 +41,7 @@ function Image({
   loading = 'lazy',
   rootMargin = '200px',
   fadeDuration = 300,
+  imgClassName,
   className,
   style,
   onLoad,
@@ -120,6 +123,7 @@ function Image({
             'h-full w-full object-cover',
             fadeDuration > 0 && 'transition-opacity',
             loaded ? 'opacity-100' : 'opacity-0',
+            imgClassName,
           )}
           style={fadeDuration > 0 ? { transitionDuration: `${fadeDuration}ms` } : undefined}
           draggable={false}
