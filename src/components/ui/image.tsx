@@ -76,6 +76,15 @@ function Image({
     setErrored(false);
   }, [src]);
 
+  // Ref callback: fires when the <img> mounts. If the browser already
+  // resolved the image from cache, `complete` is true before React can
+  // attach the onLoad handler — flip `loaded` immediately.
+  const imgRefCallback = useCallback((node: HTMLImageElement | null) => {
+    if (node?.complete && node.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, []);
+
   const handleLoad = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
       setLoaded(true);
@@ -115,6 +124,7 @@ function Image({
       {/* Actual image — transparent until loaded, then fades in */}
       {shouldLoad && (
         <img
+          ref={imgRefCallback}
           src={src}
           alt={alt}
           onLoad={handleLoad}
