@@ -9,7 +9,7 @@ import { motion as motionTokens } from '#/tokens/motion';
 import { useTilt } from '#/hooks/use-tilt';
 import { formatCount } from '#/lib/format';
 import { useLinkComponent } from '#/components/ui/link-context';
-import type { ContentItem } from '#/types/content';
+import type { ContentItem } from '../../types/content';
 
 /* ─────────────────────────────────────────────────
  * HeroCard — full-width featured banner

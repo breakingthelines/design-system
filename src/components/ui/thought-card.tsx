@@ -9,7 +9,7 @@ import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { useRenderMentions } from '#/lib/render-mentions';
-import type { ThoughtItem } from '#/types/content';
+import type { ThoughtItem } from '../../types/content';
 
 interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
   thought: ThoughtItem;

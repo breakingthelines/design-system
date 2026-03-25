@@ -5,7 +5,7 @@ import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { Badge } from '#/components/ui/badge';
-import type { ContentAuthor } from '#/types/content';
+import type { ContentAuthor } from '../../types/content';
 
 const authorLineVariants = cva('inline-flex items-center group/author-line', {
   variants: {
