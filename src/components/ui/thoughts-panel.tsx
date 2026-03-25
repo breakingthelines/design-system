@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, PushPin, ThumbsUp, Gif, SoccerBall, Image as ImageIcon, SpinnerGap } from '@phosphor-icons/react';
+import { X, PushPin, ThumbsUp, Gif, SoccerBall, Image as ImageIcon, SpinnerGap, Clock } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
@@ -79,6 +79,8 @@ interface ThoughtsPanelProps {
   isLoading?: boolean;
   /** When set, scrolls to and highlights the thought with this ID on open */
   scrollToThoughtId?: string;
+  /** Called when user clicks a quoted passage or timestamp anchor on a thought */
+  onAnchorClick?: (anchor: import('#/types/content').ThoughtAnchor) => void;
   /** Additional class names on the panel container */
   className?: string;
 }
@@ -142,6 +144,7 @@ function ThoughtsPanel({
   userId,
   isLoading = false,
   scrollToThoughtId,
+  onAnchorClick,
   className,
 }: ThoughtsPanelProps) {
   const composerRef = React.useRef<MiniEditorHandle>(null);
@@ -527,6 +530,7 @@ function ThoughtsPanel({
                       onLike={onLike}
                       onUnlike={onUnlike}
                       onLoadReplies={onLoadReplies}
+                      onAnchorClick={onAnchorClick}
                       gifs={gifs}
                       gifsLoading={gifsLoading}
                       gifsError={gifsError}
@@ -566,6 +570,7 @@ function CommentItem({
   onLike,
   onUnlike,
   onLoadReplies,
+  onAnchorClick,
   isReply = false,
   gifs,
   gifsLoading,
@@ -586,6 +591,7 @@ function CommentItem({
   onLike?: (id: string) => void;
   onUnlike?: (id: string) => void;
   onLoadReplies?: (id: string) => void;
+  onAnchorClick?: (anchor: import('#/types/content').ThoughtAnchor) => void;
   isReply?: boolean;
   gifs?: GifItem[];
   gifsLoading?: boolean;
@@ -727,13 +733,39 @@ function CommentItem({
               )}
             </div>
 
-            {/* Content anchor quote */}
+            {/* Content anchor quote — clickable when onAnchorClick provided */}
             {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (
-              <div className="rounded-md border-l-2 border-red-100/40 bg-white/[0.03] py-1.5 pl-3 pr-2">
+              <div
+                className={cn(
+                  'rounded-md border-l-2 border-red-100/40 bg-white/[0.03] py-1.5 pl-3 pr-2',
+                  onAnchorClick && 'cursor-pointer transition-colors hover:bg-white/[0.06] hover:border-red-100/60',
+                )}
+                onClick={onAnchorClick ? () => onAnchorClick(thought.anchor!) : undefined}
+                role={onAnchorClick ? 'button' : undefined}
+                tabIndex={onAnchorClick ? 0 : undefined}
+              >
                 <p className="font-content text-[11px] leading-relaxed text-white/40 italic line-clamp-3">
                   &ldquo;{thought.anchor.text.selectedText}&rdquo;
                 </p>
               </div>
+            )}
+
+            {/* Timestamp anchor badge — clickable when onAnchorClick provided */}
+            {thought.anchor?.type === 'timestamp' && thought.anchor.label && (
+              <span
+                className={cn(
+                  'inline-flex items-center gap-1 self-start rounded-full bg-red-100/10 px-2 py-0.5 text-red-100',
+                  onAnchorClick && 'cursor-pointer transition-colors hover:bg-red-100/20',
+                )}
+                onClick={onAnchorClick ? () => onAnchorClick(thought.anchor!) : undefined}
+                role={onAnchorClick ? 'button' : undefined}
+                tabIndex={onAnchorClick ? 0 : undefined}
+              >
+                <Clock size={10} weight="bold" />
+                <span className="font-content text-[10px] font-semibold tabular-nums">
+                  {thought.anchor.label}
+                </span>
+              </span>
             )}
 
             {/* Body */}
@@ -1040,6 +1072,7 @@ function CommentItem({
               onReplySubmit={onReplySubmit}
               onLike={onLike}
               onUnlike={onUnlike}
+              onAnchorClick={onAnchorClick}
               isReply
               gifs={gifs}
               gifsLoading={gifsLoading}

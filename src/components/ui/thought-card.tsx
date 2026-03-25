@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { ArrowsClockwise } from '@phosphor-icons/react';
+import { ArrowsClockwise, Clock } from '@phosphor-icons/react';
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
@@ -122,14 +122,50 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
           )}
         </div>
 
-        {/* Quoted passage anchor */}
-        {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (
-          <div className="rounded-md border-l-2 border-red-100/40 bg-foreground/[0.03] py-1.5 pl-3 pr-2">
-            <p className="font-serif text-xs leading-relaxed text-foreground/40 italic line-clamp-3">
-              &ldquo;{thought.anchor.text.selectedText}&rdquo;
-            </p>
-          </div>
-        )}
+        {/* Quoted passage anchor — links back to the source passage */}
+        {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (() => {
+          const anchorHref = thought.contentContext?.href
+            ? `${thought.contentContext.href}?highlight=${encodeURIComponent(thought.anchor!.text!.blockId)}&offset=${thought.anchor!.text!.textOffset}`
+            : undefined;
+          const block = (
+            <div className={cn(
+              'rounded-md border-l-2 border-red-100/40 bg-foreground/[0.03] py-1.5 pl-3 pr-2',
+              anchorHref && 'cursor-pointer transition-colors hover:bg-foreground/[0.06] hover:border-red-100/60',
+            )}>
+              <p className="font-serif text-xs leading-relaxed text-foreground/40 italic line-clamp-3">
+                &ldquo;{thought.anchor!.text!.selectedText}&rdquo;
+              </p>
+            </div>
+          );
+          return anchorHref ? (
+            <Link href={anchorHref} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+              {block}
+            </Link>
+          ) : block;
+        })()}
+
+        {/* Timestamp anchor badge — links back to the source at that time */}
+        {thought.anchor?.type === 'timestamp' && thought.anchor.label && (() => {
+          const anchorHref = thought.contentContext?.href
+            ? `${thought.contentContext.href}?t=${thought.anchor!.startSeconds}`
+            : undefined;
+          const badge = (
+            <span className={cn(
+              'inline-flex items-center gap-1 rounded-full bg-red-100/10 px-2 py-0.5 text-red-100',
+              anchorHref && 'cursor-pointer transition-colors hover:bg-red-100/20',
+            )}>
+              <Clock size={10} weight="bold" />
+              <span className="font-content text-[10px] font-semibold tabular-nums">
+                {thought.anchor!.label}
+              </span>
+            </span>
+          );
+          return anchorHref ? (
+            <Link href={anchorHref} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+              {badge}
+            </Link>
+          ) : badge;
+        })()}
 
         {/* Body text — Book Antiqua 14px / 18px per Figma */}
         {thought.body && (
