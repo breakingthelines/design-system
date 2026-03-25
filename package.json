@@ -1,6 +1,6 @@
 {
   "name": "@breakingthelines/design-system",
-  "version": "0.1.129",
+  "version": "0.1.130",
   "repository": {
     "type": "git",
     "url": "https://github.com/breakingthelines/design-system.git"
@@ -51,7 +51,7 @@
   },
   "scripts": {
     "dev": "storybook dev -p 6006",
-    "build": "bunchee && sed -i '' \"s|from '#/types/|from '../src/types/|g\" dist/index.d.ts",
+    "build": "bunchee && node -e \"require('fs').writeFileSync('dist/index.d.ts',require('fs').readFileSync('dist/index.d.ts','utf8').replaceAll(\\\"from '#/types/\\\",\\\"from '../src/types/\\\"))\"",
     "lint": "oxlint",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
