@@ -793,7 +793,7 @@ function CommentItem({
 
           {/* Actions: Reply + ThumbsUp + count */}
           <div className="flex items-center gap-4">
-            {!isReply && (
+            {!isReply && user && (
               <button
                 type="button"
                 onClick={() => onStartReply(thought.id)}
@@ -801,6 +801,11 @@ function CommentItem({
               >
                 Reply{replyCount > 0 ? ` (${replyCount})` : ''}
               </button>
+            )}
+            {!isReply && !user && replyCount > 0 && (
+              <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
+                {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+              </span>
             )}
             <div className="flex items-center gap-2">
               <button
