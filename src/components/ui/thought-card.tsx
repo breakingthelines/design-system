@@ -124,8 +124,10 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
 
         {/* Quoted passage anchor — links back to the source passage */}
         {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (() => {
-          const anchorHref = thought.contentContext?.href
-            ? `${thought.contentContext.href}?highlight=${encodeURIComponent(thought.anchor!.text!.blockId)}&offset=${thought.anchor!.text!.textOffset}`
+          const base = thought.contentContext?.href;
+          const sep = base?.includes('?') ? '&' : '?';
+          const anchorHref = base
+            ? `${base}${sep}highlight=${encodeURIComponent(thought.anchor!.text!.blockId)}&offset=${thought.anchor!.text!.textOffset}`
             : undefined;
           const block = (
             <div className={cn(
@@ -146,8 +148,10 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
 
         {/* Timestamp anchor badge — links back to the source at that time */}
         {thought.anchor?.type === 'timestamp' && thought.anchor.label && (() => {
-          const anchorHref = thought.contentContext?.href
-            ? `${thought.contentContext.href}?t=${thought.anchor!.startSeconds}`
+          const base = thought.contentContext?.href;
+          const sep = base?.includes('?') ? '&' : '?';
+          const anchorHref = base
+            ? `${base}${sep}t=${thought.anchor!.startSeconds}`
             : undefined;
           const badge = (
             <span className={cn(
