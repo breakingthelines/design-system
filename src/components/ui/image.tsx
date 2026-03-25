@@ -52,6 +52,7 @@ function Image({
   const [inView, setInView] = useState(loading === 'eager');
   const [errored, setErrored] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevSrcRef = useRef(src);
 
   useEffect(() => {
     if (loading === 'eager' || !containerRef.current) return;
@@ -70,10 +71,14 @@ function Image({
     return () => observer.disconnect();
   }, [loading, rootMargin]);
 
-  // Reset state when src changes
+  // Reset state only when src actually changes (not on initial mount,
+  // which would clobber the ref callback's cache-hit detection).
   useEffect(() => {
-    setLoaded(false);
-    setErrored(false);
+    if (prevSrcRef.current !== src) {
+      prevSrcRef.current = src;
+      setLoaded(false);
+      setErrored(false);
+    }
   }, [src]);
 
   // Ref callback: fires when the <img> mounts. If the browser already
