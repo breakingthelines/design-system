@@ -22,6 +22,7 @@ export * from './components/ui/filter-bar';
 export * from './components/ui/filter-modal';
 export * from './components/ui/hero-card';
 export * from './components/ui/icon-button';
+export * from './components/ui/image';
 export * from './components/ui/input-group';
 export * from './components/ui/input';
 export * from './components/ui/label';
