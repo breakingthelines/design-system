@@ -1,13 +1,14 @@
 {
   "name": "@breakingthelines/design-system",
-  "version": "0.1.126",
+  "version": "0.1.128",
   "repository": {
     "type": "git",
     "url": "https://github.com/breakingthelines/design-system.git"
   },
   "files": [
     "dist",
-    "src/styles"
+    "src/styles",
+    "src/types"
   ],
   "type": "module",
   "sideEffects": false,
@@ -21,6 +22,7 @@
     "#/components/*": "./src/components/*",
     "#/hooks/*": "./src/hooks/*",
     "#/tokens/*": "./src/tokens/*",
+    "#/types/*": "./src/types/*",
     "#/utils/*": "./src/utils/*",
     "#/styles/*": "./src/styles/*",
     "#.storybook/*": "./.storybook/*",
