@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback } from 'react';
 
 import { cn } from '#/lib/utils';
 import { skeletonVariants } from './skeleton';
@@ -51,39 +51,43 @@ function Image({
   const [loaded, setLoaded] = useState(false);
   const [inView, setInView] = useState(loading === 'eager');
   const [errored, setErrored] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
   const prevSrcRef = useRef(src);
 
-  useEffect(() => {
-    if (loading === 'eager' || !containerRef.current) return;
+  // Synchronous state reset when src changes (no useEffect needed —
+  // React supports setting state during render for derived-from-props patterns).
+  if (prevSrcRef.current !== src) {
+    prevSrcRef.current = src;
+    setLoaded(false);
+    setErrored(false);
+  }
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) {
-          setInView(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin },
-    );
+  // Container ref callback — sets up IntersectionObserver for lazy loading.
+  const containerRefCallback = useCallback(
+    (node: HTMLDivElement | null) => {
+      observerRef.current?.disconnect();
+      observerRef.current = null;
 
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, [loading, rootMargin]);
+      if (!node || loading === 'eager') return;
 
-  // Reset state only when src actually changes (not on initial mount,
-  // which would clobber the ref callback's cache-hit detection).
-  useEffect(() => {
-    if (prevSrcRef.current !== src) {
-      prevSrcRef.current = src;
-      setLoaded(false);
-      setErrored(false);
-    }
-  }, [src]);
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry?.isIntersecting) {
+            setInView(true);
+            observer.disconnect();
+          }
+        },
+        { rootMargin },
+      );
 
-  // Ref callback: fires when the <img> mounts. If the browser already
-  // resolved the image from cache, `complete` is true before React can
-  // attach the onLoad handler — flip `loaded` immediately.
+      observer.observe(node);
+      observerRef.current = observer;
+    },
+    [loading, rootMargin],
+  );
+
+  // Img ref callback — detects cache hits where onLoad fires before
+  // React attaches the synthetic event handler.
   const imgRefCallback = useCallback((node: HTMLImageElement | null) => {
     if (node?.complete && node.naturalWidth > 0) {
       setLoaded(true);
@@ -110,7 +114,7 @@ function Image({
 
   return (
     <div
-      ref={containerRef}
+      ref={containerRefCallback}
       data-slot="image"
       className={cn('relative overflow-hidden', className)}
       style={style}
