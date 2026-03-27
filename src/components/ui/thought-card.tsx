@@ -76,7 +76,7 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
           <span className="text-xs leading-5 text-foreground/50">
             Replying to{' '}
             <Link
-              href={`/@${thought.replyingTo.username}`}
+              href={thought.replyingTo.href ?? `/@${thought.replyingTo.username}`}
               className="text-primary font-medium hover:underline"
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >

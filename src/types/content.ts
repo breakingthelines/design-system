@@ -28,6 +28,7 @@ export interface ContentItem {
 export interface ReplyContext {
   username: string;
   displayName: string;
+  href?: string;
 }
 
 export interface ThoughtContentContext {
