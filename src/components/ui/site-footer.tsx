@@ -35,7 +35,7 @@ const defaultLinks: FooterLink[] = [
     label: 'MEDIA',
     href: '/media',
     children: [
-      { label: 'BTL TV', href: '/btl-tv' },
+      { label: 'BTL TV', href: '/tv' },
       { label: 'BTL PODCASTS', href: '/podcasts' },
       { label: 'ZINE', href: '/zine' },
     ],

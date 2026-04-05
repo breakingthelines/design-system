@@ -8,6 +8,7 @@ import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
 import { useTilt } from '#/hooks/use-tilt';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
+import { Image } from '#/components/ui/image';
 import { useLinkComponent } from '#/components/ui/link-context';
 import type { ContentItem } from '#/types/content';
 
@@ -137,18 +138,20 @@ function ContentCard({
                 style={vtStyle}
                 tabIndex={-1}
               >
-                <img
+                <Image
                   src={item.imageUrl}
                   alt={item.title}
-                  className="size-full object-cover transition-transform duration-300"
+                  className="size-full"
+                  imgClassName="object-cover transition-transform duration-300"
                 />
               </LinkComponent>
             ) : (
               <div className="h-[86px] w-[108px] shrink-0 overflow-hidden" style={vtStyle}>
-                <img
+                <Image
                   src={item.imageUrl}
                   alt={item.title}
-                  className="size-full object-cover transition-transform duration-300"
+                  className="size-full"
+                  imgClassName="object-cover transition-transform duration-300"
                 />
               </div>
             ))}
@@ -207,18 +210,20 @@ function ContentCard({
                 style={vtStyle}
                 tabIndex={-1}
               >
-                <img
+                <Image
                   src={item.imageUrl}
                   alt={item.title}
-                  className="size-full object-cover transition-transform duration-300"
+                  className="size-full"
+                  imgClassName="object-cover transition-transform duration-300"
                 />
               </LinkComponent>
             ) : (
               <div className="aspect-[2/3] w-full overflow-hidden" style={vtStyle}>
-                <img
+                <Image
                   src={item.imageUrl}
                   alt={item.title}
-                  className="size-full object-cover transition-transform duration-300"
+                  className="size-full"
+                  imgClassName="object-cover transition-transform duration-300"
                 />
               </div>
             ))}

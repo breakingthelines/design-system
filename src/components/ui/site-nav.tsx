@@ -71,7 +71,7 @@ const defaultTabs: NavTab[] = [
   {
     label: 'Media',
     children: [
-      { label: 'BTL TV', href: '/btl-tv' },
+      { label: 'BTL TV', href: '/tv' },
       { label: 'BTL Podcasts', href: '/podcasts' },
       { label: 'Zine', href: 'https://zine.breakingthelines.com', external: true },
     ],
