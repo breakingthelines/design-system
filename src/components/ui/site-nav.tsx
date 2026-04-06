@@ -31,10 +31,12 @@ export interface NavTab {
 
 export interface AvatarMenuItem {
   label: string;
-  /** Internal link href */
+  /** Link href */
   href?: string;
   /** Click handler (for actions like logout) */
   onClick?: () => void;
+  /** Opens in new tab (for external links like Studio) */
+  external?: boolean;
 }
 
 interface SiteNavProps extends React.ComponentProps<'header'> {
@@ -303,13 +305,25 @@ function SiteNav({
                   <nav className="flex flex-col gap-0.5">
                     {avatarMenu.map((item) =>
                       item.href ? (
-                        <LinkComponent
-                          key={item.label}
-                          href={item.href}
-                          className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                        >
-                          {item.label}
-                        </LinkComponent>
+                        item.external ? (
+                          <a
+                            key={item.label}
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                          >
+                            {item.label}
+                          </a>
+                        ) : (
+                          <LinkComponent
+                            key={item.label}
+                            href={item.href}
+                            className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                          >
+                            {item.label}
+                          </LinkComponent>
+                        )
                       ) : (
                         <button
                           key={item.label}
