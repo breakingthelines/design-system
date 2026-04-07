@@ -1,6 +1,6 @@
 export const fontFamily = {
   display: '"Le Monde Journal Std", Georgia, serif', // Headlines
-  body: '"Helvetica Neue", Helvetica, Arial, sans-serif', // UI text
+  body: '"Inter", sans-serif', // UI text
   mono: '"JetBrains Mono", monospace', // Code (if needed)
 } as const;
 

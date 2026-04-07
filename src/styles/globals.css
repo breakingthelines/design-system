@@ -140,8 +140,8 @@
 
   /* BTL Typography - Adobe Fonts + Google Fonts */
   --font-display: 'le-monde-journal-std', Georgia, serif;
-  --font-body: 'helvetica-neue', Helvetica, Arial, sans-serif;
-  --font-sans: 'helvetica-neue', Helvetica, Arial, sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-sans: 'Inter', sans-serif;
   --font-content: 'Inter', sans-serif;
 
   /* BTL Radius - Lyra sharp style */
