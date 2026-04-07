@@ -280,18 +280,20 @@ function ContentCard({
               style={vtStyle}
               tabIndex={-1}
             >
-              <img
+              <Image
                 src={item.imageUrl}
                 alt={item.title}
-                className="size-full object-cover transition-transform duration-300"
+                className="size-full"
+                imgClassName="object-cover transition-transform duration-300"
               />
             </LinkComponent>
           ) : (
             <div className="aspect-[328/364] w-full shrink-0 overflow-hidden" style={vtStyle}>
-              <img
+              <Image
                 src={item.imageUrl}
                 alt={item.title}
-                className="size-full object-cover transition-transform duration-300"
+                className="size-full"
+                imgClassName="object-cover transition-transform duration-300"
               />
             </div>
           ))}
