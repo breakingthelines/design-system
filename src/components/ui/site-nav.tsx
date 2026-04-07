@@ -78,7 +78,15 @@ const defaultTabs: NavTab[] = [
       { label: 'Zine', href: 'https://zine.breakingthelines.com', external: true },
     ],
   },
-  { label: 'Contact', href: '/contact' },
+  {
+    label: 'About',
+    children: [
+      { label: 'Credo', href: '/credo' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Careers', href: '/careers' },
+    ],
+  },
 ];
 
 /** BTL bracket logo — two offset bracket shapes with red gradient fill */

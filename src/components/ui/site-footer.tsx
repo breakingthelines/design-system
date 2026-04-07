@@ -14,8 +14,10 @@ interface FooterLink {
 }
 
 interface SiteFooterProps extends React.ComponentProps<'footer'> {
-  /** Navigation links. Defaults to ARENA, THOUGHTS, MEDIA (BTL TV, PODCASTS, ZINE), CONTACT */
+  /** Navigation links. Defaults to ARENA, THOUGHTS, MEDIA (BTL TV, PODCASTS, ZINE), ABOUT */
   links?: FooterLink[];
+  /** Legal bar links (Terms, Privacy, Cookies, RSS, Sitemap) */
+  legalLinks?: LegalLink[];
   /** Email address */
   email?: string;
   /** Phone number */
@@ -40,7 +42,30 @@ const defaultLinks: FooterLink[] = [
       { label: 'ZINE', href: '/zine' },
     ],
   },
-  { label: 'CONTACT', href: '/contact' },
+  {
+    label: 'ABOUT',
+    href: '/credo',
+    children: [
+      { label: 'CREDO', href: '/credo' },
+      { label: 'PRICING', href: '/pricing' },
+      { label: 'CONTACT', href: '/contact' },
+      { label: 'CAREERS', href: '/careers' },
+    ],
+  },
+];
+
+interface LegalLink {
+  label: string;
+  href: string;
+  external?: boolean;
+}
+
+const defaultLegalLinks: LegalLink[] = [
+  { label: 'Terms of Use', href: '/terms' },
+  { label: 'Privacy', href: '/privacy' },
+  { label: 'Cookies', href: '/cookies' },
+  { label: 'RSS', href: '/feed.xml' },
+  { label: 'Sitemap', href: '/sitemap' },
 ];
 
 /** BTL bracket logo — two offset bracket shapes with red gradient fill (footer size) */
@@ -173,9 +198,10 @@ function FooterNavItem({ link }: { link: FooterLink }) {
 function SiteFooter({
   className,
   links = defaultLinks,
+  legalLinks = defaultLegalLinks,
   email = 'hello@breakingthelines.com',
   phone,
-  copyright = `© ${new Date().getFullYear()}`,
+  copyright = `© ${new Date().getFullYear()} Breaking The Lines`,
   logoHref = '/',
   logo,
   ...props
@@ -215,9 +241,41 @@ function SiteFooter({
           </div>
           <p className="text-xs">{copyright}</p>
         </div>
+
+        {/* Legal bar */}
+        {legalLinks.length > 0 && (
+          <div className="border-t border-white/10 pt-6">
+            <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
+              {legalLinks.map((link, i) => (
+                <React.Fragment key={link.href}>
+                  {i > 0 && (
+                    <span className="text-white/20 text-xs select-none" aria-hidden>·</span>
+                  )}
+                  {link.external ? (
+                    <a
+                      href={link.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-xs text-white/40 transition-colors hover:text-white/70"
+                    >
+                      {link.label}
+                    </a>
+                  ) : (
+                    <LinkComponent
+                      href={link.href}
+                      className="text-xs text-white/40 transition-colors hover:text-white/70"
+                    >
+                      {link.label}
+                    </LinkComponent>
+                  )}
+                </React.Fragment>
+              ))}
+            </nav>
+          </div>
+        )}
       </div>
     </footer>
   );
 }
 
-export { SiteFooter, type SiteFooterProps, type FooterLink };
+export { SiteFooter, type SiteFooterProps, type FooterLink, type LegalLink };
