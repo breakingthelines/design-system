@@ -170,6 +170,7 @@ function AmbientEmitter({
   scale,
   position = 'top',
   className,
+  style,
   ...props
 }: AmbientEmitterProps) {
   const preset = sizePresets[size];
@@ -222,6 +223,10 @@ function AmbientEmitter({
           data-slot="ambient-emitter"
           aria-hidden
           className={cn('pointer-events-none absolute inset-0', className)}
+          style={{
+            inset: '-8% -10%',
+            ...style,
+          }}
           {...props}
         >
           {/* Layer 1: Gradient base — dominant colour, always vivid, extends beyond via scale */}

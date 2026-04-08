@@ -186,7 +186,7 @@ function SiteNav({
   return (
     <header
       data-slot="site-nav"
-      className={cn('z-50 flex h-14 items-center justify-between', className)}
+      className={cn('relative z-50 flex h-14 items-center justify-between', className)}
       {...props}
     >
       {/* Left: Logo */}
@@ -260,7 +260,7 @@ function SiteNav({
       </nav>
 
       {/* Right: Actions — uniform gap, all items on the same level */}
-      <div className={cn('flex items-center', avatarUrl || initials ? 'gap-4' : 'gap-8')}>
+      <div className={cn('relative z-10 flex items-center', avatarUrl || initials ? 'gap-4' : 'gap-8')}>
         {onSearchClick && (
           <button
             type="button"
@@ -272,81 +272,164 @@ function SiteNav({
           </button>
         )}
         {(onNotificationsClick || notificationPopover) && (
-          <div className={cn('relative', notificationPopover && 'group/notif')}>
-            <div className="flex items-center justify-center">
-              <button
-                type="button"
-                aria-label="Notifications"
-                onClick={notificationPopover ? undefined : onNotificationsClick}
-                className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
-              >
-                <NotificationIcon className="size-[22px]" />
-              </button>
-              {notificationCount !== undefined && notificationCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
-                  {notificationCount > 9 ? '9+' : notificationCount}
-                </span>
+          <>
+            <div className={cn('relative hidden sm:block', notificationPopover && 'group/notif')}>
+              <div className="flex items-center justify-center">
+                <button
+                  type="button"
+                  aria-label="Notifications"
+                  onClick={notificationPopover ? undefined : onNotificationsClick}
+                  className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
+                >
+                  <NotificationIcon className="size-[22px]" />
+                </button>
+                {notificationCount !== undefined && notificationCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                    {notificationCount > 9 ? '9+' : notificationCount}
+                  </span>
+                )}
+              </div>
+              {notificationPopover && (
+                <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/notif:opacity-100 group-hover/notif:visible group-hover/notif:translate-y-0 transition-all duration-150 ease-out">
+                  {notificationPopover}
+                </div>
               )}
             </div>
-            {notificationPopover && (
-              <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/notif:opacity-100 group-hover/notif:visible group-hover/notif:translate-y-0 transition-all duration-150 ease-out">
-                {notificationPopover}
-              </div>
-            )}
-          </div>
+            <div className="relative sm:hidden">
+              {notificationPopover ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        type="button"
+                        aria-label="Notifications"
+                        className="relative flex items-center justify-center text-white/80 transition-colors hover:text-red-100"
+                      />
+                    }
+                  >
+                    <NotificationIcon className="size-[22px]" />
+                    {notificationCount !== undefined && notificationCount > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                        {notificationCount > 9 ? '9+' : notificationCount}
+                      </span>
+                    )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" sideOffset={8} className="w-[min(92vw,380px)] p-0">
+                    {notificationPopover}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <button
+                  type="button"
+                  aria-label="Notifications"
+                  onClick={onNotificationsClick}
+                  className="relative flex items-center justify-center text-white/80 transition-colors hover:text-red-100"
+                >
+                  <NotificationIcon className="size-[22px]" />
+                  {notificationCount !== undefined && notificationCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  )}
+                </button>
+              )}
+            </div>
+          </>
         )}
 
         {/* Avatar (logged in) or Login button (logged out) */}
         {avatarUrl || initials ? (
           avatarMenu?.length ? (
-            <div className="group/avatar relative">
-              <div className="flex items-center justify-center cursor-pointer">
-                <Avatar size="default" className="size-[34px]">
-                  {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
-                  <AvatarFallback>{initials ?? '?'}</AvatarFallback>
-                </Avatar>
-              </div>
-              {/* Dropdown — same pattern as Media dropdown */}
-              <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
-                <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
-                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
-                  <nav className="flex flex-col gap-0.5">
-                    {avatarMenu.map((item) =>
-                      item.href ? (
-                        item.external ? (
-                          <a
-                            key={item.label}
-                            href={item.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                          >
-                            {item.label}
-                          </a>
+            <>
+              <div className="group/avatar relative hidden sm:block">
+                <div className="flex items-center justify-center cursor-pointer">
+                  <Avatar size="default" className="size-[34px]">
+                    {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                    <AvatarFallback>{initials ?? '?'}</AvatarFallback>
+                  </Avatar>
+                </div>
+                {/* Dropdown — same pattern as Media dropdown */}
+                <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
+                  <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
+                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                    <nav className="flex flex-col gap-0.5">
+                      {avatarMenu.map((item) =>
+                        item.href ? (
+                          item.external ? (
+                            <a
+                              key={item.label}
+                              href={item.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            >
+                              {item.label}
+                            </a>
+                          ) : (
+                            <LinkComponent
+                              key={item.label}
+                              href={item.href}
+                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            >
+                              {item.label}
+                            </LinkComponent>
+                          )
                         ) : (
-                          <LinkComponent
+                          <button
                             key={item.label}
-                            href={item.href}
-                            className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            type="button"
+                            onClick={item.onClick}
+                            className="block w-full cursor-pointer rounded-[2px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                           >
                             {item.label}
-                          </LinkComponent>
+                          </button>
                         )
-                      ) : (
-                        <button
-                          key={item.label}
-                          type="button"
-                          onClick={item.onClick}
-                          className="block w-full cursor-pointer rounded-[2px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                        >
-                          {item.label}
-                        </button>
-                      )
-                    )}
-                  </nav>
+                      )}
+                    </nav>
+                  </div>
                 </div>
               </div>
-            </div>
+              <div className="sm:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        type="button"
+                        aria-label="Account"
+                        className="flex items-center justify-center"
+                      />
+                    }
+                  >
+                    <Avatar size="default" className="size-[34px]">
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                      <AvatarFallback>{initials ?? '?'}</AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" sideOffset={8} className="min-w-[160px]">
+                    {avatarMenu.map((item) =>
+                      item.href ? (
+                        <DropdownMenuItem
+                          key={item.label}
+                          render={
+                            item.external ? (
+                              <a href={item.href} target="_blank" rel="noopener noreferrer" />
+                            ) : (
+                              <LinkComponent href={item.href} />
+                            )
+                          }
+                        >
+                          {item.label}
+                        </DropdownMenuItem>
+                      ) : (
+                        <DropdownMenuItem key={item.label} onClick={item.onClick}>
+                          {item.label}
+                        </DropdownMenuItem>
+                      )
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
           ) : (
             <button type="button" onClick={onAvatarClick} className="flex items-center justify-center cursor-pointer">
               <Avatar size="default" className="size-[34px]">

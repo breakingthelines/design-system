@@ -171,6 +171,7 @@ function ThoughtComposer({
 
     onSubmit?.(text, media);
     editorRef.current?.clear();
+    editorRef.current?.blur();
     setHasText(false);
     setSelectedGif(null);
     clearImage();
@@ -256,7 +257,7 @@ function ThoughtComposer({
               onChange={(text) => setHasText(text.length > 0)}
               onRemainingChange={setRemaining}
               onMentionSearch={onMentionSearch}
-              className="text-sm font-medium leading-6 tracking-[-0.42px] text-foreground min-h-0"
+              className="text-base font-medium leading-6 tracking-[-0.42px] text-foreground min-h-0 sm:text-sm"
               placeholderClassName="text-white/30 font-medium tracking-[-0.42px]"
             />
           </div>

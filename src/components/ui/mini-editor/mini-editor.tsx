@@ -21,6 +21,7 @@ import { MentionPlugin, type MentionSuggestion } from './mention-plugin';
 interface MiniEditorHandle {
   clear: () => void;
   focus: () => void;
+  blur: () => void;
   getText: () => string;
   insertText: (text: string) => void;
   getMentionedUserIds: () => string[];
@@ -72,6 +73,9 @@ const EditorRefPlugin = React.forwardRef<MiniEditorHandle>(function EditorRefPlu
     },
     focus() {
       editor.focus();
+    },
+    blur() {
+      editor.getRootElement()?.blur();
     },
     getText() {
       return editor.getEditorState().read(() => $getRoot().getTextContent());
@@ -175,7 +179,7 @@ function MiniEditor({
           contentEditable={
             <ContentEditable
               className={cn(
-                'w-full bg-transparent text-sm leading-6 text-inherit placeholder:text-muted-foreground focus:outline-none',
+                'w-full bg-transparent text-base leading-6 text-inherit placeholder:text-muted-foreground focus:outline-none sm:text-sm',
                 !multiline && 'overflow-hidden whitespace-nowrap',
                 multiline && 'min-h-[60px] resize-none field-sizing-content',
                 className,
@@ -185,7 +189,7 @@ function MiniEditor({
           placeholder={
             <div
               className={cn(
-                'pointer-events-none absolute top-0 left-0 text-sm leading-6 select-none',
+                'pointer-events-none absolute top-0 left-0 text-base leading-6 select-none sm:text-sm',
                 placeholderClassName ?? 'text-muted-foreground',
               )}
             >
