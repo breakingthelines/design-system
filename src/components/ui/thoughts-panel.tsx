@@ -201,6 +201,7 @@ function ThoughtsPanel({
     }
     onSubmit?.(text, undefined, media);
     composerRef.current?.clear();
+    composerRef.current?.blur();
     setHasText(false);
     setSelectedGif(null);
     clearImage();
@@ -319,7 +320,7 @@ function ThoughtsPanel({
                       onChange={(text) => setHasText(text.length > 0)}
                       onMentionSearch={onMentionSearch}
                       disabled={!user}
-                      className="font-body text-sm font-medium leading-6 text-white"
+                      className="font-body text-base font-medium leading-6 text-white sm:text-sm"
                       placeholderClassName="text-[#807c7c] font-medium"
                     />
                   </div>
@@ -854,11 +855,12 @@ function CommentItem({
                     media = { ...media, mentionedUserIds: mentionedIds };
                   }
                   onReplySubmit(text, thought.id, media);
+                  replyEditorRef.current?.blur();
                   resetReplyMedia();
                 }}
                 onChange={(text) => setReplyHasText(text.length > 0)}
                 onMentionSearch={onMentionSearch}
-                className="font-body text-sm font-medium leading-6 text-white"
+                className="font-body text-base font-medium leading-6 text-white sm:text-sm"
                 placeholderClassName="text-[#807c7c] font-medium"
               />
             </div>
@@ -975,7 +977,7 @@ function CommentItem({
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => { resetReplyMedia(); onCancelReply(); }}
+                onClick={() => { replyEditorRef.current?.blur(); resetReplyMedia(); onCancelReply(); }}
                 className="rounded-[2px] px-4 py-1.5 text-xs bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]"
               >
                 Cancel
@@ -997,6 +999,7 @@ function CommentItem({
                   }
                   if (text || media) {
                     onReplySubmit(text, thought.id, media);
+                    replyEditorRef.current?.blur();
                     resetReplyMedia();
                   }
                 }}
