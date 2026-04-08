@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CaretUp } from '@phosphor-icons/react';
+import { CaretUp, XLogo, YoutubeLogo, LinkedinLogo } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { useLinkComponent } from '#/components/ui/link-context';
@@ -13,11 +13,18 @@ interface FooterLink {
   children?: FooterLink[];
 }
 
+interface SocialLink {
+  platform: 'x' | 'youtube' | 'linkedin';
+  href: string;
+}
+
 interface SiteFooterProps extends React.ComponentProps<'footer'> {
   /** Navigation links. Defaults to ARENA, THOUGHTS, MEDIA (BTL TV, PODCASTS, ZINE), ABOUT */
   links?: FooterLink[];
   /** Legal bar links (Terms, Privacy, Cookies, RSS, Sitemap) */
   legalLinks?: LegalLink[];
+  /** Social media links */
+  socials?: SocialLink[];
   /** Email address */
   email?: string;
   /** Phone number */
@@ -195,10 +202,23 @@ function FooterNavItem({ link }: { link: FooterLink }) {
   );
 }
 
+const socialIcons = {
+  x: XLogo,
+  youtube: YoutubeLogo,
+  linkedin: LinkedinLogo,
+} as const;
+
+const defaultSocials: SocialLink[] = [
+  { platform: 'x', href: 'https://x.com/breakthelines' },
+  { platform: 'linkedin', href: 'https://www.linkedin.com/company/breaking-the-lines' },
+  { platform: 'youtube', href: 'https://www.youtube.com/BreakingTheLinesFootball' },
+];
+
 function SiteFooter({
   className,
   links = defaultLinks,
   legalLinks = defaultLegalLinks,
+  socials = defaultSocials,
   email = 'hello@breakingthelines.com',
   phone,
   copyright = `© ${new Date().getFullYear()} Breaking The Lines`,
@@ -228,7 +248,7 @@ function SiteFooter({
           </nav>
         </div>
 
-        {/* Bottom row: contact + copyright */}
+        {/* Bottom row: contact + socials + copyright */}
         <div className="flex flex-col gap-[26px] text-white">
           <div className="flex flex-col gap-[13px] text-sm font-medium">
             <a
@@ -239,6 +259,25 @@ function SiteFooter({
             </a>
             {phone && <p>{phone}</p>}
           </div>
+          {socials && socials.length > 0 && (
+            <div className="flex items-center gap-4">
+              {socials.map((social) => {
+                const Icon = socialIcons[social.platform];
+                return (
+                  <a
+                    key={social.platform}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={social.platform}
+                    className="text-white/40 transition-colors hover:text-white"
+                  >
+                    <Icon weight="regular" className="size-5" />
+                  </a>
+                );
+              })}
+            </div>
+          )}
           <p className="text-xs">{copyright}</p>
         </div>
 
@@ -278,4 +317,4 @@ function SiteFooter({
   );
 }
 
-export { SiteFooter, type SiteFooterProps, type FooterLink, type LegalLink };
+export { SiteFooter, type SiteFooterProps, type FooterLink, type LegalLink, type SocialLink };
