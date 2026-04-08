@@ -13,7 +13,7 @@ interface FooterLink {
   children?: FooterLink[];
 }
 
-interface SocialLink {
+interface FooterSocialLink {
   platform: 'x' | 'youtube' | 'linkedin';
   href: string;
 }
@@ -24,7 +24,7 @@ interface SiteFooterProps extends React.ComponentProps<'footer'> {
   /** Legal bar links (Terms, Privacy, Cookies, RSS, Sitemap) */
   legalLinks?: LegalLink[];
   /** Social media links */
-  socials?: SocialLink[];
+  socials?: FooterSocialLink[];
   /** Email address */
   email?: string;
   /** Phone number */
@@ -208,7 +208,7 @@ const socialIcons = {
   linkedin: LinkedinLogo,
 } as const;
 
-const defaultSocials: SocialLink[] = [
+const defaultSocials: FooterSocialLink[] = [
   { platform: 'x', href: 'https://x.com/breakthelines' },
   { platform: 'linkedin', href: 'https://www.linkedin.com/company/breaking-the-lines' },
   { platform: 'youtube', href: 'https://www.youtube.com/BreakingTheLinesFootball' },
@@ -317,4 +317,4 @@ function SiteFooter({
   );
 }
 
-export { SiteFooter, type SiteFooterProps, type FooterLink, type LegalLink, type SocialLink };
+export { SiteFooter, type SiteFooterProps, type FooterLink, type LegalLink, type FooterSocialLink };
