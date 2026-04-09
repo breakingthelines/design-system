@@ -1,9 +1,10 @@
 'use client';
 
 import * as React from 'react';
-import { List } from '@phosphor-icons/react';
+import { useState } from 'react';
 
 import { cn } from '#/lib/utils';
+import { BrokenLinesIcon } from '#/components/ui/broken-lines-icon';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
@@ -182,6 +183,7 @@ function SiteNav({
   ...props
 }: SiteNavProps) {
   const LinkComponent = useLinkComponent();
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <header
@@ -405,7 +407,8 @@ function SiteNav({
                       <AvatarFallback>{initials ?? '?'}</AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={8} className="min-w-[160px]">
+                  <DropdownMenuContent align="end" sideOffset={8} className="relative min-w-[160px] overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                     {avatarMenu.map((item) =>
                       item.href ? (
                         <DropdownMenuItem
@@ -448,13 +451,14 @@ function SiteNav({
 
         {/* Mobile: Hamburger menu */}
         <div className="sm:hidden">
-          <DropdownMenu>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger
               render={<IconButton aria-label="Menu" variant="ghost" size="lg" animated={false} />}
             >
-              <List weight="bold" />
+              <BrokenLinesIcon open={menuOpen} />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8}>
+            <DropdownMenuContent align="end" sideOffset={8} className="relative min-w-[180px] overflow-hidden">
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
               {tabs.map((tab) =>
                 tab.children ? (
                   <React.Fragment key={tab.label}>
