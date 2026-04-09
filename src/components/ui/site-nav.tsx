@@ -8,7 +8,6 @@ import { BrokenLinesIcon } from '#/components/ui/broken-lines-icon';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
-import { IconButton } from '#/components/ui/icon-button';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -453,7 +452,13 @@ function SiteNav({
         <div className="sm:hidden">
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger
-              render={<IconButton aria-label="Menu" variant="ghost" size="lg" animated={false} />}
+              render={
+                <button
+                  type="button"
+                  aria-label="Menu"
+                  className="flex items-center justify-center text-white/80 transition-colors hover:text-white cursor-pointer"
+                />
+              }
             >
               <BrokenLinesIcon open={menuOpen} />
             </DropdownMenuTrigger>
