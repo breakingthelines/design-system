@@ -102,11 +102,7 @@ function FooterNavItem({ link }: { link: FooterLink }) {
   };
 
   return (
-    <div
-      className="relative"
-      onMouseEnter={handleEnter}
-      onMouseLeave={handleLeave}
-    >
+    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -243,7 +239,9 @@ function SiteFooter({
               {legalLinks.map((link, i) => (
                 <React.Fragment key={link.href}>
                   {i > 0 && (
-                    <span className="text-white/20 text-xs select-none" aria-hidden>·</span>
+                    <span className="text-white/20 text-xs select-none" aria-hidden>
+                      ·
+                    </span>
                   )}
                   {link.external ? (
                     <a

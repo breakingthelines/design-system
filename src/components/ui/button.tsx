@@ -51,10 +51,7 @@ function Button({
   // Covers both native elements (<a />) and React components (<LinkComponent />).
   const resolvedNativeButton =
     nativeButton ??
-    (render != null &&
-    typeof render === 'object' &&
-    'type' in render &&
-    render.type !== 'button'
+    (render != null && typeof render === 'object' && 'type' in render && render.type !== 'button'
       ? false
       : true);
 

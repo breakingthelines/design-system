@@ -1,6 +1,6 @@
-import { useId } from "react";
+import { useId } from 'react';
 
-import { cn } from "#/lib/utils";
+import { cn } from '#/lib/utils';
 
 export interface BtlLogoProps extends React.SVGAttributes<SVGSVGElement> {
   /** Tailwind size class — defaults to `size-7` */
@@ -21,7 +21,7 @@ export function BtlLogo({ className, ...props }: BtlLogoProps) {
       viewBox="0 0 29.09 28.02"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      className={cn("size-7", className)}
+      className={cn('size-7', className)}
       aria-label="Breaking The Lines"
       {...props}
     >
@@ -49,14 +49,8 @@ export function BtlLogo({ className, ...props }: BtlLogoProps) {
           <stop offset="1" stopColor="#E5332A" />
         </linearGradient>
       </defs>
-      <path
-        d="M12.467 0V8.516H9.049V19.513H12.467V28.022H0V0H12.467Z"
-        fill={`url(#${gl})`}
-      />
-      <path
-        d="M29.091 0V28.022H16.628V19.513H20.046V8.516H16.628V0H29.091Z"
-        fill={`url(#${gr})`}
-      />
+      <path d="M12.467 0V8.516H9.049V19.513H12.467V28.022H0V0H12.467Z" fill={`url(#${gl})`} />
+      <path d="M29.091 0V28.022H16.628V19.513H20.046V8.516H16.628V0H29.091Z" fill={`url(#${gr})`} />
     </svg>
   );
 }

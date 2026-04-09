@@ -151,9 +151,7 @@ function GifPicker({
 
         {error && !loading && (
           <div className="flex h-full flex-col items-center justify-center gap-2">
-            <span className="text-xs text-white/30">
-              Failed to load GIFs
-            </span>
+            <span className="text-xs text-white/30">Failed to load GIFs</span>
             <button
               type="button"
               onClick={() => onRetry?.()}
@@ -209,9 +207,7 @@ function GifPicker({
 
       {/* Footer — KLIPY attribution */}
       <div className="flex items-center justify-center border-t border-grey-300 px-2 py-1.5">
-        <span className="text-[10px] tracking-wide text-white/20">
-          Powered by KLIPY
-        </span>
+        <span className="text-[10px] tracking-wide text-white/20">Powered by KLIPY</span>
       </div>
     </div>
   );

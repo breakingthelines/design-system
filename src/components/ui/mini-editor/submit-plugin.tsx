@@ -36,7 +36,7 @@ function SubmitPlugin({ mode, onSubmit }: SubmitPluginProps) {
 
         return false;
       },
-      COMMAND_PRIORITY_HIGH,
+      COMMAND_PRIORITY_HIGH
     );
   }, [editor, mode, onSubmit]);
 

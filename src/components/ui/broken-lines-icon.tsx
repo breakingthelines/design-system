@@ -54,9 +54,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
-        animate={
-          open ? { opacity: 0, x1: 10, x2: 10 } : { opacity: 1, x1: 6, x2: 18 }
-        }
+        animate={open ? { opacity: 0, x1: 10, x2: 10 } : { opacity: 1, x1: 6, x2: 18 }}
         transition={lineTransition}
       />
       {/* Bottom line */}

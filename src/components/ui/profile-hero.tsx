@@ -83,14 +83,7 @@ function ProfileHero({
     >
       {/* Banner with ambient glow */}
       <div className="relative overflow-hidden">
-        {bannerUrl && (
-          <AmbientEmitter
-            src={bannerUrl}
-            size="md"
-            position="center"
-            scale={1.3}
-          />
-        )}
+        {bannerUrl && <AmbientEmitter src={bannerUrl} size="md" position="center" scale={1.3} />}
 
         {/* Banner image with 3D tilt */}
         <motion.div
@@ -156,7 +149,9 @@ function ProfileHero({
               )}
 
               {/* Follower / Following / Subscriber counts */}
-              {(followers !== undefined || following !== undefined || subscribers !== undefined) && (
+              {(followers !== undefined ||
+                following !== undefined ||
+                subscribers !== undefined) && (
                 <div className="flex items-baseline gap-8 leading-6 text-foreground">
                   {followers !== undefined &&
                     (onFollowersClick ? (
@@ -237,12 +232,21 @@ function ProfileHero({
           {(onFollow || onSubscribe) && (
             <div className="flex shrink-0 items-start gap-3">
               {onFollow && (
-                <Button variant="outline" size="lg" onClick={onFollow} className="flex-1 sm:w-[130px] sm:flex-none rounded-[2px] bg-grey-200 border-grey-300 backdrop-blur-[15px] hover:bg-grey-200 hover:border-[#807c7c]">
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={onFollow}
+                  className="flex-1 sm:w-[130px] sm:flex-none rounded-[2px] bg-grey-200 border-grey-300 backdrop-blur-[15px] hover:bg-grey-200 hover:border-[#807c7c]"
+                >
                   {isFollowing ? 'Following' : 'Follow'}
                 </Button>
               )}
               {onSubscribe && (
-                <Button size="lg" onClick={onSubscribe} className="flex-1 sm:w-[130px] sm:flex-none">
+                <Button
+                  size="lg"
+                  onClick={onSubscribe}
+                  className="flex-1 sm:w-[130px] sm:flex-none"
+                >
                   Subscribe
                 </Button>
               )}

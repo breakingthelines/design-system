@@ -37,7 +37,7 @@ function useRenderMentions() {
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             @{username}
-          </Link>,
+          </Link>
         );
 
         lastIndex = match.index + match[0].length;
@@ -50,7 +50,7 @@ function useRenderMentions() {
 
       return parts.length === 1 && typeof parts[0] === 'string' ? parts[0] : parts;
     },
-    [Link],
+    [Link]
   );
 }
 

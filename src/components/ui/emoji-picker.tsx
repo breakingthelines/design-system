@@ -14,9 +14,7 @@ interface EmojiPickerProps {
 function EmojiPicker({ onEmojiSelect, className }: EmojiPickerProps) {
   return (
     <Frimousse.Root
-      onEmojiSelect={
-        onEmojiSelect ? (emoji) => onEmojiSelect(emoji.emoji) : undefined
-      }
+      onEmojiSelect={onEmojiSelect ? (emoji) => onEmojiSelect(emoji.emoji) : undefined}
       className={cn(
         'flex h-[340px] w-[320px] flex-col rounded-[4px] border border-grey-300 bg-grey-200 shadow-[0_8px_32px_rgba(0,0,0,0.5)]',
         className

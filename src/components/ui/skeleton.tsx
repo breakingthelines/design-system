@@ -32,7 +32,7 @@ const skeletonVariants = cva(
     defaultVariants: {
       variant: 'rect',
     },
-  },
+  }
 );
 
 interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {

@@ -139,7 +139,10 @@ function HeroCard({
 
               {/* Author accent bar — double red bars */}
               {authorHref ? (
-                <LinkComponent href={authorHref} className="inline-flex items-center gap-1 group/author relative z-10">
+                <LinkComponent
+                  href={authorHref}
+                  className="inline-flex items-center gap-1 group/author relative z-10"
+                >
                   <span className="flex gap-[2px]">
                     <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
                     <span className="h-4 w-[3px] shrink-0 rounded-[1px] bg-red-100" />
@@ -193,7 +196,9 @@ function HeroCard({
                   className={cn(
                     'group/pill relative z-10 flex-1 cursor-pointer py-3',
                     'before:block before:h-1 before:w-full before:rounded-full before:transition-colors',
-                    i === activeSlide ? 'before:bg-red-100' : 'before:bg-white/20 hover:before:bg-white/40'
+                    i === activeSlide
+                      ? 'before:bg-red-100'
+                      : 'before:bg-white/20 hover:before:bg-white/40'
                   )}
                   onClick={(e) => {
                     e.stopPropagation();

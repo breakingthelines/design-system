@@ -2,7 +2,16 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, PushPin, ThumbsUp, Gif, SoccerBall, Image as ImageIcon, SpinnerGap, Clock } from '@phosphor-icons/react';
+import {
+  X,
+  PushPin,
+  ThumbsUp,
+  Gif,
+  SoccerBall,
+  Image as ImageIcon,
+  SpinnerGap,
+  Clock,
+} from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
@@ -10,7 +19,11 @@ import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { useRenderMentions } from '#/lib/render-mentions';
-import { MiniEditor, type MiniEditorHandle, type MentionSuggestion } from '#/components/ui/mini-editor/index';
+import {
+  MiniEditor,
+  type MiniEditorHandle,
+  type MentionSuggestion,
+} from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
 import type { ThoughtItem } from '#/types/content';
@@ -177,8 +190,15 @@ function ThoughtsPanel({
     setImagePreview(preview);
     setImageUploading(true);
     onImageUpload(file)
-      .then((url) => { setImageUrl(url); setImageUploading(false); })
-      .catch(() => { setImagePreview(null); setImageUrl(null); setImageUploading(false); });
+      .then((url) => {
+        setImageUrl(url);
+        setImageUploading(false);
+      })
+      .catch(() => {
+        setImagePreview(null);
+        setImageUrl(null);
+        setImageUploading(false);
+      });
   }
 
   function clearImage() {
@@ -248,8 +268,24 @@ function ThoughtsPanel({
       const el = document.querySelector(`[data-thought-id="${scrollToThoughtId}"]`);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.add('ring-1', 'ring-red-100/50', 'ring-offset-4', 'ring-offset-background', 'rounded-lg');
-        setTimeout(() => el.classList.remove('ring-1', 'ring-red-100/50', 'ring-offset-4', 'ring-offset-background', 'rounded-lg'), 2000);
+        el.classList.add(
+          'ring-1',
+          'ring-red-100/50',
+          'ring-offset-4',
+          'ring-offset-background',
+          'rounded-lg'
+        );
+        setTimeout(
+          () =>
+            el.classList.remove(
+              'ring-1',
+              'ring-red-100/50',
+              'ring-offset-4',
+              'ring-offset-background',
+              'rounded-lg'
+            ),
+          2000
+        );
       } else if (onLoadReplies) {
         // Target not found — it's likely a reply that's collapsed.
         // Auto-expand replies for all thoughts that have unloaded replies.
@@ -280,7 +316,7 @@ function ThoughtsPanel({
           <motion.aside
             className={cn(
               'fixed top-0 right-0 z-50 flex h-full w-full flex-col bg-black sm:w-[740px]',
-              className,
+              className
             )}
             variants={panelVariants}
             initial="hidden"
@@ -398,7 +434,7 @@ function ThoughtsPanel({
                             : 'text-red-100 hover:bg-red-100/10 hover:text-red-300'
                         )}
                         onClick={() => {
-                          if (useBuiltInGif) setPanelPicker(p => p === 'gif' ? null : 'gif');
+                          if (useBuiltInGif) setPanelPicker((p) => (p === 'gif' ? null : 'gif'));
                           else onGifClick?.();
                         }}
                       >
@@ -416,7 +452,8 @@ function ThoughtsPanel({
                             : 'text-red-100 hover:bg-red-100/10 hover:text-red-300'
                         )}
                         onClick={() => {
-                          if (useBuiltInEmoji) setPanelPicker(p => p === 'emoji' ? null : 'emoji');
+                          if (useBuiltInEmoji)
+                            setPanelPicker((p) => (p === 'emoji' ? null : 'emoji'));
                           else onEmojiClick?.();
                         }}
                       >
@@ -442,7 +479,7 @@ function ThoughtsPanel({
                     onChange={handleFileSelect}
                   />
                   <Button
-                    variant={(hasText || selectedGif || imageUrl) ? 'default' : 'outline'}
+                    variant={hasText || selectedGif || imageUrl ? 'default' : 'outline'}
                     data-shimmer="slow"
                     disabled={(!hasText && !selectedGif && !imageUrl) || imageUploading || !user}
                     onClick={() => {
@@ -451,7 +488,7 @@ function ThoughtsPanel({
                     }}
                     className={cn(
                       'w-[100px] rounded-[2px] px-6 py-2',
-                      (hasText || selectedGif || imageUrl)
+                      hasText || selectedGif || imageUrl
                         ? 'bg-red-300 border-red-100 hover:bg-red-100'
                         : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]'
                     )}
@@ -642,8 +679,15 @@ function CommentItem({
     setReplyImagePreview(preview);
     setReplyImageUploading(true);
     onImageUpload(file)
-      .then((url) => { setReplyImageUrl(url); setReplyImageUploading(false); })
-      .catch(() => { setReplyImagePreview(null); setReplyImageUrl(null); setReplyImageUploading(false); });
+      .then((url) => {
+        setReplyImageUrl(url);
+        setReplyImageUploading(false);
+      })
+      .catch(() => {
+        setReplyImagePreview(null);
+        setReplyImageUrl(null);
+        setReplyImageUploading(false);
+      });
   }
 
   function resetReplyMedia() {
@@ -674,7 +718,9 @@ function CommentItem({
           {thought.author.avatarUrl && (
             <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
           )}
-          <AvatarFallback>{thought.author.initials ?? thought.author.name.charAt(0)}</AvatarFallback>
+          <AvatarFallback>
+            {thought.author.initials ?? thought.author.name.charAt(0)}
+          </AvatarFallback>
         </Avatar>
 
         {/* Content */}
@@ -710,10 +756,12 @@ function CommentItem({
                   {thought.author.verified && <VerifiedBadge size="sm" />}
                 </span>
               ) : (
-                <span className={cn(
-                  'inline-flex items-center gap-1 font-content font-semibold tracking-[-0.42px] text-white',
-                  isReply ? 'py-[2px] text-xs' : 'py-[3.5px] text-sm',
-                )}>
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 font-content font-semibold tracking-[-0.42px] text-white',
+                    isReply ? 'py-[2px] text-xs' : 'py-[3.5px] text-sm'
+                  )}
+                >
                   {thought.author.handle ? (
                     <Link
                       href={`/@${thought.author.handle}`}
@@ -739,7 +787,8 @@ function CommentItem({
               <div
                 className={cn(
                   'rounded-md border-l-2 border-red-100/40 bg-white/[0.03] py-1.5 pl-3 pr-2',
-                  onAnchorClick && 'cursor-pointer transition-colors hover:bg-white/[0.06] hover:border-red-100/60',
+                  onAnchorClick &&
+                    'cursor-pointer transition-colors hover:bg-white/[0.06] hover:border-red-100/60'
                 )}
                 onClick={onAnchorClick ? () => onAnchorClick(thought.anchor!) : undefined}
                 role={onAnchorClick ? 'button' : undefined}
@@ -756,7 +805,7 @@ function CommentItem({
               <span
                 className={cn(
                   'inline-flex items-center gap-1 self-start rounded-full bg-red-100/10 px-2 py-0.5 text-red-100',
-                  onAnchorClick && 'cursor-pointer transition-colors hover:bg-red-100/20',
+                  onAnchorClick && 'cursor-pointer transition-colors hover:bg-red-100/20'
                 )}
                 onClick={onAnchorClick ? () => onAnchorClick(thought.anchor!) : undefined}
                 role={onAnchorClick ? 'button' : undefined}
@@ -771,10 +820,12 @@ function CommentItem({
 
             {/* Body */}
             {thought.body && (
-              <p className={cn(
-                'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
-                isReply ? 'text-xs' : 'text-sm',
-              )}>
+              <p
+                className={cn(
+                  'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
+                  isReply ? 'text-xs' : 'text-sm'
+                )}
+              >
                 {renderMentions(thought.body)}
               </p>
             )}
@@ -811,12 +862,10 @@ function CommentItem({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id)
-                }
+                onClick={() => (thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id))}
                 className={cn(
                   'cursor-pointer transition-colors',
-                  thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white',
+                  thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white'
                 )}
               >
                 <ThumbsUp size={14} weight={thought.liked ? 'fill' : 'regular'} />
@@ -876,7 +925,11 @@ function CommentItem({
                 className="overflow-hidden pl-11"
               >
                 <div className="relative inline-block max-w-[160px] overflow-hidden rounded-[6px] border border-white/[0.06]">
-                  <img src={replyGif.previewUrl} alt={replyGif.title} className="block max-h-[100px] w-full object-cover" />
+                  <img
+                    src={replyGif.previewUrl}
+                    alt={replyGif.title}
+                    className="block max-h-[100px] w-full object-cover"
+                  />
                   <button
                     type="button"
                     onClick={() => setReplyGif(null)}
@@ -900,7 +953,11 @@ function CommentItem({
                 className="overflow-hidden pl-11"
               >
                 <div className="relative inline-block max-w-[160px] overflow-hidden rounded-[6px] border border-white/[0.06]">
-                  <img src={replyImagePreview} alt="" className="block max-h-[100px] w-full object-cover" />
+                  <img
+                    src={replyImagePreview}
+                    alt=""
+                    className="block max-h-[100px] w-full object-cover"
+                  />
                   {replyImageUploading && (
                     <div className="absolute inset-0 flex items-center justify-center bg-black/50">
                       <SpinnerGap className="size-4 animate-spin text-white" />
@@ -929,10 +986,10 @@ function CommentItem({
                     'flex cursor-pointer items-center justify-center rounded-[4px] p-[7px] transition-colors',
                     replyPicker === 'gif'
                       ? 'bg-red-100/15 text-red-300'
-                      : 'text-red-100 hover:bg-red-100/10 hover:text-red-300',
+                      : 'text-red-100 hover:bg-red-100/10 hover:text-red-300'
                   )}
                   onClick={() => {
-                    if (useBuiltInGif) setReplyPicker(p => p === 'gif' ? null : 'gif');
+                    if (useBuiltInGif) setReplyPicker((p) => (p === 'gif' ? null : 'gif'));
                     else onGifClick?.();
                   }}
                 >
@@ -947,10 +1004,10 @@ function CommentItem({
                     'flex cursor-pointer items-center justify-center rounded-[4px] p-[7px] transition-colors',
                     replyPicker === 'emoji'
                       ? 'bg-red-100/15 text-red-300'
-                      : 'text-red-100 hover:bg-red-100/10 hover:text-red-300',
+                      : 'text-red-100 hover:bg-red-100/10 hover:text-red-300'
                   )}
                   onClick={() => {
-                    if (useBuiltInEmoji) setReplyPicker(p => p === 'emoji' ? null : 'emoji');
+                    if (useBuiltInEmoji) setReplyPicker((p) => (p === 'emoji' ? null : 'emoji'));
                   }}
                 >
                   <SoccerBall weight="regular" className="size-[13px]" />
@@ -977,13 +1034,17 @@ function CommentItem({
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => { replyEditorRef.current?.blur(); resetReplyMedia(); onCancelReply(); }}
+                onClick={() => {
+                  replyEditorRef.current?.blur();
+                  resetReplyMedia();
+                  onCancelReply();
+                }}
                 className="rounded-[2px] px-4 py-1.5 text-xs bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]"
               >
                 Cancel
               </Button>
               <Button
-                variant={(replyHasText || replyGif || replyImageUrl) ? 'default' : 'outline'}
+                variant={replyHasText || replyGif || replyImageUrl ? 'default' : 'outline'}
                 data-shimmer="slow"
                 disabled={(!replyHasText && !replyGif && !replyImageUrl) || replyImageUploading}
                 onClick={() => {
@@ -1005,9 +1066,9 @@ function CommentItem({
                 }}
                 className={cn(
                   'rounded-[2px] px-4 py-1.5 text-xs',
-                  (replyHasText || replyGif || replyImageUrl)
+                  replyHasText || replyGif || replyImageUrl
                     ? 'bg-red-300 border-red-100 hover:bg-red-100'
-                    : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]',
+                    : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]'
                 )}
               >
                 Reply

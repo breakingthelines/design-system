@@ -2,7 +2,14 @@
 
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { Play, Pause, SpeakerHigh, SpeakerSlash, SpinnerGap, WarningCircle } from '@phosphor-icons/react';
+import {
+  Play,
+  Pause,
+  SpeakerHigh,
+  SpeakerSlash,
+  SpinnerGap,
+  WarningCircle,
+} from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 
@@ -18,14 +25,13 @@ const audioPlayerVariants = cva(
     defaultVariants: {
       variant: 'default',
     },
-  },
+  }
 );
 
 type AudioStatus = 'hidden' | 'generating' | 'ready' | 'regenerating' | 'failed';
 
 export interface AudioPlayerProps
-  extends Omit<React.ComponentProps<'div'>, 'children'>,
-    VariantProps<typeof audioPlayerVariants> {
+  extends Omit<React.ComponentProps<'div'>, 'children'>, VariantProps<typeof audioPlayerVariants> {
   audioUrl?: string;
   status: AudioStatus;
   durationSeconds?: number;

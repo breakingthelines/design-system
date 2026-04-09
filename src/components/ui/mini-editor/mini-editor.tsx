@@ -6,7 +6,13 @@ import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import { $getRoot, $getSelection, $createParagraphNode, $createTextNode, type EditorState } from 'lexical';
+import {
+  $getRoot,
+  $getSelection,
+  $createParagraphNode,
+  $createTextNode,
+  type EditorState,
+} from 'lexical';
 
 import { cn } from '#/lib/utils';
 import { SubmitPlugin } from './submit-plugin';
@@ -159,7 +165,7 @@ function MiniEditor({
     }),
     // Only used for initial render — intentionally excluding disabled
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    []
   );
 
   const handleChange = React.useCallback(
@@ -169,7 +175,7 @@ function MiniEditor({
         onChange($getRoot().getTextContent());
       });
     },
-    [onChange],
+    [onChange]
   );
 
   return (
@@ -182,7 +188,7 @@ function MiniEditor({
                 'w-full bg-transparent text-base leading-6 text-inherit placeholder:text-muted-foreground focus:outline-none sm:text-sm',
                 !multiline && 'overflow-hidden whitespace-nowrap',
                 multiline && 'min-h-[60px] resize-none field-sizing-content',
-                className,
+                className
               )}
             />
           }
@@ -190,7 +196,7 @@ function MiniEditor({
             <div
               className={cn(
                 'pointer-events-none absolute top-0 left-0 text-base leading-6 select-none sm:text-sm',
-                placeholderClassName ?? 'text-muted-foreground',
+                placeholderClassName ?? 'text-muted-foreground'
               )}
             >
               {placeholder}

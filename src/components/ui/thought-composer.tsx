@@ -7,7 +7,11 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
-import { MiniEditor, type MiniEditorHandle, type MentionSuggestion } from '#/components/ui/mini-editor/index';
+import {
+  MiniEditor,
+  type MiniEditorHandle,
+  type MentionSuggestion,
+} from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
 
@@ -306,9 +310,7 @@ function ThoughtComposer({
       </AnimatePresence>
 
       {/* Image error message */}
-      {imageError && (
-        <p className="text-xs text-red-100">{imageError}</p>
-      )}
+      {imageError && <p className="text-xs text-red-100">{imageError}</p>}
 
       {/* Bottom row — action icons + submit */}
       <div className="flex items-center justify-between">

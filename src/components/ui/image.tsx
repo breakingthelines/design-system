@@ -77,13 +77,13 @@ function Image({
             observer.disconnect();
           }
         },
-        { rootMargin },
+        { rootMargin }
       );
 
       observer.observe(node);
       observerRef.current = observer;
     },
-    [loading, rootMargin],
+    [loading, rootMargin]
   );
 
   // Img ref callback — detects cache hits where onLoad fires before
@@ -99,7 +99,7 @@ function Image({
       setLoaded(true);
       onLoad?.(e);
     },
-    [onLoad],
+    [onLoad]
   );
 
   const handleError = useCallback(
@@ -107,7 +107,7 @@ function Image({
       setErrored(true);
       onError?.(e);
     },
-    [onError],
+    [onError]
   );
 
   const shouldLoad = inView && src && !errored;
@@ -125,7 +125,7 @@ function Image({
           aria-hidden
           className={cn(
             skeletonVariants({ variant: 'rect' }),
-            'absolute inset-0 h-full w-full rounded-[inherit]',
+            'absolute inset-0 h-full w-full rounded-[inherit]'
           )}
         />
       )}
@@ -142,7 +142,7 @@ function Image({
             'h-full w-full object-cover',
             fadeDuration > 0 && 'transition-opacity',
             loaded ? 'opacity-100' : 'opacity-0',
-            imgClassName,
+            imgClassName
           )}
           style={fadeDuration > 0 ? { transitionDuration: `${fadeDuration}ms` } : undefined}
           draggable={false}

@@ -216,31 +216,31 @@ function SiteNav({
                   {/* Subtle bottom accent line */}
                   <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                   <nav className="flex flex-col gap-0.5">
-                  {tab.children.map((child) => {
-                    const isExternal = child.external;
-                    if (isExternal) {
+                    {tab.children.map((child) => {
+                      const isExternal = child.external;
+                      if (isExternal) {
+                        return (
+                          <a
+                            key={child.href}
+                            href={child.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                          >
+                            {child.label}
+                          </a>
+                        );
+                      }
                       return (
-                        <a
+                        <LinkComponent
                           key={child.href}
                           href={child.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
                           className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                         >
                           {child.label}
-                        </a>
+                        </LinkComponent>
                       );
-                    }
-                    return (
-                      <LinkComponent
-                        key={child.href}
-                        href={child.href}
-                        className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                      >
-                        {child.label}
-                      </LinkComponent>
-                    );
-                  })}
+                    })}
                   </nav>
                 </div>
               </div>
@@ -261,7 +261,9 @@ function SiteNav({
       </nav>
 
       {/* Right: Actions — uniform gap, all items on the same level */}
-      <div className={cn('relative z-10 flex items-center', avatarUrl || initials ? 'gap-4' : 'gap-8')}>
+      <div
+        className={cn('relative z-10 flex items-center', avatarUrl || initials ? 'gap-4' : 'gap-8')}
+      >
         {onSearchClick && (
           <button
             type="button"
@@ -315,7 +317,11 @@ function SiteNav({
                       </span>
                     )}
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={8} className="w-[min(92vw,380px)] p-0">
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={8}
+                    className="w-[min(92vw,380px)] p-0"
+                  >
                     {notificationPopover}
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -406,7 +412,11 @@ function SiteNav({
                       <AvatarFallback>{initials ?? '?'}</AvatarFallback>
                     </Avatar>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" sideOffset={8} className="relative min-w-[160px] overflow-hidden">
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={8}
+                    className="relative min-w-[160px] overflow-hidden"
+                  >
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                     {avatarMenu.map((item) =>
                       item.href ? (
@@ -433,7 +443,11 @@ function SiteNav({
               </div>
             </>
           ) : (
-            <button type="button" onClick={onAvatarClick} className="flex items-center justify-center cursor-pointer">
+            <button
+              type="button"
+              onClick={onAvatarClick}
+              className="flex items-center justify-center cursor-pointer"
+            >
               <Avatar size="default" className="size-[34px]">
                 {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
                 <AvatarFallback>{initials ?? '?'}</AvatarFallback>
@@ -462,7 +476,11 @@ function SiteNav({
             >
               <BrokenLinesIcon open={menuOpen} />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={8} className="relative min-w-[180px] overflow-hidden">
+            <DropdownMenuContent
+              align="end"
+              sideOffset={8}
+              className="relative min-w-[180px] overflow-hidden"
+            >
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
               {tabs.map((tab) =>
                 tab.children ? (
@@ -487,7 +505,10 @@ function SiteNav({
                     ))}
                   </React.Fragment>
                 ) : (
-                  <DropdownMenuItem key={tab.href ?? tab.label} render={<LinkComponent href={tab.href ?? '#'} />}>
+                  <DropdownMenuItem
+                    key={tab.href ?? tab.label}
+                    render={<LinkComponent href={tab.href ?? '#'} />}
+                  >
                     {tab.label}
                   </DropdownMenuItem>
                 )

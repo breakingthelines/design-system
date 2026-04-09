@@ -8,7 +8,14 @@ type EmitterPosition = 'top' | 'center';
 
 const sizePresets: Record<
   EmitterSize,
-  { width: number; height: number; blur: number; opacity: number; scale: number; overlayHeight: number }
+  {
+    width: number;
+    height: number;
+    blur: number;
+    opacity: number;
+    scale: number;
+    overlayHeight: number;
+  }
 > = {
   sm: { width: 600, height: 400, blur: 80, opacity: 0.25, scale: 1, overlayHeight: 500 },
   md: { width: 700, height: 500, blur: 90, opacity: 0.32, scale: 1.15, overlayHeight: 650 },
@@ -78,7 +85,9 @@ function useImageAnalysis(src?: string): ImageAnalysis {
         const data = ctx.getImageData(0, 0, 4, 4).data;
 
         let totalLum = 0;
-        let rSum = 0, gSum = 0, bSum = 0;
+        let rSum = 0,
+          gSum = 0,
+          bSum = 0;
         for (let i = 0; i < data.length; i += 4) {
           rSum += data[i];
           gSum += data[i + 1];
@@ -91,7 +100,9 @@ function useImageAnalysis(src?: string): ImageAnalysis {
         const darkness = Math.max(0, 1 - lum * 2);
 
         // Dominant colour — average RGB boosted away from gray for vibrancy
-        const avgR = rSum / 16, avgG = gSum / 16, avgB = bSum / 16;
+        const avgR = rSum / 16,
+          avgG = gSum / 16,
+          avgB = bSum / 16;
         const gray = (avgR + avgG + avgB) / 3;
         const colorBoost = 1.4; // push colours away from neutral
         const clamp = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
@@ -110,7 +121,9 @@ function useImageAnalysis(src?: string): ImageAnalysis {
       }
     };
     img.src = src;
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [src]);
 
   return analysis;
@@ -139,7 +152,8 @@ interface AmbientEmitterProps extends React.ComponentProps<'div'> {
 }
 
 /** Shared CSS transition — smooths filter/opacity/background changes between images. */
-const TRANSITION = 'filter 0.6s ease-out, opacity 0.6s ease-out, background 0.6s ease-out, transform 0.6s ease-out';
+const TRANSITION =
+  'filter 0.6s ease-out, opacity 0.6s ease-out, background 0.6s ease-out, transform 0.6s ease-out';
 
 /**
  * Ambient emitter — GPU-composited glow that bleeds colour behind content.
@@ -301,4 +315,11 @@ function AmbientEmitter({
   );
 }
 
-export { AmbientEmitter, useImageAnalysis, type AmbientEmitterProps, type ImageAnalysis, type EmitterSize, type EmitterPosition };
+export {
+  AmbientEmitter,
+  useImageAnalysis,
+  type AmbientEmitterProps,
+  type ImageAnalysis,
+  type EmitterSize,
+  type EmitterPosition,
+};

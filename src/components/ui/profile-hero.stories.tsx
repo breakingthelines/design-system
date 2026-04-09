@@ -17,7 +17,8 @@ export const Default = meta.story({
     name: 'Zach Lowy',
     handle: 'zachlowy',
     verified: true,
-    description: 'Co-creator of @btlvid . Words for @theScore, @NICETYo, @90minUSV, @iraqgoalsports, @ReissxMUFC and @BBCWorld.',
+    description:
+      'Co-creator of @btlvid . Words for @theScore, @NICETYo, @90minUSV, @iraqgoalsports, @ReissxMUFC and @BBCWorld.',
     socialLinks: [
       { type: 'x', url: 'https://x.com/zachlowy' },
       { type: 'website', url: 'https://breakingthelines.com' },

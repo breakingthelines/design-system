@@ -21,7 +21,7 @@ function ProfileTabs({ className, tabs, activeTab, onTabChange, ...props }: Prof
       data-slot="profile-tabs"
       className={cn(
         'flex items-start gap-1 overflow-x-auto scrollbar-none sm:overflow-x-visible sm:flex-wrap',
-        className,
+        className
       )}
       {...props}
     >

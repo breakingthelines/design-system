@@ -252,14 +252,14 @@
    on both dark and light backgrounds (like the white play button).
    Skipped for link-variant buttons (no background to shimmer over). */
 
-[data-slot="button"]:not([class*="variant-link"]),
-[data-slot="filter-chip"] {
+[data-slot='button']:not([class*='variant-link']),
+[data-slot='filter-chip'] {
   position: relative;
   overflow: hidden;
 }
 
-[data-slot="button"]:not([class*="variant-link"])::after,
-[data-slot="filter-chip"]::after {
+[data-slot='button']:not([class*='variant-link'])::after,
+[data-slot='filter-chip']::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -277,14 +277,14 @@
   transition: none;
 }
 
-[data-slot="button"]:not([class*="variant-link"]):hover::after,
-[data-slot="filter-chip"]:hover::after {
+[data-slot='button']:not([class*='variant-link']):hover::after,
+[data-slot='filter-chip']:hover::after {
   translate: 110% 0 0;
   transition: translate 0.5s var(--ease-standard);
 }
 
 /* Slower shimmer for logo / larger elements */
-[data-shimmer="slow"]:hover::after {
+[data-shimmer='slow']:hover::after {
   transition: translate 1s var(--ease-standard);
 }
 
@@ -294,8 +294,12 @@
    Dual-band gradient: a soft primary highlight + faint secondary,
    so it reads as a glossy surface catching light, not a loading bar. */
 @keyframes skeleton-shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* Breathing animation for AmbientEmitter — slow, organic opacity pulse */
@@ -327,13 +331,12 @@
   z-index: -1;
   backdrop-filter: blur(2px) saturate(1.08);
   -webkit-backdrop-filter: blur(2px) saturate(1.08);
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.012) 0%,
-      transparent 50%,
-      rgba(255, 255, 255, 0.008) 100%
-    );
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.012) 0%,
+    transparent 50%,
+    rgba(255, 255, 255, 0.008) 100%
+  );
   border-radius: inherit;
   pointer-events: none;
 }
@@ -361,10 +364,10 @@
 
 /* Reduced motion: hide ambient blobs, disable breathing + shimmer */
 @media (prefers-reduced-motion: reduce) {
-  [data-slot="ambient-emitter"] {
+  [data-slot='ambient-emitter'] {
     display: none;
   }
-  [data-slot="skeleton"] {
+  [data-slot='skeleton'] {
     animation: none;
   }
 }

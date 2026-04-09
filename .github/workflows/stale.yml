@@ -2,7 +2,7 @@ name: Stale issues
 
 on:
   schedule:
-    - cron: "0 9 * * 1" # Every Monday at 09:00 UTC
+    - cron: '0 9 * * 1' # Every Monday at 09:00 UTC
   workflow_dispatch:
 
 permissions:
@@ -23,6 +23,6 @@ jobs:
             Remove the `stale` label or comment to keep it open.
           close-issue-message: >
             Closed due to inactivity. Reopen if still relevant.
-          exempt-issue-labels: "pinned,P0 — Critical,P1 — High"
+          exempt-issue-labels: 'pinned,P0 — Critical,P1 — High'
           exempt-all-milestones: true
           operations-per-run: 100

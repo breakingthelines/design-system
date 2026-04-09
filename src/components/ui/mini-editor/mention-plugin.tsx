@@ -102,17 +102,13 @@ function MentionAutocomplete({
   if (suggestions.length === 0) return null;
 
   return (
-    <div
-      className="absolute left-0 top-full z-50 mt-1 min-w-[200px] max-w-[300px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
-    >
+    <div className="absolute left-0 top-full z-50 mt-1 min-w-[200px] max-w-[300px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
       {suggestions.map((suggestion, index) => (
         <button
           key={suggestion.userId}
           type="button"
           className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none ${
-            index === selectedIndex
-              ? 'bg-accent text-accent-foreground'
-              : 'hover:bg-accent/50'
+            index === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
           }`}
           onMouseDown={(e) => {
             e.preventDefault(); // prevent editor blur
@@ -120,11 +116,7 @@ function MentionAutocomplete({
           }}
         >
           {suggestion.avatarUrl ? (
-            <img
-              src={suggestion.avatarUrl}
-              alt=""
-              className="h-6 w-6 rounded-full object-cover"
-            />
+            <img src={suggestion.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
           ) : (
             <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
               {suggestion.displayName.charAt(0).toUpperCase()}
@@ -205,7 +197,7 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
 
       setSuggestions([]);
     },
-    [editor, trigger],
+    [editor, trigger]
   );
 
   // Keyboard navigation
@@ -219,7 +211,7 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
         setSelectedIndex((i) => (i + 1) % suggestions.length);
         return true;
       },
-      COMMAND_PRIORITY_LOW,
+      COMMAND_PRIORITY_LOW
     );
 
     const unregisterUp = editor.registerCommand(
@@ -229,7 +221,7 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
         setSelectedIndex((i) => (i - 1 + suggestions.length) % suggestions.length);
         return true;
       },
-      COMMAND_PRIORITY_LOW,
+      COMMAND_PRIORITY_LOW
     );
 
     const unregisterEnter = editor.registerCommand(
@@ -241,7 +233,7 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
         }
         return true;
       },
-      COMMAND_PRIORITY_LOW,
+      COMMAND_PRIORITY_LOW
     );
 
     const unregisterTab = editor.registerCommand(
@@ -253,7 +245,7 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
         }
         return true;
       },
-      COMMAND_PRIORITY_LOW,
+      COMMAND_PRIORITY_LOW
     );
 
     const unregisterEscape = editor.registerCommand(
@@ -262,7 +254,7 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
         setSuggestions([]);
         return true;
       },
-      COMMAND_PRIORITY_LOW,
+      COMMAND_PRIORITY_LOW
     );
 
     return () => {

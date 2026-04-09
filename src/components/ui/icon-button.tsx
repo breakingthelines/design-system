@@ -55,10 +55,7 @@ function IconButton({
 }: IconButtonProps) {
   const resolvedNativeButton =
     nativeButton ??
-    (render != null &&
-    typeof render === 'object' &&
-    'type' in render &&
-    render.type !== 'button'
+    (render != null && typeof render === 'object' && 'type' in render && render.type !== 'button'
       ? false
       : undefined);
 

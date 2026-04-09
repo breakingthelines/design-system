@@ -54,159 +54,174 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
               onClick={(e: React.MouseEvent) => e.stopPropagation()}
             >
               {thought.repostedBy.displayName || thought.repostedBy.username}
-            </Link>
-            {' '}reposted
+            </Link>{' '}
+            reposted
           </span>
         </div>
       )}
 
       <div className={cn('flex gap-3 px-4', thought.repostedBy ? 'pt-2 pb-5' : 'py-5')}>
-      {/* Left: Avatar — 48px per Figma */}
-      <Avatar className="size-[48px] shrink-0">
-        {thought.author.avatarUrl && (
-          <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
-        )}
-        <AvatarFallback>{thought.author.initials ?? thought.author.name.charAt(0)}</AvatarFallback>
-      </Avatar>
+        {/* Left: Avatar — 48px per Figma */}
+        <Avatar className="size-[48px] shrink-0">
+          {thought.author.avatarUrl && (
+            <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
+          )}
+          <AvatarFallback>
+            {thought.author.initials ?? thought.author.name.charAt(0)}
+          </AvatarFallback>
+        </Avatar>
 
-      {/* Right: Content */}
-      <div className="flex min-w-0 flex-1 flex-col gap-4">
-        {/* Reply context */}
-        {thought.replyingTo && (
-          <span className="text-xs leading-5 text-foreground/50">
-            Replying to{' '}
-            <Link
-              href={thought.replyingTo.href ?? `/@${thought.replyingTo.username}`}
-              className="text-primary font-medium hover:underline"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            >
-              @{thought.replyingTo.username}
-            </Link>
-          </span>
-        )}
-
-        {/* Author header */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            {thought.author.handle ? (
+        {/* Right: Content */}
+        <div className="flex min-w-0 flex-1 flex-col gap-4">
+          {/* Reply context */}
+          {thought.replyingTo && (
+            <span className="text-xs leading-5 text-foreground/50">
+              Replying to{' '}
               <Link
-                href={`/@${thought.author.handle}`}
-                className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap transition-colors hover:text-red-100"
+                href={thought.replyingTo.href ?? `/@${thought.replyingTo.username}`}
+                className="text-primary font-medium hover:underline"
                 onClick={(e: React.MouseEvent) => e.stopPropagation()}
               >
-                {thought.author.name}
+                @{thought.replyingTo.username}
               </Link>
-            ) : (
-              <span className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap">
-                {thought.author.name}
-              </span>
-            )}
-            {thought.author.verified && <VerifiedBadge size="sm" />}
-          </div>
-          {thought.author.handle && (
-            <Link
-              href={`/@${thought.author.handle}`}
-              className="text-xs leading-6 text-foreground/50 whitespace-nowrap transition-colors hover:text-foreground/80"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            >
-              @{thought.author.handle}
-            </Link>
-          )}
-          {thought.createdAt && (
-            <>
-              <span className="size-0.5 shrink-0 rounded-full bg-foreground/50" />
-              <span className="text-xs font-medium leading-6 text-foreground/50 whitespace-nowrap">
-                {thought.createdAt}
-              </span>
-            </>
-          )}
-        </div>
-
-        {/* Quoted passage anchor — links back to the source passage */}
-        {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (() => {
-          const base = thought.contentContext?.href;
-          const sep = base?.includes('?') ? '&' : '?';
-          const anchorHref = base
-            ? `${base}${sep}highlight=${encodeURIComponent(thought.anchor!.text!.blockId)}&offset=${thought.anchor!.text!.textOffset}`
-            : undefined;
-          const block = (
-            <div className={cn(
-              'rounded-md border-l-2 border-red-100/40 bg-foreground/[0.03] py-1.5 pl-3 pr-2',
-              anchorHref && 'cursor-pointer transition-colors hover:bg-foreground/[0.06] hover:border-red-100/60',
-            )}>
-              <p className="font-serif text-xs leading-relaxed text-foreground/40 italic line-clamp-3">
-                &ldquo;{thought.anchor!.text!.selectedText}&rdquo;
-              </p>
-            </div>
-          );
-          return anchorHref ? (
-            <Link href={anchorHref} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-              {block}
-            </Link>
-          ) : block;
-        })()}
-
-        {/* Timestamp anchor badge — links back to the source at that time */}
-        {thought.anchor?.type === 'timestamp' && thought.anchor.label && (() => {
-          const base = thought.contentContext?.href;
-          const sep = base?.includes('?') ? '&' : '?';
-          const anchorHref = base
-            ? `${base}${sep}t=${thought.anchor!.startSeconds}`
-            : undefined;
-          const badge = (
-            <span className={cn(
-              'inline-flex items-center gap-1 rounded-full bg-red-100/10 px-2 py-0.5 text-red-100',
-              anchorHref && 'cursor-pointer transition-colors hover:bg-red-100/20',
-            )}>
-              <Clock size={10} weight="bold" />
-              <span className="font-content text-[10px] font-semibold tabular-nums">
-                {thought.anchor!.label}
-              </span>
             </span>
-          );
-          return anchorHref ? (
-            <Link href={anchorHref} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
-              {badge}
-            </Link>
-          ) : badge;
-        })()}
+          )}
 
-        {/* Body text — Book Antiqua 14px / 18px per Figma */}
-        {thought.body && (
-          <p className="font-serif text-sm leading-[18px] text-foreground whitespace-pre-line">
-            {renderMentions(thought.body)}
-          </p>
-        )}
-
-        {/* GIF / image attachment */}
-        {(thought.gifUrl || thought.imageUrl) && (
-          <div className="max-w-[280px] overflow-hidden rounded-[6px] border border-grey-300">
-            <img
-              src={thought.gifUrl || thought.imageUrl}
-              alt=""
-              className="block max-h-[220px] w-full object-cover"
-              loading="lazy"
-            />
+          {/* Author header */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              {thought.author.handle ? (
+                <Link
+                  href={`/@${thought.author.handle}`}
+                  className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap transition-colors hover:text-red-100"
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                >
+                  {thought.author.name}
+                </Link>
+              ) : (
+                <span className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap">
+                  {thought.author.name}
+                </span>
+              )}
+              {thought.author.verified && <VerifiedBadge size="sm" />}
+            </div>
+            {thought.author.handle && (
+              <Link
+                href={`/@${thought.author.handle}`}
+                className="text-xs leading-6 text-foreground/50 whitespace-nowrap transition-colors hover:text-foreground/80"
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              >
+                @{thought.author.handle}
+              </Link>
+            )}
+            {thought.createdAt && (
+              <>
+                <span className="size-0.5 shrink-0 rounded-full bg-foreground/50" />
+                <span className="text-xs font-medium leading-6 text-foreground/50 whitespace-nowrap">
+                  {thought.createdAt}
+                </span>
+              </>
+            )}
           </div>
-        )}
 
-        {/* Content context */}
-        {thought.contentContext && (
-          <span className="text-xs leading-5 text-foreground/50">
-            on{' '}
-            <Link
-              href={thought.contentContext.href}
-              className="font-medium text-foreground/70 transition-colors hover:text-red-100"
-              onClick={(e: React.MouseEvent) => e.stopPropagation()}
-            >
-              {thought.contentContext.title}
-            </Link>
-          </span>
-        )}
+          {/* Quoted passage anchor — links back to the source passage */}
+          {thought.anchor?.type === 'text' &&
+            thought.anchor.text?.selectedText &&
+            (() => {
+              const base = thought.contentContext?.href;
+              const sep = base?.includes('?') ? '&' : '?';
+              const anchorHref = base
+                ? `${base}${sep}highlight=${encodeURIComponent(thought.anchor!.text!.blockId)}&offset=${thought.anchor!.text!.textOffset}`
+                : undefined;
+              const block = (
+                <div
+                  className={cn(
+                    'rounded-md border-l-2 border-red-100/40 bg-foreground/[0.03] py-1.5 pl-3 pr-2',
+                    anchorHref &&
+                      'cursor-pointer transition-colors hover:bg-foreground/[0.06] hover:border-red-100/60'
+                  )}
+                >
+                  <p className="font-serif text-xs leading-relaxed text-foreground/40 italic line-clamp-3">
+                    &ldquo;{thought.anchor!.text!.selectedText}&rdquo;
+                  </p>
+                </div>
+              );
+              return anchorHref ? (
+                <Link href={anchorHref} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                  {block}
+                </Link>
+              ) : (
+                block
+              );
+            })()}
 
-        {/* Engagement — compact variant, gap-2 between actions */}
-        <EngagementBar variant="compact" actions={engagementActions} />
-      </div>
+          {/* Timestamp anchor badge — links back to the source at that time */}
+          {thought.anchor?.type === 'timestamp' &&
+            thought.anchor.label &&
+            (() => {
+              const base = thought.contentContext?.href;
+              const sep = base?.includes('?') ? '&' : '?';
+              const anchorHref = base
+                ? `${base}${sep}t=${thought.anchor!.startSeconds}`
+                : undefined;
+              const badge = (
+                <span
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-full bg-red-100/10 px-2 py-0.5 text-red-100',
+                    anchorHref && 'cursor-pointer transition-colors hover:bg-red-100/20'
+                  )}
+                >
+                  <Clock size={10} weight="bold" />
+                  <span className="font-content text-[10px] font-semibold tabular-nums">
+                    {thought.anchor!.label}
+                  </span>
+                </span>
+              );
+              return anchorHref ? (
+                <Link href={anchorHref} onClick={(e: React.MouseEvent) => e.stopPropagation()}>
+                  {badge}
+                </Link>
+              ) : (
+                badge
+              );
+            })()}
+
+          {/* Body text — Book Antiqua 14px / 18px per Figma */}
+          {thought.body && (
+            <p className="font-serif text-sm leading-[18px] text-foreground whitespace-pre-line">
+              {renderMentions(thought.body)}
+            </p>
+          )}
+
+          {/* GIF / image attachment */}
+          {(thought.gifUrl || thought.imageUrl) && (
+            <div className="max-w-[280px] overflow-hidden rounded-[6px] border border-grey-300">
+              <img
+                src={thought.gifUrl || thought.imageUrl}
+                alt=""
+                className="block max-h-[220px] w-full object-cover"
+                loading="lazy"
+              />
+            </div>
+          )}
+
+          {/* Content context */}
+          {thought.contentContext && (
+            <span className="text-xs leading-5 text-foreground/50">
+              on{' '}
+              <Link
+                href={thought.contentContext.href}
+                className="font-medium text-foreground/70 transition-colors hover:text-red-100"
+                onClick={(e: React.MouseEvent) => e.stopPropagation()}
+              >
+                {thought.contentContext.title}
+              </Link>
+            </span>
+          )}
+
+          {/* Engagement — compact variant, gap-2 between actions */}
+          <EngagementBar variant="compact" actions={engagementActions} />
+        </div>
       </div>
     </article>
   );
