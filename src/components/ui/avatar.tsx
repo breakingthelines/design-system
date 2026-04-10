@@ -5,6 +5,7 @@ import { Avatar as AvatarPrimitive } from '@base-ui/react/avatar';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion, type HTMLMotionProps } from 'framer-motion';
 
+import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
 
@@ -121,22 +122,33 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
 interface AvatarFallbackProps extends AvatarPrimitive.Fallback.Props {
   /** Background color for the fallback */
   fallbackColor?: string;
+  /** Use the branded BTL logo fallback instead of text initials */
+  branded?: boolean;
 }
 
-function AvatarFallback({ className, fallbackColor, style, ...props }: AvatarFallbackProps) {
+function AvatarFallback({
+  className,
+  fallbackColor,
+  branded = false,
+  style,
+  children,
+  ...props
+}: AvatarFallbackProps) {
   return (
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        'flex size-full items-center justify-center rounded-full bg-muted text-sm font-medium text-muted-foreground',
+        'flex size-full items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-medium text-muted-foreground',
         'group-data-[size=sm]/avatar:text-xs',
         'group-data-[size=xl]/avatar:text-xl',
         'group-data-[size=xxl]/avatar:text-4xl',
         className
       )}
-      style={fallbackColor ? { ...style, backgroundColor: fallbackColor } : style}
+      style={!branded && fallbackColor ? { ...style, backgroundColor: fallbackColor } : style}
       {...props}
-    />
+    >
+      {branded ? <BtlPlaceholder variant="avatar" /> : children}
+    </AvatarPrimitive.Fallback>
   );
 }
 

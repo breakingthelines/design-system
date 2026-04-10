@@ -9,6 +9,7 @@ import { Button } from '#/components/ui/button';
 import { formatCount } from '#/lib/format';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { AmbientEmitter } from '#/components/ui/ambient-emitter';
+import { Image } from '#/components/ui/image';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useTilt } from '#/hooks/use-tilt';
 
@@ -97,18 +98,7 @@ function ProfileHero({
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
         >
-          {bannerUrl ? (
-            <img src={bannerUrl} alt="" className="size-full object-cover" />
-          ) : (
-            <div
-              className="size-full"
-              style={{
-                background:
-                  'radial-gradient(ellipse 80% 70% at 70% 40%, rgba(229, 51, 42, 0.15) 0%, transparent 70%), ' +
-                  'radial-gradient(ellipse 60% 50% at 30% 60%, rgba(226, 6, 19, 0.10) 0%, transparent 60%)',
-              }}
-            />
-          )}
+          <Image src={bannerUrl} alt="" loading="eager" className="size-full" />
         </motion.div>
       </div>
 
@@ -118,7 +108,7 @@ function ProfileHero({
         <div className="-mt-12 mb-4 sm:-mt-[82px]">
           <Avatar size="xxl" borderColor="default" className="!size-[100px] sm:!size-[164px]">
             {avatarUrl && <AvatarImage src={avatarUrl} alt={name} />}
-            <AvatarFallback>{initials ?? name.charAt(0)}</AvatarFallback>
+            <AvatarFallback branded>{initials ?? name.charAt(0)}</AvatarFallback>
           </Avatar>
         </div>
 

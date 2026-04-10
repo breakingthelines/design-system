@@ -130,31 +130,30 @@ function ContentCard({
       >
         <div className={cn('flex items-start gap-4', onClick && 'cursor-pointer')}>
           {/* Thumbnail — 108×86 */}
-          {item.imageUrl &&
-            (href ? (
-              <LinkComponent
-                href={href}
-                className="h-[86px] w-[108px] shrink-0 overflow-hidden"
-                style={vtStyle}
-                tabIndex={-1}
-              >
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="size-full"
-                  imgClassName="object-cover transition-transform duration-300"
-                />
-              </LinkComponent>
-            ) : (
-              <div className="h-[86px] w-[108px] shrink-0 overflow-hidden" style={vtStyle}>
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="size-full"
-                  imgClassName="object-cover transition-transform duration-300"
-                />
-              </div>
-            ))}
+          {href ? (
+            <LinkComponent
+              href={href}
+              className="h-[86px] w-[108px] shrink-0 overflow-hidden"
+              style={vtStyle}
+              tabIndex={-1}
+            >
+              <Image
+                src={item.imageUrl}
+                alt={item.title}
+                className="size-full"
+                imgClassName="object-cover transition-transform duration-300"
+              />
+            </LinkComponent>
+          ) : (
+            <div className="h-[86px] w-[108px] shrink-0 overflow-hidden" style={vtStyle}>
+              <Image
+                src={item.imageUrl}
+                alt={item.title}
+                className="size-full"
+                imgClassName="object-cover transition-transform duration-300"
+              />
+            </div>
+          )}
 
           {/* Content */}
           <div className="flex min-h-[86px] min-w-0 flex-1 flex-col gap-4">
@@ -202,31 +201,30 @@ function ContentCard({
       >
         <div className={cn('flex flex-col', onClick && 'cursor-pointer')}>
           {/* Portrait image — tall crop */}
-          {item.imageUrl &&
-            (href ? (
-              <LinkComponent
-                href={href}
-                className="aspect-[2/3] w-full overflow-hidden"
-                style={vtStyle}
-                tabIndex={-1}
-              >
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="size-full"
-                  imgClassName="object-cover transition-transform duration-300"
-                />
-              </LinkComponent>
-            ) : (
-              <div className="aspect-[2/3] w-full overflow-hidden" style={vtStyle}>
-                <Image
-                  src={item.imageUrl}
-                  alt={item.title}
-                  className="size-full"
-                  imgClassName="object-cover transition-transform duration-300"
-                />
-              </div>
-            ))}
+          {href ? (
+            <LinkComponent
+              href={href}
+              className="aspect-[2/3] w-full overflow-hidden"
+              style={vtStyle}
+              tabIndex={-1}
+            >
+              <Image
+                src={item.imageUrl}
+                alt={item.title}
+                className="size-full"
+                imgClassName="object-cover transition-transform duration-300"
+              />
+            </LinkComponent>
+          ) : (
+            <div className="aspect-[2/3] w-full overflow-hidden" style={vtStyle}>
+              <Image
+                src={item.imageUrl}
+                alt={item.title}
+                className="size-full"
+                imgClassName="object-cover transition-transform duration-300"
+              />
+            </div>
+          )}
 
           {/* Content below image */}
           <div className="flex flex-col gap-2 pt-6">
@@ -272,31 +270,30 @@ function ContentCard({
     >
       <div className={cn('flex flex-col', onClick && 'cursor-pointer')}>
         {/* Image — fills width, tall crop (~364px at 366 wide) */}
-        {item.imageUrl &&
-          (href ? (
-            <LinkComponent
-              href={href}
-              className="aspect-[328/364] w-full shrink-0 overflow-hidden"
-              style={vtStyle}
-              tabIndex={-1}
-            >
-              <Image
-                src={item.imageUrl}
-                alt={item.title}
-                className="size-full"
-                imgClassName="object-cover transition-transform duration-300"
-              />
-            </LinkComponent>
-          ) : (
-            <div className="aspect-[328/364] w-full shrink-0 overflow-hidden" style={vtStyle}>
-              <Image
-                src={item.imageUrl}
-                alt={item.title}
-                className="size-full"
-                imgClassName="object-cover transition-transform duration-300"
-              />
-            </div>
-          ))}
+        {href ? (
+          <LinkComponent
+            href={href}
+            className="aspect-[328/364] w-full shrink-0 overflow-hidden"
+            style={vtStyle}
+            tabIndex={-1}
+          >
+            <Image
+              src={item.imageUrl}
+              alt={item.title}
+              className="size-full"
+              imgClassName="object-cover transition-transform duration-300"
+            />
+          </LinkComponent>
+        ) : (
+          <div className="aspect-[328/364] w-full shrink-0 overflow-hidden" style={vtStyle}>
+            <Image
+              src={item.imageUrl}
+              alt={item.title}
+              className="size-full"
+              imgClassName="object-cover transition-transform duration-300"
+            />
+          </div>
+        )}
 
         {/* Content area — 24px gap from image */}
         <div className="flex flex-col gap-3 pt-6">

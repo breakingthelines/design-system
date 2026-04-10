@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useState, useRef, useCallback } from 'react';
 
+import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
 import { skeletonVariants } from './skeleton';
 
@@ -33,6 +34,8 @@ interface ImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'lo
   onLoad?: React.ReactEventHandler<HTMLImageElement>;
   /** Callback on load error. */
   onError?: React.ReactEventHandler<HTMLImageElement>;
+  /** Placeholder shown when the image is missing or fails to load. */
+  fallback?: React.ReactNode;
 }
 
 function Image({
@@ -46,6 +49,7 @@ function Image({
   style,
   onLoad,
   onError,
+  fallback,
   ...props
 }: ImageProps) {
   const [loaded, setLoaded] = useState(false);
@@ -110,7 +114,10 @@ function Image({
     [onError]
   );
 
-  const shouldLoad = inView && src && !errored;
+  const normalizedSrc = typeof src === 'string' ? src.trim() : src;
+  const hasSource = typeof normalizedSrc === 'string' ? normalizedSrc.length > 0 : !!normalizedSrc;
+  const shouldLoad = inView && hasSource && !errored;
+  const showFallback = !hasSource || errored;
 
   return (
     <div
@@ -120,7 +127,7 @@ function Image({
       style={style}
     >
       {/* Shimmer placeholder — visible until image loads */}
-      {!loaded && (
+      {!loaded && !showFallback && (
         <div
           aria-hidden
           className={cn(
@@ -130,11 +137,17 @@ function Image({
         />
       )}
 
+      {showFallback ? (
+        <div className="absolute inset-0 h-full w-full overflow-hidden rounded-[inherit]">
+          {fallback ?? <BtlPlaceholder className="rounded-[inherit]" />}
+        </div>
+      ) : null}
+
       {/* Actual image — transparent until loaded, then fades in */}
       {shouldLoad && (
         <img
           ref={imgRefCallback}
-          src={src}
+          src={normalizedSrc}
           alt={alt}
           onLoad={handleLoad}
           onError={handleError}

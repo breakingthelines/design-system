@@ -8,6 +8,7 @@ import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
 import { useTilt } from '#/hooks/use-tilt';
 import { formatCount } from '#/lib/format';
+import { Image } from '#/components/ui/image';
 import { useLinkComponent } from '#/components/ui/link-context';
 import type { ContentItem } from '#/types/content';
 
@@ -89,9 +90,13 @@ function HeroCard({
             style={viewTransitionName ? { viewTransitionName } : undefined}
             tabIndex={-1}
           >
-            {item.imageUrl && (
-              <img src={item.imageUrl} alt={item.title} className="size-full object-cover" />
-            )}
+            <Image
+              src={item.imageUrl}
+              alt={item.title}
+              loading="eager"
+              className="size-full"
+              imgClassName="object-cover"
+            />
             {/* Angled gradient: transparent top-right → black 0.75 bottom-left */}
             <div
               className="absolute inset-0"
@@ -106,9 +111,13 @@ function HeroCard({
             className="relative aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
             style={viewTransitionName ? { viewTransitionName } : undefined}
           >
-            {item.imageUrl && (
-              <img src={item.imageUrl} alt={item.title} className="size-full object-cover" />
-            )}
+            <Image
+              src={item.imageUrl}
+              alt={item.title}
+              loading="eager"
+              className="size-full"
+              imgClassName="object-cover"
+            />
             <div
               className="absolute inset-0"
               style={{

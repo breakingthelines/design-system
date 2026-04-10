@@ -7,6 +7,12 @@ export interface BtlLogoProps extends React.SVGAttributes<SVGSVGElement> {
   className?: string;
 }
 
+export interface BtlWordmarkProps extends React.ComponentProps<'div'> {
+  iconClassName?: string;
+  textClassName?: string;
+  showText?: boolean;
+}
+
 /**
  * BTL bracket logo — two offset bracket shapes with red gradient fill.
  * Uses `useId()` for gradient uniqueness so multiple instances render correctly.
@@ -52,5 +58,30 @@ export function BtlLogo({ className, ...props }: BtlLogoProps) {
       <path d="M12.467 0V8.516H9.049V19.513H12.467V28.022H0V0H12.467Z" fill={`url(#${gl})`} />
       <path d="M29.091 0V28.022H16.628V19.513H20.046V8.516H16.628V0H29.091Z" fill={`url(#${gr})`} />
     </svg>
+  );
+}
+
+export function BtlWordmark({
+  className,
+  iconClassName,
+  textClassName,
+  showText = true,
+  ...props
+}: BtlWordmarkProps) {
+  return (
+    <div className={cn('flex shrink-0 items-center gap-[10.9px]', className)} {...props}>
+      <BtlLogo className={cn('size-7 shrink-0', iconClassName)} />
+      {showText ? (
+        <div
+          className={cn(
+            'flex flex-col gap-0.5 text-[14px] font-semibold leading-none tracking-[-0.42px] text-white',
+            textClassName
+          )}
+        >
+          <span>breaking</span>
+          <span>the lines</span>
+        </div>
+      ) : null}
+    </div>
   );
 }

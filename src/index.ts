@@ -3,6 +3,7 @@ export * from './components/ui/alert-dialog';
 export * from './components/ui/ambient-emitter';
 export * from './components/ui/broken-lines-icon';
 export * from './components/ui/btl-logo';
+export * from './components/ui/btl-placeholder';
 export * from './components/ui/audio-player';
 export * from './components/ui/author-line';
 export * from './components/ui/avatar';
