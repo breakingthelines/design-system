@@ -9,6 +9,7 @@ import { Button } from '#/components/ui/button';
 import { formatCount } from '#/lib/format';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { AmbientEmitter } from '#/components/ui/ambient-emitter';
+import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { Image } from '#/components/ui/image';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useTilt } from '#/hooks/use-tilt';
@@ -79,16 +80,25 @@ function ProfileHero({
   return (
     <div
       data-slot="profile-hero"
-      className={cn('relative mx-auto w-full max-w-[1144px] px-4', className)}
+      className={cn('relative mx-auto w-full max-w-[1144px] overflow-visible px-4', className)}
       {...props}
     >
       {/* Banner with ambient glow */}
-      <div className="relative overflow-hidden">
-        {bannerUrl && <AmbientEmitter src={bannerUrl} size="md" position="center" scale={1.3} />}
+      <div className="relative">
+        <div className="pointer-events-none absolute -inset-x-8 -top-12 -bottom-14 sm:-inset-x-10 sm:-top-16 sm:-bottom-16">
+          <AmbientEmitter
+            src={bannerUrl}
+            color={bannerUrl ? undefined : 'rgb(141, 32, 32)'}
+            size="md"
+            position="center"
+            scale={1.35}
+            opacity={0.34}
+          />
+        </div>
 
         {/* Banner image with 3D tilt */}
         <motion.div
-          className="relative h-[180px] w-full overflow-hidden rounded-lg bg-grey-300 sm:h-[220px]"
+          className="relative z-10 h-[180px] w-full overflow-hidden rounded-lg bg-grey-300 sm:h-[220px]"
           style={{
             rotateX,
             rotateY,
@@ -98,12 +108,18 @@ function ProfileHero({
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
         >
-          <Image src={bannerUrl} alt="" loading="eager" className="size-full" />
+          <Image
+            src={bannerUrl}
+            alt=""
+            loading="eager"
+            className="size-full"
+            fallback={<BtlPlaceholder className="rounded-[inherit]" framed={false} />}
+          />
         </motion.div>
       </div>
 
       {/* Profile content — avatar overlaps banner bottom */}
-      <div className="relative">
+      <div className="relative z-20">
         {/* Avatar — overlaps the banner by half */}
         <div className="-mt-12 mb-4 sm:-mt-[82px]">
           <Avatar size="xxl" borderColor="default" className="!size-[100px] sm:!size-[164px]">

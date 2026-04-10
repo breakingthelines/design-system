@@ -138,7 +138,8 @@ function AvatarFallback({
     <AvatarPrimitive.Fallback
       data-slot="avatar-fallback"
       className={cn(
-        'flex size-full items-center justify-center overflow-hidden rounded-full bg-muted text-sm font-medium text-muted-foreground',
+        'relative isolate flex size-full items-center justify-center overflow-hidden rounded-full text-sm font-medium',
+        branded ? 'bg-transparent text-white' : 'bg-muted text-muted-foreground',
         'group-data-[size=sm]/avatar:text-xs',
         'group-data-[size=xl]/avatar:text-xl',
         'group-data-[size=xxl]/avatar:text-4xl',
@@ -147,7 +148,18 @@ function AvatarFallback({
       style={!branded && fallbackColor ? { ...style, backgroundColor: fallbackColor } : style}
       {...props}
     >
-      {branded ? <BtlPlaceholder variant="avatar" /> : children}
+      {branded ? (
+        <>
+          <BtlPlaceholder variant="avatar" showBrand={!children} className="absolute inset-0" />
+          {children ? (
+            <span className="relative z-10 font-display font-semibold uppercase tracking-[-0.08em] text-white [text-shadow:0_1px_16px_rgba(0,0,0,0.45)]">
+              {children}
+            </span>
+          ) : null}
+        </>
+      ) : (
+        children
+      )}
     </AvatarPrimitive.Fallback>
   );
 }

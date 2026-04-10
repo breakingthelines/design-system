@@ -7,14 +7,19 @@ import { cn } from '#/lib/utils';
 
 export interface BtlPlaceholderProps extends React.ComponentProps<'div'> {
   variant?: 'media' | 'avatar';
+  showBrand?: boolean;
+  framed?: boolean;
 }
 
 function BtlPlaceholder({
   className,
   variant = 'media',
+  showBrand = true,
+  framed,
   ...props
 }: BtlPlaceholderProps) {
   const isAvatar = variant === 'avatar';
+  const shouldShowFrame = framed ?? !isAvatar;
 
   return (
     <div
@@ -36,23 +41,25 @@ function BtlPlaceholder({
         )}
       />
 
-      {!isAvatar ? (
+      {shouldShowFrame ? (
         <div
           aria-hidden
           className="absolute inset-[10%] rounded-[inherit] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]"
         />
       ) : null}
 
-      <div className="relative z-10 flex items-center justify-center">
-        {isAvatar ? (
-          <BtlLogo className="h-[44%] w-auto max-w-[58%]" />
-        ) : (
-          <BtlWordmark
-            iconClassName="size-7 sm:size-8"
-            textClassName="text-[13px] font-semibold tracking-[-0.39px] text-white/68"
-          />
-        )}
-      </div>
+      {showBrand ? (
+        <div className="relative z-10 flex items-center justify-center">
+          {isAvatar ? (
+            <BtlLogo className="h-[44%] w-auto max-w-[58%]" />
+          ) : (
+            <BtlWordmark
+              iconClassName="size-7 sm:size-8"
+              textClassName="text-[13px] font-semibold tracking-[-0.39px] text-white/68"
+            />
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
