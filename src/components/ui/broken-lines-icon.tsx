@@ -31,46 +31,40 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
     >
       {/* Top line */}
       <motion.line
-        x1="2"
-        x2="14"
-        y1="5.5"
-        y2="5.5"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
+        initial={false}
         animate={
           open
             ? { x1: 4, x2: 16, y1: 4, y2: 16, opacity: 1 }
             : { x1: 2, x2: 14, y1: 5.5, y2: 5.5, opacity: 1 }
         }
+        style={{ x1: 2, x2: 14, y1: 5.5, y2: 5.5 }}
         transition={lineTransition}
       />
       {/* Middle line — offset right, fades out on open */}
       <motion.line
-        x1="6"
-        x2="18"
-        y1="10"
-        y2="10"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
+        initial={false}
         animate={open ? { opacity: 0, x1: 10, x2: 10 } : { opacity: 1, x1: 6, x2: 18 }}
+        style={{ x1: 6, x2: 18, y1: 10, y2: 10 }}
         transition={lineTransition}
       />
       {/* Bottom line */}
       <motion.line
-        x1="2"
-        x2="14"
-        y1="14.5"
-        y2="14.5"
         stroke="currentColor"
         strokeWidth="2"
         strokeLinecap="round"
+        initial={false}
         animate={
           open
             ? { x1: 4, x2: 16, y1: 16, y2: 4, opacity: 1 }
             : { x1: 2, x2: 14, y1: 14.5, y2: 14.5, opacity: 1 }
         }
+        style={{ x1: 2, x2: 14, y1: 14.5, y2: 14.5 }}
         transition={lineTransition}
       />
     </svg>
