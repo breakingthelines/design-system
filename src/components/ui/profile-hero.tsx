@@ -11,6 +11,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { AmbientEmitter } from '#/components/ui/ambient-emitter';
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { Image } from '#/components/ui/image';
+import { Badge } from '#/components/ui/badge';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useTilt } from '#/hooks/use-tilt';
 
@@ -33,6 +34,8 @@ interface ProfileHeroProps extends React.ComponentProps<'div'> {
   handle?: string;
   /** Verified status */
   verified?: boolean;
+  /** Subscription tier (normalized: "PRO", "LINE_BREAKERS", "FREE", etc.) */
+  tier?: string;
   /** Short one-liner tagline displayed under name */
   description?: string;
   /** Social links */
@@ -63,6 +66,7 @@ function ProfileHero({
   name,
   handle,
   verified,
+  tier,
   description,
   socialLinks,
   followers,
@@ -141,6 +145,12 @@ function ProfileHero({
                     {name}
                   </h1>
                   {verified && <VerifiedBadge className="size-6 sm:size-8" />}
+                  {tier === 'PRO' && (
+                    <Badge variant="secondary" className="rounded-full text-[10px]">Pro</Badge>
+                  )}
+                  {tier === 'LINE_BREAKERS' && (
+                    <Badge variant="secondary" className="rounded-full text-[10px]">Line Breaker</Badge>
+                  )}
                 </div>
                 {handle && (
                   <p className="text-xs leading-6 text-foreground opacity-50">@{handle}</p>
