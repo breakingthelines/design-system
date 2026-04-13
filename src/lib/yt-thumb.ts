@@ -35,8 +35,8 @@ export function safeYtThumbnail(url: string): string {
   const m = url.match(YT_THUMB_RE);
   if (!m) return url;
   const currentRes = m[2];
-  if (currentRes === 'hqdefault' || currentRes === 'mqdefault' || currentRes === 'default') {
-    return url;
-  }
-  return url.replace(`/${currentRes}.`, '/hqdefault.');
+  if (currentRes === 'mqdefault' || currentRes === 'default') return url;
+  // mqdefault (320×180) is the highest 16:9 resolution guaranteed to exist.
+  // hqdefault/sddefault are 4:3 with black letterbox bars on 16:9 content.
+  return url.replace(`/${currentRes}.`, '/mqdefault.');
 }
