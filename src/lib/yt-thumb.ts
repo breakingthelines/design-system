@@ -19,45 +19,24 @@ export function nextYtResolution(src: string): string | null {
   return src.replace(`/${currentRes}.`, `/${YT_RESOLUTIONS[idx + 1]}.`);
 }
 
-/* ── Fetch-based resolution probe ──────────────────────────────────────────── */
-
-/** Global cache — deduplicates in-flight probes and caches resolved URLs. */
-const resolveCache = new Map<string, Promise<string | null>>();
-
 /**
- * Resolve a YouTube thumbnail URL to the highest available resolution
- * using `fetch()` HEAD requests. Because `fetch()` 404s do NOT produce
- * browser console errors (unlike `<img src>`), this eliminates the
- * "Failed to load resource: 404" noise entirely.
+ * Rewrite a YouTube thumbnail URL to `hqdefault` resolution.
  *
- * Returns the first resolution that responds 200, or:
- * - `null` if all resolutions return non-200 (video truly unavailable)
- * - the original `url` if fetch itself throws (CORS/network — graceful degradation)
+ * `hqdefault.jpg` (480×360) is the highest resolution **guaranteed** to exist
+ * for every valid YouTube video. Higher resolutions (`maxresdefault`,
+ * `sddefault`) are unavailable for many videos and requesting them produces
+ * browser-level "Failed to load resource: 404" console errors that **no**
+ * JavaScript mechanism can suppress — not `<img onError>`, not `fetch()`,
+ * not `new Image()`. The only solution is to never request them.
  *
- * Results are cached globally so each URL is probed at most once.
+ * Pure string operation — zero network requests, zero 404 risk.
  */
-export function resolveYtThumbnail(url: string): Promise<string | null> {
-  if (!extractYtVideoId(url)) return Promise.resolve(url);
-
-  const cached = resolveCache.get(url);
-  if (cached) return cached;
-
-  const promise = (async (): Promise<string | null> => {
-    let current: string | null = url;
-    while (current) {
-      try {
-        const res = await fetch(current, { method: 'HEAD' });
-        if (res.ok) return current;
-      } catch {
-        // CORS or network error — fetch can't probe this CDN.
-        // Return original URL so <img> still gets a chance.
-        return url;
-      }
-      current = nextYtResolution(current);
-    }
-    return null;
-  })();
-
-  resolveCache.set(url, promise);
-  return promise;
+export function safeYtThumbnail(url: string): string {
+  const m = url.match(YT_THUMB_RE);
+  if (!m) return url;
+  const currentRes = m[2];
+  if (currentRes === 'hqdefault' || currentRes === 'mqdefault' || currentRes === 'default') {
+    return url;
+  }
+  return url.replace(`/${currentRes}.`, '/hqdefault.');
 }

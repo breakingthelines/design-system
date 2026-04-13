@@ -5,7 +5,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
-import { extractYtVideoId, nextYtResolution, resolveYtThumbnail } from '#/lib/yt-thumb';
+import { extractYtVideoId, nextYtResolution, safeYtThumbnail } from '#/lib/yt-thumb';
 import { skeletonVariants } from './skeleton';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -116,8 +116,8 @@ function Image({
     setYtChecking(!!ytVideoId && ytCache.get(ytVideoId) === undefined);
   }
 
-  // YouTube validation + resolution — oEmbed check then fetch-based URL resolution.
-  // fetch() 404s are silent (no "Failed to load resource" console noise).
+  // YouTube oEmbed validation — fires only for ytimg.com thumbnails.
+  // If the video exists, rewrites the URL to hqdefault (guaranteed to exist).
   useEffect(() => {
     if (!ytVideoId || typeof normalizedSrc !== 'string') return;
 
@@ -127,28 +127,22 @@ function Image({
       setErrored(true);
       return;
     }
+    if (oembedCached === true) {
+      setResolvedSrc(safeYtThumbnail(normalizedSrc));
+      setYtChecking(false);
+      return;
+    }
 
     let cancelled = false;
-
-    (async () => {
-      const available = await checkYtAvailability(ytVideoId);
+    checkYtAvailability(ytVideoId).then((available) => {
       if (cancelled) return;
       if (!available) {
         setErrored(true);
-        setYtChecking(false);
-        return;
-      }
-
-      // Resolve working thumbnail resolution via fetch() — no console 404
-      const resolved = await resolveYtThumbnail(normalizedSrc);
-      if (cancelled) return;
-      if (resolved) {
-        setResolvedSrc(resolved);
       } else {
-        setErrored(true);
+        setResolvedSrc(safeYtThumbnail(normalizedSrc));
       }
       setYtChecking(false);
-    })();
+    });
 
     return () => { cancelled = true; };
   }, [ytVideoId, normalizedSrc]);

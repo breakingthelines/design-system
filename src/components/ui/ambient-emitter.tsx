@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '#/lib/utils';
-import { extractYtVideoId, resolveYtThumbnail } from '#/lib/yt-thumb';
+import { safeYtThumbnail } from '#/lib/yt-thumb';
 
 type EmitterSize = 'sm' | 'md' | 'lg';
 type EmitterPosition = 'top' | 'center';
@@ -60,92 +60,74 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
     if (src) return analysisCache.get(src) ?? DEFAULT_ANALYSIS;
     return DEFAULT_ANALYSIS;
   });
-  // For YouTube URLs, defer thumbSrc until fetch-based resolution completes.
-  // Setting it eagerly would cause <img> to request the unresolved URL (→ console 404).
   const [thumbSrc, setThumbSrc] = React.useState(() =>
-    src && extractYtVideoId(src) ? undefined : src,
+    src ? safeYtThumbnail(src) : src,
   );
 
   React.useEffect(() => {
-    // For YouTube URLs, thumbSrc is set after fetch-based resolution in the analysis effect.
-    if (src && extractYtVideoId(src)) return;
-    setThumbSrc(src);
+    setThumbSrc(src ? safeYtThumbnail(src) : src);
   }, [src]);
 
   React.useEffect(() => {
     if (!src) return;
 
+    // Cache hit — apply synchronously (covers src changes after mount)
+    const cached = analysisCache.get(src);
+    if (cached) {
+      setAnalysis(cached);
+      return;
+    }
+
     let cancelled = false;
+    const safeSrc = safeYtThumbnail(src);
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      if (cancelled) return;
+      try {
+        const c = document.createElement('canvas');
+        c.width = 4;
+        c.height = 4;
+        const ctx = c.getContext('2d');
+        if (!ctx) return;
+        ctx.drawImage(img, 0, 0, 4, 4);
+        const data = ctx.getImageData(0, 0, 4, 4).data;
 
-    (async () => {
-      // Resolve YouTube thumbnails via fetch() before creating any Image element.
-      // fetch() 404s are silent — no "Failed to load resource" console noise.
-      let resolvedUrl = src;
-      if (extractYtVideoId(src)) {
-        const resolved = await resolveYtThumbnail(src);
-        if (cancelled) return;
-        if (!resolved) return; // All resolutions failed — skip analysis
-        resolvedUrl = resolved;
-        setThumbSrc(resolvedUrl);
-      }
-
-      // Cache hit — apply synchronously
-      const cached = analysisCache.get(src);
-      if (cached) {
-        setAnalysis(cached);
-        return;
-      }
-
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => {
-        if (cancelled) return;
-        try {
-          const c = document.createElement('canvas');
-          c.width = 4;
-          c.height = 4;
-          const ctx = c.getContext('2d');
-          if (!ctx) return;
-          ctx.drawImage(img, 0, 0, 4, 4);
-          const data = ctx.getImageData(0, 0, 4, 4).data;
-
-          let totalLum = 0;
-          let rSum = 0,
-            gSum = 0,
-            bSum = 0;
-          for (let i = 0; i < data.length; i += 4) {
-            rSum += data[i];
-            gSum += data[i + 1];
-            bSum += data[i + 2];
-            totalLum += (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
-          }
-
-          const lum = totalLum / 16;
-          const darkness = Math.max(0, 1 - lum * 2);
-
-          const avgR = rSum / 16,
-            avgG = gSum / 16,
-            avgB = bSum / 16;
-          const gray = (avgR + avgG + avgB) / 3;
-          const colorBoost = 1.4;
-          const clamp = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
-
-          const result: ImageAnalysis = {
-            brightness: 1 + darkness * 0.8,
-            opacityMultiplier: 1 + darkness * 0.5,
-            saturation: 1 + darkness * 0.4,
-            dominantColor: `${clamp(gray + (avgR - gray) * colorBoost)}, ${clamp(gray + (avgG - gray) * colorBoost)}, ${clamp(gray + (avgB - gray) * colorBoost)}`,
-          };
-
-          analysisCache.set(src, result);
-          if (!cancelled) setAnalysis(result);
-        } catch {
-          // CORS or canvas taint — defaults remain
+        let totalLum = 0;
+        let rSum = 0,
+          gSum = 0,
+          bSum = 0;
+        for (let i = 0; i < data.length; i += 4) {
+          rSum += data[i];
+          gSum += data[i + 1];
+          bSum += data[i + 2];
+          totalLum += (0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]) / 255;
         }
-      };
-      img.src = resolvedUrl;
-    })();
 
+        const lum = totalLum / 16;
+        const darkness = Math.max(0, 1 - lum * 2);
+
+        const avgR = rSum / 16,
+          avgG = gSum / 16,
+          avgB = bSum / 16;
+        const gray = (avgR + avgG + avgB) / 3;
+        const colorBoost = 1.4;
+        const clamp = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
+
+        const result: ImageAnalysis = {
+          brightness: 1 + darkness * 0.8,
+          opacityMultiplier: 1 + darkness * 0.5,
+          saturation: 1 + darkness * 0.4,
+          dominantColor: `${clamp(gray + (avgR - gray) * colorBoost)}, ${clamp(gray + (avgG - gray) * colorBoost)}, ${clamp(gray + (avgB - gray) * colorBoost)}`,
+        };
+
+        analysisCache.set(src, result);
+        if (!cancelled) setAnalysis(result);
+      } catch {
+        // CORS or canvas taint — defaults remain
+      }
+    };
+    img.src = safeSrc;
     return () => {
       cancelled = true;
     };
