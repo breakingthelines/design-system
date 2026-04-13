@@ -5,7 +5,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
-import { extractYtVideoId, nextYtResolution } from '#/lib/yt-thumb';
+import { extractYtVideoId, nextYtResolution, resolveYtThumbnail } from '#/lib/yt-thumb';
 import { skeletonVariants } from './skeleton';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -116,27 +116,42 @@ function Image({
     setYtChecking(!!ytVideoId && ytCache.get(ytVideoId) === undefined);
   }
 
-  // YouTube oEmbed validation — fires only for ytimg.com thumbnails.
+  // YouTube validation + resolution — oEmbed check then fetch-based URL resolution.
+  // fetch() 404s are silent (no "Failed to load resource" console noise).
   useEffect(() => {
-    if (!ytVideoId) return;
+    if (!ytVideoId || typeof normalizedSrc !== 'string') return;
 
-    // If already cached, apply immediately.
-    const cached = ytCache.get(ytVideoId);
-    if (cached !== undefined) {
+    const oembedCached = ytCache.get(ytVideoId);
+    if (oembedCached === false) {
       setYtChecking(false);
-      if (!cached) setErrored(true);
+      setErrored(true);
       return;
     }
 
     let cancelled = false;
-    checkYtAvailability(ytVideoId).then((available) => {
+
+    (async () => {
+      const available = await checkYtAvailability(ytVideoId);
       if (cancelled) return;
+      if (!available) {
+        setErrored(true);
+        setYtChecking(false);
+        return;
+      }
+
+      // Resolve working thumbnail resolution via fetch() — no console 404
+      const resolved = await resolveYtThumbnail(normalizedSrc);
+      if (cancelled) return;
+      if (resolved) {
+        setResolvedSrc(resolved);
+      } else {
+        setErrored(true);
+      }
       setYtChecking(false);
-      if (!available) setErrored(true);
-    });
+    })();
 
     return () => { cancelled = true; };
-  }, [ytVideoId]);
+  }, [ytVideoId, normalizedSrc]);
 
   // Container ref callback — sets up IntersectionObserver for lazy loading.
   const containerRefCallback = useCallback(
