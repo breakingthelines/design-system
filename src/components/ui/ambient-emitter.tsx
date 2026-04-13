@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { cn } from '#/lib/utils';
+import { nextYtResolution } from '#/lib/yt-thumb';
 
 type EmitterSize = 'sm' | 'md' | 'lg';
 type EmitterPosition = 'top' | 'center';
@@ -54,11 +55,16 @@ const analysisCache = new Map<string, ImageAnalysis>();
  * Results are cached by URL. Cached values initialise synchronously (no flash).
  * Fresh URLs compute asynchronously; CSS transitions smooth the visual change.
  */
-function useImageAnalysis(src?: string): ImageAnalysis {
+function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
   const [analysis, setAnalysis] = React.useState<ImageAnalysis>(() => {
     if (src) return analysisCache.get(src) ?? DEFAULT_ANALYSIS;
     return DEFAULT_ANALYSIS;
   });
+  const [thumbSrc, setThumbSrc] = React.useState(src);
+
+  React.useEffect(() => {
+    setThumbSrc(src);
+  }, [src]);
 
   React.useEffect(() => {
     if (!src) return;
@@ -73,6 +79,14 @@ function useImageAnalysis(src?: string): ImageAnalysis {
     let cancelled = false;
     const img = new Image();
     img.crossOrigin = 'anonymous';
+    img.onerror = () => {
+      if (cancelled) return;
+      const fallback = nextYtResolution(img.src);
+      if (fallback) {
+        setThumbSrc(fallback);
+        img.src = fallback;
+      }
+    };
     img.onload = () => {
       if (cancelled) return;
       try {
@@ -126,7 +140,7 @@ function useImageAnalysis(src?: string): ImageAnalysis {
     };
   }, [src]);
 
-  return analysis;
+  return { ...analysis, src: thumbSrc };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -189,7 +203,7 @@ function AmbientEmitter({
 }: AmbientEmitterProps) {
   const preset = sizePresets[size];
   const finalScale = scale ?? preset.scale;
-  const { brightness, opacityMultiplier, saturation, dominantColor } = useImageAnalysis(src);
+  const { brightness, opacityMultiplier, saturation, dominantColor, src: thumbSrc } = useImageAnalysis(src);
   const finalOpacity = Math.min(1, (opacity ?? preset.opacity) * opacityMultiplier);
 
   // Fade in from opacity 0 on mount so the blurred image doesn't flash bright
@@ -255,7 +269,7 @@ function AmbientEmitter({
           />
           {/* Layer 2: Blurred image — organic colour variation on top */}
           <img
-            src={src}
+            src={thumbSrc}
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
             style={{
@@ -278,7 +292,7 @@ function AmbientEmitter({
         {...props}
       >
         <img
-          src={src}
+          src={resolvedSrc}
           alt=""
           className="absolute top-0 left-1/2 object-cover"
           style={{

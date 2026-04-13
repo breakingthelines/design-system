@@ -5,6 +5,7 @@ import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
+import { extractYtVideoId, nextYtResolution } from '#/lib/yt-thumb';
 import { skeletonVariants } from './skeleton';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -47,12 +48,6 @@ interface ImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'lo
 /** Cache oEmbed results globally so each video ID is checked at most once. */
 const ytCache = new Map<string, boolean>();
 
-function extractYtVideoId(src: string | undefined): string | null {
-  if (typeof src !== 'string') return null;
-  const m = src.match(/(?:i\d*\.ytimg\.com|img\.youtube\.com)\/vi\/([^/]+)/);
-  return m?.[1] ?? null;
-}
-
 async function checkYtAvailability(videoId: string): Promise<boolean> {
   const cached = ytCache.get(videoId);
   if (cached !== undefined) return cached;
@@ -92,6 +87,7 @@ function Image({
   const [loaded, setLoaded] = useState(false);
   const [inView, setInView] = useState(loading === 'eager');
   const [errored, setErrored] = useState(false);
+  const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(undefined);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const prevSrcRef = useRef(src);
 
@@ -100,7 +96,7 @@ function Image({
 
   // Extract YouTube video ID (null for non-YouTube images).
   const ytVideoId = useMemo(
-    () => extractYtVideoId(typeof normalizedSrc === 'string' ? normalizedSrc : undefined),
+    () => (typeof normalizedSrc === 'string' ? extractYtVideoId(normalizedSrc) : null),
     [normalizedSrc],
   );
 
@@ -116,6 +112,7 @@ function Image({
     prevSrcRef.current = src;
     setLoaded(false);
     setErrored(false);
+    setResolvedSrc(undefined);
     setYtChecking(!!ytVideoId && ytCache.get(ytVideoId) === undefined);
   }
 
@@ -183,10 +180,17 @@ function Image({
 
   const handleError = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
+      // For YouTube thumbnails, try the next lower resolution before giving up.
+      const currentUrl = resolvedSrc ?? (typeof normalizedSrc === 'string' ? normalizedSrc : '');
+      const fallbackUrl = nextYtResolution(currentUrl);
+      if (fallbackUrl) {
+        setResolvedSrc(fallbackUrl);
+        return;
+      }
       setErrored(true);
       onError?.(e);
     },
-    [onError]
+    [onError, resolvedSrc, normalizedSrc]
   );
 
   // Don't start loading the image while the YouTube check is in-flight —
@@ -222,7 +226,7 @@ function Image({
       {shouldLoad && (
         <img
           ref={imgRefCallback}
-          src={normalizedSrc}
+          src={resolvedSrc ?? normalizedSrc}
           alt={alt}
           onLoad={handleLoad}
           onError={handleError}
