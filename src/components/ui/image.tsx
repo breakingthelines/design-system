@@ -49,7 +49,7 @@ const ytCache = new Map<string, boolean>();
 
 function extractYtVideoId(src: string | undefined): string | null {
   if (typeof src !== 'string') return null;
-  const m = src.match(/i\.ytimg\.com\/vi\/([^/]+)/);
+  const m = src.match(/(?:i\d*\.ytimg\.com|img\.youtube\.com)\/vi\/([^/]+)/);
   return m?.[1] ?? null;
 }
 
