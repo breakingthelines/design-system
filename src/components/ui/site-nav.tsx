@@ -90,6 +90,14 @@ const defaultTabs: NavTab[] = [
   },
 ];
 
+function getNavTabKey(tab: NavTab): string {
+  return `${tab.label}:${tab.href ?? ''}`;
+}
+
+function getNavChildKey(child: NonNullable<NavTab['children']>[number]): string {
+  return `${child.label}:${child.href}`;
+}
+
 /** Search icon matching Figma spec — Material-style magnifying glass */
 function SearchIcon({ className }: { className?: string }) {
   return (
@@ -177,7 +185,7 @@ function SiteNav({
                       if (isExternal) {
                         return (
                           <a
-                            key={child.href}
+                            key={getNavChildKey(child)}
                             href={child.href}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -189,7 +197,7 @@ function SiteNav({
                       }
                       return (
                         <LinkComponent
-                          key={child.href}
+                          key={getNavChildKey(child)}
                           href={child.href}
                           className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                         >
@@ -203,7 +211,7 @@ function SiteNav({
             </div>
           ) : (
             <LinkComponent
-              key={tab.href ?? tab.label}
+              key={getNavTabKey(tab)}
               href={tab.href ?? '#'}
               className={cn(
                 'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
@@ -446,7 +454,7 @@ function SiteNav({
                     </div>
                     {tab.children.map((child) => (
                       <DropdownMenuItem
-                        key={child.href}
+                        key={getNavChildKey(child)}
                         render={
                           child.external ? (
                             <a href={child.href} target="_blank" rel="noopener noreferrer" />
@@ -462,7 +470,7 @@ function SiteNav({
                   </React.Fragment>
                 ) : (
                   <DropdownMenuItem
-                    key={tab.href ?? tab.label}
+                    key={getNavTabKey(tab)}
                     render={<LinkComponent href={tab.href ?? '#'} />}
                   >
                     {tab.label}

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
@@ -13,6 +13,10 @@ import { skeletonVariants } from './skeleton';
  * Renders a shimmer placeholder (matching the Skeleton component) while the
  * image loads, then cross-fades to the real image. Uses IntersectionObserver
  * for lazy loading below-the-fold images.
+ *
+ * YouTube thumbnails are automatically validated via the oEmbed API. If the
+ * video is deleted or private (404), the fallback placeholder is shown instead
+ * of YouTube's grey "unavailable" image.
  *
  * Drop-in replacement for <img> — accepts the same props.
  * ───────────────────────────────────────────────────────────────────────────── */
@@ -38,6 +42,39 @@ interface ImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'lo
   fallback?: React.ReactNode;
 }
 
+/* ── YouTube thumbnail validation ──────────────────────────────────────────── */
+
+/** Cache oEmbed results globally so each video ID is checked at most once. */
+const ytCache = new Map<string, boolean>();
+
+function extractYtVideoId(src: string | undefined): string | null {
+  if (typeof src !== 'string') return null;
+  const m = src.match(/i\.ytimg\.com\/vi\/([^/]+)/);
+  return m?.[1] ?? null;
+}
+
+async function checkYtAvailability(videoId: string): Promise<boolean> {
+  const cached = ytCache.get(videoId);
+  if (cached !== undefined) return cached;
+
+  try {
+    const res = await fetch(
+      `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`,
+    );
+    // 200 = public + embeddable, 401 = exists but restricted — both have valid thumbnails.
+    // 404 = deleted or private — thumbnail is the grey "unavailable" placeholder.
+    const available = res.status !== 404;
+    ytCache.set(videoId, available);
+    return available;
+  } catch {
+    // Network error — assume available to avoid false negatives.
+    ytCache.set(videoId, true);
+    return true;
+  }
+}
+
+/* ── Component ─────────────────────────────────────────────────────────────── */
+
 function Image({
   src,
   alt = '',
@@ -58,13 +95,51 @@ function Image({
   const observerRef = useRef<IntersectionObserver | null>(null);
   const prevSrcRef = useRef(src);
 
+  const normalizedSrc = typeof src === 'string' ? src.trim() : src;
+  const hasSource = typeof normalizedSrc === 'string' ? normalizedSrc.length > 0 : !!normalizedSrc;
+
+  // Extract YouTube video ID (null for non-YouTube images).
+  const ytVideoId = useMemo(
+    () => extractYtVideoId(typeof normalizedSrc === 'string' ? normalizedSrc : undefined),
+    [normalizedSrc],
+  );
+
+  // Whether we're waiting for the YouTube oEmbed check to complete.
+  const [ytChecking, setYtChecking] = useState(() => {
+    if (!ytVideoId) return false;
+    return ytCache.get(ytVideoId) === undefined; // only check if not cached
+  });
+
   // Synchronous state reset when src changes (no useEffect needed —
   // React supports setting state during render for derived-from-props patterns).
   if (prevSrcRef.current !== src) {
     prevSrcRef.current = src;
     setLoaded(false);
     setErrored(false);
+    setYtChecking(!!ytVideoId && ytCache.get(ytVideoId) === undefined);
   }
+
+  // YouTube oEmbed validation — fires only for ytimg.com thumbnails.
+  useEffect(() => {
+    if (!ytVideoId) return;
+
+    // If already cached, apply immediately.
+    const cached = ytCache.get(ytVideoId);
+    if (cached !== undefined) {
+      setYtChecking(false);
+      if (!cached) setErrored(true);
+      return;
+    }
+
+    let cancelled = false;
+    checkYtAvailability(ytVideoId).then((available) => {
+      if (cancelled) return;
+      setYtChecking(false);
+      if (!available) setErrored(true);
+    });
+
+    return () => { cancelled = true; };
+  }, [ytVideoId]);
 
   // Container ref callback — sets up IntersectionObserver for lazy loading.
   const containerRefCallback = useCallback(
@@ -114,9 +189,9 @@ function Image({
     [onError]
   );
 
-  const normalizedSrc = typeof src === 'string' ? src.trim() : src;
-  const hasSource = typeof normalizedSrc === 'string' ? normalizedSrc.length > 0 : !!normalizedSrc;
-  const shouldLoad = inView && hasSource && !errored;
+  // Don't start loading the image while the YouTube check is in-flight —
+  // avoids briefly flashing the grey "unavailable" thumbnail.
+  const shouldLoad = inView && hasSource && !errored && !ytChecking;
   const showFallback = !hasSource || errored;
 
   return (

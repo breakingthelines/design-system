@@ -48,6 +48,13 @@ function CollaboratorDropdown({
   const [search, setSearch] = React.useState('');
   const [highlightedIndex, setHighlightedIndex] = React.useState(0);
   const showSearch = users.length >= 10;
+  const triggerElement = React.isValidElement(trigger) ? (
+    trigger
+  ) : (
+    <button type="button" className="inline-flex items-center">
+      {trigger}
+    </button>
+  );
 
   const filteredUsers = React.useMemo(() => {
     if (!search.trim()) return users;
@@ -81,7 +88,7 @@ function CollaboratorDropdown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<span className="inline-flex">{trigger}</span>} />
+      <DropdownMenuTrigger render={triggerElement} />
       <DropdownMenuContent
         className={cn('w-72 p-0', className)}
         align="end"
