@@ -292,7 +292,7 @@ function AmbientEmitter({
         {...props}
       >
         <img
-          src={resolvedSrc}
+          src={thumbSrc}
           alt=""
           className="absolute top-0 left-1/2 object-cover"
           style={{
