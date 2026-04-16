@@ -50,6 +50,8 @@ interface ProfileHeroProps extends React.ComponentProps<'div'> {
   onFollow?: () => void;
   /** Subscribe button handler */
   onSubscribe?: () => void;
+  /** Whether the current user already has an active principal subscription */
+  isSubscribed?: boolean;
   /** Whether the current user is following this profile */
   isFollowing?: boolean;
   /** Click handler for followers count */
@@ -74,6 +76,7 @@ function ProfileHero({
   subscribers,
   onFollow,
   onSubscribe,
+  isSubscribed,
   isFollowing,
   onFollowersClick,
   onFollowingClick,
@@ -259,11 +262,12 @@ function ProfileHero({
               )}
               {onSubscribe && (
                 <Button
+                  variant={isSubscribed ? 'outline' : 'default'}
                   size="lg"
                   onClick={onSubscribe}
                   className="flex-1 sm:w-[130px] sm:flex-none"
                 >
-                  Subscribe
+                  {isSubscribed ? 'Subscribed' : 'Subscribe'}
                 </Button>
               )}
             </div>
