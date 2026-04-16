@@ -35,6 +35,7 @@ export * from './components/ui/profile-hero';
 export * from './components/ui/profile-tabs';
 export * from './components/ui/section-header';
 export * from './components/ui/select';
+export * from './components/ui/sheet';
 export * from './components/ui/separator';
 export * from './components/ui/site-footer';
 export * from './components/ui/site-nav';
