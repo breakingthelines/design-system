@@ -443,13 +443,13 @@ function SiteNav({
             <DropdownMenuContent
               align="end"
               sideOffset={8}
-              className="relative min-w-[180px] overflow-hidden"
+              className="relative min-w-[180px] overflow-hidden rounded-[2px] border-white/10 !bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl"
             >
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
               {tabs.map((tab) =>
                 tab.children ? (
                   <React.Fragment key={tab.label}>
-                    <div className="px-2 py-1.5 text-[11px] uppercase tracking-[-0.33px] text-white/40">
+                    <div className="px-4 pt-2.5 pb-1 text-[10px] font-medium uppercase tracking-[0.08em] text-white/30">
                       {tab.label}
                     </div>
                     {tab.children.map((child) => (
@@ -462,7 +462,7 @@ function SiteNav({
                             <LinkComponent href={child.href} />
                           )
                         }
-                        className="pl-4"
+                        className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                       >
                         {child.label}
                       </DropdownMenuItem>
@@ -472,6 +472,7 @@ function SiteNav({
                   <DropdownMenuItem
                     key={getNavTabKey(tab)}
                     render={<LinkComponent href={tab.href ?? '#'} />}
+                    className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                   >
                     {tab.label}
                   </DropdownMenuItem>
