@@ -25,7 +25,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       {/* Top bar — break early: short left, long right */}
       <motion.line
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="4"
         strokeLinecap="round"
         initial={false}
         animate={
@@ -37,7 +37,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       />
       <motion.line
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="4"
         strokeLinecap="round"
         initial={false}
         animate={
@@ -50,7 +50,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       {/* Middle bar — break late: long left, short right */}
       <motion.line
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="4"
         strokeLinecap="round"
         initial={false}
         animate={
@@ -63,7 +63,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       />
       <motion.line
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="4"
         strokeLinecap="round"
         initial={false}
         animate={
@@ -77,7 +77,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       {/* Bottom bar — break mid-left */}
       <motion.line
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="4"
         strokeLinecap="round"
         initial={false}
         animate={
@@ -89,7 +89,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       />
       <motion.line
         stroke="currentColor"
-        strokeWidth="2.5"
+        strokeWidth="4"
         strokeLinecap="round"
         initial={false}
         animate={
