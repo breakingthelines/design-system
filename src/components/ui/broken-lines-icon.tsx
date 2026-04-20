@@ -25,7 +25,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       {/* Top bar — break early: short left, long right */}
       <motion.line
         stroke="currentColor"
-        strokeWidth="4"
+        strokeWidth="2.5"
         strokeLinecap="round"
         initial={false}
         animate={
@@ -37,33 +37,33 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       />
       <motion.line
         stroke="currentColor"
-        strokeWidth="4"
+        strokeWidth="2.5"
         strokeLinecap="round"
         initial={false}
         animate={
           open
             ? { x1: 12, x2: 19, y1: 12, y2: 19, opacity: 1 }
-            : { x1: 10, x2: 21, y1: 6, y2: 6, opacity: 1 }
+            : { x1: 11, x2: 21, y1: 6, y2: 6, opacity: 1 }
         }
         transition={lineTransition}
       />
       {/* Middle bar — break late: long left, short right */}
       <motion.line
         stroke="currentColor"
-        strokeWidth="4"
+        strokeWidth="2.5"
         strokeLinecap="round"
         initial={false}
         animate={
           open
             ? { opacity: 0 }
-            : { x1: 3, x2: 15, y1: 12, y2: 12, opacity: 1 }
+            : { x1: 3, x2: 14, y1: 12, y2: 12, opacity: 1 }
         }
-        style={{ x1: 3, x2: 15, y1: 12, y2: 12 }}
+        style={{ x1: 3, x2: 14, y1: 12, y2: 12 }}
         transition={lineTransition}
       />
       <motion.line
         stroke="currentColor"
-        strokeWidth="4"
+        strokeWidth="2.5"
         strokeLinecap="round"
         initial={false}
         animate={
@@ -77,19 +77,19 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
       {/* Bottom bar — break mid-left */}
       <motion.line
         stroke="currentColor"
-        strokeWidth="4"
+        strokeWidth="2.5"
         strokeLinecap="round"
         initial={false}
         animate={
           open
             ? { x1: 5, x2: 12, y1: 19, y2: 12, opacity: 1 }
-            : { x1: 3, x2: 10, y1: 18, y2: 18, opacity: 1 }
+            : { x1: 3, x2: 9, y1: 18, y2: 18, opacity: 1 }
         }
         transition={lineTransition}
       />
       <motion.line
         stroke="currentColor"
-        strokeWidth="4"
+        strokeWidth="2.5"
         strokeLinecap="round"
         initial={false}
         animate={
