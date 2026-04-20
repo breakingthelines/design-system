@@ -43,7 +43,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
         animate={
           open
             ? { x1: 12, x2: 19, y1: 12, y2: 19, opacity: 1 }
-            : { x1: 11, x2: 21, y1: 6, y2: 6, opacity: 1 }
+            : { x1: 12, x2: 21, y1: 6, y2: 6, opacity: 1 }
         }
         transition={lineTransition}
       />
@@ -56,9 +56,9 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
         animate={
           open
             ? { opacity: 0 }
-            : { x1: 3, x2: 14, y1: 12, y2: 12, opacity: 1 }
+            : { x1: 3, x2: 13, y1: 12, y2: 12, opacity: 1 }
         }
-        style={{ x1: 3, x2: 14, y1: 12, y2: 12 }}
+        style={{ x1: 3, x2: 13, y1: 12, y2: 12 }}
         transition={lineTransition}
       />
       <motion.line
@@ -95,7 +95,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
         animate={
           open
             ? { x1: 12, x2: 19, y1: 12, y2: 5, opacity: 1 }
-            : { x1: 13, x2: 21, y1: 18, y2: 18, opacity: 1 }
+            : { x1: 14, x2: 21, y1: 18, y2: 18, opacity: 1 }
         }
         transition={lineTransition}
       />
