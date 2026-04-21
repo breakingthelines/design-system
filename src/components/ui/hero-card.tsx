@@ -97,14 +97,20 @@ function HeroCard({
               className="size-full"
               imgClassName="object-cover"
             />
-            {/* Angled gradient: transparent top-right → black 0.75 bottom-left */}
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  'linear-gradient(235deg, rgba(0,0,0,0) 33.4%, rgba(0,0,0,0.75) 79.17%, rgba(0,0,0,0.75) 100%)',
-              }}
-            />
+            {/* Angled gradient: transparent top-right → black 0.75 bottom-left.
+                Only rendered when there's an image to darken — when the
+                BtlPlaceholder fallback is showing, its own dark background
+                already provides text contrast and the overlay dims the
+                wordmark unnecessarily. */}
+            {item.imageUrl ? (
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(235deg, rgba(0,0,0,0) 33.4%, rgba(0,0,0,0.75) 79.17%, rgba(0,0,0,0.75) 100%)',
+                }}
+              />
+            ) : null}
           </LinkComponent>
         ) : (
           <div
@@ -118,13 +124,15 @@ function HeroCard({
               className="size-full"
               imgClassName="object-cover"
             />
-            <div
-              className="absolute inset-0"
-              style={{
-                backgroundImage:
-                  'linear-gradient(235deg, rgba(0,0,0,0) 33.4%, rgba(0,0,0,0.75) 79.17%, rgba(0,0,0,0.75) 100%)',
-              }}
-            />
+            {item.imageUrl ? (
+              <div
+                className="absolute inset-0"
+                style={{
+                  backgroundImage:
+                    'linear-gradient(235deg, rgba(0,0,0,0) 33.4%, rgba(0,0,0,0.75) 79.17%, rgba(0,0,0,0.75) 100%)',
+                }}
+              />
+            ) : null}
           </div>
         )}
 
