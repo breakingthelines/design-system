@@ -149,12 +149,12 @@ function ProfileHero({
                   </h1>
                   {verified && <VerifiedBadge className="size-6 sm:size-8" />}
                   {tier === 'PRO' && (
-                    <Badge variant="secondary" className="rounded-full text-[10px]">Pro</Badge>
+                    <Badge variant="secondary" className="text-[10px]">Pro</Badge>
                   )}
                   {tier === 'LINE_BREAKERS' && (
                     <Badge
                       variant="default"
-                      className="rounded-full bg-red-100/15 text-[10px] text-red-100 hover:bg-red-100/15"
+                      className="bg-red-100/15 text-[10px] text-red-100 hover:bg-red-100/15"
                     >
                       Line Breaker
                     </Badge>
