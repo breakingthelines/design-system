@@ -72,7 +72,7 @@ function BtlPlaceholder({
             <BtlWordmark
               className="gap-[clamp(8px,2.8cqi,11px)]"
               iconClassName="size-[clamp(26px,11cqi,40px)]"
-              textClassName="text-[clamp(10px,5.5cqi,12px)] font-semibold tracking-[-0.04em] text-white"
+              textClassName="text-[clamp(12px,5.5cqi,12px)] font-semibold tracking-[-0.04em] text-white"
             />
           )}
         </div>
