@@ -42,7 +42,7 @@ function BtlPlaceholder({
       data-variant={variant}
       data-brand={resolvedBrand}
       className={cn(
-        'relative isolate flex size-full items-center justify-center overflow-hidden bg-[#050505] text-white',
+        '@container relative isolate flex size-full items-center justify-center overflow-hidden bg-[#050505] text-white',
         className
       )}
       {...props}
@@ -70,8 +70,9 @@ function BtlPlaceholder({
             <BtlLogo className="h-[44%] w-auto max-w-[58%]" />
           ) : (
             <BtlWordmark
-              iconClassName="size-7 sm:size-8"
-              textClassName="text-[13px] font-semibold tracking-[-0.39px] text-white/68"
+              className="gap-[clamp(10px,3.5cqi,20px)]"
+              iconClassName="size-[clamp(32px,14cqi,84px)]"
+              textClassName="text-[clamp(16px,7cqi,44px)] font-semibold tracking-[-0.04em] text-white"
             />
           )}
         </div>
