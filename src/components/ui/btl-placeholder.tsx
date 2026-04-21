@@ -70,9 +70,9 @@ function BtlPlaceholder({
             <BtlLogo className="h-[44%] w-auto max-w-[58%]" />
           ) : (
             <BtlWordmark
-              className="gap-[clamp(10px,3.5cqi,14px)]"
-              iconClassName="size-[clamp(32px,14cqi,52px)]"
-              textClassName="text-[clamp(16px,7cqi,26px)] font-semibold tracking-[-0.04em] text-white"
+              className="gap-[clamp(8px,2.8cqi,11px)]"
+              iconClassName="size-[clamp(26px,11cqi,40px)]"
+              textClassName="text-[clamp(14px,5.5cqi,20px)] font-semibold tracking-[-0.04em] text-white"
             />
           )}
         </div>
