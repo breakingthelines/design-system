@@ -5,26 +5,42 @@ import * as React from 'react';
 import { BtlLogo, BtlWordmark } from '#/components/ui/btl-logo';
 import { cn } from '#/lib/utils';
 
+export type BtlPlaceholderBrand = 'wordmark' | 'logo' | 'none';
+
 export interface BtlPlaceholderProps extends React.ComponentProps<'div'> {
   variant?: 'media' | 'avatar';
+  /**
+   * Which brand element to render. Defaults: 'wordmark' for media, 'logo' for avatar.
+   * Pass 'logo' on small thumbnails where the wordmark text would be unreadable.
+   */
+  brand?: BtlPlaceholderBrand;
+  /** @deprecated Prefer `brand="none"`. Kept for backward compatibility. */
   showBrand?: boolean;
+  /**
+   * Inset framing line that creates a "card-inside-a-card" look. Defaults to false —
+   * pass `framed` when the placeholder is large enough to benefit from the
+   * decorative inset (e.g. profile headers). Grid thumbnails look cleaner flush.
+   */
   framed?: boolean;
 }
 
 function BtlPlaceholder({
   className,
   variant = 'media',
-  showBrand = true,
-  framed,
+  brand,
+  showBrand,
+  framed = false,
   ...props
 }: BtlPlaceholderProps) {
   const isAvatar = variant === 'avatar';
-  const shouldShowFrame = framed ?? !isAvatar;
+  const resolvedBrand: BtlPlaceholderBrand =
+    brand ?? (showBrand === false ? 'none' : isAvatar ? 'logo' : 'wordmark');
 
   return (
     <div
       data-slot="btl-placeholder"
       data-variant={variant}
+      data-brand={resolvedBrand}
       className={cn(
         'relative isolate flex size-full items-center justify-center overflow-hidden bg-[#050505] text-white',
         className
@@ -41,16 +57,16 @@ function BtlPlaceholder({
         )}
       />
 
-      {shouldShowFrame ? (
+      {framed ? (
         <div
           aria-hidden
           className="absolute inset-[10%] rounded-[inherit] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]"
         />
       ) : null}
 
-      {showBrand ? (
+      {resolvedBrand !== 'none' ? (
         <div className="relative z-10 flex items-center justify-center">
-          {isAvatar ? (
+          {resolvedBrand === 'logo' ? (
             <BtlLogo className="h-[44%] w-auto max-w-[58%]" />
           ) : (
             <BtlWordmark
