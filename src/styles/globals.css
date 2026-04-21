@@ -284,8 +284,23 @@
 }
 
 /* Slower shimmer for logo / larger elements */
-[data-shimmer='slow']:hover::after {
+[data-shimmer='slow']:hover::after,
+[data-shimmer='brand']:hover::after {
   transition: translate 1s var(--ease-standard);
+}
+
+/* Brand-red shimmer — used on the BTL wordmark in SiteNav so the
+   sweep reads as the logo catching brand light, not generic gloss. */
+[data-slot='button'][data-shimmer='brand']::after {
+  background: linear-gradient(
+    120deg,
+    transparent 25%,
+    rgba(235, 0, 0, 0.08) 38%,
+    rgba(235, 0, 0, 0.28) 45%,
+    rgba(235, 0, 0, 0.28) 55%,
+    rgba(235, 0, 0, 0.08) 62%,
+    transparent 75%
+  );
 }
 
 /* ── Ambient system ──────────────────────────────────────────────────── */

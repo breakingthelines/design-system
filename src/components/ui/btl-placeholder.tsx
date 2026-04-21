@@ -65,7 +65,7 @@ function BtlPlaceholder({
       ) : null}
 
       {resolvedBrand !== 'none' ? (
-        <div className="relative z-10 flex items-center justify-center">
+        <div className="relative z-10 flex size-full items-center justify-center">
           {resolvedBrand === 'logo' ? (
             <BtlLogo className="h-[44%] w-auto max-w-[58%]" />
           ) : (

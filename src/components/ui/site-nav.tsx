@@ -152,7 +152,7 @@ function SiteNav({
         {logo ?? (
           <BtlWordmark
             data-slot="button"
-            data-shimmer="slow"
+            data-shimmer="brand"
             iconClassName="size-[29px]"
             textClassName="hidden sm:flex"
           />
