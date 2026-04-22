@@ -73,20 +73,6 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
 
         {/* Right: Content */}
         <div className="flex min-w-0 flex-1 flex-col gap-4">
-          {/* Reply context */}
-          {thought.replyingTo && (
-            <span className="text-xs leading-5 text-foreground/50">
-              Replying to{' '}
-              <Link
-                href={thought.replyingTo.href ?? `/@${thought.replyingTo.username}`}
-                className="text-primary font-medium hover:underline"
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
-                @{thought.replyingTo.username}
-              </Link>
-            </span>
-          )}
-
           {/* Author header */}
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1">
@@ -205,18 +191,34 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
             </div>
           )}
 
-          {/* Content context */}
-          {thought.contentContext && (
-            <span className="text-xs leading-5 text-foreground/50">
-              on{' '}
-              <Link
-                href={thought.contentContext.href}
-                className="font-medium text-foreground/70 transition-colors hover:text-red-100"
-                onClick={(e: React.MouseEvent) => e.stopPropagation()}
-              >
-                {thought.contentContext.title}
-              </Link>
-            </span>
+          {/* Footer meta — reply context + content context, stacked */}
+          {(thought.replyingTo || thought.contentContext) && (
+            <div className="flex flex-col gap-0.5">
+              {thought.replyingTo && (
+                <span className="text-xs leading-5 text-foreground/50">
+                  Replying to{' '}
+                  <Link
+                    href={thought.replyingTo.href ?? `/@${thought.replyingTo.username}`}
+                    className="font-medium text-foreground/70 transition-colors hover:text-red-100"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  >
+                    @{thought.replyingTo.username}
+                  </Link>
+                </span>
+              )}
+              {thought.contentContext && (
+                <span className="text-xs leading-5 text-foreground/50">
+                  on{' '}
+                  <Link
+                    href={thought.contentContext.href}
+                    className="font-medium text-foreground/70 transition-colors hover:text-red-100"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  >
+                    {thought.contentContext.title}
+                  </Link>
+                </span>
+              )}
+            </div>
           )}
 
           {/* Engagement — compact variant, gap-2 between actions */}
