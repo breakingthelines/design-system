@@ -75,3 +75,13 @@ export interface ThoughtItem {
   contentContext?: ThoughtContentContext;
   anchor?: ThoughtAnchor;
 }
+
+export interface CollectionItem {
+  id: string;
+  name: string;
+  description?: string;
+  artworkUrl?: string;
+  itemCount?: number;
+  collectionType?: 'podcast' | 'series' | 'newsletter' | 'visual' | 'mixed' | 'article';
+  creator?: ContentAuthor;
+}
