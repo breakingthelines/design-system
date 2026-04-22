@@ -43,6 +43,7 @@ export * from './components/ui/site-nav';
 export * from './components/ui/squad-role-badge';
 export * from './components/ui/textarea';
 export * from './components/ui/thought-card';
+export * from './components/ui/thought-comment';
 export * from './components/ui/thought-composer';
 export * from './components/ui/thoughts-panel';
 export * from './components/ui/toggle';
