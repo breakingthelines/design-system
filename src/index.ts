@@ -22,6 +22,7 @@ export * from './components/ui/emoji-picker';
 export * from './components/ui/engagement-bar';
 export * from './components/ui/field';
 export * from './components/ui/gif-picker';
+export * from './components/ui/go-back';
 export * from './components/ui/filter-bar';
 export * from './components/ui/filter-modal';
 export * from './components/ui/hero-card';
