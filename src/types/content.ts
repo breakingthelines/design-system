@@ -82,6 +82,6 @@ export interface CollectionItem {
   description?: string;
   artworkUrl?: string;
   itemCount?: number;
-  collectionType?: 'podcast' | 'series' | 'newsletter' | 'visual' | 'mixed' | 'article';
+  collectionType?: 'podcast' | 'video' | 'newsletter' | 'visual' | 'mixed' | 'article';
   creator?: ContentAuthor;
 }

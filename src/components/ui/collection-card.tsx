@@ -78,8 +78,8 @@ function typeLabel(type?: CollectionItem['collectionType']): string | undefined 
   switch (type) {
     case 'podcast':
       return 'Podcast';
-    case 'series':
-      return 'Series';
+    case 'video':
+      return 'Video';
     case 'newsletter':
       return 'Newsletter';
     case 'visual':
@@ -97,8 +97,12 @@ function itemCountLabel(type: CollectionItem['collectionType'], count: number): 
   let unit: string;
   if (type === 'podcast') {
     unit = count === 1 ? 'episode' : 'episodes';
+  } else if (type === 'video') {
+    unit = count === 1 ? 'video' : 'videos';
   } else if (type === 'article') {
     unit = count === 1 ? 'article' : 'articles';
+  } else if (type === 'newsletter') {
+    unit = count === 1 ? 'issue' : 'issues';
   } else {
     unit = count === 1 ? 'item' : 'items';
   }
