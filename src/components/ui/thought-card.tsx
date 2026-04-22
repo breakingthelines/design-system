@@ -103,9 +103,19 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
             {thought.createdAt && (
               <>
                 <span className="size-0.5 shrink-0 rounded-full bg-foreground/50" />
-                <span className="text-xs font-medium leading-6 text-foreground/50 whitespace-nowrap">
-                  {thought.createdAt}
-                </span>
+                {thought.permalinkHref ? (
+                  <Link
+                    href={thought.permalinkHref}
+                    className="text-xs font-medium leading-6 text-foreground/50 whitespace-nowrap transition-colors hover:text-foreground/70"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  >
+                    {thought.createdAt}
+                  </Link>
+                ) : (
+                  <span className="text-xs font-medium leading-6 text-foreground/50 whitespace-nowrap">
+                    {thought.createdAt}
+                  </span>
+                )}
               </>
             )}
           </div>

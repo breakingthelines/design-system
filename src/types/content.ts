@@ -74,6 +74,8 @@ export interface ThoughtItem {
   replyingTo?: ReplyContext;
   contentContext?: ThoughtContentContext;
   anchor?: ThoughtAnchor;
+  /** Permalink to this thought (e.g. `/@handle/thoughts/{id}`). When set, the card's timestamp renders as a Link. */
+  permalinkHref?: string;
 }
 
 export interface CollectionItem {
