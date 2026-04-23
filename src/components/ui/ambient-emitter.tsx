@@ -44,6 +44,12 @@ const DEFAULT_ANALYSIS: ImageAnalysis = {
 
 /** Module-level cache — survives remounts, shared across all emitters. */
 const analysisCache = new Map<string, ImageAnalysis>();
+const clampColorChannel = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
+
+function appendAmbientProbeParam(src: string): string {
+  if (src.includes('__ambient_probe=1')) return src;
+  return `${src}${src.includes('?') ? '&' : '?'}__ambient_probe=1`;
+}
 
 /**
  * Analyse a 4×4 canvas (16 pixels) for luminance + dominant colour.
@@ -60,9 +66,7 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
     if (src) return analysisCache.get(src) ?? DEFAULT_ANALYSIS;
     return DEFAULT_ANALYSIS;
   });
-  const [thumbSrc, setThumbSrc] = React.useState(() =>
-    src ? safeYtThumbnail(src) : src,
-  );
+  const [thumbSrc, setThumbSrc] = React.useState(() => (src ? safeYtThumbnail(src) : src));
 
   React.useEffect(() => {
     setThumbSrc(src ? safeYtThumbnail(src) : src);
@@ -82,7 +86,7 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
     const safeSrc = safeYtThumbnail(src);
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => {
+    const handleLoad = () => {
       if (cancelled) return;
       try {
         const c = document.createElement('canvas');
@@ -112,13 +116,12 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
           avgB = bSum / 16;
         const gray = (avgR + avgG + avgB) / 3;
         const colorBoost = 1.4;
-        const clamp = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
 
         const result: ImageAnalysis = {
           brightness: 1 + darkness * 0.8,
           opacityMultiplier: 1 + darkness * 0.5,
           saturation: 1 + darkness * 0.4,
-          dominantColor: `${clamp(gray + (avgR - gray) * colorBoost)}, ${clamp(gray + (avgG - gray) * colorBoost)}, ${clamp(gray + (avgB - gray) * colorBoost)}`,
+          dominantColor: `${clampColorChannel(gray + (avgR - gray) * colorBoost)}, ${clampColorChannel(gray + (avgG - gray) * colorBoost)}, ${clampColorChannel(gray + (avgB - gray) * colorBoost)}`,
         };
 
         analysisCache.set(src, result);
@@ -127,9 +130,13 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
         // CORS or canvas taint — defaults remain
       }
     };
-    img.src = safeSrc;
+    img.addEventListener('load', handleLoad);
+    // Give the anonymous analysis fetch its own cache key so it doesn't reuse a
+    // plain <img> response that was cached without CORS metadata.
+    img.src = appendAmbientProbeParam(safeSrc);
     return () => {
       cancelled = true;
+      img.removeEventListener('load', handleLoad);
     };
   }, [src]);
 
@@ -196,7 +203,13 @@ function AmbientEmitter({
 }: AmbientEmitterProps) {
   const preset = sizePresets[size];
   const finalScale = scale ?? preset.scale;
-  const { brightness, opacityMultiplier, saturation, dominantColor, src: thumbSrc } = useImageAnalysis(src);
+  const {
+    brightness,
+    opacityMultiplier,
+    saturation,
+    dominantColor,
+    src: thumbSrc,
+  } = useImageAnalysis(src);
   const finalOpacity = Math.min(1, (opacity ?? preset.opacity) * opacityMultiplier);
 
   // Fade in from opacity 0 on mount so the blurred image doesn't flash bright
