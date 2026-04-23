@@ -156,50 +156,55 @@ function SiteNav({
       className={cn('relative z-50 flex h-14 items-center justify-between', className)}
       {...props}
     >
-      {/* Left: optional back button + logo — spring on enter, quick tween on exit.
-          popLayout lets the logo reflow the moment the back button starts leaving,
-          so the fade-out happens under a logo that's already in its final spot. */}
-      <motion.div layout transition={motionTokens.spring.shift} className="flex items-center gap-3">
-        <AnimatePresence initial={false} mode="popLayout">
+      {/* Left: optional back button + logo. The back slot collapses its own
+          width + margin on exit (overflow hidden) so the logo slides into the
+          vacated space without ever overlapping the fading pill. */}
+      <div className="flex items-center">
+        <AnimatePresence initial={false}>
           {onGoBack ? (
             <motion.div
               key="go-back"
-              layout
-              initial={{ opacity: 0, x: -8, scale: 0.96 }}
+              initial={{ opacity: 0, width: 0, marginRight: 0 }}
               animate={{
                 opacity: 1,
-                x: 0,
-                scale: 1,
-                transition: motionTokens.spring.shift,
+                width: 'auto',
+                marginRight: 12,
+                transition: {
+                  opacity: {
+                    duration: motionTokens.duration.entrance / 1000,
+                    ease: [0, 0, 0.2, 1],
+                  },
+                  width: motionTokens.spring.shift,
+                  marginRight: motionTokens.spring.shift,
+                },
               }}
               exit={{
                 opacity: 0,
-                x: -6,
-                scale: 0.96,
+                width: 0,
+                marginRight: 0,
                 transition: {
                   duration: motionTokens.duration.exit / 1000,
                   ease: [0.4, 0, 1, 1],
                 },
               }}
-              className="flex items-center"
+              style={{ overflow: 'hidden' }}
+              className="flex shrink-0 items-center"
             >
               <GoBack size="sm" onClick={onGoBack} label={goBackLabel} />
             </motion.div>
           ) : null}
         </AnimatePresence>
-        <motion.div layout transition={motionTokens.spring.shift} className="flex items-center">
-          <LinkComponent href={logoHref} className="flex items-center">
-            {logo ?? (
-              <BtlWordmark
-                data-slot="button"
-                data-shimmer="brand"
-                iconClassName="size-[29px]"
-                textClassName="hidden sm:flex"
-              />
-            )}
-          </LinkComponent>
-        </motion.div>
-      </motion.div>
+        <LinkComponent href={logoHref} className="flex items-center">
+          {logo ?? (
+            <BtlWordmark
+              data-slot="button"
+              data-shimmer="brand"
+              iconClassName="size-[29px]"
+              textClassName="hidden sm:flex"
+            />
+          )}
+        </LinkComponent>
+      </div>
 
       {/* Center: Pill tab bar (tablet+) */}
       <nav className="hidden items-center rounded-full p-1 sm:flex">
