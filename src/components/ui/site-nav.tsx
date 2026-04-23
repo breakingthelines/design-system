@@ -156,41 +156,51 @@ function SiteNav({
       className={cn('relative z-50 flex h-14 items-center justify-between', className)}
       {...props}
     >
-      {/* Left: optional back button + logo. The back slot collapses its own
-          width + margin on exit (overflow hidden) so the logo slides into the
-          vacated space without ever overlapping the fading pill. */}
+      {/* Left: optional back button + logo. The outer motion.div clips width
+          + margin on exit; the inner box is pinned to max-content so the pill
+          keeps its natural size while the clipping window slides over it.
+          No squish, no overlap with the logo. */}
       <div className="flex items-center">
         <AnimatePresence initial={false}>
           {onGoBack ? (
             <motion.div
               key="go-back"
-              initial={{ opacity: 0, width: 0, marginRight: 0 }}
+              initial={{ width: 0, marginRight: 0, opacity: 0 }}
               animate={{
-                opacity: 1,
                 width: 'auto',
                 marginRight: 12,
+                opacity: 1,
                 transition: {
+                  width: motionTokens.spring.shift,
+                  marginRight: motionTokens.spring.shift,
                   opacity: {
                     duration: motionTokens.duration.entrance / 1000,
                     ease: [0, 0, 0.2, 1],
                   },
-                  width: motionTokens.spring.shift,
-                  marginRight: motionTokens.spring.shift,
                 },
               }}
               exit={{
-                opacity: 0,
                 width: 0,
                 marginRight: 0,
+                opacity: 0,
                 transition: {
-                  duration: motionTokens.duration.exit / 1000,
-                  ease: [0.4, 0, 1, 1],
+                  width: { duration: motionTokens.duration.exit / 1000, ease: [0.4, 0, 1, 1] },
+                  marginRight: {
+                    duration: motionTokens.duration.exit / 1000,
+                    ease: [0.4, 0, 1, 1],
+                  },
+                  opacity: {
+                    duration: motionTokens.duration.micro / 1000,
+                    ease: [0.4, 0, 1, 1],
+                  },
                 },
               }}
               style={{ overflow: 'hidden' }}
-              className="flex shrink-0 items-center"
+              className="shrink-0"
             >
-              <GoBack size="sm" onClick={onGoBack} label={goBackLabel} />
+              <div className="flex items-center" style={{ width: 'max-content' }}>
+                <GoBack size="sm" onClick={onGoBack} label={goBackLabel} />
+              </div>
             </motion.div>
           ) : null}
         </AnimatePresence>
