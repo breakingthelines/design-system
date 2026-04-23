@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import { BtlWordmark } from '#/components/ui/btl-logo';
 import { cn } from '#/lib/utils';
@@ -10,6 +11,7 @@ import { useLinkComponent } from '#/components/ui/link-context';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { GoBack } from '#/components/ui/go-back';
+import { motion as motionTokens } from '#/tokens/motion';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -154,20 +156,37 @@ function SiteNav({
       className={cn('relative z-50 flex h-14 items-center justify-between', className)}
       {...props}
     >
-      {/* Left: optional back button + logo */}
-      <div className="flex items-center gap-3">
-        {onGoBack && <GoBack size="sm" onClick={onGoBack} label={goBackLabel} />}
-        <LinkComponent href={logoHref} className="flex items-center">
-          {logo ?? (
-            <BtlWordmark
-              data-slot="button"
-              data-shimmer="brand"
-              iconClassName="size-[29px]"
-              textClassName="hidden sm:flex"
-            />
-          )}
-        </LinkComponent>
-      </div>
+      {/* Left: optional back button + logo — animates via layout + AnimatePresence
+          so the logo springs as the back slot mounts/unmounts */}
+      <motion.div layout transition={motionTokens.spring.shift} className="flex items-center gap-3">
+        <AnimatePresence initial={false} mode="popLayout">
+          {onGoBack ? (
+            <motion.div
+              key="go-back"
+              layout
+              initial={{ opacity: 0, x: -8, scale: 0.96 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -8, scale: 0.96 }}
+              transition={motionTokens.spring.shift}
+              className="flex items-center"
+            >
+              <GoBack size="sm" onClick={onGoBack} label={goBackLabel} />
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+        <motion.div layout transition={motionTokens.spring.shift} className="flex items-center">
+          <LinkComponent href={logoHref} className="flex items-center">
+            {logo ?? (
+              <BtlWordmark
+                data-slot="button"
+                data-shimmer="brand"
+                iconClassName="size-[29px]"
+                textClassName="hidden sm:flex"
+              />
+            )}
+          </LinkComponent>
+        </motion.div>
+      </motion.div>
 
       {/* Center: Pill tab bar (tablet+) */}
       <nav className="hidden items-center rounded-full p-1 sm:flex">
