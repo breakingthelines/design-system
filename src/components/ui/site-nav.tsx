@@ -156,8 +156,9 @@ function SiteNav({
       className={cn('relative z-50 flex h-14 items-center justify-between', className)}
       {...props}
     >
-      {/* Left: optional back button + logo — animates via layout + AnimatePresence
-          so the logo springs as the back slot mounts/unmounts */}
+      {/* Left: optional back button + logo — spring on enter, quick tween on exit.
+          popLayout lets the logo reflow the moment the back button starts leaving,
+          so the fade-out happens under a logo that's already in its final spot. */}
       <motion.div layout transition={motionTokens.spring.shift} className="flex items-center gap-3">
         <AnimatePresence initial={false} mode="popLayout">
           {onGoBack ? (
@@ -165,9 +166,21 @@ function SiteNav({
               key="go-back"
               layout
               initial={{ opacity: 0, x: -8, scale: 0.96 }}
-              animate={{ opacity: 1, x: 0, scale: 1 }}
-              exit={{ opacity: 0, x: -8, scale: 0.96 }}
-              transition={motionTokens.spring.shift}
+              animate={{
+                opacity: 1,
+                x: 0,
+                scale: 1,
+                transition: motionTokens.spring.shift,
+              }}
+              exit={{
+                opacity: 0,
+                x: -6,
+                scale: 0.96,
+                transition: {
+                  duration: motionTokens.duration.exit / 1000,
+                  ease: [0.4, 0, 1, 1],
+                },
+              }}
               className="flex items-center"
             >
               <GoBack size="sm" onClick={onGoBack} label={goBackLabel} />
