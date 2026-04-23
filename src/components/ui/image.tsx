@@ -54,7 +54,7 @@ async function checkYtAvailability(videoId: string): Promise<boolean> {
 
   try {
     const res = await fetch(
-      `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`,
+      `https://www.youtube.com/oembed?url=${encodeURIComponent(`https://www.youtube.com/watch?v=${videoId}`)}&format=json`
     );
     // 200 = public + embeddable, 401 = exists but restricted — both have valid thumbnails.
     // 404 = deleted or private — thumbnail is the grey "unavailable" placeholder.
@@ -97,7 +97,7 @@ function Image({
   // Extract YouTube video ID (null for non-YouTube images).
   const ytVideoId = useMemo(
     () => (typeof normalizedSrc === 'string' ? extractYtVideoId(normalizedSrc) : null),
-    [normalizedSrc],
+    [normalizedSrc]
   );
 
   // Whether we're waiting for the YouTube oEmbed check to complete.
@@ -144,7 +144,9 @@ function Image({
       setYtChecking(false);
     });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [ytVideoId, normalizedSrc]);
 
   // Container ref callback — sets up IntersectionObserver for lazy loading.

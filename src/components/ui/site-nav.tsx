@@ -9,6 +9,7 @@ import { BrokenLinesIcon } from '#/components/ui/broken-lines-icon';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
+import { GoBack } from '#/components/ui/go-back';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -66,6 +67,10 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   logoHref?: string;
   /** Logo render prop */
   logo?: React.ReactNode;
+  /** When set, renders a Go-back button in row 1 col 1. Omit to hide the back slot. */
+  onGoBack?: () => void;
+  /** Label for the Go-back button (default: "Go back"). */
+  goBackLabel?: string;
 }
 
 const defaultTabs: NavTab[] = [
@@ -136,143 +141,108 @@ function SiteNav({
   notificationPopover,
   logoHref = '/',
   logo,
+  onGoBack,
+  goBackLabel,
   ...props
 }: SiteNavProps) {
   const LinkComponent = useLinkComponent();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <header
-      data-slot="site-nav"
-      className={cn('relative z-50 flex h-14 items-center justify-between', className)}
-      {...props}
-    >
-      {/* Left: Logo */}
-      <LinkComponent href={logoHref} className="flex items-center">
-        {logo ?? (
-          <BtlWordmark
-            data-slot="button"
-            data-shimmer="brand"
-            iconClassName="size-[29px]"
-            textClassName="hidden sm:flex"
-          />
-        )}
-      </LinkComponent>
+    <header data-slot="site-nav" className={cn('relative z-50', className)} {...props}>
+      {/* Row 1: back | logo | actions */}
+      <div className="grid h-14 grid-cols-[1fr_auto_1fr] items-center gap-3">
+        {/* Col 1: Go-back slot (optional) */}
+        <div className="flex min-w-0 items-center justify-start">
+          {onGoBack && <GoBack size="sm" onClick={onGoBack} label={goBackLabel} />}
+        </div>
 
-      {/* Center: Pill tab bar (desktop/tablet) */}
-      <nav className="hidden sm:flex items-center rounded-full p-1">
-        {tabs.map((tab) =>
-          tab.children ? (
-            <div key={tab.label} className="group/sub relative">
-              <button
-                type="button"
-                className={cn(
-                  'cursor-pointer rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
-                  tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
-                )}
-                aria-haspopup="true"
-              >
-                {tab.label}
-              </button>
-              {/* Dropdown — pt-2 creates an invisible hover bridge between trigger and panel */}
-              <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
-                <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
-                  {/* Subtle bottom accent line */}
-                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
-                  <nav className="flex flex-col gap-0.5">
-                    {tab.children.map((child) => {
-                      const isExternal = child.external;
-                      if (isExternal) {
-                        return (
-                          <a
-                            key={getNavChildKey(child)}
-                            href={child.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                          >
-                            {child.label}
-                          </a>
-                        );
-                      }
-                      return (
-                        <LinkComponent
-                          key={getNavChildKey(child)}
-                          href={child.href}
-                          className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                        >
-                          {child.label}
-                        </LinkComponent>
-                      );
-                    })}
-                  </nav>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <LinkComponent
-              key={getNavTabKey(tab)}
-              href={tab.href ?? '#'}
-              className={cn(
-                'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
-                tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
-              )}
+        {/* Col 2: Logo (centred) */}
+        <LinkComponent href={logoHref} className="flex items-center">
+          {logo ?? (
+            <BtlWordmark
+              data-slot="button"
+              data-shimmer="brand"
+              iconClassName="size-[29px]"
+              textClassName="hidden sm:flex"
+            />
+          )}
+        </LinkComponent>
+
+        {/* Col 3: Actions — uniform gap, all items on the same level */}
+        <div
+          className={cn(
+            'relative z-10 flex items-center justify-end',
+            avatarUrl || initials ? 'gap-4' : 'gap-8'
+          )}
+        >
+          {onSearchClick && (
+            <button
+              type="button"
+              aria-label="Search"
+              onClick={onSearchClick}
+              className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
             >
-              {tab.label}
-            </LinkComponent>
-          )
-        )}
-      </nav>
-
-      {/* Right: Actions — uniform gap, all items on the same level */}
-      <div
-        className={cn('relative z-10 flex items-center', avatarUrl || initials ? 'gap-4' : 'gap-8')}
-      >
-        {onSearchClick && (
-          <button
-            type="button"
-            aria-label="Search"
-            onClick={onSearchClick}
-            className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
-          >
-            <SearchIcon className="size-6" />
-          </button>
-        )}
-        {(onNotificationsClick || notificationPopover) && (
-          <>
-            <div className={cn('relative hidden sm:block', notificationPopover && 'group/notif')}>
-              <div className="flex items-center justify-center">
-                <button
-                  type="button"
-                  aria-label="Notifications"
-                  onClick={notificationPopover ? undefined : onNotificationsClick}
-                  className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
-                >
-                  <NotificationIcon className="size-[22px]" />
-                </button>
-                {notificationCount !== undefined && notificationCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </span>
+              <SearchIcon className="size-6" />
+            </button>
+          )}
+          {(onNotificationsClick || notificationPopover) && (
+            <>
+              <div className={cn('relative hidden sm:block', notificationPopover && 'group/notif')}>
+                <div className="flex items-center justify-center">
+                  <button
+                    type="button"
+                    aria-label="Notifications"
+                    onClick={notificationPopover ? undefined : onNotificationsClick}
+                    className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
+                  >
+                    <NotificationIcon className="size-[22px]" />
+                  </button>
+                  {notificationCount !== undefined && notificationCount > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  )}
+                </div>
+                {notificationPopover && (
+                  <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/notif:opacity-100 group-hover/notif:visible group-hover/notif:translate-y-0 transition-all duration-150 ease-out">
+                    {notificationPopover}
+                  </div>
                 )}
               </div>
-              {notificationPopover && (
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/notif:opacity-100 group-hover/notif:visible group-hover/notif:translate-y-0 transition-all duration-150 ease-out">
-                  {notificationPopover}
-                </div>
-              )}
-            </div>
-            <div className="relative sm:hidden">
-              {notificationPopover ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <button
-                        type="button"
-                        aria-label="Notifications"
-                        className="relative flex items-center justify-center text-white/80 transition-colors hover:text-red-100"
-                      />
-                    }
+              <div className="relative sm:hidden">
+                {notificationPopover ? (
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <button
+                          type="button"
+                          aria-label="Notifications"
+                          className="relative flex items-center justify-center text-white/80 transition-colors hover:text-red-100"
+                        />
+                      }
+                    >
+                      <NotificationIcon className="size-[22px]" />
+                      {notificationCount !== undefined && notificationCount > 0 && (
+                        <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                          {notificationCount > 9 ? '9+' : notificationCount}
+                        </span>
+                      )}
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      sideOffset={8}
+                      className="w-[min(92vw,380px)] p-0"
+                    >
+                      {notificationPopover}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <button
+                    type="button"
+                    aria-label="Notifications"
+                    onClick={onNotificationsClick}
+                    className="relative flex items-center justify-center text-white/80 transition-colors hover:text-red-100"
                   >
                     <NotificationIcon className="size-[22px]" />
                     {notificationCount !== undefined && notificationCount > 0 && (
@@ -280,207 +250,253 @@ function SiteNav({
                         {notificationCount > 9 ? '9+' : notificationCount}
                       </span>
                     )}
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={8}
-                    className="w-[min(92vw,380px)] p-0"
-                  >
-                    {notificationPopover}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <button
-                  type="button"
-                  aria-label="Notifications"
-                  onClick={onNotificationsClick}
-                  className="relative flex items-center justify-center text-white/80 transition-colors hover:text-red-100"
-                >
-                  <NotificationIcon className="size-[22px]" />
-                  {notificationCount !== undefined && notificationCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
-                      {notificationCount > 9 ? '9+' : notificationCount}
-                    </span>
-                  )}
-                </button>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Avatar (logged in) or Login button (logged out) */}
-        {avatarUrl || initials ? (
-          avatarMenu?.length ? (
-            <>
-              <div className="group/avatar relative hidden sm:block">
-                <div className="flex items-center justify-center cursor-pointer">
-                  <Avatar size="default" className="size-[34px]">
-                    {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
-                    <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
-                  </Avatar>
-                </div>
-                {/* Dropdown — same pattern as Media dropdown */}
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
-                  <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
-                    <nav className="flex flex-col gap-0.5">
-                      {avatarMenu.map((item) =>
-                        item.href ? (
-                          item.external ? (
-                            <a
-                              key={item.label}
-                              href={item.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                            >
-                              {item.label}
-                            </a>
-                          ) : (
-                            <LinkComponent
-                              key={item.label}
-                              href={item.href}
-                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                            >
-                              {item.label}
-                            </LinkComponent>
-                          )
-                        ) : (
-                          <button
-                            key={item.label}
-                            type="button"
-                            onClick={item.onClick}
-                            className="block w-full cursor-pointer rounded-[2px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                          >
-                            {item.label}
-                          </button>
-                        )
-                      )}
-                    </nav>
-                  </div>
-                </div>
+                  </button>
+                )}
               </div>
-              <div className="sm:hidden">
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <button
-                        type="button"
-                        aria-label="Account"
-                        className="flex items-center justify-center"
-                      />
-                    }
-                  >
+            </>
+          )}
+
+          {/* Avatar (logged in) or Login button (logged out) */}
+          {avatarUrl || initials ? (
+            avatarMenu?.length ? (
+              <>
+                <div className="group/avatar relative hidden sm:block">
+                  <div className="flex items-center justify-center cursor-pointer">
                     <Avatar size="default" className="size-[34px]">
                       {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
                       <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
                     </Avatar>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    sideOffset={8}
-                    className="relative min-w-[160px] overflow-hidden"
-                  >
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
-                    {avatarMenu.map((item) =>
-                      item.href ? (
-                        <DropdownMenuItem
-                          key={item.label}
-                          render={
+                  </div>
+                  {/* Dropdown — same pattern as Media dropdown */}
+                  <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
+                    <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
+                      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                      <nav className="flex flex-col gap-0.5">
+                        {avatarMenu.map((item) =>
+                          item.href ? (
                             item.external ? (
-                              <a href={item.href} target="_blank" rel="noopener noreferrer" />
+                              <a
+                                key={item.label}
+                                href={item.href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                              >
+                                {item.label}
+                              </a>
                             ) : (
-                              <LinkComponent href={item.href} />
+                              <LinkComponent
+                                key={item.label}
+                                href={item.href}
+                                className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                              >
+                                {item.label}
+                              </LinkComponent>
+                            )
+                          ) : (
+                            <button
+                              key={item.label}
+                              type="button"
+                              onClick={item.onClick}
+                              className="block w-full cursor-pointer rounded-[2px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            >
+                              {item.label}
+                            </button>
+                          )
+                        )}
+                      </nav>
+                    </div>
+                  </div>
+                </div>
+                <div className="sm:hidden">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger
+                      render={
+                        <button
+                          type="button"
+                          aria-label="Account"
+                          className="flex items-center justify-center"
+                        />
+                      }
+                    >
+                      <Avatar size="default" className="size-[34px]">
+                        {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                        <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
+                      </Avatar>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      align="end"
+                      sideOffset={8}
+                      className="relative min-w-[160px] overflow-hidden"
+                    >
+                      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                      {avatarMenu.map((item) =>
+                        item.href ? (
+                          <DropdownMenuItem
+                            key={item.label}
+                            render={
+                              item.external ? (
+                                <a href={item.href} target="_blank" rel="noopener noreferrer" />
+                              ) : (
+                                <LinkComponent href={item.href} />
+                              )
+                            }
+                          >
+                            {item.label}
+                          </DropdownMenuItem>
+                        ) : (
+                          <DropdownMenuItem key={item.label} onClick={item.onClick}>
+                            {item.label}
+                          </DropdownMenuItem>
+                        )
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={onAvatarClick}
+                className="flex items-center justify-center cursor-pointer"
+              >
+                <Avatar size="default" className="size-[34px]">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                  <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
+                </Avatar>
+              </button>
+            )
+          ) : (
+            onLoginClick && (
+              <Button onClick={onLoginClick} className="h-auto px-4 py-2.5">
+                Login
+              </Button>
+            )
+          )}
+
+          {/* Mobile: Hamburger menu */}
+          <div className="sm:hidden">
+            <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+              <DropdownMenuTrigger
+                render={
+                  <button
+                    type="button"
+                    aria-label="Menu"
+                    className="flex items-center justify-center text-white/80 transition-colors hover:text-white cursor-pointer"
+                  />
+                }
+              >
+                <BrokenLinesIcon open={menuOpen} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                sideOffset={8}
+                className="relative min-w-[180px] overflow-hidden rounded-[2px] border-white/10 !bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl"
+              >
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                {tabs.map((tab) =>
+                  tab.children ? (
+                    <React.Fragment key={tab.label}>
+                      <div className="px-4 pt-2.5 pb-1 text-[10px] font-medium uppercase tracking-[0.08em] text-white/30">
+                        {tab.label}
+                      </div>
+                      {tab.children.map((child) => (
+                        <DropdownMenuItem
+                          key={getNavChildKey(child)}
+                          render={
+                            child.external ? (
+                              <a href={child.href} target="_blank" rel="noopener noreferrer" />
+                            ) : (
+                              <LinkComponent href={child.href} />
                             )
                           }
+                          className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                         >
-                          {item.label}
+                          {child.label}
                         </DropdownMenuItem>
-                      ) : (
-                        <DropdownMenuItem key={item.label} onClick={item.onClick}>
-                          {item.label}
-                        </DropdownMenuItem>
-                      )
-                    )}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </>
-          ) : (
-            <button
-              type="button"
-              onClick={onAvatarClick}
-              className="flex items-center justify-center cursor-pointer"
-            >
-              <Avatar size="default" className="size-[34px]">
-                {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
-                <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
-              </Avatar>
-            </button>
-          )
-        ) : (
-          onLoginClick && (
-            <Button onClick={onLoginClick} className="h-auto px-4 py-2.5">
-              Login
-            </Button>
-          )
-        )}
+                      ))}
+                    </React.Fragment>
+                  ) : (
+                    <DropdownMenuItem
+                      key={getNavTabKey(tab)}
+                      render={<LinkComponent href={tab.href ?? '#'} />}
+                      className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      {tab.label}
+                    </DropdownMenuItem>
+                  )
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
 
-        {/* Mobile: Hamburger menu */}
-        <div className="sm:hidden">
-          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger
-              render={
+      {/* Row 2: Pill tab bar (tablet+) */}
+      <div className="hidden justify-center pb-2 sm:flex">
+        <nav className="flex items-center rounded-full p-1">
+          {tabs.map((tab) =>
+            tab.children ? (
+              <div key={tab.label} className="group/sub relative">
                 <button
                   type="button"
-                  aria-label="Menu"
-                  className="flex items-center justify-center text-white/80 transition-colors hover:text-white cursor-pointer"
-                />
-              }
-            >
-              <BrokenLinesIcon open={menuOpen} />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              sideOffset={8}
-              className="relative min-w-[180px] overflow-hidden rounded-[2px] border-white/10 !bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl"
-            >
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
-              {tabs.map((tab) =>
-                tab.children ? (
-                  <React.Fragment key={tab.label}>
-                    <div className="px-4 pt-2.5 pb-1 text-[10px] font-medium uppercase tracking-[0.08em] text-white/30">
-                      {tab.label}
-                    </div>
-                    {tab.children.map((child) => (
-                      <DropdownMenuItem
-                        key={getNavChildKey(child)}
-                        render={
-                          child.external ? (
-                            <a href={child.href} target="_blank" rel="noopener noreferrer" />
-                          ) : (
-                            <LinkComponent href={child.href} />
-                          )
+                  className={cn(
+                    'cursor-pointer rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
+                    tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
+                  )}
+                  aria-haspopup="true"
+                >
+                  {tab.label}
+                </button>
+                {/* Dropdown — pt-2 creates an invisible hover bridge between trigger and panel */}
+                <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
+                  <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
+                    {/* Subtle bottom accent line */}
+                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                    <nav className="flex flex-col gap-0.5">
+                      {tab.children.map((child) => {
+                        const isExternal = child.external;
+                        if (isExternal) {
+                          return (
+                            <a
+                              key={getNavChildKey(child)}
+                              href={child.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            >
+                              {child.label}
+                            </a>
+                          );
                         }
-                        className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                      >
-                        {child.label}
-                      </DropdownMenuItem>
-                    ))}
-                  </React.Fragment>
-                ) : (
-                  <DropdownMenuItem
-                    key={getNavTabKey(tab)}
-                    render={<LinkComponent href={tab.href ?? '#'} />}
-                    className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                  >
-                    {tab.label}
-                  </DropdownMenuItem>
-                )
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+                        return (
+                          <LinkComponent
+                            key={getNavChildKey(child)}
+                            href={child.href}
+                            className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                          >
+                            {child.label}
+                          </LinkComponent>
+                        );
+                      })}
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <LinkComponent
+                key={getNavTabKey(tab)}
+                href={tab.href ?? '#'}
+                className={cn(
+                  'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
+                  tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
+                )}
+              >
+                {tab.label}
+              </LinkComponent>
+            )
+          )}
+        </nav>
       </div>
     </header>
   );

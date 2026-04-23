@@ -149,7 +149,9 @@ function ProfileHero({
                   </h1>
                   {verified && <VerifiedBadge className="size-6 sm:size-8" />}
                   {tier === 'PRO' && (
-                    <Badge variant="secondary" className="text-[10px]">Pro</Badge>
+                    <Badge variant="secondary" className="text-[10px]">
+                      Pro
+                    </Badge>
                   )}
                   {tier === 'LINE_BREAKERS' && (
                     <Badge

@@ -125,7 +125,8 @@ function CollectionCard({
 
   const tilt = useTilt(isList ? 3 : 8);
   const label = typeLabel(item.collectionType);
-  const meta = item.itemCount != null ? itemCountLabel(item.collectionType, item.itemCount) : undefined;
+  const meta =
+    item.itemCount != null ? itemCountLabel(item.collectionType, item.itemCount) : undefined;
 
   if (isList) {
     return (
@@ -237,9 +238,7 @@ function CollectionCard({
         <div className="flex flex-col gap-3 pt-6">
           <div className="flex flex-col gap-4 pr-4">
             <div className="flex flex-col gap-3">
-              {item.creator?.name && (
-                <CreatorAccent name={item.creator.name} href={creatorHref} />
-              )}
+              {item.creator?.name && <CreatorAccent name={item.creator.name} href={creatorHref} />}
               {href ? (
                 <LinkComponent href={href} className="group/title">
                   <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-none tracking-[-0.48px] text-white transition-colors group-hover/title:text-red-100">

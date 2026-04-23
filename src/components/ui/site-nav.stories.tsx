@@ -52,3 +52,18 @@ export const LoggedOut = meta.story({
     onLoginClick: () => {},
   },
 });
+
+export const WithGoBack = meta.story({
+  args: {
+    tabs,
+    avatarUrl: 'https://i.pravatar.cc/150?u=zach',
+    initials: 'ZL',
+    onSearchClick: () => {},
+    onNotificationsClick: () => {},
+    avatarMenu: [
+      { label: 'Profile', href: '#' },
+      { label: 'Logout', onClick: () => {} },
+    ],
+    onGoBack: () => {},
+  },
+});

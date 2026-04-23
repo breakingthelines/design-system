@@ -14,7 +14,7 @@ export function nextYtResolution(src: string): string | null {
   const m = src.match(YT_THUMB_RE);
   if (!m) return null;
   const currentRes = m[2];
-  const idx = YT_RESOLUTIONS.indexOf(currentRes as typeof YT_RESOLUTIONS[number]);
+  const idx = YT_RESOLUTIONS.indexOf(currentRes as (typeof YT_RESOLUTIONS)[number]);
   if (idx === -1 || idx >= YT_RESOLUTIONS.length - 1) return null;
   return src.replace(`/${currentRes}.`, `/${YT_RESOLUTIONS[idx + 1]}.`);
 }

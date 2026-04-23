@@ -94,7 +94,7 @@ function Sheet({
               'fixed top-0 z-50 flex h-full flex-col bg-black',
               side === 'right' ? 'right-0' : 'left-0',
               widthClass,
-              className,
+              className
             )}
             variants={slideVariants[side]}
             initial="hidden"
@@ -107,9 +107,7 @@ function Sheet({
             {/* Header */}
             {title && (
               <div className="flex shrink-0 items-center justify-between border-b border-white/[0.06] px-6 py-4">
-                <h2 className="text-sm font-semibold tracking-[-0.2px] text-white">
-                  {title}
-                </h2>
+                <h2 className="text-sm font-semibold tracking-[-0.2px] text-white">{title}</h2>
                 <button
                   type="button"
                   onClick={onClose}
@@ -122,9 +120,7 @@ function Sheet({
             )}
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto px-6 py-5">
-              {children}
-            </div>
+            <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
           </motion.aside>
         </>
       )}

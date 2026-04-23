@@ -14,14 +14,12 @@ const goBackVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'bg-white/[0.06] text-white/70 hover:bg-white/[0.12] hover:text-white',
-        subtle:
-          'bg-transparent text-muted-foreground hover:bg-white/[0.06] hover:text-foreground',
+        default: 'bg-white/[0.06] text-white/70 hover:bg-white/[0.12] hover:text-white',
+        subtle: 'bg-transparent text-muted-foreground hover:bg-white/[0.06] hover:text-foreground',
       },
       size: {
-        sm: "text-xs pr-3 [&_[data-slot=go-back-well]]:size-5 [&_[data-slot=go-back-well]_svg]:size-[9px]",
-        md: "text-sm [&_[data-slot=go-back-well]]:size-6 [&_[data-slot=go-back-well]_svg]:size-3",
+        sm: 'text-xs pr-3 [&_[data-slot=go-back-well]]:size-5 [&_[data-slot=go-back-well]_svg]:size-[9px]',
+        md: 'text-sm [&_[data-slot=go-back-well]]:size-6 [&_[data-slot=go-back-well]_svg]:size-3',
       },
     },
     defaultVariants: { variant: 'default', size: 'md' },
@@ -29,7 +27,8 @@ const goBackVariants = cva(
 );
 
 export interface GoBackProps
-  extends Omit<ButtonPrimitive.Props, 'className' | 'children'>,
+  extends
+    Omit<ButtonPrimitive.Props, 'className' | 'children'>,
     VariantProps<typeof goBackVariants> {
   className?: string;
   /** Text after the chevron. Defaults to "Go back". */

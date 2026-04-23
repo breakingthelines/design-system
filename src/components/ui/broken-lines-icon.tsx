@@ -53,11 +53,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
         strokeWidth="2.5"
         strokeLinecap="round"
         initial={false}
-        animate={
-          open
-            ? { opacity: 0 }
-            : { x1: 3, x2: 13, y1: 12, y2: 12, opacity: 1 }
-        }
+        animate={open ? { opacity: 0 } : { x1: 3, x2: 13, y1: 12, y2: 12, opacity: 1 }}
         style={{ x1: 3, x2: 13, y1: 12, y2: 12 }}
         transition={lineTransition}
       />
@@ -66,11 +62,7 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
         strokeWidth="2.5"
         strokeLinecap="round"
         initial={false}
-        animate={
-          open
-            ? { opacity: 0 }
-            : { x1: 18, x2: 21, y1: 12, y2: 12, opacity: 1 }
-        }
+        animate={open ? { opacity: 0 } : { x1: 18, x2: 21, y1: 12, y2: 12, opacity: 1 }}
         style={{ x1: 18, x2: 21, y1: 12, y2: 12 }}
         transition={lineTransition}
       />
