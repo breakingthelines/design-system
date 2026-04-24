@@ -16,6 +16,13 @@ const badgeVariants = cva(
         outline: 'border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground',
         ghost: 'hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50',
         link: 'text-primary underline-offset-4 hover:underline',
+        tintedSuccess:
+          'bg-[color-mix(in_oklab,var(--color-status-done)_20%,transparent)] text-[var(--color-status-done)]',
+        tintedWarn:
+          'bg-[color-mix(in_oklab,var(--color-status-progress)_20%,transparent)] text-[var(--color-status-progress)]',
+        tintedDestructive:
+          'bg-[color-mix(in_oklab,var(--color-status-todo)_20%,transparent)] text-[var(--color-status-todo)]',
+        tintedNeutral: 'bg-white/10 text-white/70',
       },
     },
     defaultVariants: {
