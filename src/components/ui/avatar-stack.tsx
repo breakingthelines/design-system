@@ -148,7 +148,9 @@ function AvatarStack({
                 <div className="flex flex-col gap-0.5">
                   <span className="font-medium">{user.name}</span>
                   {user.tooltip ? (
-                    <span className="text-[11px] leading-relaxed text-white/70">{user.tooltip}</span>
+                    <span className="text-[11px] leading-relaxed text-white/70">
+                      {user.tooltip}
+                    </span>
                   ) : null}
                 </div>
               </TooltipContent>
