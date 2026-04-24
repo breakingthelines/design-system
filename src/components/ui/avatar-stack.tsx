@@ -15,6 +15,7 @@ export interface AvatarStackUser {
   initials?: string;
   cursorColor: string;
   status?: AvatarStatus;
+  tooltip?: string;
 }
 
 export interface AvatarStackProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -122,6 +123,7 @@ function AvatarStack({
                         ? ({ '--tw-ring-color': user.cursorColor } as React.CSSProperties)
                         : undefined
                     }
+                    aria-label={user.tooltip ? `${user.name}. ${user.tooltip}` : user.name}
                     onClick={() => onUserClick?.(user.id)}
                     onMouseEnter={() => handleHover(user.id)}
                     onMouseLeave={() => handleHover(null)}
@@ -138,8 +140,19 @@ function AvatarStack({
                   )}
                 </Avatar>
               </TooltipTrigger>
-              <TooltipContent side="bottom" sideOffset={8}>
-                {user.name}
+              <TooltipContent
+                side="bottom"
+                sideOffset={8}
+                className="rounded-[10px] border border-white/10 bg-black/90 px-3 py-2 text-left text-white shadow-xl backdrop-blur-sm"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="font-medium">{user.name}</span>
+                  {user.tooltip ? (
+                    <span className="text-[11px] leading-relaxed text-white/70">
+                      {user.tooltip}
+                    </span>
+                  ) : null}
+                </div>
               </TooltipContent>
             </Tooltip>
           </motion.div>
