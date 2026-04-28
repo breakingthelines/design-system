@@ -18,6 +18,7 @@ jobs:
           owner: breakingthelines
           permission-organization-projects: write
           permission-issues: read
+          permission-pull-requests: read
 
       - name: Add to repo project
         if: vars.REPO_PROJECT_URL != ''
