@@ -20,23 +20,16 @@ export function nextYtResolution(src: string): string | null {
 }
 
 /**
- * Rewrite a YouTube thumbnail URL to `hqdefault` resolution.
+ * Rewrite a YouTube thumbnail URL to the highest quality candidate.
  *
- * `hqdefault.jpg` (480×360) is the highest resolution **guaranteed** to exist
- * for every valid YouTube video. Higher resolutions (`maxresdefault`,
- * `sddefault`) are unavailable for many videos and requesting them produces
- * browser-level "Failed to load resource: 404" console errors that **no**
- * JavaScript mechanism can suppress — not `<img onError>`, not `fetch()`,
- * not `new Image()`. The only solution is to never request them.
- *
- * Pure string operation — zero network requests, zero 404 risk.
+ * Discovery cards need to look sharp at large sizes, so start at maxres and let
+ * the Image component's onError handler walk down the resolution ladder when a
+ * given video does not have that asset.
  */
 export function safeYtThumbnail(url: string): string {
   const m = url.match(YT_THUMB_RE);
   if (!m) return url;
   const currentRes = m[2];
-  if (currentRes === 'mqdefault' || currentRes === 'default') return url;
-  // mqdefault (320×180) is the highest 16:9 resolution guaranteed to exist.
-  // hqdefault/sddefault are 4:3 with black letterbox bars on 16:9 content.
-  return url.replace(`/${currentRes}.`, '/mqdefault.');
+  if (currentRes === 'maxresdefault') return url;
+  return url.replace(`/${currentRes}.`, '/maxresdefault.');
 }
