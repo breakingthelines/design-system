@@ -16,6 +16,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Mint a token from the BTL Gaffer GitHub App so the workflow can read
+      # cross-repo packages (e.g. @breakingthelines/protos) during install and
+      # publish the design-system package. The default GITHUB_TOKEN's packages
+      # scope is limited to the current repo and cannot read sibling packages.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.BTL_GAFFER_APP_ID }}
+          private-key: ${{ secrets.BTL_GAFFER_PRIVATE_KEY }}
+          owner: breakingthelines
+          permission-contents: read
+          permission-packages: write
+
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
@@ -24,10 +38,10 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GH_PKG_TOKEN: ${{ github.token }}
-          NPM_CONFIG_TOKEN: ${{ github.token }}
-          NODE_AUTH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_PKG_TOKEN: ${{ steps.app-token.outputs.token }}
+          NPM_CONFIG_TOKEN: ${{ steps.app-token.outputs.token }}
+          NODE_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Cache Playwright browsers
         id: pw-cache
@@ -56,7 +70,7 @@ jobs:
       - name: Publish
         run: bun publish --no-git-checks
         env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GH_PKG_TOKEN: ${{ github.token }}
-          NPM_CONFIG_TOKEN: ${{ github.token }}
-          NODE_AUTH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_PKG_TOKEN: ${{ steps.app-token.outputs.token }}
+          NPM_CONFIG_TOKEN: ${{ steps.app-token.outputs.token }}
+          NODE_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
