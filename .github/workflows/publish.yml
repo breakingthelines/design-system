@@ -20,13 +20,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Mint a token from the BTL Gaffer GitHub App. App tokens are the
-      # durable answer for the *publish* step (org-scoped packages: write).
-      # However, GitHub Packages npm has a long-standing limitation where
-      # App installation tokens cannot authenticate tarball downloads from
-      # npm.pkg.github.com (only user PATs work). The install step therefore
-      # prefers a PAT secret (GH_PKG_TOKEN) and only falls back to the App
-      # token when no PAT is configured.
+      # Mint a token from the BTL Gaffer GitHub App as a fallback for
+      # dependency installs. GitHub Packages npm has a long-standing limitation
+      # where App installation tokens cannot authenticate tarball downloads from
+      # npm.pkg.github.com (only user PATs work), so installs prefer
+      # GH_PKG_TOKEN when present.
       - name: Generate GitHub App token
         id: app-token
         uses: actions/create-github-app-token@v2
@@ -77,7 +75,7 @@ jobs:
       - name: Publish
         run: bun publish --no-git-checks
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          GH_PKG_TOKEN: ${{ steps.app-token.outputs.token }}
-          NPM_CONFIG_TOKEN: ${{ steps.app-token.outputs.token }}
-          NODE_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          GH_PKG_TOKEN: ${{ github.token }}
+          NPM_CONFIG_TOKEN: ${{ github.token }}
+          NODE_AUTH_TOKEN: ${{ github.token }}
