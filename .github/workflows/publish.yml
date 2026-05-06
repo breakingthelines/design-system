@@ -4,6 +4,10 @@ on:
   push:
     tags:
       - 'v*'
+  # Allow re-publishing from main (or any ref) when a tag-triggered run failed
+  # for environmental reasons (auth, registry hiccup) and we don't want to
+  # burn a new immutable tag.
+  workflow_dispatch:
 
 jobs:
   publish:
@@ -16,10 +20,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Mint a token from the BTL Gaffer GitHub App so the workflow can read
-      # cross-repo packages (e.g. @breakingthelines/protos) during install and
-      # publish the design-system package. The default GITHUB_TOKEN's packages
-      # scope is limited to the current repo and cannot read sibling packages.
+      # Mint a token from the BTL Gaffer GitHub App. App tokens are the
+      # durable answer for the *publish* step (org-scoped packages: write).
+      # However, GitHub Packages npm has a long-standing limitation where
+      # App installation tokens cannot authenticate tarball downloads from
+      # npm.pkg.github.com (only user PATs work). The install step therefore
+      # prefers a PAT secret (GH_PKG_TOKEN) and only falls back to the App
+      # token when no PAT is configured.
       - name: Generate GitHub App token
         id: app-token
         uses: actions/create-github-app-token@v2
@@ -38,10 +45,10 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
         env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
-          GH_PKG_TOKEN: ${{ steps.app-token.outputs.token }}
-          NPM_CONFIG_TOKEN: ${{ steps.app-token.outputs.token }}
-          NODE_AUTH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GH_PKG_TOKEN || steps.app-token.outputs.token }}
+          GH_PKG_TOKEN: ${{ secrets.GH_PKG_TOKEN || steps.app-token.outputs.token }}
+          NPM_CONFIG_TOKEN: ${{ secrets.GH_PKG_TOKEN || steps.app-token.outputs.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PKG_TOKEN || steps.app-token.outputs.token }}
 
       - name: Cache Playwright browsers
         id: pw-cache
