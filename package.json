@@ -1,6 +1,6 @@
 {
   "name": "@breakingthelines/design-system",
-  "version": "0.1.200",
+  "version": "0.1.201",
   "repository": {
     "type": "git",
     "url": "https://github.com/breakingthelines/design-system.git"
@@ -43,6 +43,10 @@
       "types": "./dist/tokens/index.d.ts",
       "import": "./dist/tokens/index.js"
     },
+    "./page-composition": {
+      "types": "./dist/page-composition/index.d.ts",
+      "import": "./dist/page-composition/index.js"
+    },
     "./styles.css": "./src/styles/globals.css"
   },
   "publishConfig": {
@@ -62,6 +66,8 @@
   },
   "dependencies": {
     "@base-ui/react": "^1.0.0",
+    "@breakingthelines/protos": "0.6.0",
+    "@bufbuild/protobuf": "^2.12.0",
     "@lexical/react": "^0.43.0",
     "@lexical/selection": "^0.43.0",
     "@lexical/text": "^0.43.0",

@@ -91,6 +91,7 @@ export {
 
 // Types
 export * from './types/content';
+export * from './page-composition/index';
 
 // Utilities
 export * from './lib/format';

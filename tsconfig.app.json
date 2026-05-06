@@ -20,7 +20,6 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
@@ -34,6 +33,8 @@
       "#/components/*": ["./src/components/*"],
       "#/hooks/*": ["./src/hooks/*"],
       "#/tokens/*": ["./src/tokens/*"],
+      "#/types/*": ["./src/types/*"],
+      "@breakingthelines/protos/*": ["./node_modules/@breakingthelines/protos/*.ts"],
       "#/utils/*": ["./src/utils/*"],
       "#/styles/*": ["./src/styles/*"],
       "#.storybook/*": ["./.storybook/*"]
