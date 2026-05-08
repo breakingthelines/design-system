@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -21,6 +25,11 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_PKG_TOKEN || github.token }}
+          GH_PKG_TOKEN: ${{ secrets.GH_PKG_TOKEN || github.token }}
+          NPM_CONFIG_TOKEN: ${{ secrets.GH_PKG_TOKEN || github.token }}
+          NODE_AUTH_TOKEN: ${{ secrets.GH_PKG_TOKEN || github.token }}
 
       - name: Cache Playwright browsers
         id: pw-cache
