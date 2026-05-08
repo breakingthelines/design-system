@@ -6,7 +6,7 @@
       "name": "@breakingthelines/design-system",
       "dependencies": {
         "@base-ui/react": "^1.0.0",
-        "@breakingthelines/protos": "0.6.0",
+        "@breakingthelines/protos": "0.7.0",
         "@bufbuild/protobuf": "^2.12.0",
         "@lexical/react": "^0.43.0",
         "@lexical/selection": "^0.43.0",
@@ -126,7 +126,7 @@
 
     "@bcoe/v8-coverage": ["@bcoe/v8-coverage@1.0.2", "", {}, "sha512-6zABk/ECA/QYSCQ1NGiVwwbQerUCZ+TQbp64Q3AgmfNvurHH0j8TtXa1qbShXA6qqkpAj4V5W8pP6mLe1mcMqA=="],
 
-    "@breakingthelines/protos": ["@breakingthelines/protos@0.6.0", "https://npm.pkg.github.com/download/@breakingthelines/protos/0.6.0/28778dd6c43ac6d8bf05b0ca114103db574274db", { "peerDependencies": { "@bufbuild/protobuf": "^2.0.0", "@connectrpc/connect": "^2.0.0" } }, "sha512-lJyEJOpPn7f3mIsbmr6oNhU2Yo1BtLrlnbZeNQIk2IdAzEBDSCd7mE3yZCf+Zqt6UKiXl+QRGvMfhA5wG2SExQ=="],
+    "@breakingthelines/protos": ["@breakingthelines/protos@0.7.0", "https://npm.pkg.github.com/download/@breakingthelines/protos/0.7.0/a26c9261fe9a86d72684d48a1c10b668a0c5cca0", { "peerDependencies": { "@bufbuild/protobuf": "^2.0.0", "@connectrpc/connect": "^2.0.0" } }, "sha512-gOb1iW6yv8KuIk9wadYZWzxlC7RKGl7U0cqb4Srh2rRlPW86DW29uo6dSyhMsJFGYxr6kfy07R32CHwCl82lRA=="],
 
     "@bufbuild/protobuf": ["@bufbuild/protobuf@2.12.0", "", {}, "sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA=="],
 
