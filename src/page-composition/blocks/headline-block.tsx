@@ -28,10 +28,7 @@ export function HeadlineBlock({
   const headingId = `${blockKey(block)}-headline-heading`;
 
   return (
-    <section
-      className="mx-auto w-full max-w-[1144px] px-4 pt-10 pb-12"
-      aria-labelledby={headingId}
-    >
+    <section className="mx-auto w-full max-w-[1144px] px-4 pt-10 pb-12" aria-labelledby={headingId}>
       <header className="border-b border-white/[0.08] pb-10">
         <div className="mb-6 flex items-center gap-3">
           <span

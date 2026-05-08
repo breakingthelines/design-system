@@ -28,10 +28,7 @@ export function ContentStripBlock({
   const headingId = `${blockKey(block)}-content-strip-heading`;
 
   return (
-    <section
-      className="mx-auto max-w-[1144px] px-4 pb-10"
-      aria-labelledby={headingId}
-    >
+    <section className="mx-auto max-w-[1144px] px-4 pb-10" aria-labelledby={headingId}>
       <div className="rounded-[28px] border border-white/10 bg-white/[0.025] px-6 py-7">
         <p className="text-[11px] tracking-[0.12em] text-white/45 uppercase">Content strip</p>
         <h2

@@ -114,8 +114,7 @@ describe('createProgrammeBlockRouter', () => {
 
   it('returns null for kinds with no registered renderer', () => {
     const renderUnknownBlock = createProgrammeBlockRouter({
-      [BlockKind.LEADERBOARD]: () =>
-        React.createElement('span', { 'data-test': 'leaderboard' }),
+      [BlockKind.LEADERBOARD]: () => React.createElement('span', { 'data-test': 'leaderboard' }),
     });
 
     const unhandled = renderUnknownBlock({
@@ -163,9 +162,7 @@ describe('PageRenderer + createProgrammeBlockRouter integration with the default
     );
 
     const composition = programmeComposition(
-      UNREGISTERED_PROGRAMME_KINDS.map((kind, index) =>
-        programmeBlock(kind, (index + 1) * 10)
-      )
+      UNREGISTERED_PROGRAMME_KINDS.map((kind, index) => programmeBlock(kind, (index + 1) * 10))
     );
 
     const result = asElement(
@@ -205,9 +202,7 @@ describe('PageRenderer + createProgrammeBlockRouter integration with the default
     );
 
     const composition = programmeComposition(
-      ALL_PROGRAMME_KINDS.map((kind, index) =>
-        programmeBlock(kind, (index + 1) * 10)
-      )
+      ALL_PROGRAMME_KINDS.map((kind, index) => programmeBlock(kind, (index + 1) * 10))
     );
 
     asElement(
@@ -228,8 +223,7 @@ describe('PageRenderer + createProgrammeBlockRouter integration with the default
 
   it('falls through to null wrapped in a Fragment for unregistered kinds the router does not handle', () => {
     const routes: ProgrammeBlockRouter = {
-      [BlockKind.LEADERBOARD]: () =>
-        React.createElement('span', { 'data-test': 'leaderboard' }),
+      [BlockKind.LEADERBOARD]: () => React.createElement('span', { 'data-test': 'leaderboard' }),
     };
 
     const composition = programmeComposition([
@@ -383,18 +377,12 @@ describe('PageRenderer + createProgrammeBlockRouter integration with deliberate 
     const seenKinds = routerRenderer.mock.calls.map(
       ([input]) => (input as { block: { kind: BlockKind } }).block.kind
     );
-    expect(seenKinds).toEqual([
-      BlockKind.HEADLINE,
-      BlockKind.MATCHDAY,
-      BlockKind.LEADERBOARD,
-    ]);
+    expect(seenKinds).toEqual([BlockKind.HEADLINE, BlockKind.MATCHDAY, BlockKind.LEADERBOARD]);
   });
 
   it('routes a default-registered kind through the router when `modeRegistries` removes its default for the active mode', () => {
     const matchdayRouterRenderer = vi.fn<ProgrammeBlockRenderer>(() => null);
-    const composition = programmeComposition([
-      programmeBlock(BlockKind.MATCHDAY, 5, 'matchday'),
-    ]);
+    const composition = programmeComposition([programmeBlock(BlockKind.MATCHDAY, 5, 'matchday')]);
 
     asElement(
       PageRenderer({

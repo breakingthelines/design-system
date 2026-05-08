@@ -185,9 +185,7 @@ describe('Stricter design-system parsers vs platform/app/pagecomposition', () =>
   });
 
   it('rejects unsupported NumericProof shapes the schema does not allow', () => {
-    expect(
-      parseNumericProofConfig({ schema_version: 1, metrics: ['NOT_A_METRIC'] })
-    ).toBeNull();
+    expect(parseNumericProofConfig({ schema_version: 1, metrics: ['NOT_A_METRIC'] })).toBeNull();
     expect(parseNumericProofConfig({ schema_version: 1, metrics: [] })).toBeNull();
   });
 });

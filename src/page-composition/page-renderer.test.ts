@@ -9,11 +9,7 @@ import {
   PageSurface,
 } from '@breakingthelines/protos/btl/content/v1/page_pb';
 
-import {
-  getPageBlockRegistryForMode,
-  getVisiblePageBlocks,
-  PageRenderer,
-} from './page-renderer';
+import { getPageBlockRegistryForMode, getVisiblePageBlocks, PageRenderer } from './page-renderer';
 import type { PageBlockRendererProps } from './types';
 
 const quickBrowseRenderer = () => null;
@@ -229,7 +225,9 @@ describe('PageRenderer branches', () => {
       PageRenderer({
         composition,
         mode: PageRenderMode.PROGRAMME,
-        registry: { [BlockKind.HEADLINE]: baseRenderer as React.ComponentType<PageBlockRendererProps> },
+        registry: {
+          [BlockKind.HEADLINE]: baseRenderer as React.ComponentType<PageBlockRendererProps>,
+        },
         modeRegistries: {
           [PageRenderMode.PROGRAMME]: {
             [BlockKind.HEADLINE]: programmeOverride as React.ComponentType<PageBlockRendererProps>,

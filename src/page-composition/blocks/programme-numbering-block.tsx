@@ -28,10 +28,7 @@ export function ProgrammeNumberingBlock({
   const headingId = `${blockKey(block)}-programme-numbering-heading`;
 
   return (
-    <section
-      className="mx-auto w-full max-w-[1144px] px-4 pb-6"
-      aria-labelledby={headingId}
-    >
+    <section className="mx-auto w-full max-w-[1144px] px-4 pb-6" aria-labelledby={headingId}>
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.06] pb-3">
         <h2
           id={headingId}

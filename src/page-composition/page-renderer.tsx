@@ -89,14 +89,24 @@ export function PageRenderer({
   errorState,
 }: PageRendererProps) {
   if (loadError) {
-    return errorState ?? <PageRendererNotice tone="error">We couldn't load this page right now.</PageRendererNotice>;
+    return (
+      errorState ?? (
+        <PageRendererNotice tone="error">We couldn't load this page right now.</PageRendererNotice>
+      )
+    );
   }
 
   const visibleBlocks = getVisiblePageBlocks(composition);
   const activeRegistry = getPageBlockRegistryForMode(registry, modeRegistries, mode);
 
   if (visibleBlocks.length === 0) {
-    return emptyState ?? <PageRendererNotice>This page does not have a published composition yet.</PageRendererNotice>;
+    return (
+      emptyState ?? (
+        <PageRendererNotice>
+          This page does not have a published composition yet.
+        </PageRendererNotice>
+      )
+    );
   }
 
   return (
@@ -170,10 +180,7 @@ function PageRendererNotice({
   // (polite announcement) for the no-published-composition path. Both roles
   // imply the matching aria-live behaviour, so no explicit aria-live is set.
   return (
-    <div
-      role={tone === 'error' ? 'alert' : 'status'}
-      className="mx-auto max-w-[1144px] px-4 py-20"
-    >
+    <div role={tone === 'error' ? 'alert' : 'status'} className="mx-auto max-w-[1144px] px-4 py-20">
       <div
         className={cn(
           'rounded-[28px] border px-6 py-8 text-sm leading-7',

@@ -28,10 +28,7 @@ export function ProgrammeBackCoverBlock({
   const headingId = `${blockKey(block)}-programme-back-cover-heading`;
 
   return (
-    <section
-      className="mx-auto w-full max-w-[1144px] px-4 pb-12"
-      aria-labelledby={headingId}
-    >
+    <section className="mx-auto w-full max-w-[1144px] px-4 pb-12" aria-labelledby={headingId}>
       <div className="rounded-[28px] border border-white/10 bg-white/[0.025] px-6 py-8">
         <h2
           id={headingId}

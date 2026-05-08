@@ -28,10 +28,7 @@ export function ProgrammeCoverBlock({
   const headingId = `${blockKey(block)}-programme-cover-heading`;
 
   return (
-    <section
-      className="mx-auto w-full max-w-[1144px] px-4 pt-12 pb-10"
-      aria-labelledby={headingId}
-    >
+    <section className="mx-auto w-full max-w-[1144px] px-4 pt-12 pb-10" aria-labelledby={headingId}>
       <header className="border-b border-white/[0.08] pb-12">
         <div className="mb-6 flex items-center gap-3">
           <span aria-hidden="true" className="h-[2px] w-10 shrink-0 bg-red-100" />

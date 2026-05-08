@@ -28,10 +28,7 @@ export function TierListBlock({
   const headingId = `${blockKey(block)}-tier-list-heading`;
 
   return (
-    <section
-      className="mx-auto w-full max-w-[1144px] px-4 pb-12"
-      aria-labelledby={headingId}
-    >
+    <section className="mx-auto w-full max-w-[1144px] px-4 pb-12" aria-labelledby={headingId}>
       <div className="flex flex-col gap-6 rounded-[28px] border border-white/10 bg-white/[0.025] px-6 py-7">
         <div className="flex items-center gap-3">
           <span aria-hidden="true" className="h-[2px] w-8 shrink-0 bg-red-100" />

@@ -1,5 +1,10 @@
 import type * as React from 'react';
-import type { BlockKind, PageBlock, PageComposition, PageRenderMode } from '@breakingthelines/protos/btl/content/v1/page_pb';
+import type {
+  BlockKind,
+  PageBlock,
+  PageComposition,
+  PageRenderMode,
+} from '@breakingthelines/protos/btl/content/v1/page_pb';
 
 import type {
   ContentStripBlockConfig,

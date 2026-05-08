@@ -402,18 +402,9 @@ export interface InboxBlockConfig {
   voiceFramedOnly: boolean;
 }
 
-const MATCHDAY_WINDOWS = new Set<MatchdayWindow>([
-  'LAST_BIG_MATCH',
-  'THIS_WEEKEND',
-  'GAMEWEEK',
-]);
+const MATCHDAY_WINDOWS = new Set<MatchdayWindow>(['LAST_BIG_MATCH', 'THIS_WEEKEND', 'GAMEWEEK']);
 
-const INBOX_PRIORITIES = new Set<InboxPriorityMin>([
-  'LOW',
-  'MEDIUM',
-  'HIGH',
-  'CRITICAL',
-]);
+const INBOX_PRIORITIES = new Set<InboxPriorityMin>(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']);
 
 function booleanWithDefault(value: unknown, fallback: boolean): boolean {
   return typeof value === 'boolean' ? value : fallback;

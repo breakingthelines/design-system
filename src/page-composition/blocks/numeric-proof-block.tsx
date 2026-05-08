@@ -59,10 +59,7 @@ export function NumericProofBlock({
     <section className="mx-auto max-w-[1144px] px-4 pb-8" {...sectionLabelProps}>
       <div className="rounded-[28px] border border-white/10 bg-white/[0.025] px-6 py-5 sm:px-7">
         {config.label ? (
-          <h2
-            id={headingId}
-            className="mb-5 text-[11px] tracking-[0.12em] text-white/45 uppercase"
-          >
+          <h2 id={headingId} className="mb-5 text-[11px] tracking-[0.12em] text-white/45 uppercase">
             {config.label}
           </h2>
         ) : null}
@@ -84,7 +81,11 @@ function MetricCell({
   isDivided: boolean;
 }): React.ReactElement {
   return (
-    <div className={isDivided ? 'border-t border-white/8 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5' : ''}>
+    <div
+      className={
+        isDivided ? 'border-t border-white/8 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-5' : ''
+      }
+    >
       <dt className="text-[11px] tracking-[0.12em] text-white/42 uppercase">{metric.label}</dt>
       <dd className="mt-3 text-2xl leading-none font-semibold tracking-[-0.04em] text-white sm:text-[2rem]">
         {metric.value}

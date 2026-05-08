@@ -132,7 +132,10 @@ const adapters: PageRendererAdapters = {
         </h2>
         <div className="mt-6 grid gap-4 md:grid-cols-3">
           {['The pressing trap', 'The midfield duel', 'Why the left flank matters'].map((title) => (
-            <article key={title} className="rounded-[20px] border border-white/10 bg-white/[0.03] p-5">
+            <article
+              key={title}
+              className="rounded-[20px] border border-white/10 bg-white/[0.03] p-5"
+            >
               <p className="font-display text-lg leading-tight font-semibold text-white">{title}</p>
               <p className="mt-3 text-sm leading-6 text-white/55">
                 Host apps supply fetched content while the design system owns PageBlock layout.
@@ -165,7 +168,7 @@ const meta = preview.meta({
     docs: {
       description: {
         component:
-          "Headless PageRenderer for content-service Page Composition. The `mode` prop and the `modeRegistries` plumbing are wired so host apps can override renderers per `PageRenderMode`, but no block currently renders differently between Programme and Quick Browse modes — the design-system ships a single default renderer per registered BlockKind. The default registry covers 9 BlockKinds (HEADLINE, NUMERIC_PROOF, TIER_LIST, CONTENT_STRIP plus the 5 Programme blocks: PROGRAMME_COVER, PROGRAMME_BACK_COVER, PROGRAMME_NUMBERING, MATCHDAY, INBOX); 6 Squad-capability BlockKinds (YOUR_AUDIENCE, AUDIENCE_OVERLAP, DRAFTS_DASH, RISING_CREATORS, LEADERBOARD, RATINGS_GRID) flow through `adapters.renderUnknownBlock` by default. The stories below illustrate adapter-driven rendering, fallback notices, registry override, and per-kind routing for unregistered BlockKinds.",
+          'Headless PageRenderer for content-service Page Composition. The `mode` prop and the `modeRegistries` plumbing are wired so host apps can override renderers per `PageRenderMode`, but no block currently renders differently between Programme and Quick Browse modes — the design-system ships a single default renderer per registered BlockKind. The default registry covers 9 BlockKinds (HEADLINE, NUMERIC_PROOF, TIER_LIST, CONTENT_STRIP plus the 5 Programme blocks: PROGRAMME_COVER, PROGRAMME_BACK_COVER, PROGRAMME_NUMBERING, MATCHDAY, INBOX); 6 Squad-capability BlockKinds (YOUR_AUDIENCE, AUDIENCE_OVERLAP, DRAFTS_DASH, RISING_CREATORS, LEADERBOARD, RATINGS_GRID) flow through `adapters.renderUnknownBlock` by default. The stories below illustrate adapter-driven rendering, fallback notices, registry override, and per-kind routing for unregistered BlockKinds.',
       },
     },
   },
@@ -188,11 +191,7 @@ export const WithHostAdapters = meta.story({
     },
   },
   render: () => (
-    <PageRenderer
-      composition={composition}
-      mode={PageRenderMode.PROGRAMME}
-      adapters={adapters}
-    />
+    <PageRenderer composition={composition} mode={PageRenderMode.PROGRAMME} adapters={adapters} />
   ),
 });
 
@@ -437,7 +436,7 @@ export const ProgrammeBlockRouting = meta.story({
     docs: {
       description: {
         story:
-          "Demonstrates the host-side per-kind dispatch pattern for the 6 Programme/Squad-capability BlockKinds the design-system does NOT register a default renderer for: YOUR_AUDIENCE, AUDIENCE_OVERLAP, DRAFTS_DASH, RISING_CREATORS, LEADERBOARD, and RATINGS_GRID. The other 5 Programme BlockKinds the `content-service` emits today (PROGRAMME_COVER, PROGRAMME_BACK_COVER, PROGRAMME_NUMBERING, MATCHDAY, INBOX) live in `defaultPageBlockRegistry` and are rendered by their dedicated design-system block components — the router never sees them while the host uses the default registry. See `ProgrammeBlockRoutingWithRegistryOverride` for the deliberate-override pattern hosts use to push registry-default kinds through the router.",
+          'Demonstrates the host-side per-kind dispatch pattern for the 6 Programme/Squad-capability BlockKinds the design-system does NOT register a default renderer for: YOUR_AUDIENCE, AUDIENCE_OVERLAP, DRAFTS_DASH, RISING_CREATORS, LEADERBOARD, and RATINGS_GRID. The other 5 Programme BlockKinds the `content-service` emits today (PROGRAMME_COVER, PROGRAMME_BACK_COVER, PROGRAMME_NUMBERING, MATCHDAY, INBOX) live in `defaultPageBlockRegistry` and are rendered by their dedicated design-system block components — the router never sees them while the host uses the default registry. See `ProgrammeBlockRoutingWithRegistryOverride` for the deliberate-override pattern hosts use to push registry-default kinds through the router.',
       },
     },
   },
@@ -455,7 +454,7 @@ export const ProgrammeBlockRoutingWithRegistryOverride = meta.story({
     docs: {
       description: {
         story:
-          "Demonstrates the deliberate-override pattern: passing `registry={{}}` clears the default block-kind → renderer map, so every visible block — including the 5 default-registered Programme kinds (PROGRAMME_COVER, PROGRAMME_BACK_COVER, PROGRAMME_NUMBERING, MATCHDAY, INBOX) — flows through `renderUnknownBlock`. Hosts that want to own the full Programme rendering surface (rather than mix design-system fallbacks with custom renderers) use this pattern. The placeholder banners below stand in for the real per-kind Programme renderers a host would ship.",
+          'Demonstrates the deliberate-override pattern: passing `registry={{}}` clears the default block-kind → renderer map, so every visible block — including the 5 default-registered Programme kinds (PROGRAMME_COVER, PROGRAMME_BACK_COVER, PROGRAMME_NUMBERING, MATCHDAY, INBOX) — flows through `renderUnknownBlock`. Hosts that want to own the full Programme rendering surface (rather than mix design-system fallbacks with custom renderers) use this pattern. The placeholder banners below stand in for the real per-kind Programme renderers a host would ship.',
       },
     },
   },

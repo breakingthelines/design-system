@@ -96,12 +96,8 @@ describe('PageBlock config parsers', () => {
     expect(parseContentStripConfig({ ...base, source: { kind: 'BY_TAG', tags: [] } })).toBeNull();
     expect(parseContentStripConfig({ ...base, source: { kind: 'BY_FILTER' } })).toBeNull();
     expect(parseContentStripConfig({ ...base, source: { kind: 'FEATURED_MANUAL' } })).toBeNull();
-    expect(
-      parseContentStripConfig({ ...base, count: 0, source: { kind: 'LATEST' } })
-    ).toBeNull();
-    expect(
-      parseContentStripConfig({ ...base, count: 49, source: { kind: 'LATEST' } })
-    ).toBeNull();
+    expect(parseContentStripConfig({ ...base, count: 0, source: { kind: 'LATEST' } })).toBeNull();
+    expect(parseContentStripConfig({ ...base, count: 49, source: { kind: 'LATEST' } })).toBeNull();
 
     expect(
       parseContentStripConfig({
@@ -187,12 +183,8 @@ describe('Programme block parsers', () => {
       })
     ).toMatchObject({ historyLimit: 6 });
 
-    expect(
-      parseProgrammeNumberingConfig({ schema_version: 1, history_limit: 0 })
-    ).toBeNull();
-    expect(
-      parseProgrammeNumberingConfig({ schema_version: 1, history_limit: 13 })
-    ).toBeNull();
+    expect(parseProgrammeNumberingConfig({ schema_version: 1, history_limit: 0 })).toBeNull();
+    expect(parseProgrammeNumberingConfig({ schema_version: 1, history_limit: 13 })).toBeNull();
   });
 
   it('clamps Matchday id arrays to 12 and falls back to THIS_WEEKEND for unknown windows', () => {
@@ -246,9 +238,9 @@ describe('Programme block parsers', () => {
       voiceFramedOnly: false,
     });
 
-    expect(
-      parseInboxConfig({ schema_version: 1, priority_min: 'NOT_A_PRIORITY' })
-    ).toMatchObject({ priorityMin: 'LOW' });
+    expect(parseInboxConfig({ schema_version: 1, priority_min: 'NOT_A_PRIORITY' })).toMatchObject({
+      priorityMin: 'LOW',
+    });
   });
 });
 
@@ -339,9 +331,9 @@ describe('Creator analytics + recommendation block parsers', () => {
 
     expect(parseRisingCreatorsConfig({ schema_version: 1, count: 0 })).toBeNull();
     expect(parseRisingCreatorsConfig({ schema_version: 1, count: 13 })).toBeNull();
-    expect(
-      parseRisingCreatorsConfig({ schema_version: 1, time_window: '90d' })
-    ).toMatchObject({ timeWindow: '30d' });
+    expect(parseRisingCreatorsConfig({ schema_version: 1, time_window: '90d' })).toMatchObject({
+      timeWindow: '30d',
+    });
   });
 
   it('requires Leaderboard capability_instance_id and bounds count to 1-100', () => {
@@ -361,9 +353,7 @@ describe('Creator analytics + recommendation block parsers', () => {
     });
 
     expect(parseLeaderboardConfig({ schema_version: 1 })).toBeNull();
-    expect(
-      parseLeaderboardConfig({ schema_version: 1, capability_instance_id: '' })
-    ).toBeNull();
+    expect(parseLeaderboardConfig({ schema_version: 1, capability_instance_id: '' })).toBeNull();
     expect(
       parseLeaderboardConfig({
         schema_version: 1,

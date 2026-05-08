@@ -31,7 +31,8 @@ const audioPlayerVariants = cva(
 type AudioStatus = 'hidden' | 'generating' | 'ready' | 'regenerating' | 'failed';
 
 export interface AudioPlayerProps
-  extends Omit<React.ComponentProps<'div'>, 'children' | 'onTimeUpdate'>,
+  extends
+    Omit<React.ComponentProps<'div'>, 'children' | 'onTimeUpdate'>,
     VariantProps<typeof audioPlayerVariants> {
   audioUrl?: string;
   status: AudioStatus;

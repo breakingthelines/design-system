@@ -19,11 +19,7 @@ import { ProgrammeNumberingBlock } from './blocks/programme-numbering-block';
 import { TierListBlock } from './blocks/tier-list-block';
 import type { PageBlock } from '@breakingthelines/protos/btl/content/v1/page_pb';
 import type { JsonObject } from '@bufbuild/protobuf';
-import type {
-  NumericMetricDisplay,
-  PageBlockRendererProps,
-  PageRendererAdapters,
-} from './types';
+import type { NumericMetricDisplay, PageBlockRendererProps, PageRendererAdapters } from './types';
 
 // Block renderers are stateless function components. Calling them directly
 // avoids spinning up a DOM environment for the unit project and lets the
@@ -106,7 +102,9 @@ describe('NumericProofBlock', () => {
 
   it('returns null when the metrics list is empty or unrecognised', () => {
     expect(
-      NumericProofBlock(rendererProps(block(BlockKind.NUMERIC_PROOF, { schema_version: 1, metrics: [] })))
+      NumericProofBlock(
+        rendererProps(block(BlockKind.NUMERIC_PROOF, { schema_version: 1, metrics: [] }))
+      )
     ).toBeNull();
   });
 
@@ -116,14 +114,19 @@ describe('NumericProofBlock', () => {
   });
 
   it('invokes resolveNumericMetric for every parsed metric in declared order', () => {
-    const resolveNumericMetric = vi.fn(({ metric }: { metric: string }) => ({
-      label: metric,
-      value: `${metric}-value`,
-    } satisfies NumericMetricDisplay));
+    const resolveNumericMetric = vi.fn(
+      ({ metric }: { metric: string }) =>
+        ({
+          label: metric,
+          value: `${metric}-value`,
+        }) satisfies NumericMetricDisplay
+    );
     NumericProofBlock(rendererProps(validBlock, { resolveNumericMetric }));
     expect(resolveNumericMetric).toHaveBeenCalledTimes(2);
     expect(resolveNumericMetric.mock.calls[0]?.[0]).toMatchObject({ metric: 'PIECES_TOTAL' });
-    expect(resolveNumericMetric.mock.calls[1]?.[0]).toMatchObject({ metric: 'PUBLISHED_LAST_30_DAYS' });
+    expect(resolveNumericMetric.mock.calls[1]?.[0]).toMatchObject({
+      metric: 'PUBLISHED_LAST_30_DAYS',
+    });
   });
 
   it('delegates to renderNumericProof when supplied, bypassing the metric resolver', () => {
@@ -323,9 +326,9 @@ describe('NumericProofBlock fallback a11y', () => {
     const dl = findElement(result, (el) => el.type === 'dl');
     expect(dl).not.toBeNull();
 
-    const cells = React.Children.toArray((dl!.props as { children: React.ReactNode }).children).filter(
-      React.isValidElement
-    );
+    const cells = React.Children.toArray(
+      (dl!.props as { children: React.ReactNode }).children
+    ).filter(React.isValidElement);
     expect(cells).toHaveLength(2);
 
     // Each cell is a MetricCell function-component element. Render it once
@@ -447,9 +450,7 @@ describe('ProgrammeBackCoverBlock', () => {
   it('delegates to renderProgrammeBackCover with the parsed config when supplied', () => {
     const hostNode = React.createElement('div', { 'data-test': 'host-back-cover' });
     const renderProgrammeBackCover = vi.fn(() => hostNode);
-    const result = ProgrammeBackCoverBlock(
-      rendererProps(validBlock, { renderProgrammeBackCover })
-    );
+    const result = ProgrammeBackCoverBlock(rendererProps(validBlock, { renderProgrammeBackCover }));
     expect(renderProgrammeBackCover).toHaveBeenCalledTimes(1);
     expect(renderProgrammeBackCover).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -500,9 +501,7 @@ describe('ProgrammeNumberingBlock', () => {
   it('delegates to renderProgrammeNumbering with the parsed config when supplied', () => {
     const hostNode = React.createElement('div', { 'data-test': 'host-numbering' });
     const renderProgrammeNumbering = vi.fn(() => hostNode);
-    const result = ProgrammeNumberingBlock(
-      rendererProps(validBlock, { renderProgrammeNumbering })
-    );
+    const result = ProgrammeNumberingBlock(rendererProps(validBlock, { renderProgrammeNumbering }));
     expect(renderProgrammeNumbering).toHaveBeenCalledTimes(1);
     expect(renderProgrammeNumbering).toHaveBeenCalledWith(
       expect.objectContaining({
