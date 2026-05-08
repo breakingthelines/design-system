@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { X, Gif, SoccerBall, Image as ImageIcon, SpinnerGap } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
@@ -90,15 +90,15 @@ const backdropVariants = {
   visible: { opacity: 1 },
 };
 
-const panelVariants = {
+const panelVariants: Variants = {
   hidden: { x: '100%' },
   visible: {
     x: 0,
-    transition: { type: 'spring', damping: 30, stiffness: 300 },
+    transition: { type: 'spring' as const, damping: 30, stiffness: 300 },
   },
   exit: {
     x: '100%',
-    transition: { type: 'spring', damping: 30, stiffness: 300 },
+    transition: { type: 'spring' as const, damping: 30, stiffness: 300 },
   },
 };
 
@@ -132,7 +132,7 @@ function ThoughtsPanel({
   onMentionSearch,
   onImageUpload,
   emojiEnabled = false,
-  userId,
+  userId: _userId,
   isLoading = false,
   scrollToThoughtId,
   onAnchorClick,

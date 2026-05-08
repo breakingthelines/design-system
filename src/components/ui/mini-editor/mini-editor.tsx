@@ -4,6 +4,7 @@ import * as React from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { PlainTextPlugin } from '@lexical/react/LexicalPlainTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
+import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { OnChangePlugin } from '@lexical/react/LexicalOnChangePlugin';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
@@ -11,6 +12,7 @@ import {
   $getSelection,
   $createParagraphNode,
   $createTextNode,
+  $isElementNode,
   type EditorState,
 } from 'lexical';
 
@@ -107,7 +109,7 @@ const EditorRefPlugin = React.forwardRef<MiniEditorHandle>(function EditorRefPlu
         } else {
           const root = $getRoot();
           const lastChild = root.getLastChild();
-          if (lastChild) {
+          if (lastChild && $isElementNode(lastChild)) {
             lastChild.append($createTextNode(text));
           } else {
             const p = $createParagraphNode();
@@ -202,6 +204,7 @@ function MiniEditor({
               {placeholder}
             </div>
           }
+          ErrorBoundary={LexicalErrorBoundary}
         />
 
         {/* Change tracking */}

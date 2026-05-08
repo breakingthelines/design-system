@@ -31,7 +31,7 @@ const meta = preview.meta({
 
 export const Default = meta.story({
   render: () => (
-    <ToggleGroup type="single" defaultValue="center">
+    <ToggleGroup defaultValue={['center']}>
       <ToggleGroupItem value="left">
         <TextAlignLeft />
       </ToggleGroupItem>
@@ -47,7 +47,7 @@ export const Default = meta.story({
 
 export const Multiple = meta.story({
   render: () => (
-    <ToggleGroup type="multiple" defaultValue={['bold']}>
+    <ToggleGroup multiple defaultValue={['bold']}>
       <ToggleGroupItem value="bold">
         <TextB />
       </ToggleGroupItem>
@@ -66,7 +66,7 @@ export const AllVariants = meta.story({
     <div className="flex flex-col gap-4">
       <div className="space-y-2">
         <p className="text-sm font-medium">Default</p>
-        <ToggleGroup type="single" variant="default" defaultValue="center">
+        <ToggleGroup variant="default" defaultValue={['center']}>
           <ToggleGroupItem value="left">
             <TextAlignLeft />
           </ToggleGroupItem>
@@ -80,7 +80,7 @@ export const AllVariants = meta.story({
       </div>
       <div className="space-y-2">
         <p className="text-sm font-medium">Outline</p>
-        <ToggleGroup type="single" variant="outline" defaultValue="center">
+        <ToggleGroup variant="outline" defaultValue={['center']}>
           <ToggleGroupItem value="left">
             <TextAlignLeft />
           </ToggleGroupItem>
@@ -101,7 +101,7 @@ export const AllSizes = meta.story({
     <div className="flex flex-col gap-4">
       <div className="space-y-2">
         <p className="text-sm font-medium">Small</p>
-        <ToggleGroup type="single" size="sm" defaultValue="center">
+        <ToggleGroup size="sm" defaultValue={['center']}>
           <ToggleGroupItem value="left">
             <TextAlignLeft />
           </ToggleGroupItem>
@@ -115,7 +115,7 @@ export const AllSizes = meta.story({
       </div>
       <div className="space-y-2">
         <p className="text-sm font-medium">Default</p>
-        <ToggleGroup type="single" size="default" defaultValue="center">
+        <ToggleGroup size="default" defaultValue={['center']}>
           <ToggleGroupItem value="left">
             <TextAlignLeft />
           </ToggleGroupItem>
@@ -129,7 +129,7 @@ export const AllSizes = meta.story({
       </div>
       <div className="space-y-2">
         <p className="text-sm font-medium">Large</p>
-        <ToggleGroup type="single" size="lg" defaultValue="center">
+        <ToggleGroup size="lg" defaultValue={['center']}>
           <ToggleGroupItem value="left">
             <TextAlignLeft />
           </ToggleGroupItem>
@@ -147,7 +147,7 @@ export const AllSizes = meta.story({
 
 export const Vertical = meta.story({
   render: () => (
-    <ToggleGroup type="single" orientation="vertical" defaultValue="center">
+    <ToggleGroup orientation="vertical" defaultValue={['center']}>
       <ToggleGroupItem value="left">
         <TextAlignLeft />
       </ToggleGroupItem>
@@ -166,7 +166,7 @@ export const WithSpacing = meta.story({
     <div className="flex flex-col gap-4">
       <div className="space-y-2">
         <p className="text-sm font-medium">No spacing (connected)</p>
-        <ToggleGroup type="single" variant="outline" spacing={0} defaultValue="center">
+        <ToggleGroup variant="outline" spacing={0} defaultValue={['center']}>
           <ToggleGroupItem value="left">
             <TextAlignLeft />
           </ToggleGroupItem>
@@ -180,7 +180,7 @@ export const WithSpacing = meta.story({
       </div>
       <div className="space-y-2">
         <p className="text-sm font-medium">With spacing</p>
-        <ToggleGroup type="single" variant="outline" spacing={1} defaultValue="center">
+        <ToggleGroup variant="outline" spacing={1} defaultValue={['center']}>
           <ToggleGroupItem value="left">
             <TextAlignLeft />
           </ToggleGroupItem>
@@ -198,7 +198,7 @@ export const WithSpacing = meta.story({
 
 export const WithText = meta.story({
   render: () => (
-    <ToggleGroup type="single" defaultValue="day">
+    <ToggleGroup defaultValue={['day']}>
       <ToggleGroupItem value="day">Day</ToggleGroupItem>
       <ToggleGroupItem value="week">Week</ToggleGroupItem>
       <ToggleGroupItem value="month">Month</ToggleGroupItem>

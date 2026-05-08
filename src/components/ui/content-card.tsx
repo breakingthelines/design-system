@@ -31,8 +31,12 @@ const contentCardVariants = cva('group/content-card overflow-hidden text-white t
 });
 
 type ContentCardVariant = 'grid' | 'list' | 'portrait';
+type MotionSafeArticleProps = Omit<
+  React.ComponentProps<'article'>,
+  'children' | 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart'
+>;
 
-interface ContentCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
+interface ContentCardProps extends MotionSafeArticleProps {
   /** Card layout variant */
   variant?: ContentCardVariant;
   item: ContentItem;

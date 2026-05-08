@@ -27,8 +27,12 @@ const collectionCardVariants = cva(
 );
 
 type CollectionCardVariant = 'grid' | 'list';
+type MotionSafeArticleProps = Omit<
+  React.ComponentProps<'article'>,
+  'children' | 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart'
+>;
 
-interface CollectionCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
+interface CollectionCardProps extends MotionSafeArticleProps {
   variant?: CollectionCardVariant;
   item: CollectionItem;
   onClick?: () => void;

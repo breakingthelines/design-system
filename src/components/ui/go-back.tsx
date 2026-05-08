@@ -1,6 +1,5 @@
 'use client';
 
-import * as React from 'react';
 import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { CaretLeft } from '@phosphor-icons/react';
 import { cva, type VariantProps } from 'class-variance-authority';

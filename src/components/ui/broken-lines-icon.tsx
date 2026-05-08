@@ -52,18 +52,24 @@ function BrokenLinesIcon({ open = false, size = 20, className }: BrokenLinesIcon
         stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
+        x1={3}
+        x2={13}
+        y1={12}
+        y2={12}
         initial={false}
         animate={open ? { opacity: 0 } : { x1: 3, x2: 13, y1: 12, y2: 12, opacity: 1 }}
-        style={{ x1: 3, x2: 13, y1: 12, y2: 12 }}
         transition={lineTransition}
       />
       <motion.line
         stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
+        x1={18}
+        x2={21}
+        y1={12}
+        y2={12}
         initial={false}
         animate={open ? { opacity: 0 } : { x1: 18, x2: 21, y1: 12, y2: 12, opacity: 1 }}
-        style={{ x1: 18, x2: 21, y1: 12, y2: 12 }}
         transition={lineTransition}
       />
       {/* Bottom bar — break mid-left */}

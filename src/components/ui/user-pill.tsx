@@ -20,7 +20,12 @@ export interface UserPillUser {
   role?: string;
 }
 
-export interface UserPillProps extends React.HTMLAttributes<HTMLDivElement> {
+type MotionSafeDivProps = Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart'
+>;
+
+export interface UserPillProps extends MotionSafeDivProps {
   user: UserPillUser;
   cursorColor: string;
   status?: UserPillStatus;

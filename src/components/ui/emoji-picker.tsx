@@ -1,6 +1,5 @@
 'use client';
 
-import * as React from 'react';
 import { EmojiPicker as Frimousse } from 'frimousse';
 
 import { cn } from '#/lib/utils';

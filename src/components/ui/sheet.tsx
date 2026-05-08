@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { X } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
@@ -15,16 +15,16 @@ const backdropVariants = {
   visible: { opacity: 1 },
 };
 
-const slideVariants = {
+const slideVariants: Record<'left' | 'right', Variants> = {
   right: {
     hidden: { x: '100%' },
-    visible: { x: 0, transition: { type: 'spring', damping: 30, stiffness: 300 } },
-    exit: { x: '100%', transition: { type: 'spring', damping: 30, stiffness: 300 } },
+    visible: { x: 0, transition: { type: 'spring' as const, damping: 30, stiffness: 300 } },
+    exit: { x: '100%', transition: { type: 'spring' as const, damping: 30, stiffness: 300 } },
   },
   left: {
     hidden: { x: '-100%' },
-    visible: { x: 0, transition: { type: 'spring', damping: 30, stiffness: 300 } },
-    exit: { x: '-100%', transition: { type: 'spring', damping: 30, stiffness: 300 } },
+    visible: { x: 0, transition: { type: 'spring' as const, damping: 30, stiffness: 300 } },
+    exit: { x: '-100%', transition: { type: 'spring' as const, damping: 30, stiffness: 300 } },
   },
 };
 

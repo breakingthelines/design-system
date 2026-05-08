@@ -28,7 +28,12 @@ import type { ContentItem } from '#/types/content';
  *  - Mouse-tracking 3D tilt on hover
  * ───────────────────────────────────────────────── */
 
-interface HeroCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
+type MotionSafeArticleProps = Omit<
+  React.ComponentProps<'article'>,
+  'children' | 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart'
+>;
+
+interface HeroCardProps extends MotionSafeArticleProps {
   item: ContentItem;
   /** Total slides for progress indicator */
   totalSlides?: number;

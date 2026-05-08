@@ -54,7 +54,7 @@ export function Toast({
   action,
   onDismiss,
 }: ToastProps) {
-  const timerRef = React.useRef<NodeJS.Timeout>();
+  const timerRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
   const [isPaused, setIsPaused] = React.useState(false);
 
   // Auto-dismiss timer

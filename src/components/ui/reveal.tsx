@@ -1,9 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence, type Variants } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
-import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -47,11 +46,6 @@ interface RevealGroupProps {
   stagger?: number;
   delay?: number;
 }
-
-const groupVariants: Variants = {
-  hidden: {},
-  visible: {},
-};
 
 function RevealGroup({ children, className, stagger = 0.05, delay = 0.1 }: RevealGroupProps) {
   return (
