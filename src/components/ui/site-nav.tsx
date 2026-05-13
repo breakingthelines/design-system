@@ -117,12 +117,17 @@ function SearchIcon({ className }: { className?: string }) {
   );
 }
 
-/** Notification bell icon matching Figma spec — Material-style bell */
+/**
+ * Notification slot icon — Material-style inbox glyph. The slot still
+ * routes to the notification dropdown / Inbox surface; the bell glyph
+ * read as "alerts" but BTL's notification surface IS the Inbox, so the
+ * tray better matches the destination.
+ */
 function NotificationIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
       <path
-        d="M4 19V17H6V10C6 8.617 6.417 7.388 7.25 6.313C8.083 5.238 9.167 4.533 10.5 4.2V3.5C10.5 3.083 10.646 2.729 10.938 2.438C11.229 2.146 11.583 2 12 2C12.417 2 12.771 2.146 13.063 2.438C13.354 2.729 13.5 3.083 13.5 3.5V4.2C14.833 4.533 15.917 5.238 16.75 6.313C17.583 7.388 18 8.617 18 10V17H20V19H4ZM12 22C11.45 22 10.979 21.804 10.588 21.413C10.196 21.021 10 20.55 10 20H14C14 20.55 13.804 21.021 13.413 21.413C13.021 21.804 12.55 22 12 22Z"
+        d="M19 3H5c-1.11 0-2 .89-2 2v14c0 1.11.89 2 2 2h14c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 12h-4c0 1.66-1.35 3-3 3s-3-1.34-3-3H5V5h14v10z"
         fill="currentColor"
       />
     </svg>
