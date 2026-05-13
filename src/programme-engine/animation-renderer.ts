@@ -24,7 +24,7 @@ export interface ProgrammeAnimationRecorder {
 
 export async function renderAnimatedProgrammeAsset(
   input: ProgrammeEngineInput,
-  options: AnimatedProgrammeAssetOptions = {},
+  options: AnimatedProgrammeAssetOptions = {}
 ): Promise<AnimatedProgrammeExportResult & { blob?: Blob }> {
   const width = options.width ?? 1080;
   const height = options.height ?? 1080;
@@ -55,7 +55,7 @@ export async function renderAnimatedProgrammeAsset(
 export function programmeAnimationFrames(
   scene: ProgrammeSceneBuildResult,
   durationMs: number,
-  fps: number,
+  fps: number
 ): AnimatedProgrammeExportFrame[] {
   const frameCount = Math.max(1, Math.round((durationMs / 1000) * fps));
   return Array.from({ length: frameCount }, (_, index) => {

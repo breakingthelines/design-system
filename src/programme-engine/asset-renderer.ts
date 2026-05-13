@@ -22,15 +22,17 @@ export interface ProgrammeStaticExportRenderer {
   render(scene: ProgrammeSceneBuildResult): Promise<Blob>;
 }
 
-const STATIC_DIMENSIONS: Record<StaticProgrammeAssetOptions['kind'], { width: number; height: number }> =
-  {
-    'og-cover': { width: 1200, height: 630 },
-    'spread-card': { width: 1080, height: 1080 },
-  };
+const STATIC_DIMENSIONS: Record<
+  StaticProgrammeAssetOptions['kind'],
+  { width: number; height: number }
+> = {
+  'og-cover': { width: 1200, height: 630 },
+  'spread-card': { width: 1080, height: 1080 },
+};
 
 export async function renderStaticProgrammeAsset(
   input: ProgrammeEngineInput,
-  options: StaticProgrammeAssetOptions,
+  options: StaticProgrammeAssetOptions
 ): Promise<StaticProgrammeExportResult> {
   const defaults = STATIC_DIMENSIONS[options.kind];
   const width = options.width ?? defaults.width;
@@ -56,7 +58,7 @@ export function programmeExportManifest(
   width: number,
   height: number,
   scene: ProgrammeSceneBuildResult,
-  warnings: string[] = [],
+  warnings: string[] = []
 ): ProgrammeExportManifest {
   return {
     assetKind,

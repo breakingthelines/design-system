@@ -23,7 +23,7 @@ describe('Three.js Programme engine', () => {
     expect(scene.description.engineVersion).toBe(THREE_PROGRAMME_ENGINE_VERSION);
     expect(scene.description.programmeId).toBe('programme-fixture-1');
     expect(scene.description.nodes.map((node) => node.id)).toEqual(
-      expect.arrayContaining(['background', 'main-panel', 'accent-spine', 'title', 'issue']),
+      expect.arrayContaining(['background', 'main-panel', 'accent-spine', 'title', 'issue'])
     );
     expect(scene.root.children.length).toBe(scene.description.nodes.length);
   });

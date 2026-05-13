@@ -18,7 +18,7 @@ export interface MountedProgrammeView {
 
 export function mountProgrammeView(
   input: ProgrammeEngineInput,
-  options: ProgrammeViewMountOptions,
+  options: ProgrammeViewMountOptions
 ): MountedProgrammeView {
   const scene = buildProgrammeScene(input, {
     assetKind: 'animated-programme',

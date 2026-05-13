@@ -17,7 +17,7 @@ export interface ProgrammeSceneBuildOptions {
 
 export function buildProgrammeScene(
   input: ProgrammeEngineInput,
-  options: ProgrammeSceneBuildOptions,
+  options: ProgrammeSceneBuildOptions
 ): ProgrammeSceneBuildResult {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(input.theme.background);
@@ -28,7 +28,7 @@ export function buildProgrammeScene(
     options.height / 2,
     -options.height / 2,
     0.1,
-    1000,
+    1000
   );
   camera.position.z = 500;
 
@@ -60,7 +60,7 @@ export function buildProgrammeScene(
 
 export function programmeSceneNodes(
   input: ProgrammeEngineInput,
-  options: ProgrammeSceneBuildOptions,
+  options: ProgrammeSceneBuildOptions
 ): ProgrammeSceneNode[] {
   const cardWidth = options.width * 0.78;
   const cardHeight = options.height * 0.7;
@@ -92,27 +92,33 @@ export function programmeSceneNodes(
       input.ownerLabel,
       input.theme.foreground,
       [-cardWidth / 2 + 74, cardHeight / 2 - 68, 18],
-      [cardWidth * 0.56, 28],
+      [cardWidth * 0.56, 28]
     ),
-    textProxy('title', input.title, input.theme.foreground, [-cardWidth / 2 + 74, 40, 18], [
-      cardWidth * 0.72,
-      82,
-    ]),
+    textProxy(
+      'title',
+      input.title,
+      input.theme.foreground,
+      [-cardWidth / 2 + 74, 40, 18],
+      [cardWidth * 0.72, 82]
+    ),
     textProxy(
       'issue',
       `Issue #${input.issueNumber.toString()}`,
       input.theme.accent,
       [cardWidth / 2 - 190, -cardHeight / 2 + 68, 18],
-      [220, 34],
+      [220, 34]
     ),
   ];
 
   if (input.subtitle) {
     baseNodes.push(
-      textProxy('subtitle', input.subtitle, input.theme.foreground, [-cardWidth / 2 + 74, -60, 18], [
-        cardWidth * 0.62,
-        46,
-      ]),
+      textProxy(
+        'subtitle',
+        input.subtitle,
+        input.theme.foreground,
+        [-cardWidth / 2 + 74, -60, 18],
+        [cardWidth * 0.62, 46]
+      )
     );
   }
 
@@ -138,7 +144,7 @@ function spreadNodes(
   blocks: ProgrammeEngineBlock[],
   theme: ProgrammeEngineInput['theme'],
   cardWidth: number,
-  cardHeight: number,
+  cardHeight: number
 ): ProgrammeSceneNode[] {
   return blocks.map((block, index) =>
     textProxy(
@@ -146,8 +152,8 @@ function spreadNodes(
       block.title,
       theme.foreground,
       [-cardWidth / 2 + 96, -cardHeight / 2 + 138 + index * 54, 20],
-      [cardWidth * 0.58, 28],
-    ),
+      [cardWidth * 0.58, 28]
+    )
   );
 }
 
@@ -156,7 +162,7 @@ function textProxy(
   label: string,
   color: string,
   position: readonly [number, number, number],
-  size: readonly [number, number],
+  size: readonly [number, number]
 ): ProgrammeSceneNode {
   return {
     id,
