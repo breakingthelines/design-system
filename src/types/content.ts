@@ -13,11 +13,34 @@ export interface ContentStats {
   reposts?: number;
 }
 
+export type ImageFitMode = 'smart-cover' | 'contain-bleed';
+
+export interface ImageFocalArea {
+  /** Normalized left coordinate, where 0 is the left edge and 1 is the right edge. */
+  x: number;
+  /** Normalized top coordinate, where 0 is the top edge and 1 is the bottom edge. */
+  y: number;
+  /** Normalized width of the focal area. */
+  width: number;
+  /** Normalized height of the focal area. */
+  height: number;
+}
+
+export interface ImagePresentation {
+  /** smart-cover crops around the focal area; contain-bleed fits the full image over an editorial bleed. */
+  fitMode?: ImageFitMode;
+  /** The important crop region inside the source image, expressed as normalized image coordinates. */
+  focalArea?: ImageFocalArea;
+  /** Optional focal zoom. Values below 1 are treated as 1. */
+  zoom?: number;
+}
+
 export interface ContentItem {
   id: string;
   title: string;
   excerpt?: string;
   imageUrl?: string;
+  imagePresentation?: ImagePresentation;
   author: ContentAuthor;
   publishedAt: string;
   readTime?: string;

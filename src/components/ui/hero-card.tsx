@@ -99,8 +99,8 @@ function HeroCard({
               src={item.imageUrl}
               alt={item.title}
               loading="eager"
+              presentation={item.imagePresentation}
               className="size-full"
-              imgClassName="object-cover"
             />
             {/* Angled gradient: transparent top-right → black 0.75 bottom-left.
                 Only rendered when there's an image to darken — when the
@@ -126,8 +126,8 @@ function HeroCard({
               src={item.imageUrl}
               alt={item.title}
               loading="eager"
+              presentation={item.imagePresentation}
               className="size-full"
-              imgClassName="object-cover"
             />
             {item.imageUrl ? (
               <div

@@ -9,7 +9,7 @@ const meta = preview.meta({
   argTypes: {
     variant: {
       control: 'select',
-      options: ['grid', 'list'],
+      options: ['grid', 'list', 'portrait'],
     },
   },
 });
@@ -43,6 +43,29 @@ const listItem: ContentItem = {
     handle: 'mattlaw',
     initials: 'ML',
     avatarUrl: 'https://i.pravatar.cc/150?u=matt',
+  },
+};
+
+const smartCoverItem: ContentItem = {
+  ...gridItem,
+  id: 'smart-cover',
+  title: 'A wide stadium image cropped into a tall card without losing the decisive run',
+  imageUrl: 'https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=1400&h=520&fit=crop',
+  imagePresentation: {
+    fitMode: 'smart-cover',
+    focalArea: { x: 0.58, y: 0.18, width: 0.26, height: 0.48 },
+    zoom: 1.18,
+  },
+};
+
+const containBleedItem: ContentItem = {
+  ...gridItem,
+  id: 'contain-bleed',
+  title: 'A portrait source stays intact on a landscape thumbnail with an editorial bleed',
+  imageUrl: 'https://images.unsplash.com/photo-1517466787929-bc90951d0974?w=520&h=1200&fit=crop',
+  imagePresentation: {
+    fitMode: 'contain-bleed',
+    focalArea: { x: 0.2, y: 0.1, width: 0.52, height: 0.58 },
   },
 };
 
@@ -96,6 +119,27 @@ export const ListStack = meta.story({
       <ContentCard item={listItem} variant="list" />
       <ContentCard item={{ ...listItem, id: '3' }} variant="list" />
       <ContentCard item={{ ...listItem, id: '4' }} variant="list" />
+    </div>
+  ),
+});
+
+export const SmartCover = meta.story({
+  name: 'Smart Cover Focal Area',
+  render: () => (
+    <div className="w-[366px]">
+      <ContentCard item={smartCoverItem} variant="grid" />
+    </div>
+  ),
+});
+
+export const ContainBleed = meta.story({
+  name: 'Contain Bleed Awkward Ratio',
+  render: () => (
+    <div className="flex w-[560px] flex-col gap-6">
+      <ContentCard item={containBleedItem} variant="list" />
+      <div className="w-[260px]">
+        <ContentCard item={containBleedItem} variant="portrait" />
+      </div>
     </div>
   ),
 });

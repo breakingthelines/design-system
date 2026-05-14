@@ -95,6 +95,7 @@ export * from './page-composition/index';
 
 // Utilities
 export * from './lib/format';
+export * from './lib/image-presentation';
 export * from './lib/render-mentions';
 
 // Hooks

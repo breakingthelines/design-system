@@ -144,8 +144,9 @@ function ContentCard({
               <Image
                 src={item.imageUrl}
                 alt={item.title}
+                presentation={item.imagePresentation}
                 className="size-full"
-                imgClassName="object-cover transition-transform duration-300"
+                imgClassName="transition-transform duration-300"
               />
             </LinkComponent>
           ) : (
@@ -153,8 +154,9 @@ function ContentCard({
               <Image
                 src={item.imageUrl}
                 alt={item.title}
+                presentation={item.imagePresentation}
                 className="size-full"
-                imgClassName="object-cover transition-transform duration-300"
+                imgClassName="transition-transform duration-300"
               />
             </div>
           )}
@@ -215,8 +217,9 @@ function ContentCard({
               <Image
                 src={item.imageUrl}
                 alt={item.title}
+                presentation={item.imagePresentation}
                 className="size-full"
-                imgClassName="object-cover transition-transform duration-300"
+                imgClassName="transition-transform duration-300"
               />
             </LinkComponent>
           ) : (
@@ -224,8 +227,9 @@ function ContentCard({
               <Image
                 src={item.imageUrl}
                 alt={item.title}
+                presentation={item.imagePresentation}
                 className="size-full"
-                imgClassName="object-cover transition-transform duration-300"
+                imgClassName="transition-transform duration-300"
               />
             </div>
           )}
@@ -284,8 +288,9 @@ function ContentCard({
             <Image
               src={item.imageUrl}
               alt={item.title}
+              presentation={item.imagePresentation}
               className="size-full"
-              imgClassName="object-cover transition-transform duration-300"
+              imgClassName="transition-transform duration-300"
             />
           </LinkComponent>
         ) : (
@@ -293,8 +298,9 @@ function ContentCard({
             <Image
               src={item.imageUrl}
               alt={item.title}
+              presentation={item.imagePresentation}
               className="size-full"
-              imgClassName="object-cover transition-transform duration-300"
+              imgClassName="transition-transform duration-300"
             />
           </div>
         )}

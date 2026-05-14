@@ -4,9 +4,11 @@ import * as React from 'react';
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
+import { isContainBleedPresentation, resolveImagePresentation } from '#/lib/image-presentation';
 import { cn } from '#/lib/utils';
 import { extractYtVideoId, nextYtResolution, safeYtThumbnail } from '#/lib/yt-thumb';
 import { skeletonVariants } from './skeleton';
+import type { ImagePresentation } from '#/types/content';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * Image — design-system image with shimmer loading and lazy viewport loading.
@@ -41,6 +43,8 @@ interface ImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'lo
   onError?: React.ReactEventHandler<HTMLImageElement>;
   /** Placeholder shown when the image is missing or fails to load. */
   fallback?: React.ReactNode;
+  /** Optional smart featured-image presentation controls. */
+  presentation?: ImagePresentation;
 }
 
 /* ── YouTube thumbnail validation ──────────────────────────────────────────── */
@@ -82,6 +86,7 @@ function Image({
   onLoad,
   onError,
   fallback,
+  presentation,
   ...props
 }: ImageProps) {
   const [loaded, setLoaded] = useState(false);
@@ -93,6 +98,29 @@ function Image({
 
   const normalizedSrc = typeof src === 'string' ? src.trim() : src;
   const hasSource = typeof normalizedSrc === 'string' ? normalizedSrc.length > 0 : !!normalizedSrc;
+  const containBleed = isContainBleedPresentation(presentation);
+  const imagePresentation = resolveImagePresentation(presentation, {
+    containForeground: containBleed,
+  });
+  const imageSource = resolvedSrc ?? normalizedSrc;
+  const imgStyle: React.CSSProperties | undefined =
+    imagePresentation || fadeDuration > 0
+      ? {
+          objectFit: imagePresentation?.objectFit,
+          objectPosition: imagePresentation?.objectPosition,
+          transform: imagePresentation?.transform,
+          transformOrigin: imagePresentation?.transformOrigin,
+          transitionDuration: fadeDuration > 0 ? `${fadeDuration}ms` : undefined,
+        }
+      : undefined;
+  const bleedStyle: React.CSSProperties | undefined = imagePresentation
+    ? {
+        objectFit: 'cover',
+        objectPosition: imagePresentation.objectPosition,
+        transform: imagePresentation.transform ?? 'scale(1.08)',
+        transformOrigin: imagePresentation.transformOrigin,
+      }
+    : undefined;
 
   // Extract YouTube video ID (null for non-YouTube images).
   const ytVideoId = useMemo(
@@ -234,20 +262,35 @@ function Image({
       ) : null}
 
       {/* Actual image — transparent until loaded, then fades in */}
+      {shouldLoad && containBleed && (
+        <img
+          aria-hidden
+          src={imageSource}
+          alt=""
+          className={cn(
+            'pointer-events-none absolute inset-0 h-full w-full blur-xl saturate-110',
+            loaded ? 'opacity-55' : 'opacity-0'
+          )}
+          style={bleedStyle}
+          draggable={false}
+        />
+      )}
+
       {shouldLoad && (
         <img
           ref={imgRefCallback}
-          src={resolvedSrc ?? normalizedSrc}
+          src={imageSource}
           alt={alt}
           onLoad={handleLoad}
           onError={handleError}
           className={cn(
             'h-full w-full object-cover',
+            containBleed && 'relative z-10',
             fadeDuration > 0 && 'transition-opacity',
             loaded ? 'opacity-100' : 'opacity-0',
             imgClassName
           )}
-          style={fadeDuration > 0 ? { transitionDuration: `${fadeDuration}ms` } : undefined}
+          style={imgStyle}
           draggable={false}
           {...props}
         />
