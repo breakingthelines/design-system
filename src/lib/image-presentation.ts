@@ -10,6 +10,19 @@ export interface ResolvedImagePresentation {
   transformOrigin: string;
 }
 
+interface Size {
+  width: number;
+  height: number;
+}
+
+export interface ContainedImageFrame {
+  width: number;
+  height: number;
+  left: number;
+  top: number;
+  edgeFadeAxis?: 'x' | 'y';
+}
+
 const DEFAULT_FIT_MODE: ImageFitMode = 'smart-cover';
 const DEFAULT_OBJECT_POSITION = '50% 50%';
 const MAX_ZOOM = 3;
@@ -45,6 +58,77 @@ export function focalAreaToObjectPosition(focalArea: ImageFocalArea | undefined)
   const centerY = clamp(y + height / 2, 0, 1);
 
   return `${Math.round(centerX * 10000) / 100}% ${Math.round(centerY * 10000) / 100}%`;
+}
+
+function parsePositionPart(value: string | undefined): number {
+  if (!value) return 0.5;
+  const trimmed = value.trim().toLowerCase();
+  switch (trimmed) {
+    case 'left':
+    case 'top':
+      return 0;
+    case 'right':
+    case 'bottom':
+      return 1;
+    case 'center':
+      return 0.5;
+    default: {
+      const parsed = Number.parseFloat(trimmed);
+      if (!Number.isFinite(parsed)) return 0.5;
+      return clamp(trimmed.endsWith('%') ? parsed / 100 : parsed, 0, 1);
+    }
+  }
+}
+
+function parseObjectPosition(objectPosition: string): { x: number; y: number } {
+  const [x, y] = objectPosition.trim().split(/\s+/);
+  return {
+    x: parsePositionPart(x),
+    y: parsePositionPart(y ?? x),
+  };
+}
+
+export function resolveContainedImageFrame(
+  container: Size,
+  image: Size,
+  objectPosition: string = DEFAULT_OBJECT_POSITION
+): ContainedImageFrame | undefined {
+  if (
+    container.width <= 0 ||
+    container.height <= 0 ||
+    image.width <= 0 ||
+    image.height <= 0 ||
+    !Number.isFinite(container.width) ||
+    !Number.isFinite(container.height) ||
+    !Number.isFinite(image.width) ||
+    !Number.isFinite(image.height)
+  ) {
+    return undefined;
+  }
+
+  const position = parseObjectPosition(objectPosition);
+  const imageAspect = image.width / image.height;
+  const containerAspect = container.width / container.height;
+
+  if (imageAspect >= containerAspect) {
+    const height = container.width / imageAspect;
+    return {
+      width: container.width,
+      height,
+      left: 0,
+      top: (container.height - height) * position.y,
+      edgeFadeAxis: height < container.height - 0.5 ? 'y' : undefined,
+    };
+  }
+
+  const width = container.height * imageAspect;
+  return {
+    width,
+    height: container.height,
+    left: (container.width - width) * position.x,
+    top: 0,
+    edgeFadeAxis: width < container.width - 0.5 ? 'x' : undefined,
+  };
 }
 
 export function resolveImagePresentation(
