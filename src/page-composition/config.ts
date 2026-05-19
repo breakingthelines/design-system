@@ -605,7 +605,7 @@ export type RatingSubjectType = 'PLAYER' | 'TEAM' | 'COACH' | 'MATCH' | 'MOMENT'
 export interface RatingsGridBlockConfig {
   schemaVersion: 1;
   capabilityInstanceId: string;
-  matchId?: string;
+  gameId?: string;
   subjectTypes: RatingSubjectType[];
   count: number;
 }
@@ -767,7 +767,7 @@ export function parseRatingsGridConfig(config?: JsonObject): RatingsGridBlockCon
   return {
     schemaVersion: 1,
     capabilityInstanceId,
-    matchId: stringOrUndefined(config.match_id),
+    gameId: stringOrUndefined(config.game_id),
     subjectTypes: filterEnumArray(config.subject_types, RATING_SUBJECT_TYPES, 5),
     count,
   };

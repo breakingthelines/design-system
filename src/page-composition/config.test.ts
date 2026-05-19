@@ -375,14 +375,14 @@ describe('Creator analytics + recommendation block parsers', () => {
       parseRatingsGridConfig({
         schema_version: 1,
         capability_instance_id: 'cap-2',
-        match_id: 'match-9',
+        game_id: 'game-9',
         subject_types: ['PLAYER', 'NOT_A_SUBJECT', 'TEAM'],
         count: 30,
       })
     ).toEqual({
       schemaVersion: 1,
       capabilityInstanceId: 'cap-2',
-      matchId: 'match-9',
+      gameId: 'game-9',
       subjectTypes: ['PLAYER', 'TEAM'],
       count: 30,
     });
