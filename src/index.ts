@@ -89,6 +89,9 @@ export {
   type LinkProviderProps,
 } from './components/ui/link-context';
 
+// G5 First Touch primitives (render-only)
+export * from './components/g5/index';
+
 // Types
 export * from './types/content';
 export * from './page-composition/index';
