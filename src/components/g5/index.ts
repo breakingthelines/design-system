@@ -24,12 +24,7 @@
 export { FixtureCard, formatKickoff, initialsFromLabel } from './fixture-card';
 export type { FixtureCardProps } from './fixture-card';
 
-export {
-  RefCard,
-  TeamRefCard,
-  CompetitionRefCard,
-  GameRoundRefCard,
-} from './ref-card';
+export { RefCard, TeamRefCard, CompetitionRefCard, GameRoundRefCard } from './ref-card';
 export type {
   RefCardBaseProps,
   TeamRefCardProps,
@@ -37,16 +32,10 @@ export type {
   GameRoundRefCardProps,
 } from './ref-card';
 
-export {
-  MatchdayFixtureStrip,
-  MATCHDAY_FIXTURE_STRIP_EMPTY_LINE,
-} from './matchday-fixture-strip';
+export { MatchdayFixtureStrip, MATCHDAY_FIXTURE_STRIP_EMPTY_LINE } from './matchday-fixture-strip';
 export type { MatchdayFixtureStripProps } from './matchday-fixture-strip';
 
-export {
-  Issue1Skeleton,
-  ISSUE1_SLOT_ORDER,
-} from './issue1-skeleton';
+export { Issue1Skeleton, ISSUE1_SLOT_ORDER } from './issue1-skeleton';
 export type { Issue1SkeletonProps } from './issue1-skeleton';
 
 export {

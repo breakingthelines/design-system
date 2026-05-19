@@ -66,17 +66,9 @@ export const InteractiveRow = meta.story({
   name: 'Interactive (onClick)',
   render: () => (
     <div className="flex w-[420px] flex-col gap-3">
-      <FixtureCard
-        data={fixtureScheduledArsVMun}
-        variant="compact"
-        onClick={() => undefined}
-      />
+      <FixtureCard data={fixtureScheduledArsVMun} variant="compact" onClick={() => undefined} />
       <FixtureCard data={fixtureLiveMadridDerby} variant="compact" onClick={() => undefined} />
-      <FixtureCard
-        data={fixtureFinishedLivCity}
-        variant="compact"
-        onClick={() => undefined}
-      />
+      <FixtureCard data={fixtureFinishedLivCity} variant="compact" onClick={() => undefined} />
     </div>
   ),
 });

@@ -1,11 +1,7 @@
 import * as React from 'react';
 
 import preview from '#.storybook/preview';
-import {
-  CompetitionRefCard,
-  GameRoundRefCard,
-  TeamRefCard,
-} from './ref-card';
+import { CompetitionRefCard, GameRoundRefCard, TeamRefCard } from './ref-card';
 import {
   competitionRefChampionsLeague,
   competitionRefPremierLeague,

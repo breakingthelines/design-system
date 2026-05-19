@@ -78,7 +78,7 @@ function ThoughtComposer({
   onMentionSearch,
   emojiEnabled = false,
   onEmojiClick,
-  userId,
+  userId: _userId,
   disabled = false,
   ...props
 }: ThoughtComposerProps) {

@@ -30,6 +30,12 @@ const audioPlayerVariants = cva(
 
 type AudioStatus = 'hidden' | 'generating' | 'ready' | 'regenerating' | 'failed';
 
+function formatTime(s: number) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
 export interface AudioPlayerProps
   extends
     Omit<React.ComponentProps<'div'>, 'children' | 'onTimeUpdate'>,
@@ -117,12 +123,6 @@ function AudioPlayer({
     if (audioRef.current) {
       audioRef.current.muted = !muted;
     }
-  };
-
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, '0')}`;
   };
 
   if (status === 'generating') {

@@ -36,11 +36,7 @@ export const AllFilled = meta.story({
           kind: 'filled',
           content: (
             <MatchdayFixtureStrip
-              fixtures={[
-                fixtureScheduledArsVMun,
-                fixtureLiveMadridDerby,
-                fixtureFinishedLivCity,
-              ]}
+              fixtures={[fixtureScheduledArsVMun, fixtureLiveMadridDerby, fixtureFinishedLivCity]}
             />
           ),
         },
@@ -48,16 +44,14 @@ export const AllFilled = meta.story({
           kind: 'filled',
           content: (
             <div className="text-[14px] text-white/85">
-              <span className="font-semibold text-white">Arsenal to win 2 — 0</span> over
-              Manchester United, Sat 19 May.
+              <span className="font-semibold text-white">Arsenal to win 2 — 0</span> over Manchester
+              United, Sat 19 May.
             </div>
           ),
         },
         firstRating: {
           kind: 'filled',
-          content: (
-            <FixtureCard data={fixtureLiveMadridDerby} variant="compact" />
-          ),
+          content: <FixtureCard data={fixtureLiveMadridDerby} variant="compact" />,
         },
       }}
       dateline="WED 19 MAY 2026"

@@ -99,11 +99,7 @@ export function sliceSlot(markup: string, slot: string): string | undefined {
  * Returns the value of a single attribute on the (first) element that carries
  * `data-slot="<slot>"`. Undefined if not present.
  */
-export function getSlotAttr(
-  markup: string,
-  slot: string,
-  attribute: string
-): string | undefined {
+export function getSlotAttr(markup: string, slot: string, attribute: string): string | undefined {
   const slice = sliceSlot(markup, slot);
   if (!slice) return undefined;
   // Read just the opening tag (up to first '>').

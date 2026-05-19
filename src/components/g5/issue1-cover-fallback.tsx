@@ -193,10 +193,7 @@ function CornerMark({ accent }: { accent: string }) {
       data-slot="cover-corner-mark"
       className="absolute top-6 left-6 z-10 inline-flex h-6 items-center gap-2"
     >
-      <span
-        className="inline-block size-2.5 rounded-[1px]"
-        style={{ backgroundColor: accent }}
-      />
+      <span className="inline-block size-2.5 rounded-[1px]" style={{ backgroundColor: accent }} />
       <span className="font-mono text-[10px] tracking-[0.24em] text-white/70 uppercase">
         BTL/01
       </span>

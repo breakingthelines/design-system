@@ -41,28 +41,20 @@ describe('FixtureCard status branches', () => {
 
 describe('FixtureCard provisional chip', () => {
   it('omits the provisional chip when fallbackReasons is empty or missing', () => {
-    const markup = render(
-      <FixtureCard data={fixtureScheduledArsVMun} variant="full" />
-    );
+    const markup = render(<FixtureCard data={fixtureScheduledArsVMun} variant="full" />);
     expect(hasSlot(markup, 'fixture-provisional')).toBe(false);
     expect(getSlotAttr(markup, 'fixture-card', 'data-provisional')).toBeUndefined();
   });
 
   it('shows the provisional chip when fallbackReasons is non-empty', () => {
-    const markup = render(
-      <FixtureCard data={fixtureProvisionalChelsea} variant="full" />
-    );
+    const markup = render(<FixtureCard data={fixtureProvisionalChelsea} variant="full" />);
     expect(hasSlot(markup, 'fixture-provisional')).toBe(true);
-    expect(slotText(markup, 'fixture-provisional').toLowerCase()).toContain(
-      'provisional'
-    );
+    expect(slotText(markup, 'fixture-provisional').toLowerCase()).toContain('provisional');
     expect(getSlotAttr(markup, 'fixture-card', 'data-provisional')).toBe('true');
   });
 
   it('does NOT render the provisional chip in compact variant even when reasons exist', () => {
-    const markup = render(
-      <FixtureCard data={fixtureProvisionalChelsea} variant="compact" />
-    );
+    const markup = render(<FixtureCard data={fixtureProvisionalChelsea} variant="compact" />);
     // The compact variant suppresses the bottom strip entirely.
     expect(hasSlot(markup, 'fixture-provisional')).toBe(false);
   });
@@ -76,9 +68,7 @@ describe('FixtureCard interactivity', () => {
   });
 
   it('renders a button when onClick is provided', () => {
-    const markup = render(
-      <FixtureCard data={fixtureScheduledArsVMun} onClick={() => undefined} />
-    );
+    const markup = render(<FixtureCard data={fixtureScheduledArsVMun} onClick={() => undefined} />);
     expect(markup.startsWith('<button')).toBe(true);
     // And it carries an explicit type="button" so it never submits a form.
     expect(/^<button[^>]*\stype="button"/.test(markup)).toBe(true);

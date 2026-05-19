@@ -18,18 +18,14 @@ describe('composeCoverHeadline (pure)', () => {
   });
 
   it('preserves multi-digit issue numbers', () => {
-    expect(
-      composeCoverHeadline({ issueNumber: 12, ownerHandle: 'zachlowy' }).numberLabel
-    ).toBe('12');
+    expect(composeCoverHeadline({ issueNumber: 12, ownerHandle: 'zachlowy' }).numberLabel).toBe(
+      '12'
+    );
   });
 
   it('clamps non-positive issue numbers up to 1', () => {
-    expect(composeCoverHeadline({ issueNumber: 0, ownerHandle: 'ando' }).numberLabel).toBe(
-      '01'
-    );
-    expect(composeCoverHeadline({ issueNumber: -3, ownerHandle: 'ando' }).numberLabel).toBe(
-      '01'
-    );
+    expect(composeCoverHeadline({ issueNumber: 0, ownerHandle: 'ando' }).numberLabel).toBe('01');
+    expect(composeCoverHeadline({ issueNumber: -3, ownerHandle: 'ando' }).numberLabel).toBe('01');
   });
 
   it('lowercases the archetype in the caption line', () => {
@@ -79,9 +75,7 @@ describe('Issue1CoverFallback render', () => {
       <Issue1CoverFallback issueNumber={1} ownerHandle="ando" archetype="Tactician" />
     );
     expect(getSlotAttr(markup, 'issue1-cover-fallback', 'data-issue-number')).toBe('01');
-    expect(getSlotAttr(markup, 'issue1-cover-fallback', 'data-archetype')).toBe(
-      'Tactician'
-    );
+    expect(getSlotAttr(markup, 'issue1-cover-fallback', 'data-archetype')).toBe('Tactician');
     expect(slotText(markup, 'cover-masthead')).toContain('Breaking the Lines');
     expect(slotText(markup, 'cover-issue-number')).toBe('01');
     expect(slotText(markup, 'cover-owner')).toBe('@ando');

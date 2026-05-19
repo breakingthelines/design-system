@@ -77,8 +77,7 @@ export function RefCard({
         'rounded-[8px] py-3 pr-3 pl-2.5',
         'text-white transition-colors duration-150',
         isInteractive && 'cursor-pointer hover:border-white/25',
-        isInteractive &&
-          'focus-visible:border-[var(--color-red-100)] focus-visible:outline-none',
+        isInteractive && 'focus-visible:border-[var(--color-red-100)] focus-visible:outline-none',
         selected && 'border-[var(--color-red-100)]/45',
         className
       )}
@@ -146,13 +145,9 @@ function AccentStripe({ selected, accent }: { selected: boolean; accent?: string
     <span
       aria-hidden="true"
       data-slot="ref-card-stripe"
-      className={cn(
-        'self-stretch w-[3px] shrink-0 rounded-full transition-colors duration-150'
-      )}
+      className={cn('self-stretch w-[3px] shrink-0 rounded-full transition-colors duration-150')}
       style={{
-        backgroundColor: selected
-          ? 'var(--color-red-100)'
-          : (accent ?? 'rgba(255,255,255,0.08)'),
+        backgroundColor: selected ? 'var(--color-red-100)' : (accent ?? 'rgba(255,255,255,0.08)'),
       }}
     />
   );

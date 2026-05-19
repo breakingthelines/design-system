@@ -25,12 +25,7 @@ export interface FixtureCardProps {
   className?: string;
 }
 
-export function FixtureCard({
-  data,
-  variant = 'compact',
-  onClick,
-  className,
-}: FixtureCardProps) {
+export function FixtureCard({ data, variant = 'compact', onClick, className }: FixtureCardProps) {
   const status: G5FixtureStatus = data.status ?? 'scheduled';
   const isProvisional = (data.fallbackReasons?.length ?? 0) > 0;
   const isInteractive = Boolean(onClick);
@@ -95,10 +90,7 @@ export function FixtureCard({
                 'text-[var(--color-red-100)]'
               )}
             >
-              <span
-                aria-hidden="true"
-                className="size-1 rounded-full bg-[var(--color-red-100)]"
-              />
+              <span aria-hidden="true" className="size-1 rounded-full bg-[var(--color-red-100)]" />
               Provisional
             </span>
           ) : null}
@@ -110,19 +102,10 @@ export function FixtureCard({
 
 // ─── eyebrow ─────────────────────────────────────────────────────────────────
 
-function FixtureEyebrow({
-  data,
-  status,
-}: {
-  data: G5FixtureCardData;
-  status: G5FixtureStatus;
-}) {
+function FixtureEyebrow({ data, status }: { data: G5FixtureCardData; status: G5FixtureStatus }) {
   return (
     <header className="flex items-center justify-between gap-2 text-[10px] tracking-[0.16em] uppercase">
-      <p
-        data-slot="fixture-competition"
-        className="truncate text-[var(--color-grey-500)]"
-      >
+      <p data-slot="fixture-competition" className="truncate text-[var(--color-grey-500)]">
         {data.competitionLabel ?? 'Fixture'}
       </p>
       <StatusPill status={status} />
@@ -148,11 +131,7 @@ function StatusPill({ status }: { status: G5FixtureStatus }) {
   }
   if (status === 'finished') {
     return (
-      <span
-        data-slot="fixture-status"
-        data-status="finished"
-        className="text-white/70"
-      >
+      <span data-slot="fixture-status" data-status="finished" className="text-white/70">
         Full time
       </span>
     );

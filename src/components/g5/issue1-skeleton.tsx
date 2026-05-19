@@ -61,12 +61,7 @@ const SLOT_META: Record<SlotKey, SlotMeta> = {
   backCover: { serial: '08', eyebrow: 'Back cover', headline: 'Signing off' },
 };
 
-export function Issue1Skeleton({
-  slots,
-  className,
-  dateline,
-  assistantLine,
-}: Issue1SkeletonProps) {
+export function Issue1Skeleton({ slots, className, dateline, assistantLine }: Issue1SkeletonProps) {
   return (
     <article
       data-slot="issue1-skeleton"
@@ -120,9 +115,7 @@ function Masthead({ dateline }: { dateline?: string }) {
 function Colophon({ assistantLine }: { assistantLine?: string }) {
   return (
     <footer className="flex flex-col gap-1.5 border-t border-white/[0.08] px-6 py-4 sm:px-8">
-      <p className="text-[10px] tracking-[0.24em] text-white/40 uppercase">
-        Assistant Manager
-      </p>
+      <p className="text-[10px] tracking-[0.24em] text-white/40 uppercase">Assistant Manager</p>
       <p className="text-[13px] text-white/65">
         {assistantLine ?? 'A first edition is a footprint. Drop it and walk forward.'}
       </p>
@@ -153,9 +146,7 @@ function SlotShell({
       <SlotSerial serial={meta.serial} state={state.kind} />
       <div className="flex min-w-0 flex-1 flex-col gap-3">
         <header className="flex flex-col gap-1">
-          <p className="text-[10px] tracking-[0.22em] text-white/45 uppercase">
-            {meta.eyebrow}
-          </p>
+          <p className="text-[10px] tracking-[0.22em] text-white/45 uppercase">{meta.eyebrow}</p>
           <h2 className="font-display text-[18px] leading-tight font-bold tracking-tight text-white sm:text-[20px]">
             {meta.headline}
           </h2>
@@ -209,10 +200,7 @@ function SlotBody({ state }: { state: G5Issue1SlotState }) {
         )}
       >
         <p className="inline-flex items-center gap-2 text-[10px] tracking-[0.2em] text-white/55 uppercase">
-          <span
-            aria-hidden="true"
-            className="size-1.5 rounded-full bg-white/35"
-          />
+          <span aria-hidden="true" className="size-1.5 rounded-full bg-white/35" />
           Waiting
         </p>
         <p data-slot="issue1-slot-objective" className="text-[14px] text-white/80">

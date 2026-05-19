@@ -147,12 +147,12 @@ export function ThoughtComment({
   const showReplyGifBtn = useBuiltInGif || !!onGifClick;
   const showReplyEmojiBtn = useBuiltInEmoji;
 
-  function clearReplyImage() {
+  const clearReplyImage = React.useCallback(() => {
     if (replyImagePreview) URL.revokeObjectURL(replyImagePreview);
     setReplyImagePreview(null);
     setReplyImageUrl(null);
     setReplyImageUploading(false);
-  }
+  }, [replyImagePreview]);
 
   function handleReplyFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -176,12 +176,12 @@ export function ThoughtComment({
       });
   }
 
-  function resetReplyMedia() {
+  const resetReplyMedia = React.useCallback(() => {
     setReplyGif(null);
     clearReplyImage();
     setReplyPicker(null);
     setReplyHasText(false);
-  }
+  }, [clearReplyImage]);
 
   // Auto-focus reply editor when it opens
   React.useEffect(() => {
@@ -190,7 +190,7 @@ export function ThoughtComment({
     } else {
       resetReplyMedia();
     }
-  }, [isReplying]);
+  }, [isReplying, resetReplyMedia]);
 
   const replies = thought.replies ?? [];
   const replyCount = thought.replyCount ?? 0;

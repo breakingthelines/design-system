@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  issue1AllFallback,
-  issue1AllFilled,
-  issue1Mixed,
-  issue1MostlyPending,
-} from '../fixtures';
+import { issue1AllFallback, issue1AllFilled, issue1Mixed, issue1MostlyPending } from '../fixtures';
 import { ISSUE1_SLOT_ORDER, Issue1Skeleton } from '../issue1-skeleton';
 import { eachSlot, getAttr, render, textContent } from './test-utils';
 
@@ -66,9 +61,7 @@ describe('Issue1Skeleton slot state branches', () => {
     const slots = collectSlotInfo(markup);
     const coverSlot = slots.find((slot) => slot.key === 'cover');
     expect(coverSlot?.state).toBe('pending');
-    expect(textContent(markup)).toContain(
-      'Upload a cover or accept the branded fallback.'
-    );
+    expect(textContent(markup)).toContain('Upload a cover or accept the branded fallback.');
     // The "Waiting" eyebrow should show on at least one pending slot.
     expect(textContent(markup)).toContain('Waiting');
   });
@@ -79,9 +72,7 @@ describe('Issue1Skeleton slot state branches', () => {
     for (const slot of slots) {
       expect(slot.state).toBe('fallback');
     }
-    expect(textContent(markup)).toContain(
-      'Branded fallback selected. The press still runs.'
-    );
+    expect(textContent(markup)).toContain('Branded fallback selected. The press still runs.');
   });
 
   it('renders all three branches when the slots map is mixed', () => {
@@ -94,18 +85,13 @@ describe('Issue1Skeleton slot state branches', () => {
 
 describe('Issue1Skeleton chrome', () => {
   it('renders the supplied dateline in the masthead', () => {
-    const markup = render(
-      <Issue1Skeleton slots={issue1AllFilled} dateline="WED 19 MAY 2026" />
-    );
+    const markup = render(<Issue1Skeleton slots={issue1AllFilled} dateline="WED 19 MAY 2026" />);
     expect(textContent(markup)).toContain('WED 19 MAY 2026');
   });
 
   it('renders the supplied assistant line in the colophon', () => {
     const markup = render(
-      <Issue1Skeleton
-        slots={issue1AllFilled}
-        assistantLine="The press still runs."
-      />
+      <Issue1Skeleton slots={issue1AllFilled} assistantLine="The press still runs." />
     );
     expect(textContent(markup)).toContain('The press still runs.');
   });

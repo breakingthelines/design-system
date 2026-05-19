@@ -1,16 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import {
-  CompetitionRefCard,
-  GameRoundRefCard,
-  RefCard,
-  TeamRefCard,
-} from '../ref-card';
-import {
-  competitionRefPremierLeague,
-  gameRoundRefGameweek34,
-  teamRefArsenal,
-} from '../fixtures';
+import { CompetitionRefCard, GameRoundRefCard, RefCard, TeamRefCard } from '../ref-card';
+import { competitionRefPremierLeague, gameRoundRefGameweek34, teamRefArsenal } from '../fixtures';
 import { getSlotAttr, hasSlot, render, slotText } from './test-utils';
 
 describe('RefCard variant + interactivity', () => {
@@ -22,9 +13,7 @@ describe('RefCard variant + interactivity', () => {
   });
 
   it('renders a button when onToggle is provided', () => {
-    const markup = render(
-      <RefCard data={teamRefArsenal} onToggle={() => undefined} />
-    );
+    const markup = render(<RefCard data={teamRefArsenal} onToggle={() => undefined} />);
     expect(markup.startsWith('<button')).toBe(true);
     expect(getSlotAttr(markup, 'ref-card', 'aria-pressed')).toBe('false');
   });
@@ -54,11 +43,7 @@ describe('TeamRefCard toggle behaviour', () => {
 
   it('reflects the selected state on the data attribute and aria-pressed', () => {
     const markup = render(
-      <TeamRefCard
-        data={teamRefArsenal}
-        selected
-        onToggle={() => undefined}
-      />
+      <TeamRefCard data={teamRefArsenal} selected onToggle={() => undefined} />
     );
     expect(getSlotAttr(markup, 'ref-card', 'data-selected')).toBe('true');
     expect(getSlotAttr(markup, 'ref-card', 'aria-pressed')).toBe('true');
@@ -73,9 +58,7 @@ describe('TeamRefCard toggle behaviour', () => {
 
 describe('CompetitionRefCard + GameRoundRefCard kind labels', () => {
   it('CompetitionRefCard shows "Competition" eyebrow', () => {
-    const markup = render(
-      <CompetitionRefCard data={competitionRefPremierLeague} />
-    );
+    const markup = render(<CompetitionRefCard data={competitionRefPremierLeague} />);
     expect(slotText(markup, 'ref-card').toUpperCase()).toContain('COMPETITION');
   });
 

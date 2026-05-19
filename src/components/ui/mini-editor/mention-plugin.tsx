@@ -139,20 +139,21 @@ function MentionAutocomplete({
 export function MentionPlugin({ onSearch }: MentionPluginProps) {
   const [editor] = useLexicalComposerContext();
   const trigger = useMentionTrigger();
+  const triggerQuery = trigger?.query;
   const [suggestions, setSuggestions] = React.useState<MentionSuggestion[]>([]);
   const [selectedIndex, setSelectedIndex] = React.useState(0);
   const isOpen = trigger !== null && suggestions.length > 0;
 
   // Debounced search
   React.useEffect(() => {
-    if (!trigger) {
+    if (triggerQuery === undefined) {
       setSuggestions([]);
       return;
     }
 
     const timer = setTimeout(async () => {
       try {
-        const results = await onSearch(trigger.query);
+        const results = await onSearch(triggerQuery);
         setSuggestions(results);
         setSelectedIndex(0);
       } catch {
@@ -161,7 +162,7 @@ export function MentionPlugin({ onSearch }: MentionPluginProps) {
     }, 150);
 
     return () => clearTimeout(timer);
-  }, [trigger?.query, onSearch]);
+  }, [triggerQuery, onSearch]);
 
   // Insert mention node
   const insertMention = React.useCallback(

@@ -8,20 +8,14 @@
  * realistic data inside every `.stories.tsx` file.
  */
 
-import type {
-  G5FixtureCardData,
-  G5InboxObjective,
-  G5Issue1Slots,
-  G5SubjectRef,
-} from './types';
+import type { G5FixtureCardData, G5InboxObjective, G5Issue1Slots, G5SubjectRef } from './types';
 
 export const teamRefArsenal: G5SubjectRef = {
   kind: 'team',
   id: 'team-arsenal',
   label: 'Arsenal',
   slug: 'arsenal',
-  imageUrl:
-    'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg',
+  imageUrl: 'https://upload.wikimedia.org/wikipedia/en/5/53/Arsenal_FC.svg',
   accentColor: '#ef0107',
   secondaryLabel: 'Premier League',
   tertiaryLabel: 'London',
