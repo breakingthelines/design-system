@@ -92,6 +92,90 @@ export {
 // G5 First Touch primitives (render-only)
 export * from './components/g5/index';
 
+// G6 Game Centre primitives (render-only)
+export {
+  RatingScale,
+  RATING_SCALE,
+  ratingDescriptor,
+  type RatingScaleValue,
+  type RatingScaleDescriptor,
+  type RatingScaleProps,
+} from './components/ui/rating-scale';
+
+export {
+  RatingDistribution,
+  EMPTY_RATING_COUNTS,
+  ratingTotal,
+  type RatingCounts,
+  type RatingDistributionProps,
+} from './components/ui/rating-distribution';
+
+export {
+  MatchHeader,
+  formatMatchKickoff,
+  initialsFromMatchLabel,
+  type MatchHeaderProps,
+  type MatchHeaderSide,
+} from './components/ui/match-header';
+
+export {
+  ScoreboardChip,
+  type ScoreboardChipProps,
+  type ScoreboardChipStatus,
+} from './components/ui/scoreboard-chip';
+
+export {
+  TabbedPage,
+  readTabFromSearch,
+  pushTabToSearch,
+  type TabbedPageProps,
+  type TabbedPageTab,
+} from './components/ui/tabbed-page';
+
+export {
+  FallbackNotice,
+  normaliseFallbackReason,
+  type FallbackNoticeProps,
+  type FallbackReasonKey,
+  type FallbackReasonInput,
+} from './components/ui/fallback-notice';
+
+export {
+  EntityPageShell,
+  type EntityKind,
+  type EntityPageShellMeta,
+  type EntityPageShellProps,
+} from './components/ui/entity-page-shell';
+
+export {
+  RatingLogRow,
+  formatLogDate,
+  initialsForLogSubject,
+  type RatingLogRowProps,
+} from './components/ui/rating-log-row';
+
+export {
+  PredictionPickCard,
+  formatKickoffShort,
+  type PredictionPickCardProps,
+  type PredictionPickModule,
+  type PredictionOutcomePick,
+  type PredictionPickResult,
+  type PredictionExactScore,
+} from './components/ui/prediction-pick-card';
+
+export {
+  LeaderboardRow,
+  initialsForMember,
+  type LeaderboardRowProps,
+} from './components/ui/leaderboard-row';
+
+export {
+  ContextSlot,
+  type ContextSlotProps,
+  type ContextSlotState,
+} from './components/ui/context-slot';
+
 // Types
 export * from './types/content';
 export * from './page-composition/index';
