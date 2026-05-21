@@ -176,6 +176,9 @@ export {
   type ContextSlotState,
 } from './components/ui/context-slot';
 
+// G6 Game Centre composite primitives (promoted from platform 0.3.0)
+export * from './components/game-centre/index';
+
 // Types
 export * from './types/content';
 export * from './page-composition/index';

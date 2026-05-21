@@ -16,16 +16,22 @@ import { cn } from '#/lib/utils';
  * enum so consumers can map straight from the proto's numeric value or its
  * SCREAMING_SNAKE_CASE label.
  *
- *   Proto                                   Local key
- *   ─────────────────────────────────────── ────────────────────
- *   FALLBACK_REASON_UNSPECIFIED             (skipped — never shown)
- *   FALLBACK_REASON_LINEUPS_MISSING         lineups_missing
- *   FALLBACK_REASON_TIMELINE_MISSING        timeline_missing
- *   FALLBACK_REASON_RICH_ACTIONS_UNAVAILABLE rich_actions_unavailable
- *   FALLBACK_REASON_LIVE_SCORE_STALE        live_score_stale
- *   FALLBACK_REASON_PROVIDER_OUTAGE         provider_outage
- *   FALLBACK_REASON_UNRESOLVED_IDENTITY     unresolved_identity
- *   FALLBACK_REASON_SETTLEMENT_PENDING      settlement_pending
+ *   Proto                                          Local key
+ *   ──────────────────────────────────────────────  ──────────────────────────────
+ *   FALLBACK_REASON_UNSPECIFIED                     (skipped — never shown)
+ *   FALLBACK_REASON_LINEUPS_MISSING                 lineups_missing
+ *   FALLBACK_REASON_TIMELINE_MISSING                timeline_missing
+ *   FALLBACK_REASON_RICH_ACTIONS_UNAVAILABLE        rich_actions_unavailable
+ *   FALLBACK_REASON_LIVE_SCORE_STALE                live_score_stale
+ *   FALLBACK_REASON_PROVIDER_OUTAGE                 provider_outage
+ *   FALLBACK_REASON_UNRESOLVED_IDENTITY             unresolved_identity
+ *   FALLBACK_REASON_SETTLEMENT_PENDING              settlement_pending
+ *   FALLBACK_REASON_POTM_NOT_REPORTED               potm_not_reported
+ *   FALLBACK_REASON_RPC_NOT_AVAILABLE               rpc_not_available
+ *   FALLBACK_REASON_NO_THOUGHTS_YET                 no_thoughts_yet
+ *   FALLBACK_REASON_NO_RATINGS_YET                  no_ratings_yet
+ *   FALLBACK_REASON_NO_ACTIVE_PREDICTION_LEAGUE     no_active_prediction_league
+ *   FALLBACK_REASON_LIST_RATINGS_RPC_PENDING        list_ratings_rpc_pending
  *
  * Each reason renders distinct, non-apologetic copy describing *what* is
  * missing and *why*. The component never claims data that isn't there.
@@ -38,7 +44,13 @@ export type FallbackReasonKey =
   | 'live_score_stale'
   | 'provider_outage'
   | 'unresolved_identity'
-  | 'settlement_pending';
+  | 'settlement_pending'
+  | 'potm_not_reported'
+  | 'rpc_not_available'
+  | 'no_thoughts_yet'
+  | 'no_ratings_yet'
+  | 'no_active_prediction_league'
+  | 'list_ratings_rpc_pending';
 
 /** Proto-string accepted as input. We normalise to FallbackReasonKey. */
 export type FallbackReasonInput = FallbackReasonKey | string | number;
@@ -65,6 +77,18 @@ export function normaliseFallbackReason(input: FallbackReasonInput): FallbackRea
         return 'unresolved_identity';
       case 7:
         return 'settlement_pending';
+      case 8:
+        return 'potm_not_reported';
+      case 9:
+        return 'rpc_not_available';
+      case 10:
+        return 'no_thoughts_yet';
+      case 11:
+        return 'no_ratings_yet';
+      case 12:
+        return 'no_active_prediction_league';
+      case 13:
+        return 'list_ratings_rpc_pending';
       default:
         return undefined;
     }
@@ -94,6 +118,24 @@ export function normaliseFallbackReason(input: FallbackReasonInput): FallbackRea
     case 'FALLBACK_REASON_SETTLEMENT_PENDING':
     case 'SETTLEMENT_PENDING':
       return 'settlement_pending';
+    case 'FALLBACK_REASON_POTM_NOT_REPORTED':
+    case 'POTM_NOT_REPORTED':
+      return 'potm_not_reported';
+    case 'FALLBACK_REASON_RPC_NOT_AVAILABLE':
+    case 'RPC_NOT_AVAILABLE':
+      return 'rpc_not_available';
+    case 'FALLBACK_REASON_NO_THOUGHTS_YET':
+    case 'NO_THOUGHTS_YET':
+      return 'no_thoughts_yet';
+    case 'FALLBACK_REASON_NO_RATINGS_YET':
+    case 'NO_RATINGS_YET':
+      return 'no_ratings_yet';
+    case 'FALLBACK_REASON_NO_ACTIVE_PREDICTION_LEAGUE':
+    case 'NO_ACTIVE_PREDICTION_LEAGUE':
+      return 'no_active_prediction_league';
+    case 'FALLBACK_REASON_LIST_RATINGS_RPC_PENDING':
+    case 'LIST_RATINGS_RPC_PENDING':
+      return 'list_ratings_rpc_pending';
     default:
       // Accept already-normalised keys
       if (
@@ -106,6 +148,12 @@ export function normaliseFallbackReason(input: FallbackReasonInput): FallbackRea
             'provider_outage',
             'unresolved_identity',
             'settlement_pending',
+            'potm_not_reported',
+            'rpc_not_available',
+            'no_thoughts_yet',
+            'no_ratings_yet',
+            'no_active_prediction_league',
+            'list_ratings_rpc_pending',
           ] as string[]
         ).includes(trimmed)
       ) {
@@ -148,6 +196,30 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   settlement_pending: {
     title: 'Settlement pending',
     body: 'The match has ended but results have not yet been settled by our provider.',
+  },
+  potm_not_reported: {
+    title: 'Player of the match not reported',
+    body: 'The match POTM has not been published for this fixture.',
+  },
+  rpc_not_available: {
+    title: 'Service unavailable',
+    body: 'Try again shortly.',
+  },
+  no_thoughts_yet: {
+    title: 'No thoughts yet',
+    body: 'Be the first to share.',
+  },
+  no_ratings_yet: {
+    title: 'No ratings yet',
+    body: 'Player ratings will appear after the match.',
+  },
+  no_active_prediction_league: {
+    title: 'No active prediction league',
+    body: 'Join or create a league to start predicting.',
+  },
+  list_ratings_rpc_pending: {
+    title: 'Ratings loading',
+    body: 'Pulling your rating history.',
   },
 };
 
