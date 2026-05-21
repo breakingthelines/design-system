@@ -18,11 +18,11 @@ import { FallbackNotice } from '#/components/ui/fallback-notice';
  * lists from `GamePage.fallback_reasons` etc., normalise the raw proto values
  * via `normaliseFallbackReason` and render `FallbackNotice` directly.
  *
- * FallbackReason union — 7 proto values + 6 platform extensions
+ * FallbackReason union — 12 proto values + 1 platform extension
  * ────────────────────────────────────────────────────────────
  *
- * Proto-mapped (1:1 with `btl.game.v1.types.FallbackReason`, excluding
- * `UNSPECIFIED`):
+ * Proto-mapped (1:1 with `btl.game.v1.types.FallbackReason` from
+ * `@breakingthelines/protos`, excluding `UNSPECIFIED`):
  *   - LINEUPS_MISSING
  *   - TIMELINE_MISSING
  *   - RICH_ACTIONS_UNAVAILABLE
@@ -30,18 +30,19 @@ import { FallbackNotice } from '#/components/ui/fallback-notice';
  *   - PROVIDER_OUTAGE
  *   - UNRESOLVED_IDENTITY
  *   - SETTLEMENT_PENDING
- *
- * Platform extensions (no proto enum yet — pending Lane A proto v0.13.0):
+ *   - POTM_NOT_REPORTED
  *   - RPC_NOT_AVAILABLE
- *   - VIEWER_NOT_ELIGIBLE
- *   - NO_ACTIVE_PREDICTION_LEAGUE
- *   - NO_RATINGS_YET
  *   - NO_THOUGHTS_YET
+ *   - NO_RATINGS_YET
+ *   - NO_ACTIVE_PREDICTION_LEAGUE
  *   - LIST_RATINGS_RPC_PENDING
  *
- * Consumers that wire only the proto enum still get autocomplete on the
- * 7 proto reasons via the literal union; the 6 extensions are accepted
- * but render through this primitive's own copy table.
+ * Platform extensions (no proto enum — UI-only signal):
+ *   - VIEWER_NOT_ELIGIBLE
+ *
+ * Consumers that wire only the proto enum get autocomplete on the proto
+ * reasons via the literal union; the platform extension is accepted but
+ * renders through this primitive's own copy table.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export type FallbackReason =
@@ -52,12 +53,13 @@ export type FallbackReason =
   | 'PROVIDER_OUTAGE'
   | 'UNRESOLVED_IDENTITY'
   | 'SETTLEMENT_PENDING'
+  | 'POTM_NOT_REPORTED'
   | 'RPC_NOT_AVAILABLE'
-  | 'VIEWER_NOT_ELIGIBLE'
-  | 'NO_ACTIVE_PREDICTION_LEAGUE'
-  | 'NO_RATINGS_YET'
   | 'NO_THOUGHTS_YET'
-  | 'LIST_RATINGS_RPC_PENDING';
+  | 'NO_RATINGS_YET'
+  | 'NO_ACTIVE_PREDICTION_LEAGUE'
+  | 'LIST_RATINGS_RPC_PENDING'
+  | 'VIEWER_NOT_ELIGIBLE';
 
 const PROTO_REASONS = new Set<FallbackReason>([
   'LINEUPS_MISSING',
@@ -67,6 +69,12 @@ const PROTO_REASONS = new Set<FallbackReason>([
   'PROVIDER_OUTAGE',
   'UNRESOLVED_IDENTITY',
   'SETTLEMENT_PENDING',
+  'POTM_NOT_REPORTED',
+  'RPC_NOT_AVAILABLE',
+  'NO_THOUGHTS_YET',
+  'NO_RATINGS_YET',
+  'NO_ACTIVE_PREDICTION_LEAGUE',
+  'LIST_RATINGS_RPC_PENDING',
 ]);
 
 // Proto-mapped reasons forward their kebab-case key to FallbackNotice so
@@ -79,34 +87,20 @@ const PROTO_KEY: Record<string, string> = {
   PROVIDER_OUTAGE: 'provider_outage',
   UNRESOLVED_IDENTITY: 'unresolved_identity',
   SETTLEMENT_PENDING: 'settlement_pending',
+  POTM_NOT_REPORTED: 'potm_not_reported',
+  RPC_NOT_AVAILABLE: 'rpc_not_available',
+  NO_THOUGHTS_YET: 'no_thoughts_yet',
+  NO_RATINGS_YET: 'no_ratings_yet',
+  NO_ACTIVE_PREDICTION_LEAGUE: 'no_active_prediction_league',
+  LIST_RATINGS_RPC_PENDING: 'list_ratings_rpc_pending',
 };
 
 // Platform extensions get their copy here. Keep it terse — title is the
 // primary signal, body is one supporting line.
 const PLATFORM_COPY: Record<string, { title: string; body: string }> = {
-  RPC_NOT_AVAILABLE: {
-    title: 'This view is awaiting service coverage',
-    body: 'The backing read endpoint is not yet available. We will surface the data the moment it lands.',
-  },
   VIEWER_NOT_ELIGIBLE: {
     title: 'Members only',
     body: 'Joining the squad unlocks this engagement.',
-  },
-  NO_ACTIVE_PREDICTION_LEAGUE: {
-    title: 'No prediction leagues are running for this fixture',
-    body: 'Squads can run a Prediction League covering this match from Studio.',
-  },
-  NO_RATINGS_YET: {
-    title: 'Be the first to rate this',
-    body: 'Ratings are personal. Score on the BTL 1-6 scale (1 excellent, 6 poor).',
-  },
-  NO_THOUGHTS_YET: {
-    title: 'No thoughts yet',
-    body: 'Be the first to share a take.',
-  },
-  LIST_RATINGS_RPC_PENDING: {
-    title: 'List ratings RPC pending',
-    body: 'Your ratings will land here as soon as the read endpoint ships.',
   },
 };
 
@@ -153,7 +147,7 @@ export function FallbackState({ reason, tone, title, cta, className }: FallbackS
       className={cn(
         'rounded-md border p-4',
         isWarn ? 'border-yellow-300/25 bg-yellow-950/20' : 'border-white/10 bg-white/[0.03]',
-        className,
+        className
       )}
     >
       <h3 className="text-sm font-semibold text-white">{heading}</h3>

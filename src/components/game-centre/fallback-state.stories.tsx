@@ -17,12 +17,13 @@ const meta = preview.meta({
         'PROVIDER_OUTAGE',
         'UNRESOLVED_IDENTITY',
         'SETTLEMENT_PENDING',
+        'POTM_NOT_REPORTED',
         'RPC_NOT_AVAILABLE',
-        'VIEWER_NOT_ELIGIBLE',
-        'NO_ACTIVE_PREDICTION_LEAGUE',
-        'NO_RATINGS_YET',
         'NO_THOUGHTS_YET',
+        'NO_RATINGS_YET',
+        'NO_ACTIVE_PREDICTION_LEAGUE',
         'LIST_RATINGS_RPC_PENDING',
+        'VIEWER_NOT_ELIGIBLE',
       ],
     },
     tone: {
@@ -71,8 +72,8 @@ export const PlatformExtensionMembersOnly = meta.story({
   ),
 });
 
-export const PlatformExtensionNoLeague = meta.story({
-  name: 'Platform extension (no prediction league)',
+export const ProtoReasonNoLeague = meta.story({
+  name: 'Proto reason (no prediction league)',
   args: { reason: 'NO_ACTIVE_PREDICTION_LEAGUE' },
   render: (args) => (
     <div className="w-[420px]">

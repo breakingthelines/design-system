@@ -125,9 +125,7 @@ export function PredictionSummary({
           className="rounded-md border border-white/10 bg-white/[0.03] p-4"
         >
           <header className="mb-2 flex items-baseline justify-between gap-2">
-            <h3 className="text-xs font-semibold tracking-wide text-white/55 uppercase">
-              Pulse
-            </h3>
+            <h3 className="text-xs font-semibold tracking-wide text-white/55 uppercase">Pulse</h3>
             {pulse && pulse.total > 0 ? (
               <span className="text-xs text-white/45">{pulse.total} picks</span>
             ) : null}
@@ -154,10 +152,7 @@ export function PredictionSummary({
           </header>
           <ul className="space-y-2">
             {leagues.map((league) => (
-              <li
-                key={league.route}
-                className="flex items-center justify-between gap-3 text-sm"
-              >
+              <li key={league.route} className="flex items-center justify-between gap-3 text-sm">
                 <Link
                   href={league.route}
                   className="min-w-0 truncate text-white/75 hover:text-white"

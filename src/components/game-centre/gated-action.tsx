@@ -191,7 +191,7 @@ export function GatedAction({
  */
 function interceptClick(
   children: React.ReactNode,
-  handler: (event: React.MouseEvent) => void,
+  handler: (event: React.MouseEvent) => void
 ): React.ReactNode {
   if (React.isValidElement(children)) {
     const el = children as React.ReactElement<{ onClick?: (event: React.MouseEvent) => void }>;

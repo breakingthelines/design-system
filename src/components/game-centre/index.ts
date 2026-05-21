@@ -43,10 +43,7 @@ export { RatingSummary } from './rating-summary';
 export type { RatingSummaryProps, RatingClubAverage } from './rating-summary';
 
 export { PredictionSummary } from './prediction-summary';
-export type {
-  PredictionSummaryProps,
-  ActivePredictionLeagueRef,
-} from './prediction-summary';
+export type { PredictionSummaryProps, ActivePredictionLeagueRef } from './prediction-summary';
 
 export { TimelinePulse } from './timeline-pulse';
 export type {

@@ -23,15 +23,15 @@ G6 07-04 promotes them so:
 
 ## The 7 primitives
 
-| Primitive             | Before (platform)                                   | After (design-system)                  |
-| --------------------- | --------------------------------------------------- | -------------------------------------- |
-| `IdentityHeader`      | `~/components/game-centre/IdentityHeader`           | `@breakingthelines/design-system`      |
-| `GameCentreTabRail`   | `~/components/game-centre/GameCentreTabRail`        | `@breakingthelines/design-system`      |
-| `FallbackState`       | `~/components/game-centre/FallbackState`            | `@breakingthelines/design-system`      |
-| `RatingSummary`       | `~/components/game-centre/RatingSummary`            | `@breakingthelines/design-system`      |
-| `PredictionSummary`   | `~/components/game-centre/PredictionSummary`        | `@breakingthelines/design-system`      |
-| `TimelinePulse`       | `~/components/game-centre/TimelinePulse`            | `@breakingthelines/design-system`      |
-| `GatedAction`         | `~/components/game-centre/GatedAction`              | `@breakingthelines/design-system`      |
+| Primitive           | Before (platform)                            | After (design-system)             |
+| ------------------- | -------------------------------------------- | --------------------------------- |
+| `IdentityHeader`    | `~/components/game-centre/IdentityHeader`    | `@breakingthelines/design-system` |
+| `GameCentreTabRail` | `~/components/game-centre/GameCentreTabRail` | `@breakingthelines/design-system` |
+| `FallbackState`     | `~/components/game-centre/FallbackState`     | `@breakingthelines/design-system` |
+| `RatingSummary`     | `~/components/game-centre/RatingSummary`     | `@breakingthelines/design-system` |
+| `PredictionSummary` | `~/components/game-centre/PredictionSummary` | `@breakingthelines/design-system` |
+| `TimelinePulse`     | `~/components/game-centre/TimelinePulse`     | `@breakingthelines/design-system` |
+| `GatedAction`       | `~/components/game-centre/GatedAction`       | `@breakingthelines/design-system` |
 
 ## Import-path changes
 
@@ -81,11 +81,11 @@ type GatedActionMode = 'inline' | 'sheet' | 'overlay';
 
 Migration:
 
-| Before    | After                                              |
-| --------- | -------------------------------------------------- |
-| `'auto'`  | Pick `'inline'` for shallow toggles, `'overlay'` for rich actions. The new primitive does not infer mode from action verb. |
-| `'inline'`| `'inline'` (unchanged)                            |
-| `'modal'` | `'overlay'` on desktop, `'sheet'` on mobile-first  |
+| Before     | After                                                                                                                      |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `'auto'`   | Pick `'inline'` for shallow toggles, `'overlay'` for rich actions. The new primitive does not infer mode from action verb. |
+| `'inline'` | `'inline'` (unchanged)                                                                                                     |
+| `'modal'`  | `'overlay'` on desktop, `'sheet'` on mobile-first                                                                          |
 
 ### `GatedAction` no longer depends on platform hooks
 

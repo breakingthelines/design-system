@@ -150,9 +150,7 @@ export function IdentityHeader({
       </div>
       <div className="mt-3 flex items-center gap-4">
         <Avatar size="default" className="size-14 border border-white/10">
-          {identity.imageUrl && !unresolved ? (
-            <AvatarImage src={identity.imageUrl} alt="" />
-          ) : null}
+          {identity.imageUrl && !unresolved ? <AvatarImage src={identity.imageUrl} alt="" /> : null}
           <AvatarFallback className="text-base font-semibold tracking-wide">
             {initials}
           </AvatarFallback>

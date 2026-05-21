@@ -4,14 +4,8 @@ import * as React from 'react';
 
 import { cn } from '#/lib/utils';
 import { useLinkComponent } from '#/components/ui/link-context';
-import {
-  RatingDistribution,
-  type RatingCounts,
-} from '#/components/ui/rating-distribution';
-import {
-  RatingScale,
-  type RatingScaleValue,
-} from '#/components/ui/rating-scale';
+import { RatingDistribution, type RatingCounts } from '#/components/ui/rating-distribution';
+import { RatingScale, type RatingScaleValue } from '#/components/ui/rating-scale';
 
 import { FallbackState, type FallbackReason } from './fallback-state';
 
@@ -109,8 +103,7 @@ export function RatingSummary({
   }
 
   const myValue = toRatingScaleValue(myRating);
-  const btlMean =
-    btlAverage?.average && btlAverage.average > 0 ? btlAverage.average : undefined;
+  const btlMean = btlAverage?.average && btlAverage.average > 0 ? btlAverage.average : undefined;
   const hasDistribution = distribution && hasAnyCount(distribution);
 
   return (
@@ -211,9 +204,7 @@ export function RatingSummary({
 
       {/* Thoughts count */}
       {thoughtCount !== undefined && thoughtCount > 0 ? (
-        <p className="text-xs text-white/45">
-          {thoughtCount} rating-tagged thoughts attached
-        </p>
+        <p className="text-xs text-white/45">{thoughtCount} rating-tagged thoughts attached</p>
       ) : null}
     </div>
   );

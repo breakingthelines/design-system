@@ -104,10 +104,7 @@ export function TimelinePulse({
       <ol
         data-slot="timeline-pulse"
         data-variant="horizontal"
-        className={cn(
-          'flex w-full snap-x snap-mandatory gap-2 overflow-x-auto pb-2',
-          className,
-        )}
+        className={cn('flex w-full snap-x snap-mandatory gap-2 overflow-x-auto pb-2', className)}
       >
         {sliced.map((event, idx) => (
           <li
@@ -131,11 +128,7 @@ export function TimelinePulse({
   }
 
   return (
-    <ol
-      data-slot="timeline-pulse"
-      data-variant="vertical"
-      className={cn('space-y-2', className)}
-    >
+    <ol data-slot="timeline-pulse" data-variant="vertical" className={cn('space-y-2', className)}>
       {sliced.map((event, idx) => (
         <li
           key={event.id ?? `event-${idx}`}

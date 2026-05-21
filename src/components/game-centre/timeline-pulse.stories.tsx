@@ -15,13 +15,57 @@ const meta = preview.meta({
 });
 
 const sampleEvents: readonly TimelinePulseEvent[] = [
-  { id: '1', minute: "12'", minuteNumber: 12, kind: 'goal', label: 'Saka', detail: 'Arsenal 1 — 0', side: 'home' },
-  { id: '2', minute: "31'", minuteNumber: 31, kind: 'yellow_card', label: 'Bruno Fernandes', side: 'away' },
-  { id: '3', minute: 'HT', minuteNumber: 45, kind: 'half_time', label: 'Half time', detail: '1 — 0' },
-  { id: '4', minute: "58'", minuteNumber: 58, kind: 'substitution', label: 'Trossard → Martinelli', side: 'home' },
-  { id: '5', minute: "67'", minuteNumber: 67, kind: 'penalty_goal', label: 'Ødegaard', detail: 'Arsenal 2 — 0', side: 'home' },
+  {
+    id: '1',
+    minute: "12'",
+    minuteNumber: 12,
+    kind: 'goal',
+    label: 'Saka',
+    detail: 'Arsenal 1 — 0',
+    side: 'home',
+  },
+  {
+    id: '2',
+    minute: "31'",
+    minuteNumber: 31,
+    kind: 'yellow_card',
+    label: 'Bruno Fernandes',
+    side: 'away',
+  },
+  {
+    id: '3',
+    minute: 'HT',
+    minuteNumber: 45,
+    kind: 'half_time',
+    label: 'Half time',
+    detail: '1 — 0',
+  },
+  {
+    id: '4',
+    minute: "58'",
+    minuteNumber: 58,
+    kind: 'substitution',
+    label: 'Trossard → Martinelli',
+    side: 'home',
+  },
+  {
+    id: '5',
+    minute: "67'",
+    minuteNumber: 67,
+    kind: 'penalty_goal',
+    label: 'Ødegaard',
+    detail: 'Arsenal 2 — 0',
+    side: 'home',
+  },
   { id: '6', minute: "78'", minuteNumber: 78, kind: 'red_card', label: 'Casemiro', side: 'away' },
-  { id: '7', minute: 'FT', minuteNumber: 90, kind: 'full_time', label: 'Full time', detail: '2 — 0' },
+  {
+    id: '7',
+    minute: 'FT',
+    minuteNumber: 90,
+    kind: 'full_time',
+    label: 'Full time',
+    detail: '2 — 0',
+  },
 ];
 
 export const Default = meta.story({
@@ -69,10 +113,7 @@ export const Loading = meta.story({
   render: () => (
     <div className="w-[520px] space-y-2">
       {Array.from({ length: 5 }).map((_, idx) => (
-        <div
-          key={`skeleton-${idx}`}
-          className="h-10 animate-pulse rounded-md bg-white/[0.04]"
-        />
+        <div key={`skeleton-${idx}`} className="h-10 animate-pulse rounded-md bg-white/[0.04]" />
       ))}
     </div>
   ),
