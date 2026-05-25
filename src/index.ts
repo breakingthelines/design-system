@@ -176,6 +176,71 @@ export {
   type ContextSlotState,
 } from './components/ui/context-slot';
 
+// Beta Polish v0.4.0 primitives — Prediction League, Ratings Club, Studio cockpit, engagement ops, media
+export {
+  PredictionFormCard,
+  type PredictionFormCardProps,
+  type PredictionFormOutcome,
+  type PredictionFormExactScore,
+  type PredictionFormModule,
+} from './components/ui/prediction-form-card';
+
+export {
+  PredictionLeaderboardTable,
+  type PredictionLeaderboardTableProps,
+  type PredictionLeaderboardEntry,
+} from './components/ui/prediction-leaderboard-table';
+
+export {
+  RatingScaleSlider,
+  type RatingScaleSliderProps,
+} from './components/ui/rating-scale-slider';
+
+export {
+  RatingDistributionBar,
+  type RatingDistributionBarProps,
+} from './components/ui/rating-distribution-bar';
+
+export {
+  RatingsClubTable,
+  type RatingsClubTableProps,
+  type RatingsClubTableEntry,
+} from './components/ui/ratings-club-table';
+
+export {
+  StudioCockpitSidebar,
+  type StudioCockpitSidebarProps,
+  type StudioCockpitSidebarItem,
+  type StudioCockpitSidebarSection,
+} from './components/ui/studio-cockpit-sidebar';
+
+export {
+  EngagementOpsHeader,
+  type EngagementOpsHeaderProps,
+  type EngagementOpsKpi,
+  type EngagementOpsWindow,
+} from './components/ui/engagement-ops-header';
+
+export {
+  OpportunityCard,
+  type OpportunityCardProps,
+  type OpportunityKind,
+  type OpportunitySignal,
+} from './components/ui/opportunity-card';
+
+export {
+  ExternalMediaPicker,
+  type ExternalMediaPickerProps,
+  type ExternalMediaKind,
+} from './components/ui/external-media-picker';
+
+export {
+  ComposerFromSourceCard,
+  type ComposerFromSourceCardProps,
+  type ComposerSourceKind,
+  type ComposerFromSourceSignal,
+} from './components/ui/composer-from-source-card';
+
 // G6 Game Centre composite primitives (promoted from platform 0.3.0)
 export * from './components/game-centre/index';
 
