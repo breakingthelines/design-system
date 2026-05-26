@@ -5,6 +5,156 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] — 2026-05-25
+
+### Added — L1 Beta Polish primitives + FallbackReason expansion
+
+Ten new render-only primitives covering the Arena (L3), Prediction League
+(L4), Ratings Club (L5), Studio Cockpit shell (L6), Engagement Ops (L7),
+and Studio Media composer (L8) lanes of the Beta Polish surface matrix.
+All primitives are fetcher-agnostic and router-agnostic — routing wires
+through `<LinkProvider>` like the rest of the library.
+
+- **`PredictionFormCard`** (L4 — Prediction League composer)
+  Props: `matchLabel: string; kickoffIso?: string; contextLabel?: string;
+outcomePick?: 'home' | 'draw' | 'away'; onOutcomeChange?: (next) => void;
+exactScore?: { home: number | undefined; away: number | undefined };
+onExactScoreChange?: (side: 'home' | 'away', value: number | undefined) => void;
+modules?: readonly { id: string; label: string; control: React.ReactNode;
+helpText?: React.ReactNode }[]; footer?: React.ReactNode;
+disabled?: boolean; className?: string`.
+  Renders a fieldset/legend per pick group. `data-state="open" | "disabled"`.
+
+- **`PredictionLeaderboardTable`** (L4 — Prediction League standings)
+  Props: `title: string; eyebrow?: string;
+rows: readonly (LeaderboardRowProps & { id: string; onSelect?: (id) => void })[];
+totalEntrants?: number; footer?: React.ReactNode; className?: string`.
+  Wraps `LeaderboardRow`. Viewer row anchor `id="leaderboard-viewer-row"`.
+
+- **`RatingScaleSlider`** (L5 — Ratings Club composer)
+  Props: `value?: RatingScaleValue; defaultValue?: RatingScaleValue;
+onChange?: (value: RatingScaleValue) => void;
+variant?: 'tiles' | 'slider'; eyebrow?: string;
+helpText?: React.ReactNode; disabled?: boolean; ariaLabel?: string;
+className?: string`.
+  Supports controlled + uncontrolled. Arrow-key nav. Always exposes
+  `data-direction="lower-is-better"` to hold the inverse-scale invariant.
+
+- **`RatingDistributionBar`** (L5 — Ratings Club row + Game Centre player tab)
+  Props: `counts: RatingCounts; meanValue?: number; label?: React.ReactNode;
+totalOverride?: number; showSegmentCounts?: boolean;
+variant?: 'stacked' | 'grouped'; className?: string`.
+  Compact horizontal companion to `RatingDistribution`. Honest empty state
+  via the `EMPTY_RATING_COUNTS` sentinel.
+
+- **`RatingsClubTable`** (L5 — Ratings Club standings)
+  Props: `title: string; eyebrow?: string;
+rows: readonly { id: string; rank: number; subjectLabel: string;
+subjectSecondary?: string; subjectImageUrl?: string;
+subjectAccentColor?: string; meanValue?: number; counts?: RatingCounts;
+onSelect?: (id) => void }[]; totalSubjects?: number;
+footer?: React.ReactNode; className?: string`.
+  Embeds `RatingDistributionBar` grouped variant per row.
+
+- **`StudioCockpitSidebar`** (L6 — Studio cockpit shell)
+  Props: `identity?: { label: string; secondary?: string;
+accentColor?: string; imageUrl?: string };
+sections: readonly { id: string; label: string;
+items: readonly { id: string; label: string; description?: string;
+href?: string; onSelect?: (id) => void; badgeCount?: number;
+dot?: 'todo' | 'doing' | 'done' | 'warn'; icon?: React.ReactNode;
+isActive?: boolean; disabled?: boolean }[] }[];
+footer?: React.ReactNode; className?: string`.
+  Polymorphic item root (anchor / button / inert div) based on
+  `href` / `onSelect`. Active row uses `aria-current="page"`.
+
+- **`EngagementOpsHeader`** (L7 — Squad Engagement Overview)
+  Props: `eyebrow?: string; title: string; subtitle?: React.ReactNode;
+kpis: readonly { id: string; label: string;
+value: number | string | undefined; caption?: string; delta?: number;
+deltaUnit?: 'count' | 'percent'; sparkline?: React.ReactNode;
+higherIsBetter?: boolean }[];
+windows?: readonly { id: string; label: string; isActive?: boolean }[];
+onSelectWindow?: (id: string) => void; actions?: React.ReactNode;
+className?: string`.
+  Renders `—` for undefined KPI values (honest fallback). Delta direction
+  exposed as `data-direction="up" | "down" | "flat"`.
+
+- **`OpportunityCard`** (L7 — Studio Content Opportunities feed)
+  Props: `kind: 'trending_subject' | 'prediction_swing' | 'rating_spike'
+| 'thought_traction' | 'audience_question' | 'editorial_gap' | 'other';
+title: string; summary?: string; score?: number;
+context?: React.ReactNode;
+signals?: readonly { id: string; label: string;
+tone?: 'neutral' | 'positive' | 'warning'; hint?: string }[];
+actions?: React.ReactNode; agoLabel?: string;
+onSelect?: () => void; className?: string`.
+  Priority chip derived from `score` (low < 40, medium < 75, high ≥ 75).
+  Hidden when `score` is undefined — never fabricates a default.
+
+- **`ExternalMediaPicker`** (L8 — Studio external media composer)
+  Props: `kind: 'publisher_url' | 'video' | 'podcast' | 'visual';
+onKindChange?: (next) => void; url: string;
+onUrlChange?: (next: string) => void;
+onResolve?: (url: string, kind) => void; placeholder?: string;
+inputLabel?: string; previewNode?: React.ReactNode;
+errorNode?: React.ReactNode; resolveCta?: React.ReactNode;
+footer?: React.ReactNode; disabled?: boolean; className?: string`.
+  State `idle | resolved | error` derived from `previewNode` / `errorNode`
+  presence — no internal fetching.
+
+- **`ComposerFromSourceCard`** (L7 — Studio Compose From Source)
+  Props: `kind: 'opportunity' | 'thought' | 'question' | 'fixture'
+| 'rating_window' | 'prediction_window' | 'subject' | 'other';
+title: string; summary?: string; context?: React.ReactNode;
+sourceImageUrl?: string; sourceAccentColor?: string;
+signals?: readonly { id: string; label: string;
+tone?: 'neutral' | 'positive' | 'warning'; hint?: string }[];
+previewNode?: React.ReactNode; sourceId?: string;
+actions?: React.ReactNode; secondaryActions?: React.ReactNode;
+className?: string`.
+  Avatar slot omitted entirely when no `sourceImageUrl` or `sourceAccentColor`.
+
+### Changed — `FallbackReason` union expanded to 46 values
+
+`FallbackNotice` and `FallbackState` now recognise 33 additional fallback
+reasons mapped to the new proto `FallbackReason` tags (14–46) shipped in
+`@breakingthelines/protos@0.15.0`. Reasons are accepted in SCREAMING_SNAKE
+proto form (`FALLBACK_REASON_PREDICTION_LOCKED`), stripped form
+(`PREDICTION_LOCKED`), and the canonical kebab/lowercase form used by the
+library (`prediction_locked`). Every new reason ships with an honest title +
+body (no invented content). New keys:
+
+- L3 / Arena: `audience_signal_unavailable`, `eligibility_check_failed`,
+  `viewer_not_in_squad`, `viewer_not_subscribed`, `viewer_role_required`,
+  `squad_role_required`, `audience_window_closed`.
+- L4 / Prediction League: `prediction_locked`, `prediction_not_yet_open`,
+  `prediction_window_closed`, `prediction_already_submitted`,
+  `prediction_match_postponed`, `prediction_league_not_started`,
+  `prediction_league_archived`.
+- L5 / Ratings Club: `rating_window_closed`, `rating_already_submitted`,
+  `rating_not_yet_open`, `rating_match_postponed`,
+  `ratings_club_archived`.
+- L6 / Studio cockpit: `cockpit_section_unavailable`,
+  `studio_role_required`, `cockpit_data_pending`,
+  `studio_account_suspended`.
+- L7 / Engagement Ops + Opportunities: `engagement_window_unavailable`,
+  `opportunities_pending`, `opportunity_dismissed`,
+  `opportunity_source_archived`, `composer_source_not_available`.
+- L8 / Studio Media composer: `external_url_unresolved`,
+  `external_video_unavailable`, `external_podcast_unavailable`,
+  `external_visual_unregistered`, `external_media_rate_limited`,
+  `external_media_provider_outage`.
+
+### Notes
+
+- All 10 primitives are exported from the package root (`src/index.ts`).
+- Storybook stories added under `UI/*` for each primitive.
+- No new tokens introduced — every surface uses existing CSS variables
+  (`--color-grey-100/200/300/500`, `--color-red-100`, `--color-status-*`).
+
+[0.4.0]: https://github.com/breakingthelines/design-system/releases/tag/v0.4.0
+
 ## [0.3.0] — 2026-05-21
 
 ### Added — G6 Game Centre composite primitives
