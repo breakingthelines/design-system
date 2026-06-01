@@ -273,18 +273,26 @@ export function formatKickoffShort(
   if (!iso) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return undefined;
-  const datePart = new Intl.DateTimeFormat('en-GB', {
+  // Assemble parts manually — see comment on `formatMatchKickoff` for why we
+  // avoid letting locale punctuation decide the separator.
+  const dateParts: Record<string, string> = {};
+  for (const p of new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
     timeZone,
-  })
-    .format(date)
-    .toUpperCase();
-  const timePart = new Intl.DateTimeFormat('en-GB', {
+  }).formatToParts(date)) {
+    if (p.type !== 'literal') dateParts[p.type] = p.value;
+  }
+  const timeParts: Record<string, string> = {};
+  for (const p of new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
     timeZone,
-  }).format(date);
+  }).formatToParts(date)) {
+    if (p.type !== 'literal') timeParts[p.type] = p.value;
+  }
+  const datePart = `${dateParts.day ?? ''} ${dateParts.month ?? ''}`.trim().toUpperCase();
+  const timePart = `${timeParts.hour ?? '00'}:${timeParts.minute ?? '00'}`;
   return `${datePart} · ${timePart}`;
 }

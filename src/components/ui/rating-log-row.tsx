@@ -170,12 +170,14 @@ export function formatLogDate(
   if (!iso) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return undefined;
-  return new Intl.DateTimeFormat('en-GB', {
+  const parts: Record<string, string> = {};
+  for (const p of new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
     timeZone,
-  })
-    .format(date)
-    .toUpperCase();
+  }).formatToParts(date)) {
+    if (p.type !== 'literal') parts[p.type] = p.value;
+  }
+  return `${parts.day ?? ''} ${parts.month ?? ''} ${parts.year ?? ''}`.trim().toUpperCase();
 }

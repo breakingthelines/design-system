@@ -202,6 +202,22 @@ export function initialsFromMatchLabel(label: string): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
+/**
+ * Read individual date parts from `formatToParts` so we can assemble strings
+ * with explicit separators. Different ICU implementations (Bun vs V8 vs Node)
+ * emit slightly different separator characters for `en-GB` weekday formats —
+ * sometimes "FRIDAY, 8 AUGUST 2025", sometimes "FRIDAY 8 AUGUST 2025". For
+ * SSR + client hydration the bytes must match exactly, so we control the
+ * separators ourselves rather than letting locale punctuation decide.
+ */
+function intlPartsLookup(parts: Intl.DateTimeFormatPart[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const part of parts) {
+    if (part.type !== 'literal') result[part.type] = part.value;
+  }
+  return result;
+}
+
 export function formatMatchKickoff(
   iso?: string,
   timeZone: string = 'Europe/London'
@@ -217,28 +233,38 @@ export function formatMatchKickoff(
   if (Number.isNaN(date.getTime())) {
     return { dateLabel: 'TBD', timeLabel: '—', fullDateLabel: 'Date TBD' };
   }
-  const dateLabel = new Intl.DateTimeFormat('en-GB', {
-    weekday: 'short',
-    day: '2-digit',
-    month: 'short',
-    timeZone,
-  })
-    .format(date)
+  const shortParts = intlPartsLookup(
+    new Intl.DateTimeFormat('en-GB', {
+      weekday: 'short',
+      day: '2-digit',
+      month: 'short',
+      timeZone,
+    }).formatToParts(date)
+  );
+  const dateLabel = `${shortParts.weekday ?? ''} ${shortParts.day ?? ''} ${shortParts.month ?? ''}`
+    .trim()
     .toUpperCase();
-  const timeLabel = new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-    timeZone,
-  }).format(date);
-  const fullDateLabel = new Intl.DateTimeFormat('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone,
-  })
-    .format(date)
-    .toUpperCase();
+  const timeParts = intlPartsLookup(
+    new Intl.DateTimeFormat('en-GB', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+      timeZone,
+    }).formatToParts(date)
+  );
+  const timeLabel = `${timeParts.hour ?? '00'}:${timeParts.minute ?? '00'}`;
+  const longParts = intlPartsLookup(
+    new Intl.DateTimeFormat('en-GB', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      timeZone,
+    }).formatToParts(date)
+  );
+  const fullDateLabel =
+    `${longParts.weekday ?? ''} ${longParts.day ?? ''} ${longParts.month ?? ''} ${longParts.year ?? ''}`
+      .trim()
+      .toUpperCase();
   return { dateLabel, timeLabel, fullDateLabel };
 }
