@@ -55,3 +55,16 @@ export type {
 
 export { GatedAction } from './gated-action';
 export type { GatedActionProps, GatedRole, GatedActionMode } from './gated-action';
+
+export { TeamStatsComparison, barSplit } from './team-stats-comparison';
+export type {
+  TeamStatsComparisonProps,
+  TeamStatRow,
+  TeamStatFormat,
+} from './team-stats-comparison';
+
+export { PlayerOfTheMatchCard } from './player-of-the-match-card';
+export type { PlayerOfTheMatchCardProps } from './player-of-the-match-card';
+
+export { MatchScorersStrip } from './match-scorers-strip';
+export type { MatchScorersStripProps, MatchScorersSide, MatchScorer } from './match-scorers-strip';
