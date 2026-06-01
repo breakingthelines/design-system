@@ -37,6 +37,53 @@ export const motion = {
   },
 
   // ─────────────────────────────────────────────────
+  // TIER 3: CEREMONY (per ADR-013 — theatrical, the 1%)
+  //
+  // Reserved for genuine moments: the onboarding magazine
+  // page-curl and the Issue #1 reveal. These can exceed the
+  // everyday-UI limits (300-800ms). Everything else stays
+  // Tier 1/2. Keep this set small on purpose.
+  // ─────────────────────────────────────────────────
+  ceremony: {
+    // Staggered text/element reveal (e.g. a spread settling in
+    // after a turn, or the Issue #1 standfirst arriving). The
+    // values mirror ADR-013's reveal tokens.
+    reveal: {
+      stagger: 30, // ms between successive elements/characters
+      duration: 400, // total reveal envelope
+      delay: 80, // lead-in before the first element appears
+      easing: 'cubic-bezier(0.22, 1, 0.36, 1)', // expo-out — soft, decisive landing
+    },
+
+    // The paper page-curl turn (hero flips: reveal + opening an
+    // issue). Single-quad fragment-shader curl driven by uProgress
+    // 0→1. Duration sits in the theatrical band; the easing front-
+    // loads the peel then eases the lay-down so paper "settles".
+    pageCurl: {
+      duration: 620, // a deliberate, felt turn (300-800ms band)
+      easing: 'cubic-bezier(0.33, 0.0, 0.15, 1)', // quick lift, gentle settle
+      radius: 0.18, // cylinder radius in normalised page units
+      shadowStrength: 0.55, // 0..1 — depth of the curl's cast shadow
+    },
+
+    // The rigid rotateY turn used for fast multi-page skimming.
+    // Cheaper, snappier — closer to a real page being flicked.
+    pageSkim: {
+      duration: 320,
+      easing: 'cubic-bezier(0.4, 0, 0.2, 1)',
+    },
+
+    // react-spring (@react-spring/three) configs for animating
+    // uProgress. `turn` is the hero curl; `skim` the rigid flick;
+    // `snap` is the release-momentum settle back to 0 or 1.
+    spring: {
+      turn: { tension: 210, friction: 28, mass: 1 },
+      skim: { tension: 320, friction: 30, mass: 0.9 },
+      snap: { tension: 260, friction: 24, mass: 0.8 },
+    },
+  },
+
+  // ─────────────────────────────────────────────────
   // COMPONENT-SPECIFIC PRESETS (for Framer Motion)
   // ─────────────────────────────────────────────────
   presets: {
@@ -94,6 +141,8 @@ export type MotionDuration = keyof typeof motion.duration;
 export type MotionEasing = keyof typeof motion.easing;
 export type MotionSpring = keyof typeof motion.spring;
 export type MotionPreset = keyof typeof motion.presets;
+export type MotionCeremony = keyof typeof motion.ceremony;
+export type MotionCeremonySpring = keyof typeof motion.ceremony.spring;
 
 // CSS custom properties string for injection
 export const motionCSSVars = `
@@ -110,4 +159,12 @@ export const motionCSSVars = `
   --motion-ease-exit: cubic-bezier(0.4, 0, 1, 1);
   --motion-ease-overshoot: cubic-bezier(0.34, 1.56, 0.64, 1);
   --motion-ease-snappy: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+  /* Tier 3: ceremony (page-flip + reveal) */
+  --motion-duration-reveal: 400ms;
+  --motion-duration-page-curl: 620ms;
+  --motion-duration-page-skim: 320ms;
+  --motion-ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-page-curl: cubic-bezier(0.33, 0, 0.15, 1);
+  --motion-ease-page-skim: cubic-bezier(0.4, 0, 0.2, 1);
 `;
