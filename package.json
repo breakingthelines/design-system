@@ -1,6 +1,6 @@
 {
   "name": "@breakingthelines/design-system",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/breakingthelines/design-system.git"
@@ -51,6 +51,10 @@
       "types": "./dist/programme-engine/index.d.ts",
       "import": "./dist/programme-engine/index.js"
     },
+    "./page-flip": {
+      "types": "./dist/page-flip/index.d.ts",
+      "import": "./dist/page-flip/index.js"
+    },
     "./styles.css": "./src/styles/globals.css"
   },
   "publishConfig": {
@@ -76,12 +80,16 @@
     "@lexical/selection": "^0.43.0",
     "@lexical/text": "^0.43.0",
     "@phosphor-icons/react": "^2.1.10",
+    "@react-spring/three": "^10.1.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "@tailwindcss/vite": "^4.1.17",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "frimousse": "^0.3.0",
     "lexical": "^0.43.0",
+    "modern-screenshot": "^4.7.0",
     "shadcn": "^3.6.2",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",
