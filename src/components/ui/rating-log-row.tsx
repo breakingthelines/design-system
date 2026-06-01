@@ -34,6 +34,8 @@ export interface RatingLogRowProps {
   matchLabel: string;
   /** ISO date of the match. */
   matchDateIso?: string;
+  /** IANA timezone for match date rendering. Defaults to "Europe/London". */
+  timeZone?: string;
   /** Rating, 1 (best) to 6 (worst). */
   value: RatingScaleValue;
   /** Optional one-line rationale. */
@@ -48,12 +50,13 @@ export function RatingLogRow({
   subjectSecondary,
   matchLabel,
   matchDateIso,
+  timeZone,
   value,
   rationale,
   className,
 }: RatingLogRowProps) {
   const descriptor = ratingDescriptor(value);
-  const dateLabel = formatLogDate(matchDateIso);
+  const dateLabel = formatLogDate(matchDateIso, timeZone);
 
   return (
     <article
@@ -160,7 +163,10 @@ export function initialsForLogSubject(label: string): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-export function formatLogDate(iso?: string): string | undefined {
+export function formatLogDate(
+  iso?: string,
+  timeZone: string = 'Europe/London'
+): string | undefined {
   if (!iso) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return undefined;
@@ -168,6 +174,7 @@ export function formatLogDate(iso?: string): string | undefined {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
+    timeZone,
   })
     .format(date)
     .toUpperCase();

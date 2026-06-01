@@ -50,6 +50,8 @@ export interface PredictionPickModule {
 export interface PredictionPickCardProps {
   matchLabel: string;
   kickoffIso?: string;
+  /** IANA timezone for kickoff rendering. Defaults to "Europe/London". */
+  timeZone?: string;
   /** User's outcome pick. */
   outcomePick: PredictionOutcomePick;
   /** Optional exact score. */
@@ -82,6 +84,7 @@ const RESULT_LABEL: Record<PredictionPickResult, string> = {
 export function PredictionPickCard({
   matchLabel,
   kickoffIso,
+  timeZone,
   outcomePick,
   exactScore,
   finalScore,
@@ -91,7 +94,7 @@ export function PredictionPickCard({
   contextLabel,
   className,
 }: PredictionPickCardProps) {
-  const kickoff = formatKickoffShort(kickoffIso);
+  const kickoff = formatKickoffShort(kickoffIso, timeZone);
 
   return (
     <article
@@ -263,13 +266,17 @@ function ModuleStatusBadge({ status }: { status: NonNullable<PredictionPickModul
   );
 }
 
-export function formatKickoffShort(iso?: string): string | undefined {
+export function formatKickoffShort(
+  iso?: string,
+  timeZone: string = 'Europe/London'
+): string | undefined {
   if (!iso) return undefined;
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) return undefined;
   const datePart = new Intl.DateTimeFormat('en-GB', {
     day: '2-digit',
     month: 'short',
+    timeZone,
   })
     .format(date)
     .toUpperCase();
@@ -277,6 +284,7 @@ export function formatKickoffShort(iso?: string): string | undefined {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
+    timeZone,
   }).format(date);
   return `${datePart} · ${timePart}`;
 }

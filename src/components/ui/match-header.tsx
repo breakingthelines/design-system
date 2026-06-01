@@ -38,6 +38,8 @@ export interface MatchHeaderProps {
   clockLabel?: string;
   competitionLabel?: string;
   venueLabel?: string;
+  /** IANA timezone for kickoff rendering (e.g., "America/New_York"). Defaults to "Europe/London". */
+  timeZone?: string;
   className?: string;
 }
 
@@ -51,10 +53,11 @@ export function MatchHeader({
   clockLabel,
   competitionLabel,
   venueLabel,
+  timeZone,
   className,
 }: MatchHeaderProps) {
   const isScheduled = status === 'scheduled' || status === 'postponed' || status === 'cancelled';
-  const kickoff = formatMatchKickoff(kickoffIso);
+  const kickoff = formatMatchKickoff(kickoffIso, timeZone);
 
   return (
     <header
@@ -199,7 +202,10 @@ export function initialsFromMatchLabel(label: string): string {
   return (words[0][0] + words[words.length - 1][0]).toUpperCase();
 }
 
-export function formatMatchKickoff(iso?: string): {
+export function formatMatchKickoff(
+  iso?: string,
+  timeZone: string = 'Europe/London'
+): {
   dateLabel: string;
   timeLabel: string;
   fullDateLabel: string;
@@ -215,6 +221,7 @@ export function formatMatchKickoff(iso?: string): {
     weekday: 'short',
     day: '2-digit',
     month: 'short',
+    timeZone,
   })
     .format(date)
     .toUpperCase();
@@ -222,12 +229,14 @@ export function formatMatchKickoff(iso?: string): {
     hour: '2-digit',
     minute: '2-digit',
     hour12: false,
+    timeZone,
   }).format(date);
   const fullDateLabel = new Intl.DateTimeFormat('en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone,
   })
     .format(date)
     .toUpperCase();
