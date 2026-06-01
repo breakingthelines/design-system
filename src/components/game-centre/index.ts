@@ -68,3 +68,16 @@ export type { PlayerOfTheMatchCardProps } from './player-of-the-match-card';
 
 export { MatchScorersStrip } from './match-scorers-strip';
 export type { MatchScorersStripProps, MatchScorersSide, MatchScorer } from './match-scorers-strip';
+
+export { RecentPerformanceStrip } from './recent-performance-strip';
+export type {
+  RecentPerformanceStripProps,
+  RecentPerformanceEntry,
+} from './recent-performance-strip';
+
+export { CompetitionStandingsTable } from './competition-standings-table';
+export type {
+  CompetitionStandingsTableProps,
+  CompetitionStandingsRow,
+  CompetitionStandingsTeam,
+} from './competition-standings-table';
