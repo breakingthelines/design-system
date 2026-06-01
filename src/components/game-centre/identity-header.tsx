@@ -48,6 +48,8 @@ export interface IdentityHeaderMeta {
   venueLabel?: string;
   kickoffIso?: string;
   clockLabel?: string;
+  /** IANA timezone for kickoff rendering, forwarded to MatchHeader. */
+  timeZone?: string;
 }
 
 export type IdentityHeaderIdentity =
@@ -116,6 +118,7 @@ export function IdentityHeader({
             clockLabel={meta?.clockLabel}
             competitionLabel={meta?.competitionLabel}
             venueLabel={meta?.venueLabel}
+            timeZone={meta?.timeZone}
           />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/55">
