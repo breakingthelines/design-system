@@ -1,7 +1,12 @@
 import preview from '#.storybook/preview';
 import { useRef } from 'react';
 
-import { IssueReader, type IssueFace, type IssueMeta, type IssueReaderHandle } from './issue-reader';
+import {
+  IssueReader,
+  type IssueFace,
+  type IssueMeta,
+  type IssueReaderHandle,
+} from './issue-reader';
 
 const meta = preview.meta({
   title: 'Page Flip/Issue Reader',
@@ -299,7 +304,9 @@ const BackCover = () => (
     </div>
     <div>
       <div style={{ height: 2, width: 64, background: C.red, marginBottom: 24 }} />
-      <p style={{ fontFamily: SERIF, fontSize: 22, lineHeight: 1.5, color: C.ink, maxWidth: '28ch' }}>
+      <p
+        style={{ fontFamily: SERIF, fontSize: 22, lineHeight: 1.5, color: C.ink, maxWidth: '28ch' }}
+      >
         Next issue: the goalkeeper as playmaker, and the death of the clearance.
       </p>
       <div
@@ -525,7 +532,13 @@ export const WithControls = meta.story({
     };
     return (
       <LandscapeFrame>
-        <IssueReader ref={ref} issue={issue} faces={faces} bookMode="spread" style={{ fontFamily: SANS }} />
+        <IssueReader
+          ref={ref}
+          issue={issue}
+          faces={faces}
+          bookMode="spread"
+          style={{ fontFamily: SANS }}
+        />
         <div
           style={{
             position: 'absolute',

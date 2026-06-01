@@ -516,9 +516,7 @@ function SpreadLayer({
       })}
 
       {/* Centre gutter / spine shadow on a resting two-page spread. */}
-      {layout === 'spread' && restFaces.left != null && restFaces.right != null && (
-        <SpineShadow />
-      )}
+      {layout === 'spread' && restFaces.left != null && restFaces.right != null && <SpineShadow />}
     </>
   );
 }
@@ -804,7 +802,13 @@ function CurlMesh({
           turning leaf, sized by the leaves still to turn, so the book reads as a
           substantial bound object rather than a single sheet. Static, behind the
           curl quad. */}
-      <PageStack remaining={remaining} total={total} width={width} height={height} offsetX={offsetX} />
+      <PageStack
+        remaining={remaining}
+        total={total}
+        width={width}
+        height={height}
+        offsetX={offsetX}
+      />
       <mesh position={[offsetX, 0, 0]} scale={[width, height, 1]}>
         <planeGeometry args={[1, 1, 1, 1]} />
         <pageCurlMaterial
@@ -904,9 +908,7 @@ function coverStiffnessScale(index: number, direction: FlipDirection, positions:
 
 /** Leaves still to turn in `direction` from `index` (drives stack thickness). */
 function remainingLeaves(index: number, direction: FlipDirection, positions: number): number {
-  return direction === 'forward'
-    ? Math.max(0, positions - 1 - index)
-    : Math.max(0, index);
+  return direction === 'forward' ? Math.max(0, positions - 1 - index) : Math.max(0, index);
 }
 
 /** Scale a spring config's tension by `scale` (≥1), keeping friction/mass. */
@@ -1105,7 +1107,11 @@ function faceEl(refs: Record<number, HTMLElement | null>, face: number | null): 
  * plus the incoming spread either side. Keeping this to ≤ ~4 honours the
  * source's 3-live-texture LRU (the resting pair is always one of them).
  */
-function prewarmFaceList(position: number, pageCount: number, layout: 'single' | 'spread'): number[] {
+function prewarmFaceList(
+  position: number,
+  pageCount: number,
+  layout: 'single' | 'spread'
+): number[] {
   const set = new Set<number>();
   const here = facesAt(position, pageCount, layout);
   if (here.left != null) set.add(here.left);

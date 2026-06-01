@@ -308,9 +308,9 @@ const samplePages: PageFlipPage[] = [
           coach asked of the half-space behind him.
         </Column>
         <Column>
-          Pull one full-back inside at build-up and you have a third midfielder without ever
-          subbing one on. The pitch tilts. The opposition press has one more body to track and one
-          fewer trigger to chase.
+          Pull one full-back inside at build-up and you have a third midfielder without ever subbing
+          one on. The pitch tilts. The opposition press has one more body to track and one fewer
+          trigger to chase.
         </Column>
         <Column>
           The cost is exposure on the far side, which is why the model only works with a centre-back
@@ -338,7 +338,8 @@ const samplePages: PageFlipPage[] = [
           A quieter game, measured in metres
         </h2>
         <Standfirst>
-          PPDA crept up across the top five leagues this season. Teams are letting the first pass go.
+          PPDA crept up across the top five leagues this season. Teams are letting the first pass
+          go.
         </Standfirst>
         <StatBlock value="+1.8" label="average rise in PPDA since 2021" />
         <Byline name="Maya Okonkwo" role="Data Editor" />

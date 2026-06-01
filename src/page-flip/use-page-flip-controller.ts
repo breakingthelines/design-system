@@ -272,8 +272,7 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
       const dir = d.dir;
       // Speed of the flick toward the travel direction (≥0). The renderer maps
       // this to spring stiffness: a fast fling snaps; a slow drag eases.
-      const towardVel =
-        dir === 'forward' ? Math.max(0, -d.velocity) : Math.max(0, d.velocity);
+      const towardVel = dir === 'forward' ? Math.max(0, -d.velocity) : Math.max(0, d.velocity);
       setReleaseVelocity(towardVel);
       if (!canGo(dir)) {
         setTarget(0);
