@@ -41,9 +41,10 @@ export interface EntityImageManifestEntry {
 }
 
 /**
- * The coverage manifest. Keyed by canonical BTL identity entity ID
- * (e.g. `btl_football_team_42`). `cdnBase` is the public custom domain bound to
- * the entity-imagery R2 bucket (no trailing slash).
+ * The coverage manifest. Keyed by canonical BTL identity entity ID — a
+ * content-hashed id such as `btl_football_team_t9d7dd08f` (the suffix is an
+ * opaque hash, never a provider's numeric id). `cdnBase` is the public custom
+ * domain bound to the entity-imagery R2 bucket (no trailing slash).
  */
 export interface EntityImageManifest {
   /** Manifest version / generation timestamp (ISO 8601). */
@@ -78,7 +79,7 @@ export function entityImageKey(
   layer: EntityImageLayer,
   type: EntityImageType,
   entityId: string,
-  ext: string,
+  ext: string
 ): string {
   return `${layer}/${type}/${entityId}.${ext}`;
 }
@@ -88,15 +89,15 @@ export function entityImageKey(
  * fallback. Pure given the manifest.
  *
  * @example
- *   const url = entityImage('crest', 'btl_football_team_42', manifest);
- *   // -> "https://media.breakingthelines.dev/btl/crest/btl_football_team_42.svg"
+ *   const url = entityImage('crest', 'btl_football_team_t9d7dd08f', manifest);
+ *   // -> "https://media.breakingthelines.dev/btl/crest/btl_football_team_t9d7dd08f.svg"
  *   //    (or .../provider/... if no bespoke art, or null → monogram)
  */
 export function entityImage(
   type: EntityImageType,
   entityId: string,
   manifest: EntityImageManifest,
-  opts: EntityImageOptions = {},
+  opts: EntityImageOptions = {}
 ): string | null {
   // 0. Explicit CORS-clean override (e.g. backend-indexed URL) wins.
   if (opts.imageUrl) return opts.imageUrl;
