@@ -253,7 +253,10 @@ export * from './lib/format';
 export * from './lib/image-presentation';
 export * from './lib/render-mentions';
 export * from './lib/entity-image';
-export { ENTITY_IMAGERY_CDN_BASE, ENTITY_IMAGERY_SEED_MANIFEST } from './lib/entity-imagery-manifest';
+export {
+  ENTITY_IMAGERY_CDN_BASE,
+  ENTITY_IMAGERY_SEED_MANIFEST,
+} from './lib/entity-imagery-manifest';
 
 // Hooks
 export * from './hooks/index';
