@@ -1,0 +1,28 @@
+{
+  "version": "2026-06-02T00:00:00Z",
+  "cdnBase": "https://media.breakingthelines.dev",
+  "entities": {
+    "btl_football_competition_39": { "type": "competition", "provider": "png" },
+    "btl_football_competition_140": { "type": "competition", "provider": "png" },
+    "btl_football_competition_135": { "type": "competition", "provider": "png" },
+    "btl_football_competition_78": { "type": "competition", "provider": "png" },
+    "btl_football_competition_61": { "type": "competition", "provider": "png" },
+    "btl_football_competition_2": { "type": "competition", "provider": "png" },
+    "btl_football_competition_3": { "type": "competition", "provider": "png" },
+    "btl_football_competition_45": { "type": "competition", "provider": "png" },
+    "btl_football_competition_13": { "type": "competition", "provider": "png" },
+    "btl_football_competition_44": { "type": "competition", "provider": "png" },
+    "btl_football_team_42": { "type": "crest", "provider": "png" },
+    "btl_football_team_66": { "type": "crest", "provider": "png" },
+    "btl_football_team_49": { "type": "crest", "provider": "png" },
+    "btl_football_team_40": { "type": "crest", "provider": "png" },
+    "btl_football_team_50": { "type": "crest", "provider": "png" },
+    "btl_football_team_33": { "type": "crest", "provider": "png" },
+    "btl_football_team_47": { "type": "crest", "provider": "png" },
+    "btl_football_team_34": { "type": "crest", "provider": "png" },
+    "btl_football_team_541": { "type": "crest", "provider": "png" },
+    "btl_football_team_529": { "type": "crest", "provider": "png" },
+    "btl_football_team_505": { "type": "crest", "provider": "png" },
+    "btl_football_team_489": { "type": "crest", "provider": "png" }
+  }
+}
