@@ -1,5 +1,7 @@
 import preview from '#.storybook/preview';
 import { useRef, useState } from 'react';
+import { cdp, page as browserPage } from 'vitest/browser';
+import { expect, waitFor } from 'storybook/test';
 import { PageFlip, type PageFlipHandle, type PageFlipPage } from './page-flip';
 
 const meta = preview.meta({
@@ -859,4 +861,235 @@ export const OnboardingProgrammatic = meta.story({
  */
 export const OnboardingSinglePage = meta.story({
   render: () => <OnboardingFlow bookMode="single" />,
+});
+
+// ── Real-click verification: at-rest page controls must be hit-test reachable ─
+// Regression guard for the residual interaction bug: the flip's drag-capture
+// chrome (full-surface interaction surface + edge/corner grips) sat OVER the
+// at-rest active page, so a REAL coordinate click (browser hit-test, the way a
+// human mouse or `page.click()` works) landed on the overlay, not the page's own
+// footer Continue button or the final "Enter the Arena" CTA. A staging smoke
+// test could only advance via a synthetic `dispatchEvent` (which bypasses
+// hit-testing); a real mouse could miss. This story drives the flow with REAL
+// `userEvent.click` on the live buttons (the vitest browser provider does true
+// coordinate hit-testing) and asserts each click reaches its target. It also
+// drives a `userEvent.pointer` drag to prove edge drag-to-peel still works.
+
+/** Full-bleed onboarding-style flow with a final "Enter the Arena" CTA. */
+function RealClickFlow() {
+  const ref = useRef<PageFlipHandle>(null);
+  const [position, setPosition] = useState(0);
+  const [entered, setEntered] = useState(false);
+
+  const SCREENS = [
+    { kicker: 'Your football', heading: 'Pick the football you care about.' },
+    { kicker: 'Your masthead', heading: 'Claim your handle.' },
+    { kicker: 'No. 01', heading: 'Your first issue.' },
+  ];
+  const total = SCREENS.length;
+  const goNext = () => ref.current?.next();
+  const goPrev = () => ref.current?.prev();
+
+  const pages: PageFlipPage[] = SCREENS.map((s, idx) => ({
+    id: `rc-${idx}`,
+    render: () => (
+      <OnboardingScreen
+        kicker={s.kicker}
+        heading={s.heading}
+        folio={idx + 1}
+        folioTotal={total}
+        onBack={idx > 0 ? goPrev : undefined}
+        onContinue={idx < total - 1 ? goNext : undefined}
+      >
+        <p style={{ fontFamily: SERIF, fontSize: 16, lineHeight: 1.7, color: '#d8d4d2' }}>
+          Screen {idx + 1}. The footer Continue button must be reachable by a real coordinate click
+          — it sits in the bottom-right corner, under the corner drag-grip.
+        </p>
+        {idx === total - 1 ? (
+          // The reveal CTA — centred, full-bleed, the way "Enter the Arena" reads
+          // at the end of First Touch. Must be real-clickable.
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48 }}>
+            <button
+              type="button"
+              data-testid="rc-enter-arena"
+              onClick={() => setEntered(true)}
+              style={{
+                fontFamily: SANS,
+                fontSize: 16,
+                fontWeight: 700,
+                color: C.ground,
+                background: C.red,
+                border: 'none',
+                borderRadius: 999,
+                padding: '14px 36px',
+                cursor: 'pointer',
+              }}
+            >
+              Enter the Arena
+            </button>
+          </div>
+        ) : null}
+      </OnboardingScreen>
+    ),
+  }));
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: C.ground,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        data-page-flip-exclude="true"
+        data-testid="rc-state"
+        data-position={position}
+        data-entered={entered ? '1' : '0'}
+        style={{
+          position: 'fixed',
+          top: 4,
+          left: 4,
+          zIndex: 9999,
+          fontFamily: SANS,
+          fontSize: 11,
+          color: '#fff',
+          background: 'rgba(0,0,0,0.6)',
+          padding: '2px 6px',
+          pointerEvents: 'none',
+        }}
+      >
+        pos:{position} entered:{entered ? 'yes' : 'no'}
+      </div>
+      <PageFlip
+        ref={ref}
+        pages={pages}
+        bookMode="single"
+        showHoverControl={false}
+        sound={false}
+        onIndexChange={(i) => setPosition(i)}
+        freezeBackground="#0d0d0d"
+        style={{ width: '100vw', height: '100vh' }}
+        aria-label="Onboarding (real-click verification)"
+      />
+    </div>
+  );
+}
+
+/**
+ * REAL-click regression guard. Walks the flow using genuine **coordinate** mouse
+ * clicks dispatched through CDP `Input.dispatchMouseEvent` at each control's own
+ * centre point — the exact human-mouse / `page.mouse.click(x,y)` path, which
+ * hit-tests the *topmost* element at that coordinate. (Testing-Library
+ * `userEvent.click(node)` dispatches on the node directly and so does NOT catch
+ * occlusion; a synthetic `dispatchEvent` bypasses hit-testing entirely — both
+ * mask this bug, which is why the staging smoke test passed while a real mouse
+ * missed.) Each click must reach the page's own control, not the flip chrome.
+ * A final coordinate drag confirms edge drag-to-peel still works.
+ */
+export const OnboardingRealClick = meta.story({
+  render: () => <RealClickFlow />,
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+    const win = doc.defaultView!;
+    const session = await cdp();
+
+    const readState = () => {
+      const el = doc.querySelector('[data-testid="rc-state"]');
+      return {
+        pos: Number(el?.getAttribute('data-position') ?? '-1'),
+        entered: el?.getAttribute('data-entered') === '1',
+      };
+    };
+
+    const rect = (sel: string) => {
+      const el = doc.querySelector(sel);
+      if (!el) throw new Error(`element not found: ${sel}`);
+      return { el, r: el.getBoundingClientRect() };
+    };
+
+    // Occlusion probe: the element the browser hit-tests as topmost at a point.
+    // The bug was that this returned the flip's drag chrome over the page's own
+    // controls — so a real coordinate click never reached the button.
+    const topMostIsTarget = (sel: string) => {
+      const { el, r } = rect(sel);
+      const x = Math.round(r.left + r.width / 2);
+      const y = Math.round(r.top + r.height / 2);
+      const top = doc.elementFromPoint(x, y) as HTMLElement | null;
+      return !!top && (top === el || el.contains(top) || top.contains(el));
+    };
+
+    // A genuine, hit-tested click via the browser provider (Playwright
+    // `locator.click()` under the hood): it scrolls into view, waits for
+    // actionability, and THROWS "intercepts pointer events" if anything covers
+    // the target — i.e. exactly a real mouse. (Testing-Library `userEvent` and
+    // `dispatchEvent` both target the node directly and so would mask the bug.)
+    const realClick = (testid: string) => browserPage.getByTestId(testid).click();
+
+    // CDP input is dispatched in TOP-LEVEL page coordinates; the story renders
+    // inside Storybook's preview iframe, so translate iframe-relative coords by
+    // the frame's offset for the drag gesture below.
+    const frame = (win.frameElement as HTMLElement | null)?.getBoundingClientRect();
+    const ox = frame?.left ?? 0;
+    const oy = frame?.top ?? 0;
+
+    // Start at screen 1.
+    await waitFor(() => expect(readState().pos).toBe(0));
+
+    // ── 1. Footer Continue is the TOP hit-test target AND a real coordinate ──
+    // click on it advances the flip.
+    await waitFor(() => expect(topMostIsTarget('[data-testid="ob-continue"]')).toBe(true));
+    await realClick('ob-continue');
+    await waitFor(() => expect(readState().pos).toBe(1), { timeout: 6000 });
+
+    // ── 2. After settling, the next page's own controls are real-clickable. ──
+    await waitFor(() => expect(topMostIsTarget('[data-testid="ob-continue"]')).toBe(true));
+    await realClick('ob-continue');
+    await waitFor(() => expect(readState().pos).toBe(2), { timeout: 6000 });
+
+    // ── 3. The final "Enter the Arena" CTA is real-clickable. ───────────────
+    await waitFor(() => expect(topMostIsTarget('[data-testid="rc-enter-arena"]')).toBe(true));
+    await realClick('rc-enter-arena');
+    await waitFor(() => expect(readState().entered).toBe(true), { timeout: 6000 });
+
+    // ── 4. Drag-to-peel still works: a horizontal drag across the surface must ─
+    // turn the page (a backward peel from the last screen back to screen 2). The
+    // press starts on plain page area; deferred capture escalates once travel
+    // passes the tap threshold and the controller drives the curl.
+    const posBefore = readState().pos;
+    const surface = rect('[aria-label="Onboarding (real-click verification)"]').r;
+    const y = Math.round(oy + surface.top + surface.height / 2);
+    const startX = Math.round(ox + surface.left + surface.width * 0.5);
+    const endX = Math.round(ox + surface.left + surface.width * 0.95);
+    await session.send('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      x: startX,
+      y,
+      button: 'left',
+      buttons: 1,
+      clickCount: 1,
+    });
+    const steps = 10;
+    for (let i = 1; i <= steps; i++) {
+      await session.send('Input.dispatchMouseEvent', {
+        type: 'mouseMoved',
+        x: Math.round(startX + ((endX - startX) * i) / steps),
+        y,
+        button: 'left',
+        buttons: 1,
+      });
+    }
+    await session.send('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      x: endX,
+      y,
+      button: 'left',
+      buttons: 0,
+      clickCount: 1,
+    });
+    await waitFor(() => expect(readState().pos).toBe(posBefore - 1), { timeout: 6000 });
+  },
 });
