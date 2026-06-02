@@ -25,11 +25,7 @@ import {
 import { FlipHoverControl } from './flip-hover-control';
 import { usePrewarmTextures } from './use-prewarm-textures';
 import { useBookLayout, type BookModePreference } from './use-book-layout';
-import {
-  usePageFlipController,
-  type FlipDirection,
-  type PageFlipController,
-} from './use-page-flip-controller';
+import { usePageFlipController, type FlipDirection } from './use-page-flip-controller';
 
 /** How the turn is rendered. */
 export type FlipMode = 'curl' | 'skim' | 'flat';
@@ -321,13 +317,25 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
       tabIndex={0}
       className={className}
       onPointerDownCapture={armAudio}
+      // Drag-to-peel lives on the ROOT (not a top overlay), using deferred
+      // capture: a press only *arms* a peel and takes no pointer capture, so it
+      // passes straight through to the live page control beneath — a real
+      // coordinate click reaches the page's own buttons. Only once the pointer
+      // travels past the tap threshold does the controller capture and drive the
+      // curl. A peel can therefore start anywhere on the surface, including the
+      // binding edges and corners, with no always-on overlay stealing clicks.
+      {...controller.pointerHandlers}
       style={{
         position: 'relative',
         width: '100%',
         height: '100%',
         overflow: 'hidden',
         background: freezeBackground,
-        touchAction: 'pan-y',
+        // Claim horizontal gestures for the peel while letting vertical scroll
+        // through; during a drag, lock both axes so the peel isn't fighting the
+        // page scroller.
+        touchAction: controller.isDragging ? 'none' : 'pan-y',
+        cursor: controller.isDragging ? 'grabbing' : undefined,
         ...style,
       }}
     >
@@ -409,26 +417,26 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
         />
       )}
 
-      {/* The interaction surface — pointer capture for drag-to-peel + tap. Sits
-          on top so gestures are caught regardless of layer. Marked as flip
-          chrome so the freezer never rasterises it and the grip tap-forward
-          hit-test sees through it to the page content beneath. */}
-      <div
-        data-page-flip-exclude="true"
-        {...controller.pointerHandlers}
-        style={{
-          position: 'absolute',
-          inset: 0,
-          // Let clicks through to the live DOM at rest (so links/forms work);
-          // capture pointers only while turning.
-          pointerEvents: controller.isTurning || controller.isDragging ? 'auto' : 'none',
-          cursor: controller.isDragging ? 'grabbing' : 'grab',
-        }}
-      />
-      {/* Always-on drag-start zones at the page edges + outer corners. A peel
-          can start here; a tap is forwarded to the content beneath, so page
-          controls (e.g. the onboarding footer buttons) keep working. */}
-      <EdgeGrips controller={controller} />
+      {/* During-turn cover. ONLY mounted while a drag/turn is in flight, so at
+          rest it never exists to occlude the page's own controls (a real
+          coordinate click lands on the live DOM, not on this layer). While the
+          curl/skim/flat turn animates it sits on top to (a) show the grabbing
+          cursor and (b) swallow stray clicks on page content mid-flight. It
+          carries no pointer handlers — the root owns the gesture, and the active
+          peel is pointer-captured to the root regardless of this layer. Marked
+          flip chrome so the freezer never rasterises it. */}
+      {(controller.isTurning || controller.isDragging) && (
+        <div
+          data-page-flip-exclude="true"
+          aria-hidden
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'auto',
+            cursor: controller.isDragging ? 'grabbing' : 'grab',
+          }}
+        />
+      )}
 
       {/* Hover-to-advance control — reuses the article-detail floating bar. */}
       {showHoverControl && (
@@ -1033,115 +1041,6 @@ function SkimMesh({
         <meshBasicMaterial ref={backMat} map={textureB} transparent opacity={0} />
       </mesh>
     </group>
-  );
-}
-
-// ── Edge grips: always-on drag-start zones at the page edges + corners ────────
-//
-// The grips let a peel START from the binding edges/corners. But they sit ON
-// TOP of the live page DOM, so naively they swallow CLICKS on content that
-// reaches the edges — most importantly the onboarding footer's Back / Continue
-// buttons, which live in the bottom corners. A swallowed Continue is a dead-end
-// flow. So each grip distinguishes a peel (real horizontal travel) from a tap:
-// a drag drives the curl through the controller; a tap is released WITHOUT
-// turning and forwarded as a click to the interactive element beneath, so page
-// controls keep working while edge-peel still works.
-
-/** Travel (px) above which a grip gesture is a peel, not a tap. */
-const GRIP_TAP_SLOP_PX = 6;
-
-function EdgeGrips({ controller }: { controller: PageFlipController }) {
-  // Per-pointer start position + whether it has crossed into "peel" territory.
-  const gesture = useRef<{ x: number; y: number; peeling: boolean } | null>(null);
-
-  const handlers = useMemo(() => {
-    const { pointerHandlers, cancelDrag } = controller;
-
-    /**
-     * Forward a tap to the topmost PAGE element beneath the flip chrome. The
-     * grips, the interaction surface, and the hover-control wrapper are all
-     * `[data-page-flip-exclude]` overlays that can sit over content at the
-     * moment of a tap (the interaction surface in particular is pointer-active
-     * for a frame after a drag starts, before React re-renders it inert). So we
-     * hit-test the whole stack with `elementsFromPoint` and pick the first
-     * element that is NOT flip chrome — then click its nearest clickable
-     * ancestor. This is robust regardless of transient overlay state.
-     */
-    const forwardTap = (clientX: number, clientY: number) => {
-      const target = document
-        .elementsFromPoint(clientX, clientY)
-        .find((el) => el instanceof HTMLElement && !el.closest('[data-page-flip-exclude]')) as
-        | HTMLElement
-        | undefined;
-      if (!target) return;
-      const clickable = target.closest<HTMLElement>(
-        'button, a, input, select, textarea, [role="button"], [role="tab"], [role="option"], [tabindex]:not([tabindex="-1"]), [onclick]'
-      );
-      (clickable ?? target).click();
-    };
-
-    return {
-      onPointerDown: (e: React.PointerEvent) => {
-        gesture.current = { x: e.clientX, y: e.clientY, peeling: false };
-        pointerHandlers.onPointerDown(e);
-      },
-      onPointerMove: (e: React.PointerEvent) => {
-        const g = gesture.current;
-        if (g && !g.peeling && Math.abs(e.clientX - g.x) > GRIP_TAP_SLOP_PX) {
-          g.peeling = true;
-        }
-        pointerHandlers.onPointerMove(e);
-      },
-      onPointerUp: (e: React.PointerEvent) => {
-        const g = gesture.current;
-        gesture.current = null;
-        const moved = g ? Math.hypot(e.clientX - g.x, e.clientY - g.y) : 0;
-        if (g?.peeling || moved > GRIP_TAP_SLOP_PX) {
-          // A real peel — let the controller commit/settle it.
-          pointerHandlers.onPointerUp(e);
-        } else {
-          // A tap — don't turn the page; hand the click to the content beneath.
-          cancelDrag(e);
-          forwardTap(e.clientX, e.clientY);
-        }
-      },
-      onPointerCancel: (e: React.PointerEvent) => {
-        gesture.current = null;
-        pointerHandlers.onPointerCancel(e);
-      },
-    };
-  }, [controller]);
-
-  const edge: React.CSSProperties = {
-    position: 'absolute',
-    top: 0,
-    bottom: 0,
-    width: '12%',
-    maxWidth: 96,
-    pointerEvents: 'auto',
-    cursor: 'grab',
-    zIndex: 3,
-  };
-  // Slightly fatter corner targets — the natural place to pinch a page.
-  const corner: React.CSSProperties = {
-    position: 'absolute',
-    width: '16%',
-    height: '22%',
-    maxWidth: 120,
-    maxHeight: 200,
-    pointerEvents: 'auto',
-    cursor: 'grab',
-    zIndex: 4,
-  };
-  return (
-    <div data-page-flip-exclude="true" aria-hidden>
-      <div {...handlers} style={{ ...edge, left: 0 }} />
-      <div {...handlers} style={{ ...edge, right: 0 }} />
-      <div {...handlers} style={{ ...corner, right: 0, top: 0 }} />
-      <div {...handlers} style={{ ...corner, right: 0, bottom: 0 }} />
-      <div {...handlers} style={{ ...corner, left: 0, top: 0 }} />
-      <div {...handlers} style={{ ...corner, left: 0, bottom: 0 }} />
-    </div>
   );
 }
 

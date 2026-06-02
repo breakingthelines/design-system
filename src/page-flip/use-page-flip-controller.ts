@@ -47,7 +47,12 @@ export interface PageFlipController {
   prev(): void;
   goTo(index: number): void;
 
-  /** Pointer handlers to spread onto the interaction surface. */
+  /**
+   * Pointer handlers to spread onto the flip ROOT (which wraps the live page
+   * DOM). They use deferred capture — a press only arms a peel and takes no
+   * pointer capture, so a real click falls through to the page control beneath;
+   * capture is taken only once the gesture escalates to a drag.
+   */
   pointerHandlers: {
     onPointerDown: (e: React.PointerEvent) => void;
     onPointerMove: (e: React.PointerEvent) => void;
@@ -56,9 +61,11 @@ export interface PageFlipController {
   };
 
   /**
-   * Abandon an in-flight drag without turning the page (and release pointer
-   * capture). Used by the edge grips to release a *tap* so it can be forwarded
-   * to the interactive content beneath, rather than committing a page turn.
+   * Abandon an in-flight peel without turning the page, releasing pointer
+   * capture if one had been taken. With deferred capture a press that never
+   * escalates holds no capture and starts no turn, so this is a no-op for a
+   * plain click — letting it reach the page control beneath. Exposed for hosts
+   * that need to force-cancel a gesture (e.g. on an external navigation).
    */
   cancelDrag(e: React.PointerEvent): void;
 
@@ -131,6 +138,16 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
     /** Locked once the drag passes the dead-zone, so jitter near dx≈0 can't flip it. */
     dirLocked: boolean;
     pointerId: number;
+    /**
+     * Deferred-capture gate. A pointer-down only *arms* a potential peel; it does
+     * NOT capture the pointer or start a turn. We escalate to a real, captured
+     * drag only once the pointer travels past {@link TAP_THRESHOLD_PX}. Until
+     * then the gesture is still a candidate *click*, so the press passes straight
+     * through to the live page control beneath (a real coordinate click reaches
+     * the page's own buttons). `escalated` flips true at that point; a release
+     * before escalation is a plain click we leave entirely to the DOM.
+     */
+    escalated: boolean;
   } | null>(null);
 
   const commitIndex = useCallback(
@@ -194,13 +211,20 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
     if (committed) commitIndex(direction);
   }, [direction, commitIndex, setTarget]);
 
-  // ── Pointer: drag-to-peel ────────────────────────────────────────────────
+  // ── Pointer: drag-to-peel (deferred capture) ─────────────────────────────
+  // A press only *arms* a peel — it does NOT capture the pointer or begin a
+  // turn. This is what lets a real coordinate click fall through to the live
+  // page control beneath (the at-rest page owns the hit-test). We escalate to a
+  // captured 1:1 drag only once the pointer crosses the tap threshold; see
+  // `escalate` below. These handlers are spread onto the flip ROOT (which wraps
+  // the live page DOM), so a peel can start anywhere — including the binding
+  // edges and corners — without an always-on overlay stealing clicks.
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
     const width = e.currentTarget.getBoundingClientRect().width || 1;
-    // Capture the pointer so the whole gesture is delivered here even if it
-    // strays off the grip — the curl follows the finger 1:1 with no teleport.
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    // NOTE: no setPointerCapture / no setIsDragging here — capturing on the
+    // press would redirect the ensuing `click` to the flip chrome and the page
+    // button would never fire. We defer both to `escalate()`.
     drag.current = {
       startX: e.clientX,
       lastX: e.clientX,
@@ -211,8 +235,8 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
       dir: 'forward',
       dirLocked: false,
       pointerId: e.pointerId,
+      escalated: false,
     };
-    setIsDragging(true);
   }, []);
 
   const onPointerMove = useCallback(
@@ -226,15 +250,24 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
       // so progress + velocity are measured against that width for a true 1:1.
       const effWidth = Math.max(d.width * dragWidthFactor, 1);
 
-      // Dead-zone: under the tap threshold we don't start a turn at all, so a
-      // grab that doesn't move yet never flashes the curl or flips direction.
-      if (!d.dirLocked && d.moved < TAP_THRESHOLD_PX) {
-        // Keep tracking velocity so a fast flick from rest is still measured.
+      // Dead-zone: under the tap threshold this is still a *candidate click*. We
+      // neither capture nor start a turn, so the press stays click-through to
+      // the page control beneath; we only track velocity for a flick from rest.
+      if (!d.escalated && d.moved < TAP_THRESHOLD_PX) {
         const dt0 = Math.max(e.timeStamp - d.lastT, 1);
         d.velocity = (e.clientX - d.lastX) / effWidth / dt0;
         d.lastX = e.clientX;
         d.lastT = e.timeStamp;
         return;
+      }
+
+      // First crossing of the threshold → escalate to a real, captured peel.
+      // Capture now (not on the press) so the rest of the gesture is delivered
+      // 1:1 even if it strays off the surface, while a pure click never captured.
+      if (!d.escalated) {
+        d.escalated = true;
+        (e.currentTarget as HTMLElement).setPointerCapture?.(d.pointerId);
+        setIsDragging(true);
       }
 
       // Drag left → turn forward (page peels from the right edge); drag right →
@@ -275,21 +308,36 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
     (e: React.PointerEvent) => {
       const d = drag.current;
       drag.current = null;
-      setIsDragging(false);
       if (!d) return;
+
+      // Never escalated to a peel → this was a plain click/tap. The press already
+      // passed through to whatever lives at the point (a page control fires its
+      // own handler). We MUST NOT also turn the page when the user clicked an
+      // interactive control, or a Continue/CTA click would double as a flip. Tap
+      // -to-advance survives only on *non-interactive* page area, preserving the
+      // "tap a half to turn" affordance without stealing control clicks.
+      if (!d.escalated) {
+        const hitInteractive = isInteractiveAtPoint(e.clientX, e.clientY);
+        if (!hitInteractive && d.moved < TAP_THRESHOLD_PX) {
+          const rect = e.currentTarget.getBoundingClientRect();
+          const hitForward = e.clientX - rect.left > rect.width / 2;
+          const dir: FlipDirection = hitForward ? 'forward' : 'backward';
+          if (canGo(dir)) beginTurn(dir);
+        }
+        // No capture was taken on a non-escalated gesture, so nothing to release
+        // and no in-flight curl to reset.
+        return;
+      }
+
+      setIsDragging(false);
       (e.currentTarget as HTMLElement).releasePointerCapture?.(d.pointerId);
 
-      // Tap (negligible travel): advance/back depending on which half was hit.
+      // A captured peel that never passed the threshold mid-move (defensive): if
+      // somehow escalated with negligible travel, just reset without turning.
       if (d.moved < TAP_THRESHOLD_PX) {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const hitForward = e.clientX - rect.left > rect.width / 2;
-        const dir: FlipDirection = hitForward ? 'forward' : 'backward';
-        if (canGo(dir)) beginTurn(dir);
-        else {
-          setProgress(0);
-          setTarget(0);
-          setIsTurning(false);
-        }
+        setProgress(0);
+        setTarget(0);
+        setIsTurning(false);
         return;
       }
 
@@ -312,19 +360,23 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
     [progress, canGo, beginTurn, setTarget]
   );
 
-  // Abandon an in-progress (or just-started) drag WITHOUT turning the page —
-  // distinct from `endDrag`, which converts a tap into a page turn. The edge
-  // grips use this so a *tap* that lands on them (rather than a peel drag) is
-  // forwarded to the interactive content beneath instead of stealing the click.
+  // Abandon an in-progress (or just-armed) gesture WITHOUT turning the page, and
+  // release pointer capture if a peel had escalated. With deferred capture a
+  // press alone takes no capture and starts no turn, so for an un-escalated
+  // gesture this is effectively a no-op beyond clearing the arm — exactly what
+  // lets a real click reach the page control beneath.
   const cancelDrag = useCallback(
     (e: React.PointerEvent) => {
       const d = drag.current;
       drag.current = null;
-      setIsDragging(false);
-      setProgress(0);
-      setTarget(0);
-      setIsTurning(false);
-      if (d) (e.currentTarget as HTMLElement).releasePointerCapture?.(d.pointerId);
+      if (!d) return;
+      if (d.escalated) {
+        setIsDragging(false);
+        setProgress(0);
+        setTarget(0);
+        setIsTurning(false);
+        (e.currentTarget as HTMLElement).releasePointerCapture?.(d.pointerId);
+      }
     },
     [setTarget]
   );
@@ -377,4 +429,25 @@ function clampIndex(i: number, count: number): number {
 
 function clamp01(x: number): number {
   return Math.max(0, Math.min(1, x));
+}
+
+/** Selector matching the elements a tap should defer to (never flip over). */
+const INTERACTIVE_SELECTOR =
+  'button, a[href], input, select, textarea, [role="button"], [role="tab"], [role="option"], [role="link"], [role="menuitem"], [role="switch"], [role="checkbox"], [contenteditable="true"], [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Does the topmost element at this viewport point belong to an interactive page
+ * control? A tap there must NOT also turn the page — the control owns the click.
+ * Flip chrome (`[data-page-flip-exclude]`) is skipped so it never counts as the
+ * hit. Used only on a non-escalated release, so it runs at most once per click.
+ */
+function isInteractiveAtPoint(clientX: number, clientY: number): boolean {
+  if (typeof document === 'undefined') return false;
+  const stack = document.elementsFromPoint(clientX, clientY);
+  for (const el of stack) {
+    if (!(el instanceof HTMLElement)) continue;
+    if (el.closest('[data-page-flip-exclude]')) continue; // ignore flip chrome
+    return !!el.closest(INTERACTIVE_SELECTOR);
+  }
+  return false;
 }
