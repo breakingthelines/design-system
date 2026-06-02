@@ -1,5 +1,5 @@
 import preview from '#.storybook/preview';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { PageFlip, type PageFlipHandle, type PageFlipPage } from './page-flip';
 
 const meta = preview.meta({
@@ -581,4 +581,282 @@ export const FlatFallback = meta.story({
       <PageFlip mode="flat" bookMode="single" pages={samplePages} style={{ fontFamily: SANS }} />
     </PortraitFrame>
   ),
+});
+
+// ── Onboarding repro: full-bleed, multi-page, PROGRAMMATIC advance ───────────
+// Mirrors the platform First Touch flow (app/routes/_fullbleed/onboarding):
+//  - <PageFlip bookMode="auto" className="h-dvh w-screen"> filling the viewport,
+//  - each page a full-bleed "screen" (header + body + a footer Continue button),
+//  - the Continue button advances PROGRAMMATICALLY via the handle ref's next(),
+//    exactly like the platform's `goNext` → `flipRef.current?.next()`.
+//
+// This is the configuration that wedged on staging: clicking Continue created a
+// WebGL canvas, the deck lost pointer-events, and the next screen never
+// re-activated (the turn never settled), while spread-mode squeezed each screen
+// into a half-width column that overflowed off the viewport. The story drives
+// purely through the live footer buttons (no Storybook controls) so a Playwright
+// smoke test can reproduce + verify the fix end to end.
+
+/** A full-bleed onboarding "screen" — header, scrolling body, footer nav. */
+function OnboardingScreen({
+  kicker,
+  heading,
+  folio,
+  folioTotal,
+  children,
+  onBack,
+  onContinue,
+  canContinue = true,
+}: {
+  kicker: string;
+  heading: string;
+  folio: number;
+  folioTotal: number;
+  children: React.ReactNode;
+  onBack?: () => void;
+  onContinue?: () => void;
+  canContinue?: boolean;
+}) {
+  return (
+    <div
+      data-slot="flip-screen"
+      data-testid={`ob-screen-${folio}`}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        background: C.ground,
+        color: C.ink,
+        overflow: 'hidden',
+        fontFamily: SANS,
+      }}
+    >
+      <header style={{ padding: '36px 40px 0' }}>
+        <div
+          style={{
+            fontFamily: SANS,
+            fontSize: 11,
+            letterSpacing: '0.26em',
+            textTransform: 'uppercase',
+            color: C.red,
+            fontWeight: 700,
+            marginBottom: 12,
+          }}
+        >
+          {kicker}
+        </div>
+        <h1
+          style={{
+            fontFamily: SERIF,
+            fontSize: 42,
+            lineHeight: 1.05,
+            fontWeight: 700,
+            letterSpacing: '-0.02em',
+            margin: 0,
+            maxWidth: '18ch',
+          }}
+        >
+          {heading}
+        </h1>
+      </header>
+
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '28px 40px 16px' }}>
+        {children}
+      </div>
+
+      <footer style={{ padding: '0 40px 32px' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderTop: `1px solid ${C.rule}`,
+            paddingTop: 12,
+          }}
+        >
+          <div
+            style={{
+              fontFamily: SANS,
+              fontSize: 10,
+              letterSpacing: '0.28em',
+              textTransform: 'uppercase',
+              color: C.muted,
+            }}
+          >
+            {String(folio).padStart(2, '0')} / {String(folioTotal).padStart(2, '0')}
+          </div>
+          <nav style={{ display: 'flex', gap: 12 }}>
+            {onBack ? (
+              <button
+                type="button"
+                data-testid="ob-back"
+                onClick={onBack}
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'rgba(255,255,255,0.6)',
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                ← Back
+              </button>
+            ) : null}
+            {onContinue ? (
+              <button
+                type="button"
+                data-testid="ob-continue"
+                onClick={onContinue}
+                disabled={!canContinue}
+                style={{
+                  fontFamily: SANS,
+                  fontSize: 13,
+                  fontWeight: 700,
+                  color: C.ground,
+                  background: '#fff',
+                  border: 'none',
+                  borderRadius: 999,
+                  padding: '9px 20px',
+                  cursor: canContinue ? 'pointer' : 'not-allowed',
+                  opacity: canContinue ? 1 : 0.4,
+                }}
+              >
+                Continue →
+              </button>
+            ) : null}
+          </nav>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+/** The shared onboarding flow body, parameterised by book mode. */
+function OnboardingFlow({ bookMode }: { bookMode: 'auto' | 'single' | 'spread' }) {
+  const ref = useRef<PageFlipHandle>(null);
+  const [position, setPosition] = useState(0);
+
+  const SCREENS = [
+    { kicker: 'Your football', heading: 'Pick the football you care about.' },
+    { kicker: 'Your masthead', heading: 'Claim your handle.' },
+    { kicker: 'On the record', heading: 'Call one. Or rate one.' },
+    { kicker: 'Join in', heading: 'React to a piece.' },
+    { kicker: 'Your corner', heading: 'Follow a few.' },
+    { kicker: 'No. 01', heading: 'Your first issue.' },
+  ];
+  const total = SCREENS.length;
+
+  const goNext = () => ref.current?.next();
+  const goPrev = () => ref.current?.prev();
+
+  const pages: PageFlipPage[] = SCREENS.map((s, idx) => ({
+    id: `ob-${idx}`,
+    render: () => (
+      <OnboardingScreen
+        kicker={s.kicker}
+        heading={s.heading}
+        folio={idx + 1}
+        folioTotal={total}
+        onBack={idx > 0 ? goPrev : undefined}
+        onContinue={idx < total - 1 ? goNext : undefined}
+      >
+        <p style={{ fontFamily: SERIF, fontSize: 16, lineHeight: 1.7, color: '#d8d4d2' }}>
+          Screen {idx + 1} body content. In the platform this is an interactive seed action (search
+          box, crest grid, handle input, …). The footer Continue button advances the flip
+          programmatically through the imperative handle.
+        </p>
+        <div
+          style={{
+            marginTop: 20,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: 8,
+          }}
+        >
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                height: 48,
+                borderRadius: 2,
+                border: `1px solid ${C.rule}`,
+                background: 'rgba(255,255,255,0.02)',
+              }}
+            />
+          ))}
+        </div>
+      </OnboardingScreen>
+    ),
+  }));
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        background: C.ground,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {/* Out-of-band probe: the settled index, for the smoke test. Excluded
+          from any freeze so it never lands in a page texture. */}
+      <div
+        data-page-flip-exclude="true"
+        data-testid="ob-position"
+        style={{
+          position: 'fixed',
+          top: 4,
+          left: 4,
+          zIndex: 9999,
+          fontFamily: SANS,
+          fontSize: 11,
+          color: '#fff',
+          background: 'rgba(0,0,0,0.6)',
+          padding: '2px 6px',
+          pointerEvents: 'none',
+        }}
+      >
+        pos:{position}
+      </div>
+      <PageFlip
+        ref={ref}
+        pages={pages}
+        bookMode={bookMode}
+        onIndexChange={(i) => setPosition(i)}
+        freezeBackground="#0d0d0d"
+        className="h-dvh w-screen"
+        style={{ width: '100vw', height: '100vh' }}
+        aria-label="Onboarding (programmatic)"
+      />
+    </div>
+  );
+}
+
+/**
+ * Full-bleed onboarding flow with PROGRAMMATIC advance — the staging-blocker
+ * repro. Six live screens; Continue advances via the handle ref. The visible
+ * `data-testid="ob-position"` mirrors the settled index so a test can assert the
+ * turn actually completed (the wedge left it stuck at 0). `bookMode="auto"`
+ * matches the platform exactly — on a wide viewport it resolves to a two-page
+ * spread, so each full-bleed screen is squeezed into a half-width leaf (the
+ * off-viewport symptom). For a full-bleed single-screen-per-page flow, prefer
+ * {@link OnboardingSinglePage}.
+ */
+export const OnboardingProgrammatic = meta.story({
+  render: () => <OnboardingFlow bookMode="auto" />,
+});
+
+/**
+ * The same flow in `single` mode — the correct book mode for a full-bleed
+ * one-screen-per-page onboarding (each screen fills the viewport, no half-width
+ * spread). Programmatic Continue advances cleanly through every page. This is
+ * the configuration the platform onboarding should pass.
+ */
+export const OnboardingSinglePage = meta.story({
+  render: () => <OnboardingFlow bookMode="single" />,
 });
