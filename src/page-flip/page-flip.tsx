@@ -92,6 +92,19 @@ export interface PageFlipHandle {
 const DEFAULT_FREEZE_BG = '#0d0d0d';
 
 /**
+ * Hard ceiling (ms) for a single turn. The curl spring settles in ~620ms and
+ * skim in ~320ms, so any turn still "turning" past this has stalled — most
+ * likely the freeze rasteriser (`modern-screenshot`) never resolved (a hung
+ * `domToCanvas`, a tainted cross-origin image, or a face element that never
+ * mounted), so the spring's `onRest` never fired and `settle()` was never
+ * called. Left unhandled this wedges the flip permanently: `isTurning` stays
+ * true, the interaction surface keeps pointer-events, and the deck never
+ * re-activates. The watchdog force-settles so the turn always completes — the
+ * GL flourish is best-effort, advancing the page is not.
+ */
+const TURN_WATCHDOG_MS = 2500;
+
+/**
  * `<PageFlip>` — the WebGL "magazine" page-flip runtime.
  *
  * Architecture: pages are live, interactive DOM at rest. On a turn we freeze the
@@ -216,6 +229,21 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
   }, [onKeyDown, audio]);
+
+  // ── Turn watchdog ─────────────────────────────────────────────────────────
+  // Force-settle a turn that stalls (a hung freeze, a dropped spring onRest, a
+  // missing face). Armed only while `isTurning`; a normal turn clears the flag
+  // via settle() well before the deadline, so the timer is cleared and never
+  // fires. `settle` lives behind a ref so re-arming doesn't happen on its
+  // (direction-dependent) identity changes — only on the turning edge.
+  const settleRef = useRef(controller.settle);
+  settleRef.current = controller.settle;
+  const isTurningNow = controller.isTurning;
+  useEffect(() => {
+    if (!isTurningNow) return;
+    const id = setTimeout(() => settleRef.current(), TURN_WATCHDOG_MS);
+    return () => clearTimeout(id);
+  }, [isTurningNow]);
 
   const index = controller.index;
   const dir = controller.direction;
@@ -382,8 +410,11 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
       )}
 
       {/* The interaction surface — pointer capture for drag-to-peel + tap. Sits
-          on top so gestures are caught regardless of layer. */}
+          on top so gestures are caught regardless of layer. Marked as flip
+          chrome so the freezer never rasterises it and the grip tap-forward
+          hit-test sees through it to the page content beneath. */}
       <div
+        data-page-flip-exclude="true"
         {...controller.pointerHandlers}
         style={{
           position: 'absolute',
@@ -394,9 +425,10 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
           cursor: controller.isDragging ? 'grabbing' : 'grab',
         }}
       />
-      {/* Always-on drag-start zones at the page edges + outer corners, so a peel
-          can start without stealing clicks from page content. */}
-      <EdgeGrips pointerHandlers={controller.pointerHandlers} />
+      {/* Always-on drag-start zones at the page edges + outer corners. A peel
+          can start here; a tap is forwarded to the content beneath, so page
+          controls (e.g. the onboarding footer buttons) keep working. */}
+      <EdgeGrips controller={controller} />
 
       {/* Hover-to-advance control — reuses the article-detail floating bar. */}
       {showHoverControl && (
@@ -1005,12 +1037,81 @@ function SkimMesh({
 }
 
 // ── Edge grips: always-on drag-start zones at the page edges + corners ────────
+//
+// The grips let a peel START from the binding edges/corners. But they sit ON
+// TOP of the live page DOM, so naively they swallow CLICKS on content that
+// reaches the edges — most importantly the onboarding footer's Back / Continue
+// buttons, which live in the bottom corners. A swallowed Continue is a dead-end
+// flow. So each grip distinguishes a peel (real horizontal travel) from a tap:
+// a drag drives the curl through the controller; a tap is released WITHOUT
+// turning and forwarded as a click to the interactive element beneath, so page
+// controls keep working while edge-peel still works.
 
-function EdgeGrips({
-  pointerHandlers,
-}: {
-  pointerHandlers: PageFlipController['pointerHandlers'];
-}) {
+/** Travel (px) above which a grip gesture is a peel, not a tap. */
+const GRIP_TAP_SLOP_PX = 6;
+
+function EdgeGrips({ controller }: { controller: PageFlipController }) {
+  // Per-pointer start position + whether it has crossed into "peel" territory.
+  const gesture = useRef<{ x: number; y: number; peeling: boolean } | null>(null);
+
+  const handlers = useMemo(() => {
+    const { pointerHandlers, cancelDrag } = controller;
+
+    /**
+     * Forward a tap to the topmost PAGE element beneath the flip chrome. The
+     * grips, the interaction surface, and the hover-control wrapper are all
+     * `[data-page-flip-exclude]` overlays that can sit over content at the
+     * moment of a tap (the interaction surface in particular is pointer-active
+     * for a frame after a drag starts, before React re-renders it inert). So we
+     * hit-test the whole stack with `elementsFromPoint` and pick the first
+     * element that is NOT flip chrome — then click its nearest clickable
+     * ancestor. This is robust regardless of transient overlay state.
+     */
+    const forwardTap = (clientX: number, clientY: number) => {
+      const target = document
+        .elementsFromPoint(clientX, clientY)
+        .find((el) => el instanceof HTMLElement && !el.closest('[data-page-flip-exclude]')) as
+        | HTMLElement
+        | undefined;
+      if (!target) return;
+      const clickable = target.closest<HTMLElement>(
+        'button, a, input, select, textarea, [role="button"], [role="tab"], [role="option"], [tabindex]:not([tabindex="-1"]), [onclick]'
+      );
+      (clickable ?? target).click();
+    };
+
+    return {
+      onPointerDown: (e: React.PointerEvent) => {
+        gesture.current = { x: e.clientX, y: e.clientY, peeling: false };
+        pointerHandlers.onPointerDown(e);
+      },
+      onPointerMove: (e: React.PointerEvent) => {
+        const g = gesture.current;
+        if (g && !g.peeling && Math.abs(e.clientX - g.x) > GRIP_TAP_SLOP_PX) {
+          g.peeling = true;
+        }
+        pointerHandlers.onPointerMove(e);
+      },
+      onPointerUp: (e: React.PointerEvent) => {
+        const g = gesture.current;
+        gesture.current = null;
+        const moved = g ? Math.hypot(e.clientX - g.x, e.clientY - g.y) : 0;
+        if (g?.peeling || moved > GRIP_TAP_SLOP_PX) {
+          // A real peel — let the controller commit/settle it.
+          pointerHandlers.onPointerUp(e);
+        } else {
+          // A tap — don't turn the page; hand the click to the content beneath.
+          cancelDrag(e);
+          forwardTap(e.clientX, e.clientY);
+        }
+      },
+      onPointerCancel: (e: React.PointerEvent) => {
+        gesture.current = null;
+        pointerHandlers.onPointerCancel(e);
+      },
+    };
+  }, [controller]);
+
   const edge: React.CSSProperties = {
     position: 'absolute',
     top: 0,
@@ -1033,14 +1134,14 @@ function EdgeGrips({
     zIndex: 4,
   };
   return (
-    <>
-      <div {...pointerHandlers} aria-hidden style={{ ...edge, left: 0 }} />
-      <div {...pointerHandlers} aria-hidden style={{ ...edge, right: 0 }} />
-      <div {...pointerHandlers} aria-hidden style={{ ...corner, right: 0, top: 0 }} />
-      <div {...pointerHandlers} aria-hidden style={{ ...corner, right: 0, bottom: 0 }} />
-      <div {...pointerHandlers} aria-hidden style={{ ...corner, left: 0, top: 0 }} />
-      <div {...pointerHandlers} aria-hidden style={{ ...corner, left: 0, bottom: 0 }} />
-    </>
+    <div data-page-flip-exclude="true" aria-hidden>
+      <div {...handlers} style={{ ...edge, left: 0 }} />
+      <div {...handlers} style={{ ...edge, right: 0 }} />
+      <div {...handlers} style={{ ...corner, right: 0, top: 0 }} />
+      <div {...handlers} style={{ ...corner, right: 0, bottom: 0 }} />
+      <div {...handlers} style={{ ...corner, left: 0, top: 0 }} />
+      <div {...handlers} style={{ ...corner, left: 0, bottom: 0 }} />
+    </div>
   );
 }
 

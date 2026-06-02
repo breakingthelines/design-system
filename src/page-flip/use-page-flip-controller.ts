@@ -55,6 +55,13 @@ export interface PageFlipController {
     onPointerCancel: (e: React.PointerEvent) => void;
   };
 
+  /**
+   * Abandon an in-flight drag without turning the page (and release pointer
+   * capture). Used by the edge grips to release a *tap* so it can be forwarded
+   * to the interactive content beneath, rather than committing a page turn.
+   */
+  cancelDrag(e: React.PointerEvent): void;
+
   /** Document-level key handler (ArrowLeft / ArrowRight). Wire via an effect. */
   onKeyDown(e: KeyboardEvent): void;
 
@@ -86,13 +93,31 @@ const FLICK_VELOCITY = 0.0015;
 export function usePageFlipController(options: PageFlipControllerOptions): PageFlipController {
   const { pageCount, initialIndex = 0, onIndexChange, dragWidthFactor = 1 } = options;
 
-  const [index, setIndex] = useState(() => clampIndex(initialIndex, pageCount));
+  const [index, setIndexState] = useState(() => clampIndex(initialIndex, pageCount));
   const [direction, setDirection] = useState<FlipDirection>('forward');
   const [progress, setProgress] = useState(0);
-  const [target, setTarget] = useState(0);
+  const [target, setTargetState] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [isTurning, setIsTurning] = useState(false);
   const [releaseVelocity, setReleaseVelocity] = useState(0);
+
+  // `index` and `target` are also mirrored into refs so settle/commit can read
+  // the live value WITHOUT a functional state updater. Calling a setter (or the
+  // consumer's `onIndexChange`) from inside another setter's updater runs it
+  // during React's render phase — a "setState while rendering" violation that,
+  // in a production build (no warning), drops/reorders the commit and wedges the
+  // turn (isTurning stuck true, pointer-events never restored, index never
+  // advancing). Reads go through the ref; writes update ref + state together.
+  const indexRef = useRef(index);
+  const setIndex = useCallback((next: number) => {
+    indexRef.current = next;
+    setIndexState(next);
+  }, []);
+  const targetRef = useRef(target);
+  const setTarget = useCallback((next: number) => {
+    targetRef.current = next;
+    setTargetState(next);
+  }, []);
 
   // Drag bookkeeping (refs — no re-render needed mid-gesture beyond progress).
   const drag = useRef<{
@@ -110,13 +135,13 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
 
   const commitIndex = useCallback(
     (dir: FlipDirection) => {
-      setIndex((i) => {
-        const nextIdx = clampIndex(dir === 'forward' ? i + 1 : i - 1, pageCount);
-        if (nextIdx !== i) onIndexChange?.(nextIdx, dir);
-        return nextIdx;
-      });
+      const current = indexRef.current;
+      const nextIdx = clampIndex(dir === 'forward' ? current + 1 : current - 1, pageCount);
+      if (nextIdx === current) return;
+      setIndex(nextIdx);
+      onIndexChange?.(nextIdx, dir);
     },
-    [pageCount, onIndexChange]
+    [pageCount, onIndexChange, setIndex]
   );
 
   const canGo = useCallback(
@@ -132,7 +157,7 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
       setIsTurning(true);
       setTarget(1);
     },
-    [canGo, isTurning]
+    [canGo, isTurning, setTarget]
   );
 
   const next = useCallback(() => beginTurn('forward'), [beginTurn]);
@@ -151,23 +176,23 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
       setTarget(0);
       setReleaseVelocity(0);
     },
-    [index, pageCount, onIndexChange]
+    [index, pageCount, onIndexChange, setIndex, setTarget]
   );
 
   // settle: turn arrived at target. If it completed (target 1), advance the
-  // index and reset progress to 0 for the new page-pair.
+  // index and reset progress to 0 for the new page-pair. Runs from the
+  // renderer's spring `onRest` / a settle effect — never render — so every
+  // setter here (and the `onIndexChange` inside `commitIndex`) is a plain
+  // event-time update, not a setState-in-render. The committed target is read
+  // from `targetRef`, so we don't need a functional updater (which WOULD run in
+  // render) to see it.
   const settle = useCallback(() => {
+    const committed = targetRef.current >= 1;
     setIsTurning(false);
-    setTarget((tgt) => {
-      if (tgt >= 1) {
-        commitIndex(direction);
-        setProgress(0);
-        return 0;
-      }
-      setProgress(0);
-      return 0;
-    });
-  }, [direction, commitIndex]);
+    setProgress(0);
+    setTarget(0);
+    if (committed) commitIndex(direction);
+  }, [direction, commitIndex, setTarget]);
 
   // ── Pointer: drag-to-peel ────────────────────────────────────────────────
   const onPointerDown = useCallback((e: React.PointerEvent) => {
@@ -243,7 +268,7 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
       setProgress(p);
       setTarget(p); // while dragging, target tracks the finger
     },
-    [canGo, dragWidthFactor]
+    [canGo, dragWidthFactor, setTarget]
   );
 
   const endDrag = useCallback(
@@ -284,7 +309,24 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
       setTarget(commit ? 1 : 0);
       setIsTurning(true);
     },
-    [progress, canGo, beginTurn]
+    [progress, canGo, beginTurn, setTarget]
+  );
+
+  // Abandon an in-progress (or just-started) drag WITHOUT turning the page —
+  // distinct from `endDrag`, which converts a tap into a page turn. The edge
+  // grips use this so a *tap* that lands on them (rather than a peel drag) is
+  // forwarded to the interactive content beneath instead of stealing the click.
+  const cancelDrag = useCallback(
+    (e: React.PointerEvent) => {
+      const d = drag.current;
+      drag.current = null;
+      setIsDragging(false);
+      setProgress(0);
+      setTarget(0);
+      setIsTurning(false);
+      if (d) (e.currentTarget as HTMLElement).releasePointerCapture?.(d.pointerId);
+    },
+    [setTarget]
   );
 
   const onKeyDown = useCallback(
@@ -322,6 +364,7 @@ export function usePageFlipController(options: PageFlipControllerOptions): PageF
     prev,
     goTo,
     pointerHandlers,
+    cancelDrag,
     onKeyDown,
     setLiveProgress: setProgress,
     settle,

@@ -80,6 +80,7 @@ export function FlipHoverControl({
   return (
     <div
       ref={wrapRef}
+      data-page-flip-exclude="true"
       onFocusCapture={() => setFocusWithin(true)}
       onBlurCapture={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget as Node)) setFocusWithin(false);
