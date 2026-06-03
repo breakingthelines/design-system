@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
-import { X, Gif, SoccerBall, Image as ImageIcon, SpinnerGap } from '@phosphor-icons/react';
+import { X, Gif, Smiley, Image as ImageIcon, SpinnerGap } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
@@ -192,12 +192,16 @@ function ThoughtsPanel({
 
   function handleSubmit(text: string) {
     if (!user) return;
+    const mentions = composerRef.current?.getMentions() ?? [];
     const mentionedUserIds = composerRef.current?.getMentionedUserIds() ?? [];
     let media: PanelMedia | undefined = selectedGif
       ? { gifUrl: selectedGif.url, gifId: selectedGif.id, gifPlatform: 'klipy' }
       : imageUrl
         ? { imageUrl }
         : undefined;
+    if (mentions.length > 0) {
+      media = { ...media, mentions };
+    }
     if (mentionedUserIds.length > 0) {
       media = { ...media, mentionedUserIds };
     }
@@ -439,7 +443,7 @@ function ThoughtsPanel({
                           else onEmojiClick?.();
                         }}
                       >
-                        <SoccerBall weight="regular" className="size-[15px]" />
+                        <Smiley weight="regular" className="size-[15px]" />
                       </button>
                     )}
                     {onImageUpload && user && (
