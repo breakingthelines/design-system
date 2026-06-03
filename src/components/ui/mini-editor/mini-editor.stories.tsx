@@ -1,9 +1,53 @@
 import { useState, useRef } from 'react';
 import preview from '#.storybook/preview';
 import { MiniEditor, type MiniEditorHandle } from './mini-editor';
+import { type EntityHit } from './entity-mention-plugin';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
+import { ENTITY_IMAGERY_SEED_MANIFEST } from '#/lib/entity-imagery-manifest';
 import { Image, Gif, SoccerBall } from '@phosphor-icons/react';
+
+// Mock entity-search corpus. Hits are the SubjectRef shape the real search lane
+// returns; ids are content-hashed canonical ids (some present in the seed
+// manifest so their crests resolve, others fall back to a monogram).
+const ENTITY_CORPUS: EntityHit[] = [
+  {
+    canonicalId: 'btl_football_competition_lb3d230cb',
+    subjectType: 'competition',
+    label: 'Premier League',
+    slug: 'premier-league',
+  },
+  {
+    canonicalId: 'btl_football_competition_l91f82788',
+    subjectType: 'competition',
+    label: 'Bundesliga',
+    slug: 'bundesliga',
+  },
+  {
+    canonicalId: 'btl_football_team_taaaabbbb',
+    subjectType: 'team',
+    label: 'Aston Villa',
+    slug: 'aston-villa',
+  },
+  {
+    canonicalId: 'btl_football_player_pccccdddd',
+    subjectType: 'player',
+    label: 'Erling Haaland',
+    slug: 'erling-haaland',
+  },
+  {
+    canonicalId: 'btl_football_coach_peeeefff',
+    subjectType: 'coach',
+    label: 'Pep Guardiola',
+    slug: 'pep-guardiola',
+  },
+];
+
+async function mockEntitySearch(query: string): Promise<EntityHit[]> {
+  const q = query.trim().toLowerCase();
+  if (!q) return ENTITY_CORPUS;
+  return ENTITY_CORPUS.filter((hit) => hit.label.toLowerCase().includes(q));
+}
 
 const meta = preview.meta({
   title: 'UI/MiniEditor',
@@ -80,6 +124,37 @@ export const Disabled = meta.story({
       <MiniEditor {...args} />
     </div>
   ),
+});
+
+export const WithEntityMentions = meta.story({
+  name: 'With Entity Mentions (football)',
+  render: () => {
+    const ref = useRef<MiniEditorHandle>(null);
+    const [entityIds, setEntityIds] = useState<string[]>([]);
+
+    return (
+      <div className="flex w-[500px] flex-col gap-3">
+        <p className="text-sm text-muted-foreground">
+          Type <kbd>@</kbd> then a club, player, manager or competition (e.g. "@Aston", "@Haaland",
+          "@Premier"). Selecting a hit inserts an inline <code>EntityMentionNode</code> keyed by its
+          canonical <code>btl_football_*</code> id.
+        </p>
+        <div className="rounded-md border border-grey-300 bg-grey-100 px-4 py-3">
+          <MiniEditor
+            placeholder="Mention a team, player, or competition..."
+            multiline
+            editorRef={ref}
+            onEntityMentionSearch={mockEntitySearch}
+            entityMentionManifest={ENTITY_IMAGERY_SEED_MANIFEST}
+            onChange={() => setEntityIds(ref.current?.getMentionedEntityIds() ?? [])}
+          />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Mentioned canonical ids: <code>{entityIds.join(', ') || '—'}</code>
+        </p>
+      </div>
+    );
+  },
 });
 
 export const InPanel = meta.story({

@@ -19,6 +19,12 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Pre-bundle the Lexical typeahead entry so the storybook-vitest browser
+  // project doesn't re-optimise it mid-run (which triggers a Vite reload that
+  // breaks in-flight dynamic imports on a cold cache).
+  optimizeDeps: {
+    include: ['@lexical/react/LexicalTypeaheadMenuPlugin'],
+  },
   test: {
     projects: [
       {

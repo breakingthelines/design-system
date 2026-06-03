@@ -16,11 +16,14 @@ import {
   type EditorState,
 } from 'lexical';
 
+import type { EntityImageManifest } from '#/lib/entity-image';
 import { cn } from '#/lib/utils';
 import { SubmitPlugin } from './submit-plugin';
 import { MaxLengthPlugin } from './max-length-plugin';
 import { MentionNode, $isMentionNode } from './mention-node';
 import { MentionPlugin, type MentionSuggestion } from './mention-plugin';
+import { EntityMentionNode, $isEntityMentionNode } from './entity-mention-node';
+import { EntityMentionPlugin, type EntityHit } from './entity-mention-plugin';
 
 /* ────────────────────────────────────────────────────────────
  * Types
@@ -33,6 +36,8 @@ interface MiniEditorHandle {
   getText: () => string;
   insertText: (text: string) => void;
   getMentionedUserIds: () => string[];
+  /** Canonical ids (`btl_football_*`) of every football-entity mention. */
+  getMentionedEntityIds: () => string[];
 }
 
 interface MiniEditorProps {
@@ -52,8 +57,19 @@ interface MiniEditorProps {
   editorRef?: React.Ref<MiniEditorHandle>;
   /** Slot for additional Lexical plugins */
   plugins?: React.ReactNode;
-  /** @mention search callback — when provided, enables @mention support */
+  /** @mention search callback — when provided, enables user @mention support */
   onMentionSearch?: (query: string) => Promise<MentionSuggestion[]>;
+  /**
+   * Football-entity mention search callback. When provided (with `entityMentionManifest`),
+   * enables entity @mentions keyed by BTL canonical id. Returns the SubjectRef-shaped
+   * {@link EntityHit}s. Set `entityMentionTrigger` to a distinct char to co-exist with
+   * the user @mention plugin (both default to `@`).
+   */
+  onEntityMentionSearch?: (query: string) => Promise<EntityHit[]>;
+  /** Imagery manifest used to resolve entity-mention crests (required with `onEntityMentionSearch`). */
+  entityMentionManifest?: EntityImageManifest;
+  /** Trigger char for entity mentions. Default `'@'`. */
+  entityMentionTrigger?: string;
   /** Disabled state */
   disabled?: boolean;
   /** Allow multi-line input (default: single-line) */
@@ -96,6 +112,17 @@ const EditorRefPlugin = React.forwardRef<MiniEditorHandle>(function EditorRefPlu
         for (const node of textContent) {
           if ($isMentionNode(node)) {
             ids.push(node.getUserId());
+          }
+        }
+        return ids;
+      });
+    },
+    getMentionedEntityIds() {
+      return editor.getEditorState().read(() => {
+        const ids: string[] = [];
+        for (const node of $getRoot().getAllTextNodes()) {
+          if ($isEntityMentionNode(node)) {
+            ids.push(node.getCanonicalId());
           }
         }
         return ids;
@@ -153,6 +180,9 @@ function MiniEditor({
   editorRef,
   plugins,
   onMentionSearch,
+  onEntityMentionSearch,
+  entityMentionManifest,
+  entityMentionTrigger,
   disabled = false,
   multiline = false,
   className,
@@ -163,7 +193,7 @@ function MiniEditor({
       namespace: 'MiniEditor',
       onError: (error: Error) => console.error('[MiniEditor]', error),
       editable: !disabled,
-      nodes: [MentionNode],
+      nodes: [MentionNode, EntityMentionNode],
     }),
     // Only used for initial render — intentionally excluding disabled
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -224,8 +254,17 @@ function MiniEditor({
         {/* Disabled state sync */}
         <DisabledPlugin disabled={disabled} />
 
-        {/* @mention autocomplete */}
+        {/* User @mention autocomplete */}
         {onMentionSearch && <MentionPlugin onSearch={onMentionSearch} />}
+
+        {/* Football-entity @mention autocomplete */}
+        {onEntityMentionSearch && entityMentionManifest && (
+          <EntityMentionPlugin
+            onSearch={onEntityMentionSearch}
+            manifest={entityMentionManifest}
+            trigger={entityMentionTrigger}
+          />
+        )}
 
         {/* Extension slot */}
         {plugins}
