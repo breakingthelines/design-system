@@ -1,52 +1,58 @@
 import { useState, useRef } from 'react';
 import preview from '#.storybook/preview';
-import { MiniEditor, type MiniEditorHandle } from './mini-editor';
-import { type EntityHit } from './entity-mention-plugin';
+import { MiniEditor, type MiniEditorHandle, type MentionItem } from './mini-editor';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
-import { ENTITY_IMAGERY_SEED_MANIFEST } from '#/lib/entity-imagery-manifest';
 import { Image, Gif, SoccerBall } from '@phosphor-icons/react';
 
-// Mock entity-search corpus. Hits are the SubjectRef shape the real search lane
-// returns; ids are content-hashed canonical ids (some present in the seed
-// manifest so their crests resolve, others fall back to a monogram).
-const ENTITY_CORPUS: EntityHit[] = [
+// Mock federated mention corpus. Items are the polymorphic MentionItem shape the
+// host's search lane returns — a flat, relevance-ranked list spanning every kind
+// (person, squad, club, player, manager, competition). Imagery is pre-resolved
+// into `imageUrl` by the host; items without one fall back to a monogram.
+const MENTION_CORPUS: MentionItem[] = [
   {
-    canonicalId: 'btl_football_competition_lb3d230cb',
-    subjectType: 'competition',
-    label: 'Premier League',
-    slug: 'premier-league',
+    id: 'usr_zach',
+    kind: 'user',
+    label: 'zach',
+    slug: '@zach',
+    imageUrl: 'https://i.pravatar.cc/150?u=zach',
   },
   {
-    canonicalId: 'btl_football_competition_l91f82788',
-    subjectType: 'competition',
-    label: 'Bundesliga',
-    slug: 'bundesliga',
+    id: 'sqd_villa_view',
+    kind: 'squad',
+    label: 'Villa View',
+    slug: '@villa-view',
   },
   {
-    canonicalId: 'btl_football_team_taaaabbbb',
-    subjectType: 'team',
+    id: 'btl_football_club_taaaabbbb',
+    kind: 'club',
     label: 'Aston Villa',
     slug: 'aston-villa',
   },
   {
-    canonicalId: 'btl_football_player_pccccdddd',
-    subjectType: 'player',
+    id: 'btl_football_player_pccccdddd',
+    kind: 'player',
     label: 'Erling Haaland',
     slug: 'erling-haaland',
   },
   {
-    canonicalId: 'btl_football_coach_peeeefff',
-    subjectType: 'coach',
+    id: 'btl_football_manager_peeeefff',
+    kind: 'manager',
     label: 'Pep Guardiola',
     slug: 'pep-guardiola',
   },
+  {
+    id: 'btl_football_competition_lb3d230cb',
+    kind: 'competition',
+    label: 'Premier League',
+    slug: 'premier-league',
+  },
 ];
 
-async function mockEntitySearch(query: string): Promise<EntityHit[]> {
+async function mockMentionSearch(query: string): Promise<MentionItem[]> {
   const q = query.trim().toLowerCase();
-  if (!q) return ENTITY_CORPUS;
-  return ENTITY_CORPUS.filter((hit) => hit.label.toLowerCase().includes(q));
+  if (!q) return MENTION_CORPUS;
+  return MENTION_CORPUS.filter((item) => item.label.toLowerCase().includes(q));
 }
 
 const meta = preview.meta({
@@ -126,31 +132,30 @@ export const Disabled = meta.story({
   ),
 });
 
-export const WithEntityMentions = meta.story({
-  name: 'With Entity Mentions (football)',
+export const WithMentions = meta.story({
+  name: 'With Mentions (unified @)',
   render: () => {
     const ref = useRef<MiniEditorHandle>(null);
-    const [entityIds, setEntityIds] = useState<string[]>([]);
+    const [mentions, setMentions] = useState<MentionItem[]>([]);
 
     return (
       <div className="flex w-[500px] flex-col gap-3">
         <p className="text-sm text-muted-foreground">
-          Type <kbd>@</kbd> then a club, player, manager or competition (e.g. "@Aston", "@Haaland",
-          "@Premier"). Selecting a hit inserts an inline <code>EntityMentionNode</code> keyed by its
-          canonical <code>btl_football_*</code> id.
+          Type <kbd>@</kbd> then a person, squad, club, player, manager or competition (e.g.
+          "@zach", "@Villa", "@Haaland", "@Premier"). One <code>@</code> trigger drives every kind;
+          selecting a hit inserts an inline polymorphic <code>MentionNode</code>.
         </p>
         <div className="rounded-md border border-grey-300 bg-grey-100 px-4 py-3">
           <MiniEditor
-            placeholder="Mention a team, player, or competition..."
+            placeholder="Mention a person, squad, team, player, or competition..."
             multiline
             editorRef={ref}
-            onEntityMentionSearch={mockEntitySearch}
-            entityMentionManifest={ENTITY_IMAGERY_SEED_MANIFEST}
-            onChange={() => setEntityIds(ref.current?.getMentionedEntityIds() ?? [])}
+            onMentionSearch={mockMentionSearch}
+            onChange={() => setMentions(ref.current?.getMentions() ?? [])}
           />
         </div>
         <p className="text-xs text-muted-foreground">
-          Mentioned canonical ids: <code>{entityIds.join(', ') || '—'}</code>
+          Mentions: <code>{mentions.map((m) => `${m.kind}:${m.label}`).join(', ') || '—'}</code>
         </p>
       </div>
     );

@@ -1,279 +1,232 @@
 'use client';
 
 import * as React from 'react';
-import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import {
-  $createTextNode,
-  $getSelection,
-  $isRangeSelection,
-  $isTextNode,
-  COMMAND_PRIORITY_LOW,
-  KEY_ARROW_DOWN_COMMAND,
-  KEY_ARROW_UP_COMMAND,
-  KEY_ENTER_COMMAND,
-  KEY_ESCAPE_COMMAND,
-  KEY_TAB_COMMAND,
-} from 'lexical';
+import { LexicalTypeaheadMenuPlugin, MenuOption } from '@lexical/react/LexicalTypeaheadMenuPlugin';
+import type { TextNode } from 'lexical';
+import { createPortal } from 'react-dom';
 
-import { $createMentionNode } from './mention-node';
+import { $createMentionNode, type MentionItem, type MentionKind } from './mention-node';
+
+export type { MentionItem, MentionKind };
 
 /* ────────────────────────────────────────────────────────────
- * Types
+ * Contract
+ *
+ * `onSearch` is wired by the host to its federated mention-search lane and MUST
+ * return {@link MentionItem}s — the polymorphic contract identical to the
+ * `@breakingthelines/editor` package. The list is FLAT and RELEVANCE-RANKED: do
+ * not reorder it here, search rank is meaningful. Imagery is pre-resolved by the
+ * host into `imageUrl`; this plugin renders it directly (monogram fallback) and
+ * is therefore decoupled from any imagery manifest.
  * ──────────────────────────────────────────────────────────── */
-
-export interface MentionSuggestion {
-  userId: string;
-  username: string;
-  displayName: string;
-  avatarUrl?: string;
-}
 
 interface MentionPluginProps {
-  onSearch: (query: string) => Promise<MentionSuggestion[]>;
+  /** Federated mention search wired by the host. Returns relevance-ranked {@link MentionItem}s. */
+  onSearch: (query: string) => Promise<MentionItem[]>;
+  /** Debounce (ms) for `onSearch`. Default 150. */
+  debounceMs?: number;
+  /** Min query length before searching (excludes the `@`). Default 0. */
+  minQueryLength?: number;
+}
+
+/** Dropdown badge label per kind. */
+const KIND_BADGE: Record<MentionKind, string> = {
+  user: 'Person',
+  squad: 'Squad',
+  club: 'Club',
+  player: 'Player',
+  manager: 'Manager',
+  competition: 'Competition',
+  country: 'Country',
+};
+
+/** A typeahead option wrapping one {@link MentionItem}. */
+class MentionOption extends MenuOption {
+  item: MentionItem;
+
+  constructor(item: MentionItem) {
+    super(item.id);
+    this.item = item;
+  }
 }
 
 /* ────────────────────────────────────────────────────────────
- * Hook: track @ trigger position and query
+ * Dropdown row
  * ──────────────────────────────────────────────────────────── */
 
-function useMentionTrigger() {
-  const [editor] = useLexicalComposerContext();
-  const [trigger, setTrigger] = React.useState<{
-    query: string;
-    matchStart: number;
-  } | null>(null);
-
-  React.useEffect(() => {
-    const removeListener = editor.registerTextContentListener(() => {
-      editor.getEditorState().read(() => {
-        const selection = $getSelection();
-        if (!$isRangeSelection(selection) || !selection.isCollapsed()) {
-          setTrigger(null);
-          return;
-        }
-
-        const anchor = selection.anchor;
-        if (anchor.type !== 'text') {
-          setTrigger(null);
-          return;
-        }
-
-        const node = anchor.getNode();
-        if (!$isTextNode(node)) {
-          setTrigger(null);
-          return;
-        }
-
-        const text = node.getTextContent().slice(0, anchor.offset);
-        // Match @ followed by optional query chars (no spaces)
-        const match = text.match(/@([\w.]*)$/);
-
-        if (!match) {
-          setTrigger(null);
-          return;
-        }
-
-        setTrigger({
-          query: match[1],
-          matchStart: anchor.offset - match[0].length,
-        });
-      });
-    });
-
-    return removeListener;
-  }, [editor]);
-
-  return trigger;
-}
-
-/* ────────────────────────────────────────────────────────────
- * Autocomplete dropdown
- * ──────────────────────────────────────────────────────────── */
-
-function MentionAutocomplete({
-  suggestions,
-  selectedIndex,
-  onSelect,
+function MentionRow({
+  option,
+  isSelected,
+  onClick,
+  onMouseEnter,
 }: {
-  suggestions: MentionSuggestion[];
-  selectedIndex: number;
-  onSelect: (suggestion: MentionSuggestion) => void;
+  option: MentionOption;
+  isSelected: boolean;
+  onClick: () => void;
+  onMouseEnter: () => void;
 }) {
-  if (suggestions.length === 0) return null;
+  const { item } = option;
+  const badge = KIND_BADGE[item.kind] ?? item.kind;
 
   return (
-    <div className="absolute left-0 top-full z-50 mt-1 min-w-[200px] max-w-[300px] rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
-      {suggestions.map((suggestion, index) => (
-        <button
-          key={suggestion.userId}
-          type="button"
-          className={`flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none ${
-            index === selectedIndex ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
-          }`}
-          onMouseDown={(e) => {
-            e.preventDefault(); // prevent editor blur
-            onSelect(suggestion);
-          }}
+    <li
+      key={option.key}
+      ref={option.setRefElement.bind(option)}
+      role="option"
+      aria-selected={isSelected}
+      tabIndex={-1}
+      className={`flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-none ${
+        isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/50'
+      }`}
+      onMouseEnter={onMouseEnter}
+      onMouseDown={(e) => {
+        e.preventDefault(); // keep editor focus
+        onClick();
+      }}
+    >
+      {item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt=""
+          aria-hidden="true"
+          className="size-6 shrink-0 rounded-full object-cover"
+        />
+      ) : (
+        <span
+          aria-hidden="true"
+          className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium"
         >
-          {suggestion.avatarUrl ? (
-            <img src={suggestion.avatarUrl} alt="" className="h-6 w-6 rounded-full object-cover" />
-          ) : (
-            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
-              {suggestion.displayName.charAt(0).toUpperCase()}
-            </div>
-          )}
-          <div className="flex flex-col items-start overflow-hidden">
-            <span className="truncate text-sm font-medium">{suggestion.displayName}</span>
-            <span className="truncate text-xs text-muted-foreground">@{suggestion.username}</span>
-          </div>
-        </button>
-      ))}
-    </div>
+          {item.label.charAt(0).toUpperCase()}
+        </span>
+      )}
+      <span className="min-w-0 flex-1 truncate font-medium">{item.label}</span>
+      <span className="shrink-0 rounded-sm bg-white/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-white/60 uppercase">
+        {badge}
+      </span>
+    </li>
   );
 }
 
 /* ────────────────────────────────────────────────────────────
  * MentionPlugin
+ *
+ * Built on Lexical's first-party {@link LexicalTypeaheadMenuPlugin}: trigger
+ * matching, query extraction, keyboard navigation, menu positioning, and node
+ * splitting on select are all owned by the Lexical typeahead API. We therefore
+ * do NOT register manual key commands or a text-content listener.
+ *
+ * useEffect decision: there is NO React data-flow useEffect here. The async
+ * search runs from the typeahead's own `onQueryChange` lifecycle hook (debounced
+ * via a ref-held timer); results land in state guarded by a mounted ref. The
+ * only `useEffect` is a one-line mount/unmount latch that exists purely to make
+ * the async setState safe — it carries no derived data and has no deps churn.
  * ──────────────────────────────────────────────────────────── */
 
-export function MentionPlugin({ onSearch }: MentionPluginProps) {
-  const [editor] = useLexicalComposerContext();
-  const trigger = useMentionTrigger();
-  const triggerQuery = trigger?.query;
-  const [suggestions, setSuggestions] = React.useState<MentionSuggestion[]>([]);
-  const [selectedIndex, setSelectedIndex] = React.useState(0);
-  const isOpen = trigger !== null && suggestions.length > 0;
+// Single `@` trigger followed by query chars (letters, digits, spaces, common
+// name punctuation) so multi-word labels — like football entity names — match.
+const TRIGGER_RE = /(?:^|\s)@([\p{L}\p{N}][\p{L}\p{N} .'-]*)?$/u;
 
-  // Debounced search
+export function MentionPlugin({
+  onSearch,
+  debounceMs = 150,
+  minQueryLength = 0,
+}: MentionPluginProps) {
+  const [options, setOptions] = React.useState<MentionOption[]>([]);
+
+  const timerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = React.useRef(true);
+  const requestIdRef = React.useRef(0);
+
+  // Mount/unmount latch only — no derived data, guards the async setState below.
   React.useEffect(() => {
-    if (triggerQuery === undefined) {
-      setSuggestions([]);
-      return;
-    }
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
-    const timer = setTimeout(async () => {
-      try {
-        const results = await onSearch(triggerQuery);
-        setSuggestions(results);
-        setSelectedIndex(0);
-      } catch {
-        setSuggestions([]);
+  const triggerFn = React.useCallback((text: string) => {
+    const match = TRIGGER_RE.exec(text);
+    if (match === null) return null;
+    const matchingString = match[1] ?? '';
+    const replaceableString = `@${matchingString}`;
+    return {
+      leadOffset: match.index + (match[0].length - replaceableString.length),
+      matchingString,
+      replaceableString,
+    };
+  }, []);
+
+  const handleQueryChange = React.useCallback(
+    (matchingString: string | null) => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+
+      if (matchingString === null || matchingString.length < minQueryLength) {
+        setOptions([]);
+        return;
       }
-    }, 150);
 
-    return () => clearTimeout(timer);
-  }, [triggerQuery, onSearch]);
-
-  // Insert mention node
-  const insertMention = React.useCallback(
-    (suggestion: MentionSuggestion) => {
-      editor.update(() => {
-        const selection = $getSelection();
-        if (!$isRangeSelection(selection) || !trigger) return;
-
-        const anchor = selection.anchor;
-        const node = anchor.getNode();
-        if (!$isTextNode(node)) return;
-
-        const text = node.getTextContent();
-        const before = text.slice(0, trigger.matchStart);
-        const after = text.slice(anchor.offset);
-
-        // Replace the @query with the mention node
-        const mentionNode = $createMentionNode(suggestion.userId, suggestion.username);
-        const afterNode = $createTextNode(after || ' ');
-
-        if (before) {
-          node.setTextContent(before);
-          node.insertAfter(mentionNode);
-          mentionNode.insertAfter(afterNode);
-        } else {
-          node.replace(mentionNode);
-          mentionNode.insertAfter(afterNode);
-        }
-
-        // Move cursor after the space
-        afterNode.select(after ? 0 : 1);
-      });
-
-      setSuggestions([]);
+      const requestId = ++requestIdRef.current;
+      timerRef.current = setTimeout(() => {
+        onSearch(matchingString)
+          .then((items) => {
+            // Drop stale responses + post-unmount writes.
+            if (!mountedRef.current || requestId !== requestIdRef.current) return;
+            setOptions(items.map((item) => new MentionOption(item)));
+          })
+          .catch(() => {
+            if (!mountedRef.current || requestId !== requestIdRef.current) return;
+            setOptions([]);
+          });
+      }, debounceMs);
     },
-    [editor, trigger]
+    [onSearch, debounceMs, minQueryLength]
   );
 
-  // Keyboard navigation
-  React.useEffect(() => {
-    if (!isOpen) return;
-
-    const unregisterDown = editor.registerCommand(
-      KEY_ARROW_DOWN_COMMAND,
-      (event) => {
-        event?.preventDefault();
-        setSelectedIndex((i) => (i + 1) % suggestions.length);
-        return true;
-      },
-      COMMAND_PRIORITY_LOW
-    );
-
-    const unregisterUp = editor.registerCommand(
-      KEY_ARROW_UP_COMMAND,
-      (event) => {
-        event?.preventDefault();
-        setSelectedIndex((i) => (i - 1 + suggestions.length) % suggestions.length);
-        return true;
-      },
-      COMMAND_PRIORITY_LOW
-    );
-
-    const unregisterEnter = editor.registerCommand(
-      KEY_ENTER_COMMAND,
-      (event) => {
-        event?.preventDefault();
-        if (suggestions[selectedIndex]) {
-          insertMention(suggestions[selectedIndex]);
-        }
-        return true;
-      },
-      COMMAND_PRIORITY_LOW
-    );
-
-    const unregisterTab = editor.registerCommand(
-      KEY_TAB_COMMAND,
-      (event) => {
-        event?.preventDefault();
-        if (suggestions[selectedIndex]) {
-          insertMention(suggestions[selectedIndex]);
-        }
-        return true;
-      },
-      COMMAND_PRIORITY_LOW
-    );
-
-    const unregisterEscape = editor.registerCommand(
-      KEY_ESCAPE_COMMAND,
-      () => {
-        setSuggestions([]);
-        return true;
-      },
-      COMMAND_PRIORITY_LOW
-    );
-
-    return () => {
-      unregisterDown();
-      unregisterUp();
-      unregisterEnter();
-      unregisterTab();
-      unregisterEscape();
-    };
-  }, [editor, isOpen, suggestions, selectedIndex, insertMention]);
-
-  if (!isOpen) return null;
+  const handleSelectOption = React.useCallback(
+    (option: MentionOption, nodeToReplace: TextNode | null, closeMenu: () => void) => {
+      const mention = $createMentionNode(option.item);
+      if (nodeToReplace) {
+        nodeToReplace.replace(mention);
+      }
+      mention.select();
+      closeMenu();
+      setOptions([]);
+    },
+    []
+  );
 
   return (
-    <MentionAutocomplete
-      suggestions={suggestions}
-      selectedIndex={selectedIndex}
-      onSelect={insertMention}
+    <LexicalTypeaheadMenuPlugin<MentionOption>
+      options={options}
+      onQueryChange={handleQueryChange}
+      onSelectOption={handleSelectOption}
+      triggerFn={triggerFn}
+      menuRenderFn={(
+        anchorElementRef,
+        { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex }
+      ) =>
+        anchorElementRef.current && options.length > 0
+          ? createPortal(
+              <ul className="z-50 mt-1 min-w-[220px] max-w-[320px] list-none rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                {options.map((option, index) => (
+                  <MentionRow
+                    key={option.key}
+                    option={option}
+                    isSelected={selectedIndex === index}
+                    onClick={() => {
+                      setHighlightedIndex(index);
+                      selectOptionAndCleanUp(option);
+                    }}
+                    onMouseEnter={() => setHighlightedIndex(index)}
+                  />
+                ))}
+              </ul>,
+              anchorElementRef.current
+            )
+          : null
+      }
     />
   );
 }

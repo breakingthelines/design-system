@@ -1,27 +1,21 @@
 export { MiniEditor, type MiniEditorProps, type MiniEditorHandle } from './mini-editor';
-export { MentionNode, $createMentionNode, $isMentionNode } from './mention-node';
-export { MentionPlugin, type MentionSuggestion } from './mention-plugin';
 
-// Football ENTITY mentions — keyed by BTL canonical id (`btl_football_*`),
-// kept separate from the user @mention node above.
+// One polymorphic @mention — users, squads, and football entities collapse into
+// a single MentionNode + MentionPlugin discriminated by `kind`. The contract
+// (MentionItem) is identical to the `@breakingthelines/editor` package.
 export {
-  EntityMentionNode,
-  $createEntityMentionNode,
-  $isEntityMentionNode,
-  entityImageTypeForSubject,
-  resolveEntityMentionImage,
-  type EntityMentionPayload,
-  type SerializedEntityMentionNode,
-  type EntitySubjectType,
-} from './entity-mention-node';
+  MentionNode,
+  $createMentionNode,
+  $isMentionNode,
+  isHandleKind,
+  type MentionItem,
+  type MentionKind,
+  type SerializedMentionNode,
+} from './mention-node';
+export { MentionPlugin } from './mention-plugin';
 export {
-  EntityMentionPlugin,
-  type EntityMentionPluginProps,
-  type EntityHit,
-} from './entity-mention-plugin';
-export {
-  EntityMentionReader,
-  EntityMentionFromNode,
-  entityMentionHref,
-  type EntityMentionReaderProps,
-} from './entity-mention-reader';
+  MentionReader,
+  MentionFromNode,
+  mentionHref,
+  type MentionReaderProps,
+} from './mention-reader';

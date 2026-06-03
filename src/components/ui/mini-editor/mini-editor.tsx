@@ -16,18 +16,24 @@ import {
   type EditorState,
 } from 'lexical';
 
-import type { EntityImageManifest } from '#/lib/entity-image';
 import { cn } from '#/lib/utils';
 import { SubmitPlugin } from './submit-plugin';
 import { MaxLengthPlugin } from './max-length-plugin';
-import { MentionNode, $isMentionNode } from './mention-node';
-import { MentionPlugin, type MentionSuggestion } from './mention-plugin';
-import { EntityMentionNode, $isEntityMentionNode } from './entity-mention-node';
-import { EntityMentionPlugin, type EntityHit } from './entity-mention-plugin';
+import { MentionNode, $isMentionNode, type MentionItem, type MentionKind } from './mention-node';
+import { MentionPlugin } from './mention-plugin';
 
 /* ────────────────────────────────────────────────────────────
  * Types
  * ──────────────────────────────────────────────────────────── */
+
+/** Football entity kinds — the non-handle subjects keyed by canonical id. */
+const ENTITY_KINDS: ReadonlySet<MentionKind> = new Set<MentionKind>([
+  'club',
+  'player',
+  'manager',
+  'competition',
+  'country',
+]);
 
 interface MiniEditorHandle {
   clear: () => void;
@@ -35,8 +41,11 @@ interface MiniEditorHandle {
   blur: () => void;
   getText: () => string;
   insertText: (text: string) => void;
+  /** Every inserted mention, in document order, across all kinds. */
+  getMentions: () => MentionItem[];
+  /** Ids of every `user` mention (kind-filtered derivation of {@link getMentions}). */
   getMentionedUserIds: () => string[];
-  /** Canonical ids (`btl_football_*`) of every football-entity mention. */
+  /** Canonical ids (`btl_football_*`) of every football-entity mention (club/player/manager/competition/country). */
   getMentionedEntityIds: () => string[];
 }
 
@@ -57,19 +66,13 @@ interface MiniEditorProps {
   editorRef?: React.Ref<MiniEditorHandle>;
   /** Slot for additional Lexical plugins */
   plugins?: React.ReactNode;
-  /** @mention search callback — when provided, enables user @mention support */
-  onMentionSearch?: (query: string) => Promise<MentionSuggestion[]>;
   /**
-   * Football-entity mention search callback. When provided (with `entityMentionManifest`),
-   * enables entity @mentions keyed by BTL canonical id. Returns the SubjectRef-shaped
-   * {@link EntityHit}s. Set `entityMentionTrigger` to a distinct char to co-exist with
-   * the user @mention plugin (both default to `@`).
+   * Polymorphic @mention search callback. When provided, enables the single `@`
+   * mention typeahead. The host wires this to its federated search lane and
+   * returns relevance-ranked {@link MentionItem}s spanning every kind (user,
+   * squad, club, player, manager, competition, country).
    */
-  onEntityMentionSearch?: (query: string) => Promise<EntityHit[]>;
-  /** Imagery manifest used to resolve entity-mention crests (required with `onEntityMentionSearch`). */
-  entityMentionManifest?: EntityImageManifest;
-  /** Trigger char for entity mentions. Default `'@'`. */
-  entityMentionTrigger?: string;
+  onMentionSearch?: (query: string) => Promise<MentionItem[]>;
   /** Disabled state */
   disabled?: boolean;
   /** Allow multi-line input (default: single-line) */
@@ -87,67 +90,74 @@ interface MiniEditorProps {
 const EditorRefPlugin = React.forwardRef<MiniEditorHandle>(function EditorRefPlugin(_, ref) {
   const [editor] = useLexicalComposerContext();
 
-  React.useImperativeHandle(ref, () => ({
-    clear() {
-      editor.update(() => {
-        const root = $getRoot();
-        root.clear();
-        root.append($createParagraphNode());
-      });
-    },
-    focus() {
-      editor.focus();
-    },
-    blur() {
-      editor.getRootElement()?.blur();
-    },
-    getText() {
-      return editor.getEditorState().read(() => $getRoot().getTextContent());
-    },
-    getMentionedUserIds() {
-      return editor.getEditorState().read(() => {
-        const ids: string[] = [];
-        const root = $getRoot();
-        const textContent = root.getAllTextNodes();
-        for (const node of textContent) {
-          if ($isMentionNode(node)) {
-            ids.push(node.getUserId());
-          }
-        }
-        return ids;
-      });
-    },
-    getMentionedEntityIds() {
-      return editor.getEditorState().read(() => {
-        const ids: string[] = [];
+  React.useImperativeHandle(ref, () => {
+    const getMentions = (): MentionItem[] =>
+      editor.getEditorState().read(() => {
+        const items: MentionItem[] = [];
         for (const node of $getRoot().getAllTextNodes()) {
-          if ($isEntityMentionNode(node)) {
-            ids.push(node.getCanonicalId());
+          if ($isMentionNode(node)) {
+            items.push({
+              id: node.getMentionId(),
+              kind: node.getMentionKind(),
+              label: node.getMentionLabel(),
+              imageUrl: node.getImageUrl(),
+              slug: node.getSlug(),
+              url: node.getMentionUrl(),
+            });
           }
         }
-        return ids;
+        return items;
       });
-    },
-    insertText(text: string) {
-      editor.update(() => {
-        const selection = $getSelection();
-        if (selection) {
-          selection.insertText(text);
-        } else {
+
+    return {
+      clear() {
+        editor.update(() => {
           const root = $getRoot();
-          const lastChild = root.getLastChild();
-          if (lastChild && $isElementNode(lastChild)) {
-            lastChild.append($createTextNode(text));
+          root.clear();
+          root.append($createParagraphNode());
+        });
+      },
+      focus() {
+        editor.focus();
+      },
+      blur() {
+        editor.getRootElement()?.blur();
+      },
+      getText() {
+        return editor.getEditorState().read(() => $getRoot().getTextContent());
+      },
+      getMentions,
+      getMentionedUserIds() {
+        return getMentions()
+          .filter((m) => m.kind === 'user')
+          .map((m) => m.id);
+      },
+      getMentionedEntityIds() {
+        return getMentions()
+          .filter((m) => ENTITY_KINDS.has(m.kind))
+          .map((m) => m.id);
+      },
+      insertText(text: string) {
+        editor.update(() => {
+          const selection = $getSelection();
+          if (selection) {
+            selection.insertText(text);
           } else {
-            const p = $createParagraphNode();
-            p.append($createTextNode(text));
-            root.append(p);
+            const root = $getRoot();
+            const lastChild = root.getLastChild();
+            if (lastChild && $isElementNode(lastChild)) {
+              lastChild.append($createTextNode(text));
+            } else {
+              const p = $createParagraphNode();
+              p.append($createTextNode(text));
+              root.append(p);
+            }
           }
-        }
-      });
-      editor.focus();
-    },
-  }));
+        });
+        editor.focus();
+      },
+    };
+  });
 
   return null;
 });
@@ -180,9 +190,6 @@ function MiniEditor({
   editorRef,
   plugins,
   onMentionSearch,
-  onEntityMentionSearch,
-  entityMentionManifest,
-  entityMentionTrigger,
   disabled = false,
   multiline = false,
   className,
@@ -193,7 +200,7 @@ function MiniEditor({
       namespace: 'MiniEditor',
       onError: (error: Error) => console.error('[MiniEditor]', error),
       editable: !disabled,
-      nodes: [MentionNode, EntityMentionNode],
+      nodes: [MentionNode],
     }),
     // Only used for initial render — intentionally excluding disabled
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -254,17 +261,8 @@ function MiniEditor({
         {/* Disabled state sync */}
         <DisabledPlugin disabled={disabled} />
 
-        {/* User @mention autocomplete */}
+        {/* Polymorphic @mention autocomplete (users, squads, football entities) */}
         {onMentionSearch && <MentionPlugin onSearch={onMentionSearch} />}
-
-        {/* Football-entity @mention autocomplete */}
-        {onEntityMentionSearch && entityMentionManifest && (
-          <EntityMentionPlugin
-            onSearch={onEntityMentionSearch}
-            manifest={entityMentionManifest}
-            trigger={entityMentionTrigger}
-          />
-        )}
 
         {/* Extension slot */}
         {plugins}
