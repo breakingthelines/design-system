@@ -7,7 +7,7 @@ import {
   PushPin,
   ThumbsUp,
   Gif,
-  SoccerBall,
+  Smiley,
   Image as ImageIcon,
   SpinnerGap,
   Clock,
@@ -39,7 +39,14 @@ export interface ThoughtCommentMedia {
   gifId?: string;
   gifPlatform?: 'klipy' | 'giphy';
   imageUrl?: string;
+  /** Ids of every `user`-kind mention (handy shorthand for the host). */
   mentionedUserIds?: string[];
+  /**
+   * Every inserted mention, in document order, across all kinds (user, squad,
+   * and the football entities). Lets the host persist the football subjects a
+   * reply's `@` mention names, not just users. See {@link ThoughtComposerMedia}.
+   */
+  mentions?: MentionItem[];
 }
 
 export interface ThoughtCommentThought extends ThoughtItem {
@@ -384,12 +391,16 @@ export function ThoughtComment({
                 submitOn="mod-enter"
                 editorRef={replyEditorRef}
                 onSubmit={(text) => {
+                  const mentions = replyEditorRef.current?.getMentions() ?? [];
                   const mentionedIds = replyEditorRef.current?.getMentionedUserIds() ?? [];
                   let media: ThoughtCommentMedia | undefined = replyGif
                     ? { gifUrl: replyGif.url, gifId: replyGif.id, gifPlatform: 'klipy' }
                     : replyImageUrl
                       ? { imageUrl: replyImageUrl }
                       : undefined;
+                  if (mentions.length > 0) {
+                    media = { ...media, mentions };
+                  }
                   if (mentionedIds.length > 0) {
                     media = { ...media, mentionedUserIds: mentionedIds };
                   }
@@ -500,7 +511,7 @@ export function ThoughtComment({
                     if (useBuiltInEmoji) setReplyPicker((p) => (p === 'emoji' ? null : 'emoji'));
                   }}
                 >
-                  <SoccerBall weight="regular" className="size-[13px]" />
+                  <Smiley weight="regular" className="size-[13px]" />
                 </button>
               )}
               {onImageUpload && (
@@ -539,12 +550,16 @@ export function ThoughtComment({
                 disabled={(!replyHasText && !replyGif && !replyImageUrl) || replyImageUploading}
                 onClick={() => {
                   const text = replyEditorRef.current?.getText() ?? '';
+                  const mentions = replyEditorRef.current?.getMentions() ?? [];
                   const mentionedIds = replyEditorRef.current?.getMentionedUserIds() ?? [];
                   let media: ThoughtCommentMedia | undefined = replyGif
                     ? { gifUrl: replyGif.url, gifId: replyGif.id, gifPlatform: 'klipy' }
                     : replyImageUrl
                       ? { imageUrl: replyImageUrl }
                       : undefined;
+                  if (mentions.length > 0) {
+                    media = { ...media, mentions };
+                  }
                   if (mentionedIds.length > 0) {
                     media = { ...media, mentionedUserIds: mentionedIds };
                   }

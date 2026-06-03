@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Image, Gif, SoccerBall, X, SpinnerGap } from '@phosphor-icons/react';
+import { Image, Gif, Smiley, X, SpinnerGap } from '@phosphor-icons/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
@@ -26,7 +26,16 @@ interface ThoughtComposerMedia {
   gifId?: string;
   gifPlatform?: 'klipy' | 'giphy';
   imageUrl?: string;
+  /** Ids of every `user`-kind mention (handy shorthand for the host). */
   mentionedUserIds?: string[];
+  /**
+   * Every inserted mention, in document order, across all kinds (user, squad,
+   * and the football entities). The host derives whatever persistence it needs:
+   * `user` mentions → `mentionedUserIds`, football kinds → structured subject
+   * refs on the thought's context envelope. Provided so a posted thought can
+   * round-trip the football subjects a `@` mention names, not just users.
+   */
+  mentions?: MentionItem[];
 }
 
 interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubmit'> {
@@ -52,9 +61,11 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
   /** Legacy: external GIF click handler (used when gifs prop is not set) */
   onGifClick?: () => void;
   /**
-   * Polymorphic @mention search — enables the single `@` autocomplete when provided.
-   * TODO(unified-mention): host wires federated searchMentions (users + squads +
-   * football entities); today the platform passes only its user lookup here.
+   * Polymorphic @mention search — enables the single `@` autocomplete when
+   * provided. The host wires its federated lane returning {@link MentionItem}s
+   * across people and football entities; the dropdown groups them by kind and a
+   * pick inserts a typed mention node. Inserted mentions surface back on submit
+   * via {@link ThoughtComposerMedia.mentions}.
    */
   onMentionSearch?: (query: string) => Promise<MentionItem[]>;
   /** Enables built-in emoji picker */
@@ -163,6 +174,7 @@ function ThoughtComposer({
   function handleSubmit(text: string) {
     if (!canSubmit) return;
 
+    const mentions = editorRef.current?.getMentions() ?? [];
     const mentionedUserIds = editorRef.current?.getMentionedUserIds() ?? [];
 
     let media: ThoughtComposerMedia | undefined;
@@ -172,7 +184,11 @@ function ThoughtComposer({
       media = { imageUrl };
     }
 
-    // Attach mentions if any were found
+    // Surface every inserted mention so the host can persist both the user
+    // mentions and the football subjects an `@` named.
+    if (mentions.length > 0) {
+      media = { ...media, mentions };
+    }
     if (mentionedUserIds.length > 0) {
       media = { ...media, mentionedUserIds };
     }
@@ -365,7 +381,7 @@ function ThoughtComposer({
               }}
               disabled={disabled}
             >
-              <SoccerBall weight="regular" className="size-[15px]" />
+              <Smiley weight="regular" className="size-[15px]" />
             </button>
           )}
         </div>
