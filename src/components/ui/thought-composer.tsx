@@ -10,7 +10,7 @@ import { Button } from '#/components/ui/button';
 import {
   MiniEditor,
   type MiniEditorHandle,
-  type MentionSuggestion,
+  type MentionItem,
 } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
@@ -51,8 +51,12 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
   onGifRetry?: () => void;
   /** Legacy: external GIF click handler (used when gifs prop is not set) */
   onGifClick?: () => void;
-  /** @mention search callback — enables @mention autocomplete when provided */
-  onMentionSearch?: (query: string) => Promise<MentionSuggestion[]>;
+  /**
+   * Polymorphic @mention search — enables the single `@` autocomplete when provided.
+   * TODO(unified-mention): host wires federated searchMentions (users + squads +
+   * football entities); today the platform passes only its user lookup here.
+   */
+  onMentionSearch?: (query: string) => Promise<MentionItem[]>;
   /** Enables built-in emoji picker */
   emojiEnabled?: boolean;
   /** Legacy: external emoji click handler (used when emojiEnabled is not set) */

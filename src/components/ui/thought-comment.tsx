@@ -22,7 +22,7 @@ import { useRenderMentions } from '#/lib/render-mentions';
 import {
   MiniEditor,
   type MiniEditorHandle,
-  type MentionSuggestion,
+  type MentionItem,
 } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
@@ -99,8 +99,12 @@ export interface ThoughtCommentProps {
   onGifClick?: () => void;
   /** Image upload handler — enables image button in the reply composer */
   onImageUpload?: (file: File) => Promise<string>;
-  /** @mention autocomplete callback */
-  onMentionSearch?: (query: string) => Promise<MentionSuggestion[]>;
+  /**
+   * Polymorphic @mention autocomplete callback.
+   * TODO(unified-mention): host wires federated searchMentions (users + squads +
+   * football entities); today the platform passes only its user lookup here.
+   */
+  onMentionSearch?: (query: string) => Promise<MentionItem[]>;
   /** Enables built-in emoji picker in reply composer */
   emojiEnabled?: boolean;
 }
