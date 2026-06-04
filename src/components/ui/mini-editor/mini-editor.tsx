@@ -40,6 +40,13 @@ interface MiniEditorHandle {
   focus: () => void;
   blur: () => void;
   getText: () => string;
+  /**
+   * The full serialized Lexical editor state as a JSON string (`body_json`).
+   * Includes every MentionNode losslessly, so an `@`-mention round-trips through
+   * the shared {@link MentionFromNode} reader path instead of collapsing to
+   * plain text. Pair with {@link getText} (the plain-text fallback + search/preview).
+   */
+  getBodyJson: () => string;
   insertText: (text: string) => void;
   /** Every inserted mention, in document order, across all kinds. */
   getMentions: () => MentionItem[];
@@ -125,6 +132,9 @@ const EditorRefPlugin = React.forwardRef<MiniEditorHandle>(function EditorRefPlu
       },
       getText() {
         return editor.getEditorState().read(() => $getRoot().getTextContent());
+      },
+      getBodyJson() {
+        return JSON.stringify(editor.getEditorState().toJSON());
       },
       getMentions,
       getMentionedUserIds() {

@@ -26,6 +26,14 @@ interface ThoughtComposerMedia {
   gifId?: string;
   gifPlatform?: 'klipy' | 'giphy';
   imageUrl?: string;
+  /**
+   * The full serialized Lexical editor state (`body_json`) of the composed
+   * thought. Carries every inline MentionNode losslessly so the rendered
+   * thought links its mentions via the shared {@link MentionFromNode} path
+   * rather than the legacy `@word` regex. The plain-text `content` stays as the
+   * fallback + the search/preview text.
+   */
+  bodyJson?: string;
   /** Ids of every `user`-kind mention (handy shorthand for the host). */
   mentionedUserIds?: string[];
   /**
@@ -176,12 +184,19 @@ function ThoughtComposer({
 
     const mentions = editorRef.current?.getMentions() ?? [];
     const mentionedUserIds = editorRef.current?.getMentionedUserIds() ?? [];
+    const bodyJson = editorRef.current?.getBodyJson();
 
     let media: ThoughtComposerMedia | undefined;
     if (selectedGif) {
       media = { gifUrl: selectedGif.url, gifId: selectedGif.id, gifPlatform: 'klipy' };
     } else if (imageUrl) {
       media = { imageUrl };
+    }
+
+    // Carry the serialized Lexical state so the rendered thought keeps its
+    // inline mentions structured (shared MentionFromNode path), not flattened.
+    if (bodyJson) {
+      media = { ...media, bodyJson };
     }
 
     // Surface every inserted mention so the host can persist both the user
