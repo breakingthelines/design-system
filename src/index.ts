@@ -17,6 +17,9 @@ export * from './components/ui/collaborator-dropdown';
 export * from './components/ui/collection-card';
 export * from './components/ui/combobox';
 export * from './components/ui/content-card';
+// SearchEntityCard — exports SearchEntityCard, searchEntityCardVariants,
+// entityKindLabel, and the SearchEntityCard* / SearchEntityKind types.
+export * from './components/ui/search-entity-card';
 export * from './components/ui/dialog';
 export * from './components/ui/dropdown-menu';
 export * from './components/ui/emoji-picker';
