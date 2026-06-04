@@ -82,7 +82,16 @@ export interface ThoughtAnchor {
 
 export interface ThoughtItem {
   id: string;
+  /** Plain-text body. Always present — the search/preview text and the legacy fallback for rendering. */
   body: string;
+  /**
+   * The full serialized Lexical editor state (`body_json`) for this thought,
+   * if it was composed with the structured path. Carries inline MentionNodes
+   * losslessly so {@link ThoughtBody} renders mentions via the shared
+   * {@link MentionFromNode} reader. Absent on legacy thoughts, which fall back
+   * to rendering {@link body} through the `@word` regex.
+   */
+  bodyJson?: string;
   gifUrl?: string;
   imageUrl?: string;
   author: ContentAuthor;

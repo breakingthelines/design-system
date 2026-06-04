@@ -8,7 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
 import { useLinkComponent } from '#/components/ui/link-context';
-import { useRenderMentions } from '#/lib/render-mentions';
+import { ThoughtBody } from '#/components/ui/thought-body';
 import type { ThoughtItem } from '#/types/content';
 
 interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
@@ -21,7 +21,6 @@ interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'childr
 
 function ThoughtCard({ className, thought, actions, onClick, ...props }: ThoughtCardProps) {
   const Link = useLinkComponent();
-  const renderMentions = useRenderMentions();
   const engagementActions: EngagementAction[] = actions ?? [
     { type: 'comment', count: thought.stats.comments },
     { type: 'like', count: thought.stats.likes, active: thought.liked },
@@ -184,9 +183,11 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
 
           {/* Body text — Book Antiqua 14px / 18px per Figma */}
           {thought.body && (
-            <p className="font-serif text-sm leading-[18px] text-foreground whitespace-pre-line">
-              {renderMentions(thought.body)}
-            </p>
+            <ThoughtBody
+              body={thought.body}
+              bodyJson={thought.bodyJson}
+              className="font-serif text-sm leading-[18px] text-foreground"
+            />
           )}
 
           {/* GIF / image attachment */}

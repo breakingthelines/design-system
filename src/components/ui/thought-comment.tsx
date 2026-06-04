@@ -18,7 +18,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useLinkComponent } from '#/components/ui/link-context';
-import { useRenderMentions } from '#/lib/render-mentions';
+import { ThoughtBody } from '#/components/ui/thought-body';
 import {
   MiniEditor,
   type MiniEditorHandle,
@@ -39,6 +39,11 @@ export interface ThoughtCommentMedia {
   gifId?: string;
   gifPlatform?: 'klipy' | 'giphy';
   imageUrl?: string;
+  /**
+   * The full serialized Lexical editor state (`body_json`) of the reply,
+   * carrying every inline MentionNode losslessly. See {@link ThoughtComposerMedia.bodyJson}.
+   */
+  bodyJson?: string;
   /** Ids of every `user`-kind mention (handy shorthand for the host). */
   mentionedUserIds?: string[];
   /**
@@ -139,7 +144,6 @@ export function ThoughtComment({
   emojiEnabled = false,
 }: ThoughtCommentProps) {
   const Link = useLinkComponent();
-  const renderMentions = useRenderMentions();
   const isOP = thought.isOriginalAuthor;
   const isReplying = replyingTo === thought.id;
   const replyEditorRef = React.useRef<MiniEditorHandle>(null);
@@ -317,14 +321,14 @@ export function ThoughtComment({
 
             {/* Body */}
             {thought.body && (
-              <p
+              <ThoughtBody
+                body={thought.body}
+                bodyJson={thought.bodyJson}
                 className={cn(
                   'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
                   isReply ? 'text-xs' : 'text-sm'
                 )}
-              >
-                {renderMentions(thought.body)}
-              </p>
+              />
             )}
 
             {/* GIF / Image attachment */}
@@ -393,11 +397,15 @@ export function ThoughtComment({
                 onSubmit={(text) => {
                   const mentions = replyEditorRef.current?.getMentions() ?? [];
                   const mentionedIds = replyEditorRef.current?.getMentionedUserIds() ?? [];
+                  const bodyJson = replyEditorRef.current?.getBodyJson();
                   let media: ThoughtCommentMedia | undefined = replyGif
                     ? { gifUrl: replyGif.url, gifId: replyGif.id, gifPlatform: 'klipy' }
                     : replyImageUrl
                       ? { imageUrl: replyImageUrl }
                       : undefined;
+                  if (bodyJson) {
+                    media = { ...media, bodyJson };
+                  }
                   if (mentions.length > 0) {
                     media = { ...media, mentions };
                   }
@@ -552,11 +560,15 @@ export function ThoughtComment({
                   const text = replyEditorRef.current?.getText() ?? '';
                   const mentions = replyEditorRef.current?.getMentions() ?? [];
                   const mentionedIds = replyEditorRef.current?.getMentionedUserIds() ?? [];
+                  const bodyJson = replyEditorRef.current?.getBodyJson();
                   let media: ThoughtCommentMedia | undefined = replyGif
                     ? { gifUrl: replyGif.url, gifId: replyGif.id, gifPlatform: 'klipy' }
                     : replyImageUrl
                       ? { imageUrl: replyImageUrl }
                       : undefined;
+                  if (bodyJson) {
+                    media = { ...media, bodyJson };
+                  }
                   if (mentions.length > 0) {
                     media = { ...media, mentions };
                   }
