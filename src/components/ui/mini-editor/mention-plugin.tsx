@@ -5,6 +5,8 @@ import { LexicalTypeaheadMenuPlugin, MenuOption } from '@lexical/react/LexicalTy
 import type { TextNode } from 'lexical';
 import { createPortal } from 'react-dom';
 
+import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar';
+
 import { $createMentionNode, type MentionItem, type MentionKind } from './mention-node';
 
 export type { MentionItem, MentionKind };
@@ -84,21 +86,13 @@ function MentionRow({
         onClick();
       }}
     >
-      {item.imageUrl ? (
-        <img
-          src={item.imageUrl}
-          alt=""
-          aria-hidden="true"
-          className="size-6 shrink-0 rounded-full object-cover"
-        />
-      ) : (
-        <span
-          aria-hidden="true"
-          className="flex size-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium"
-        >
-          {item.label.charAt(0).toUpperCase()}
-        </span>
-      )}
+      {/* Branded fallback: missing OR broken images resolve to the BTL logo
+          (Base UI swaps to the fallback on load error), never a broken-image
+          glyph or a bare initial. */}
+      <Avatar size="sm" aria-hidden="true" className="shrink-0">
+        {item.imageUrl ? <AvatarImage src={item.imageUrl} alt="" /> : null}
+        <AvatarFallback branded />
+      </Avatar>
       <span className="min-w-0 flex-1 truncate font-medium">{item.label}</span>
       <span className="shrink-0 rounded-sm bg-white/10 px-1.5 py-0.5 text-[10px] font-medium tracking-wide text-white/60 uppercase">
         {badge}
