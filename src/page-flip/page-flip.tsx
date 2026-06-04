@@ -27,8 +27,19 @@ import { usePrewarmTextures } from './use-prewarm-textures';
 import { useBookLayout, type BookModePreference } from './use-book-layout';
 import { usePageFlipController, type FlipDirection } from './use-page-flip-controller';
 
-/** How the turn is rendered. */
-export type FlipMode = 'curl' | 'skim' | 'flat';
+/**
+ * How the turn is rendered.
+ *  - `curl`       paper page-curl (hero turns) — fragment-shader cylindrical remap.
+ *  - `skim`       rigid rotateY turn for fast skimming.
+ *  - `flat`       cross-fade, no WebGL — the fallback and reduced-motion path.
+ *  - `cover-open` a single, ceremonial "open the magazine" turn: the cover hinges
+ *                 open on its spine (left edge) and the interior fades up beneath.
+ *                 Used for the Issue #1 reveal. Single-leaf only. Capability-gated:
+ *                 falls back to a deliberately-staged 2D cover-open (the `staged`
+ *                 path in {@link SpreadLayer}) when WebGL is unavailable, on
+ *                 reduced-motion, or if the FPS watchdog trips.
+ */
+export type FlipMode = 'curl' | 'skim' | 'flat' | 'cover-open';
 
 export interface PageFlipPage {
   /** Stable key for the page. */
@@ -184,10 +195,21 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
   }, []);
 
   const resolvedMode: FlipMode = useMemo(() => {
+    // `cover-open` is opt-in (the Issue #1 reveal). It needs WebGL; if the device
+    // can't (or the FPS watchdog tripped), drop to `flat` — which, paired with
+    // the cover-open *intent*, runs the deliberately-staged 2D cover-open in
+    // SpreadLayer rather than a plain cross-fade. Same gate as the curl path, so
+    // the ceremony degrades exactly where the curl would.
+    if (mode === 'cover-open') return !capable || watchdogTripped ? 'flat' : 'cover-open';
     if (mode) return mode;
     if (!capable || watchdogTripped) return 'flat';
     return 'curl';
   }, [mode, capable, watchdogTripped]);
+
+  // The original open *intent* survives the capability gate: when the caller
+  // asked for cover-open but we fell back to flat, SpreadLayer runs the staged-2D
+  // cover-open instead of the ordinary cross-fade.
+  const stagedIntent: 'cover-open' | undefined = mode === 'cover-open' ? 'cover-open' : undefined;
 
   // ── Face source (one per instance so texture budgets don't collide). ──────
   const ownSource = useRef<PageFaceSource | null>(null);
@@ -269,7 +291,7 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
   //    pre-compile the curl material so the first flip doesn't stall. ────────
   usePrewarmTextures({
     source,
-    enabled: resolvedMode === 'curl',
+    enabled: resolvedMode === 'curl' || resolvedMode === 'cover-open',
     isTurning: controller.isTurning,
     faces: useMemo(
       () => prewarmFaceList(index, pages.length, layout),
@@ -351,6 +373,7 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
         progress={controller.progress}
         isTurning={controller.isTurning}
         mode={resolvedMode}
+        staged={stagedIntent}
         direction={dir}
         setLiveRef={setLiveRef}
         freezeBackground={freezeBackground}
@@ -466,6 +489,13 @@ interface SpreadLayerProps {
   progress: number;
   isTurning: boolean;
   mode: FlipMode;
+  /**
+   * Original open *intent*, preserved across the capability gate. When the
+   * caller asked for `'cover-open'` but the device fell back to flat, this stays
+   * `'cover-open'` so the flat path runs the deliberately-staged 2D cover-open
+   * (a CSS `rotateY` hinge off `progress`) instead of a plain cross-fade.
+   */
+  staged?: 'cover-open';
   direction: FlipDirection;
   setLiveRef: (i: number) => (el: HTMLElement | null) => void;
   freezeBackground: string;
@@ -479,11 +509,20 @@ function SpreadLayer({
   progress,
   isTurning,
   mode,
+  staged,
   setLiveRef,
   freezeBackground,
 }: SpreadLayerProps) {
   const flatFade = mode === 'flat' && isTurning;
   const liftPointer = isTurning && mode !== 'flat' ? 'none' : 'auto';
+  // Deliberately-staged 2D cover-open: engaged only when the caller asked for
+  // the cover-open ceremony but the device fell back to flat. It replaces the
+  // symmetric cross-fade with a designed hinge — the cover (the outgoing face)
+  // swings open on its left edge in CSS while the interior fades up beneath.
+  // Compositor-only (transform + opacity), so it's SSR-safe and never blocks.
+  // The flat driver (FlatTurnDriver) snaps `progress → 1` under reduced motion,
+  // which collapses this to an instant clean swap — no animation, no hang.
+  const stagedCoverOpen = flatFade && staged === 'cover-open';
 
   // The faces that must exist in the DOM this frame: the resting spread, plus —
   // while turning — the incoming faces so the freezer can rasterise them. We
@@ -526,7 +565,31 @@ function SpreadLayer({
         // stay put (the GL layer covers them).
         let opacity = 1;
         let z = 0;
-        if (flatFade) {
+        let transform: string | undefined;
+        let transformOrigin: string | undefined;
+        let backfaceVisibility: React.CSSProperties['backfaceVisibility'];
+        if (stagedCoverOpen) {
+          // Staged 2D cover-open. The resting face IS the cover: keep it opaque
+          // and swing it open on its LEFT edge (the spine), riding on top. The
+          // incoming interior sits beneath, fading up over the back half of the
+          // swing (matching the WebGL CoverOpenMesh) so it "arrives" as the
+          // cover clears it. Backface-hidden retires the cover past vertical
+          // instead of showing a mirrored front bleeding over the page.
+          const deg = -progress * STAGED_COVER_OPEN_DEG;
+          z = isRestVisible ? 2 : isIncoming ? 1 : 0;
+          if (isRestVisible) {
+            // The cover: opaque throughout, hinging open on its left edge.
+            opacity = 1;
+            transform = `perspective(1800px) rotateY(${deg}deg)`;
+            transformOrigin = 'left center';
+            backfaceVisibility = 'hidden';
+          } else if (isIncoming) {
+            // The interior beneath: fades up only over the back half of the open.
+            opacity = Math.max(0, Math.min((progress - 0.5) / 0.5, 1));
+          } else {
+            opacity = 0;
+          }
+        } else if (flatFade) {
           opacity = isIncoming ? progress : isRestVisible ? 1 - progress : 0;
           z = isIncoming ? 1 : 0;
         } else if (!isRestVisible) {
@@ -546,6 +609,9 @@ function SpreadLayer({
             style={{
               opacity,
               zIndex: z,
+              transform,
+              transformOrigin,
+              backfaceVisibility,
               pointerEvents: isRestVisible ? liftPointer : 'none',
               transition: flatFade ? 'none' : undefined,
             }}
@@ -712,6 +778,23 @@ function TurnScene({
   // whole page curls.
   const curlWidth = layout === 'spread' ? viewport.width / 2 : viewport.width;
   const curlX = layout === 'spread' ? viewport.width / 4 : 0;
+
+  // Cover-open: a single ceremonial turn that swings the cover (front) open on
+  // the spine to reveal the interior (revealed). Always full-width — the reveal
+  // forces single-leaf, so there is no spread half to pin (curlWidth/curlX
+  // already collapse to the full viewport in single mode).
+  if (mode === 'cover-open') {
+    return (
+      <CoverOpenMesh
+        textureCover={textures.front}
+        textureInterior={textures.revealed}
+        viewport={{ width: curlWidth, height: viewport.height }}
+        offsetX={curlX}
+        target={target}
+        onSettle={onSettle}
+      />
+    );
+  }
 
   return mode === 'skim' ? (
     <SkimMesh
@@ -1039,6 +1122,122 @@ function SkimMesh({
       <mesh position={[viewport.width / 2, 0, 0]} scale={[viewport.width, viewport.height, 1]}>
         <planeGeometry args={[1, 1]} />
         <meshBasicMaterial ref={backMat} map={textureB} transparent opacity={0} />
+      </mesh>
+    </group>
+  );
+}
+
+// ── Cover-open mesh: the ceremonial "open the magazine" hinge ────────────────
+
+interface CoverOpenMeshProps {
+  /** The magazine cover (front face) — hinges open on the spine. */
+  textureCover: THREE.Texture;
+  /** The first interior page revealed beneath as the cover opens. */
+  textureInterior: THREE.Texture;
+  viewport: { width: number; height: number };
+  offsetX: number;
+  target: number;
+  onSettle: () => void;
+}
+
+/** How far open the cover swings (WebGL path, radians). Not a full 180° — stop
+ *  just shy so the laid-open cover keeps a sliver of depth against the interior
+ *  rather than going perfectly flat and z-fighting the page beneath. */
+const COVER_OPEN_ANGLE = Math.PI * 0.95;
+/** Same swing in degrees for the staged-2D CSS `rotateY` fallback, so the 2D and
+ *  3D opens land at the same angle. */
+const STAGED_COVER_OPEN_DEG = (COVER_OPEN_ANGLE * 180) / Math.PI;
+
+/**
+ * `CoverOpenMesh` — the Issue #1 reveal turn. A single leaf (the cover) hinged
+ * on the **spine / left edge** swings open to reveal the interior beneath, the
+ * interior fading up over the back half of the swing so the page "arrives" as
+ * the cover clears it.
+ *
+ * Sibling of {@link SkimMesh} (same imperative spring-driven rotateY pattern,
+ * driven each frame off a `useFrame` read — animating three primitives directly
+ * blows up TS inference), but: (a) it hinges on the LEFT edge, not the spine
+ * gutter of a spread, (b) it swings nearly all the way open (≈`-COVER_OPEN_ANGLE`)
+ * rather than a half-turn, (c) it ramps interior opacity instead of a hard
+ * mid-turn swap, and (d) it is single-leaf only (the reveal forces single mode).
+ * Settles exactly once via a `settled` ref.
+ */
+function CoverOpenMesh({
+  textureCover,
+  textureInterior,
+  viewport,
+  offsetX,
+  target,
+  onSettle,
+}: CoverOpenMeshProps) {
+  const settled = useRef(false);
+  const coverGroup = useRef<THREE.Group | null>(null);
+  const coverMat = useRef<THREE.MeshBasicMaterial | null>(null);
+  const interiorMat = useRef<THREE.MeshBasicMaterial | null>(null);
+
+  // A cover is heavy — the slowest ceremony spring (low tension, high mass) so
+  // the open is felt, not flicked.
+  const [{ t }, api] = useSpring(() => ({
+    t: 0,
+    config: motion.ceremony.spring.coverOpen,
+  }));
+
+  useEffect(() => {
+    settled.current = false;
+    api.start({
+      t: target,
+      config: motion.ceremony.spring.coverOpen,
+      onRest: () => {
+        if (settled.current) return;
+        settled.current = true;
+        onSettle();
+      },
+    });
+  }, [target, api, onSettle]);
+
+  // Hinge on the LEFT edge (the spine): place the pivot group at the left edge of
+  // the page region and offset the cover mesh by +width/2 so its left edge lands
+  // on the pivot. Rotating the inner group about its own origin swings the cover
+  // around that spine — like the front board of a hardback lifting away.
+  const pivotX = offsetX - viewport.width / 2;
+
+  useFrame(() => {
+    const v = t.get() as number;
+    // Cover swings 0 → -COVER_OPEN_ANGLE (away to the left, opening toward us).
+    if (coverGroup.current) coverGroup.current.rotation.y = -v * COVER_OPEN_ANGLE;
+    // Interior fades up over the BACK HALF of the swing (v ≥ 0.5): it stays
+    // hidden behind the closed cover for the first half, then arrives as the
+    // cover clears it. Front-face culling on the cover means once it passes
+    // vertical we see its back, never a mirrored front bleeding over the page.
+    if (interiorMat.current) {
+      interiorMat.current.opacity = Math.max(0, Math.min((v - 0.5) / 0.5, 1));
+    }
+    // The cover stays fully opaque throughout — it's a solid board, not a
+    // cross-fade; the reveal comes from it rotating out of the way.
+    if (coverMat.current) coverMat.current.opacity = 1;
+  });
+
+  return (
+    <group position={[pivotX, 0, 0]}>
+      {/* The hinging cover (front), pinned by its left edge to the pivot. */}
+      <group ref={coverGroup}>
+        <mesh position={[viewport.width / 2, 0, 0.01]} scale={[viewport.width, viewport.height, 1]}>
+          <planeGeometry args={[1, 1]} />
+          {/* DoubleSide so the cover's underside shows once it swings past
+              vertical, rather than vanishing (single-sided back-face cull). */}
+          <meshBasicMaterial
+            ref={coverMat}
+            map={textureCover}
+            transparent
+            opacity={1}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      </group>
+      {/* Interior page, static beneath the cover, fading up as it opens. */}
+      <mesh position={[viewport.width / 2, 0, 0]} scale={[viewport.width, viewport.height, 1]}>
+        <planeGeometry args={[1, 1]} />
+        <meshBasicMaterial ref={interiorMat} map={textureInterior} transparent opacity={0} />
       </mesh>
     </group>
   );

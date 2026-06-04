@@ -3,6 +3,7 @@ import { useRef, useState } from 'react';
 import { cdp, page as browserPage } from 'vitest/browser';
 import { expect, waitFor } from 'storybook/test';
 import { PageFlip, type PageFlipHandle, type PageFlipPage } from './page-flip';
+import { IssueReader, type IssueReaderHandle } from './issue-reader/issue-reader';
 
 const meta = preview.meta({
   title: 'Page Flip/PageFlip',
@@ -584,6 +585,302 @@ export const FlatFallback = meta.story({
     </PortraitFrame>
   ),
 });
+
+// ── Cover-open: the Issue #1 reveal ceremony ─────────────────────────────────
+// A single, deliberate "open the magazine" turn: the cover hinges open on its
+// spine (left edge) and the first interior page fades up beneath. Single-leaf
+// only. On a capable device this is the WebGL `CoverOpenMesh`; on reduced-motion
+// / no-WebGL it degrades to the deliberately-staged 2D cover-open (a CSS rotateY
+// hinge), NOT a plain fade — see `CoverOpenFlatStaged` below.
+
+/** A magazine COVER face — masthead, issue line, a single hero headline. */
+function RevealCover() {
+  return (
+    <div
+      data-testid="reveal-cover"
+      style={{
+        position: 'absolute',
+        inset: 0,
+        background: C.ground,
+        color: C.ink,
+        padding: '56px 44px',
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
+        borderTop: `3px solid ${C.red}`,
+      }}
+    >
+      <div
+        style={{
+          fontFamily: SANS,
+          fontSize: 13,
+          fontWeight: 800,
+          letterSpacing: '0.24em',
+          textTransform: 'uppercase',
+          color: C.ink,
+        }}
+      >
+        Breaking The Lines
+      </div>
+      <div
+        style={{
+          fontFamily: SANS,
+          fontSize: 11,
+          letterSpacing: '0.26em',
+          textTransform: 'uppercase',
+          color: C.red,
+          fontWeight: 700,
+          marginTop: 8,
+        }}
+      >
+        Issue No. 01
+      </div>
+      <h1
+        style={{
+          fontFamily: SERIF,
+          fontSize: 52,
+          lineHeight: 1.02,
+          fontWeight: 700,
+          letterSpacing: '-0.02em',
+          margin: 'auto 0',
+          maxWidth: '14ch',
+        }}
+      >
+        Your first issue is ready
+      </h1>
+      <div
+        style={{
+          fontFamily: SANS,
+          fontSize: 11,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: C.muted,
+          marginTop: 'auto',
+        }}
+      >
+        Open to begin
+      </div>
+    </div>
+  );
+}
+
+/** The first INTERIOR page revealed beneath the cover. */
+function RevealInterior() {
+  return (
+    <PageFrame folio="01 — WELCOME">
+      <Kicker>Inside / Your corner</Kicker>
+      <h2
+        style={{
+          fontFamily: SERIF,
+          fontSize: 40,
+          lineHeight: 1.06,
+          fontWeight: 700,
+          letterSpacing: '-0.015em',
+          margin: 0,
+          maxWidth: '17ch',
+        }}
+      >
+        Welcome to the room
+      </h2>
+      <Standfirst>
+        The pitch is set, your club is followed, and the first whistle is moments away.
+      </Standfirst>
+      <Byline name="The Editor" role="Breaking The Lines" />
+    </PageFrame>
+  );
+}
+
+/** Cover + a couple of interior faces — the reveal's frozen "issue". */
+const revealPages: PageFlipPage[] = [
+  { id: 'reveal-cover', render: () => <RevealCover /> },
+  { id: 'reveal-inside', render: () => <RevealInterior /> },
+  {
+    id: 'reveal-back',
+    render: () => (
+      <PageFrame folio="02 — END">
+        <Column>
+          That is the whole of Issue No. 01 — a single beat to mark the start. From here the Arena is
+          live and the writing is yours.
+        </Column>
+        <Byline name="Breaking The Lines" role="See you inside" />
+      </PageFrame>
+    ),
+  },
+];
+
+/**
+ * The WebGL cover-open. The cover hinges open on its spine (left edge) and the
+ * interior fades up beneath; it settles exactly once. Drag the cover, tap the
+ * right half, or use the Next caret to open it.
+ *
+ * REAL-BROWSER CHECKPOINT (headless runs the fallback): in a real browser,
+ * confirm the cover hinges on the spine, the interior reveals, it settles once
+ * (no double-settle), and no blank texture flashes.
+ */
+export const CoverOpen = meta.story({
+  render: () => (
+    <PortraitFrame>
+      <PageFlip
+        mode="cover-open"
+        bookMode="single"
+        pages={revealPages}
+        aria-label="Breaking The Lines — Issue No. 01 (cover-open reveal)"
+        style={{ fontFamily: SANS }}
+      />
+    </PortraitFrame>
+  ),
+});
+
+/**
+ * Forced-flat staged cover-open. Emulates `prefers-reduced-motion: reduce` and
+ * low device capability via CDP, then mounts the reader so its capability check
+ * resolves to the flat path — but, because the *intent* is still `cover-open`,
+ * SpreadLayer runs the deliberately-staged 2D open (a CSS rotateY hinge with the
+ * interior fading up), not a plain cross-fade. The assertion confirms the turn
+ * still settles (position reaches 1) and never hangs.
+ */
+export const CoverOpenFlatStaged = meta.story({
+  render: () => <StagedCoverOpenFlow />,
+  play: async ({ canvasElement }) => {
+    const doc = canvasElement.ownerDocument;
+
+    // Emulate a reduced-motion / no-WebGL-grade environment so the cover-open
+    // intent degrades to the staged-2D path on mount.
+    try {
+      const session = await cdp();
+      await session.send('Emulation.setEmulatedMedia', {
+        features: [{ name: 'prefers-reduced-motion', value: 'reduce' }],
+      });
+    } catch {
+      // If CDP media emulation is unavailable, the gate below still mounts and
+      // the staged/flat path is exercised by the forced intent; the settle
+      // assertion remains the contract under test.
+    }
+
+    const stateEl = () => doc.querySelector('[data-testid="staged-state"]');
+    const armBtn = doc.querySelector('[data-testid="staged-arm"]') as HTMLButtonElement | null;
+    if (!armBtn) throw new Error('staged-arm button not found');
+
+    // Mount the reader AFTER the media emulation is in place.
+    armBtn.click();
+
+    // The reader mounts; open the cover via its Next control.
+    await waitFor(() => {
+      const open = doc.querySelector('[data-testid="staged-open"]') as HTMLButtonElement | null;
+      if (!open) throw new Error('staged-open not yet mounted');
+      open.click();
+    });
+
+    // The staged-2D open must SETTLE — position reaches ≥ 1 — and never hang.
+    await waitFor(
+      () => {
+        const pos = Number(stateEl()?.getAttribute('data-position') ?? '-1');
+        expect(pos).toBeGreaterThanOrEqual(1);
+      },
+      { timeout: 4000 }
+    );
+
+    // And it must report the cover opened exactly once.
+    await waitFor(() => {
+      expect(stateEl()?.getAttribute('data-cover-opened')).toBe('1');
+    });
+  },
+});
+
+/**
+ * Drives `IssueReader mode="reveal"` (cover-open + forced single) inside a
+ * mount-gate so a `play` function can set up the environment before the reader's
+ * capability detection runs. Exposes position + a one-shot cover-opened flag for
+ * assertions.
+ */
+function StagedCoverOpenFlow() {
+  const [armed, setArmed] = useState(false);
+  const ref = useRef<IssueReaderHandle>(null);
+  const [position, setPosition] = useState(0);
+  const [coverOpened, setCoverOpened] = useState(false);
+
+  return (
+    <PortraitFrame>
+      <div
+        data-page-flip-exclude="true"
+        data-testid="staged-state"
+        data-position={position}
+        data-cover-opened={coverOpened ? '1' : '0'}
+        style={{
+          position: 'fixed',
+          top: 4,
+          left: 4,
+          zIndex: 9999,
+          fontFamily: SANS,
+          fontSize: 11,
+          color: '#fff',
+          background: 'rgba(0,0,0,0.6)',
+          padding: '2px 6px',
+          pointerEvents: 'none',
+        }}
+      >
+        pos:{position} opened:{coverOpened ? 'yes' : 'no'}
+      </div>
+
+      {!armed ? (
+        <button
+          type="button"
+          data-testid="staged-arm"
+          onClick={() => setArmed(true)}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: C.ground,
+            color: C.ink,
+            fontFamily: SANS,
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Arm reduced-motion reveal
+        </button>
+      ) : (
+        <>
+          <IssueReader
+            ref={ref}
+            mode="reveal"
+            issue={{ id: 'issue-1', title: 'Breaking The Lines', issueNumber: 1 }}
+            faces={revealPages.map((p) => ({ id: p.id, render: p.render }))}
+            sound={false}
+            showHoverControl={false}
+            onTurn={(p) => setPosition(p)}
+            onCoverOpened={() => setCoverOpened(true)}
+            style={{ width: '100%', height: '100%' }}
+          />
+          <button
+            type="button"
+            data-testid="staged-open"
+            onClick={() => ref.current?.next()}
+            style={{
+              position: 'absolute',
+              bottom: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              zIndex: 5,
+              fontFamily: SANS,
+              fontSize: 12,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: C.ground,
+              background: C.red,
+              border: 'none',
+              borderRadius: 999,
+              padding: '10px 24px',
+              cursor: 'pointer',
+            }}
+          >
+            Open the issue
+          </button>
+        </>
+      )}
+    </PortraitFrame>
+  );
+}
 
 // ── Onboarding repro: full-bleed, multi-page, PROGRAMMATIC advance ───────────
 // Mirrors the platform First Touch flow (app/routes/_fullbleed/onboarding):

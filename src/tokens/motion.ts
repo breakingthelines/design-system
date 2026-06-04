@@ -76,10 +76,17 @@ export const motion = {
     // react-spring (@react-spring/three) configs for animating
     // uProgress. `turn` is the hero curl; `skim` the rigid flick;
     // `snap` is the release-momentum settle back to 0 or 1.
+    //
+    // `coverOpen` is the heaviest spring: the Issue #1 reveal swings a near-180°
+    // magazine *cover* open on its spine. A cover has heft, so this runs slower
+    // and with more mass than `turn` — low tension + heavy mass for a deliberate
+    // arc, with enough friction that the lay-open lands cleanly and never
+    // overshoots back past flat. A ceremony beat, not a flick.
     spring: {
       turn: { tension: 210, friction: 28, mass: 1 },
       skim: { tension: 320, friction: 30, mass: 0.9 },
       snap: { tension: 260, friction: 24, mass: 0.8 },
+      coverOpen: { tension: 120, friction: 30, mass: 1.8 },
     },
   },
 

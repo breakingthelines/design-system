@@ -1,7 +1,7 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 
 import { positionCount } from '../book';
-import { PageFlip, type PageFlipHandle, type PageFlipPage } from '../page-flip';
+import { PageFlip, type FlipMode, type PageFlipHandle, type PageFlipPage } from '../page-flip';
 import type { BookModePreference } from '../use-book-layout';
 import type { FlipDirection } from '../use-page-flip-controller';
 
@@ -97,6 +97,14 @@ export interface IssueReaderProps {
   onTurn?: (position: number, direction: FlipDirection) => void;
   /** Fired the first time the reader reaches the final position (issue finished). */
   onReachedEnd?: () => void;
+  /**
+   * Fired once, the first time the cover finishes opening (the reader settles at
+   * position ≥ 1). Only meaningful in `mode="reveal"` — the Issue #1 ceremony —
+   * where it lets the onboarding flow react to the cover having opened (e.g.
+   * staging the standfirst) without coupling to the flip's render mode. The
+   * cover-open never *gates* completion: "Enter the Arena" stays independent.
+   */
+  onCoverOpened?: () => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -130,6 +138,7 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
     showHoverControl = true,
     onTurn,
     onReachedEnd,
+    onCoverOpened,
     className,
     style,
   },
@@ -162,9 +171,16 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
   // single-page count as the upper bound; PageFlip clamps either way.
   const lastSinglePosition = Math.max(positionCount(pages.length, 'single') - 1, 0);
   const reachedEndFired = useRef(false);
+  const coverOpenedFired = useRef(false);
 
   const handleIndexChange = (index: number, direction: FlipDirection) => {
     onTurn?.(index, direction);
+    // The cover has opened once we settle anywhere past the cover (position ≥ 1).
+    // Fire exactly once; only relevant to the reveal ceremony.
+    if (!coverOpenedFired.current && index >= 1) {
+      coverOpenedFired.current = true;
+      onCoverOpened?.();
+    }
     if (!reachedEndFired.current && index >= lastSinglePosition && direction === 'forward') {
       reachedEndFired.current = true;
       onReachedEnd?.();
@@ -175,8 +191,18 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
     ? `${issue.title} — Issue No. ${String(issue.issueNumber).padStart(2, '0')}`
     : issue.title;
 
-  // `mode` is the Issue *open* intent (read vs the Issue #1 reveal ceremony);
-  // the flip's own render mode (curl / skim / flat) stays capability-driven.
+  // The reveal is the Issue #1 ceremony: it opens as a staged cover-open and
+  // MUST be single-leaf. `bookMode:'auto'` would resolve to a two-page spread on
+  // wide viewports, which renders the cover as a half-width leaf (the collapsed
+  // half-spread reveal bug). Forcing single keeps the cover full-bleed; passing
+  // `mode='cover-open'` runs the spine-hinged open (with the staged-2D fallback
+  // when WebGL is unavailable). `read` keeps the responsive, capability-driven
+  // curl exactly as before.
+  const isReveal = mode === 'reveal';
+  const effectiveBookMode: BookModePreference = isReveal ? 'single' : bookMode;
+  const flipMode: FlipMode | undefined = isReveal ? 'cover-open' : undefined;
+
+  // `mode` is the Issue *open* intent (read vs the Issue #1 reveal ceremony).
   // We expose the intent as a data attribute on the wrapper so onboarding
   // choreography can hook the reveal without this reader forking the flip.
   return (
@@ -190,7 +216,8 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
         ref={flipRef}
         pages={pages}
         initialIndex={initialIndex}
-        bookMode={bookMode}
+        mode={flipMode}
+        bookMode={effectiveBookMode}
         sound={sound}
         showHoverControl={showHoverControl}
         onIndexChange={handleIndexChange}
