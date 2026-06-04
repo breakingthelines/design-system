@@ -209,7 +209,7 @@ export function MentionPlugin({
       ) =>
         anchorElementRef.current && options.length > 0
           ? createPortal(
-              <ul className="z-50 mt-1 min-w-[220px] max-w-[320px] list-none rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+              <ul className="z-50 mt-1 max-h-72 min-w-[220px] max-w-[320px] list-none overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
                 {options.map((option, index) => (
                   <MentionRow
                     key={option.key}
