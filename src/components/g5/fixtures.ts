@@ -8,6 +8,8 @@
  * realistic data inside every `.stories.tsx` file.
  */
 
+import type { FixtureRowData } from './fixture-row';
+import type { WhatsHappeningGroup } from './whats-happening-panel';
 import type { G5FixtureCardData, G5InboxObjective, G5Issue1Slots, G5SubjectRef } from './types';
 
 export const teamRefArsenal: G5SubjectRef = {
@@ -186,3 +188,94 @@ export const issue1AllFallback: G5Issue1Slots = {
   follow: { kind: 'fallback', reason: 'Follow voices from search at any time.' },
   backCover: { kind: 'fallback', reason: 'Sign-off line drawn from your scope.' },
 };
+
+// ── fixtures-hub: FixtureRow / WhatsHappeningPanel sample data ────────────────
+// Mirrors the Figma 713-4119 mock (live + result rows on one date, an upcoming
+// row on the next). Crest URLs are omitted so the deterministic monogram path
+// renders in node-environment tests; stories that want crests pass imageUrl.
+
+export const rowLiveRealBarca: FixtureRowData = {
+  id: 'row-rma-bar',
+  status: 'live',
+  minuteLabel: "85'",
+  home: { label: 'Real Madrid', accentColor: '#febe10' },
+  away: { label: 'Barcelona', accentColor: '#a50044' },
+  scoreHome: 1,
+  scoreAway: 2,
+  href: '/game/football/rma-bar/real-madrid-v-barcelona',
+  engagement: { thoughts: 1243, ratings: 86, predictions: 412 },
+};
+
+export const rowLiveArsSheff: FixtureRowData = {
+  id: 'row-ars-shu',
+  status: 'live',
+  minuteLabel: "85'",
+  home: { label: 'Arsenal', accentColor: '#ef0107' },
+  away: { label: 'Sheffield United', accentColor: '#ee2737' },
+  scoreHome: 0,
+  scoreAway: 0,
+  href: '/game/football/ars-shu/arsenal-v-sheffield-united',
+};
+
+export const rowLiveManUtdCity: FixtureRowData = {
+  id: 'row-mun-mci',
+  status: 'live',
+  minuteLabel: "90+2'",
+  lateLive: true,
+  home: { label: 'Man United', accentColor: '#da291c' },
+  away: { label: 'Man City', accentColor: '#6cabdd' },
+  scoreHome: 3,
+  scoreAway: 1,
+  href: '/game/football/mun-mci/manchester-united-v-manchester-city',
+  engagement: { thoughts: 5120, ratings: 240, predictions: 980 },
+};
+
+export const rowResultBayernDortmund: FixtureRowData = {
+  id: 'row-bay-bvb',
+  status: 'result',
+  minuteLabel: 'FT',
+  home: { label: 'Bayern Munich', accentColor: '#dc052d' },
+  away: { label: 'Borussia Dortmund', accentColor: '#fde100' },
+  scoreHome: 1,
+  scoreAway: 0,
+  href: '/game/football/bay-bvb/bayern-munich-v-borussia-dortmund',
+};
+
+export const rowResultLivEverton: FixtureRowData = {
+  id: 'row-liv-eve',
+  status: 'result',
+  minuteLabel: 'FT',
+  home: { label: 'Liverpool', accentColor: '#c8102e' },
+  away: { label: 'Everton', accentColor: '#003399' },
+  scoreHome: 0,
+  scoreAway: 1,
+  href: '/game/football/liv-eve/liverpool-v-everton',
+};
+
+export const rowUpcomingFlamengoVasco: FixtureRowData = {
+  id: 'row-fla-vas',
+  status: 'upcoming',
+  kickoffLabel: '9 PM',
+  kickoffIso: '2026-05-20T21:00:00Z',
+  home: { label: 'Flamengo', accentColor: '#e30613' },
+  away: { label: 'Vasco', accentColor: '#000000' },
+};
+
+export const whatsHappeningGroups: WhatsHappeningGroup[] = [
+  {
+    id: '2026-05-19',
+    dateLabel: 'Tuesday, May 19',
+    fixtures: [
+      rowLiveRealBarca,
+      rowLiveArsSheff,
+      rowLiveManUtdCity,
+      rowResultBayernDortmund,
+      rowResultLivEverton,
+    ],
+  },
+  {
+    id: '2026-05-20',
+    dateLabel: 'Wednesday, May 20',
+    fixtures: [rowUpcomingFlamengoVasco],
+  },
+];
