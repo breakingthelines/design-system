@@ -123,10 +123,7 @@ export type {
 } from './entity-stats-summary';
 
 export { RatingsReceivedCard } from './ratings-received-card';
-export type {
-  RatingsReceivedCardProps,
-  RatingsReceivedOpponent,
-} from './ratings-received-card';
+export type { RatingsReceivedCardProps, RatingsReceivedOpponent } from './ratings-received-card';
 
 export { AboutEntityGrid } from './about-entity-grid';
 export type { AboutEntityGridProps } from './about-entity-grid';

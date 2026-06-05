@@ -64,7 +64,10 @@ export function AboutEntityGrid({
 
   if (items.length === 0) {
     return (
-      <section data-slot="about-entity-grid" className={cn('flex w-full flex-col gap-6', className)}>
+      <section
+        data-slot="about-entity-grid"
+        className={cn('flex w-full flex-col gap-6', className)}
+      >
         <SectionHeader label={heading} />
         <FallbackState reason={fallbackReason ?? 'NO_CONTENT_YET'} />
       </section>
@@ -74,10 +77,7 @@ export function AboutEntityGrid({
   return (
     <section data-slot="about-entity-grid" className={cn('flex w-full flex-col gap-6', className)}>
       <SectionHeader label={heading} />
-      <div
-        data-slot="about-entity-grid-columns"
-        className="grid grid-cols-1 gap-6 lg:grid-cols-3"
-      >
+      <div data-slot="about-entity-grid-columns" className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div data-slot="about-entity-grid-feature" className="lg:col-span-1">
           {leftFeature ? (
             <ContentCard
@@ -89,10 +89,7 @@ export function AboutEntityGrid({
           ) : null}
         </div>
 
-        <ul
-          data-slot="about-entity-grid-list"
-          className="flex flex-col gap-4 lg:col-span-1"
-        >
+        <ul data-slot="about-entity-grid-list" className="flex flex-col gap-4 lg:col-span-1">
           {listItems.map((item) => (
             <li key={item.id}>
               <ContentCard
