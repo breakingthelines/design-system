@@ -340,7 +340,7 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
     }
     if (!rect) return;
     const reported = safeOrientation(engine);
-    const portrait = portraitHint ?? (reported === 'portrait');
+    const portrait = portraitHint ?? reported === 'portrait';
     setPageBox(visiblePageBox(rect, portrait));
   }, []);
 
@@ -368,9 +368,7 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
     if (!host || !book) return;
     if (typeof window === 'undefined') return;
 
-    const pageEls = Array.from(
-      book.querySelectorAll<HTMLElement>('[data-page-flip-leaf]')
-    );
+    const pageEls = Array.from(book.querySelectorAll<HTMLElement>('[data-page-flip-leaf]'));
     if (pageEls.length === 0) return;
 
     // Drive the ENGINE's orientation from the same `layout` signal the rest of
