@@ -53,6 +53,24 @@ export type {
   TimelinePulseSide,
 } from './timeline-pulse';
 
+export { MatchTimeline, groupByPhase } from './match-timeline';
+export type {
+  MatchTimelineProps,
+  MatchTimelineEvent,
+  MatchTimelineEventKind,
+  MatchTimelineSide,
+} from './match-timeline';
+
+export { MatchShell, MatchAdRail, MatchAdSlot, MatchRecapStrip } from './match-shell';
+export type {
+  MatchShellProps,
+  MatchShellColumns,
+  MatchAdRailProps,
+  MatchAdSlotProps,
+  MatchRecapStripProps,
+  MatchRecapSide,
+} from './match-shell';
+
 export { GatedAction } from './gated-action';
 export type { GatedActionProps, GatedRole, GatedActionMode } from './gated-action';
 

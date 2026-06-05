@@ -35,6 +35,36 @@ export type {
 export { MatchdayFixtureStrip, MATCHDAY_FIXTURE_STRIP_EMPTY_LINE } from './matchday-fixture-strip';
 export type { MatchdayFixtureStripProps } from './matchday-fixture-strip';
 
+// fixtures-hub family — the dense, status-driven score-row family powering the
+// Football Home + "What's Happening" widget. Extends (does not replace) the
+// FixtureCard tile family above.
+export {
+  FixtureRow,
+  FixtureGroup,
+  FixtureFilterBar,
+  FixtureEngagementBadges,
+  initialsFromFixtureLabel,
+  isLateLive,
+  formatFixtureTime,
+} from './fixture-row';
+export type {
+  FixtureRowProps,
+  FixtureRowData,
+  FixtureRowStatus,
+  FixtureRowDensity,
+  FixtureEngagement,
+  FixtureGroupProps,
+  FixtureFilterBarProps,
+  FixtureFilter,
+} from './fixture-row';
+
+export {
+  WhatsHappeningPanel,
+  groupFixturesByDate,
+  WHATS_HAPPENING_EMPTY_LINE,
+} from './whats-happening-panel';
+export type { WhatsHappeningPanelProps, WhatsHappeningGroup } from './whats-happening-panel';
+
 export { Issue1Skeleton, ISSUE1_SLOT_ORDER } from './issue1-skeleton';
 export type { Issue1SkeletonProps } from './issue1-skeleton';
 
