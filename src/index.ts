@@ -120,6 +120,7 @@ export {
   initialsFromMatchLabel,
   type MatchHeaderProps,
   type MatchHeaderSide,
+  type MatchHeaderVariant,
 } from './components/ui/match-header';
 
 export {

@@ -59,6 +59,68 @@ describe('MatchHeader', () => {
   });
 });
 
+describe('MatchHeader photo-hero variant', () => {
+  const home = { label: 'Arsenal', shortLabel: 'ARS', standingLabel: '2nd in Premier League' };
+  const away = { label: 'Chelsea', shortLabel: 'CHE', standingLabel: '1st in Premier League' };
+
+  it('renders the flat variant by default', () => {
+    const markup = render(<MatchHeader home={home} away={away} status="finished" />);
+    expect(getSlotAttr(markup, 'match-header', 'data-variant')).toBe('flat');
+    expect(hasSlot(markup, 'match-header-backdrop')).toBe(false);
+  });
+
+  it('renders a blurred photo backdrop + scrim when variant=photo with an image', () => {
+    const markup = render(
+      <MatchHeader
+        home={home}
+        away={away}
+        status="finished"
+        variant="photo"
+        backgroundImageUrl="https://example.com/stadium.jpg"
+        scoreHome={1}
+        scoreAway={2}
+      />
+    );
+    expect(getSlotAttr(markup, 'match-header', 'data-variant')).toBe('photo');
+    expect(hasSlot(markup, 'match-header-backdrop')).toBe(true);
+    expect(markup).toContain('https://example.com/stadium.jpg');
+    // 20px blur on the image, plus a 50% black scrim over it.
+    expect(markup).toContain('blur-[20px]');
+    expect(markup).toContain('bg-black/50');
+  });
+
+  it('degrades to flat when variant=photo but no image is supplied', () => {
+    const markup = render(
+      <MatchHeader home={home} away={away} status="finished" variant="photo" />
+    );
+    expect(getSlotAttr(markup, 'match-header', 'data-variant')).toBe('flat');
+    expect(hasSlot(markup, 'match-header-backdrop')).toBe(false);
+  });
+
+  it('renders each side standing caption, and omits it when absent', () => {
+    const withStanding = render(<MatchHeader home={home} away={away} status="finished" />);
+    expect(slotText(withStanding, 'match-header')).toContain('2nd in Premier League');
+    expect(slotText(withStanding, 'match-header')).toContain('1st in Premier League');
+
+    const without = render(
+      <MatchHeader home={{ label: 'Arsenal' }} away={{ label: 'Chelsea' }} status="finished" />
+    );
+    expect(hasSlot(without, 'match-header-side-standing')).toBe(false);
+  });
+
+  it('renders the xG row only when an xG value is supplied', () => {
+    const withXg = render(
+      <MatchHeader home={home} away={away} status="finished" xgHome={0.25} xgAway={1.25} />
+    );
+    expect(hasSlot(withXg, 'match-header-xg')).toBe(true);
+    expect(slotText(withXg, 'match-header-xg-home')).toContain('0.25');
+    expect(slotText(withXg, 'match-header-xg-away')).toContain('1.25');
+
+    const withoutXg = render(<MatchHeader home={home} away={away} status="finished" />);
+    expect(hasSlot(withoutXg, 'match-header-xg')).toBe(false);
+  });
+});
+
 describe('MatchHeader helpers', () => {
   it('initialsFromMatchLabel returns the padded sentinel for empty input', () => {
     expect(initialsFromMatchLabel('')).toBe('··');
