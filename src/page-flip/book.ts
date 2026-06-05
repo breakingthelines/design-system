@@ -1,5 +1,8 @@
 import type { BookMode } from './use-book-layout';
 
+/** Which way a turn moves: toward a later page (`forward`) or earlier (`backward`). */
+export type FlipDirection = 'forward' | 'backward';
+
 /**
  * Book paper model — maps a flat list of page faces onto *leaves* and *spreads*,
  * and works out which faces a turn shows.

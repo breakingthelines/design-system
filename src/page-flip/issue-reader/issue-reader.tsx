@@ -1,29 +1,28 @@
 import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
 
-import { positionCount } from '../book';
+import { positionCount, type FlipDirection } from '../book';
 import { PageFlip, type FlipMode, type PageFlipHandle, type PageFlipPage } from '../page-flip';
 import type { BookModePreference } from '../use-book-layout';
-import type { FlipDirection } from '../use-page-flip-controller';
 
 /**
  * Programme Issue reader — the standalone "open an issue" experience.
  *
  * An Issue is a FROZEN snapshot: its spreads come from the page-composition
- * block renderers rendered to page faces (per the WebGL-magazine build spec).
- * This component does NOT re-implement the page-flip — it composes the existing
- * {@link PageFlip} runtime: it maps an Issue's ordered faces onto `PageFlip`'s
- * leaf model (cover → spreads → back cover) and hands them straight to the
- * fragment-shader curl. The same reader powers the onboarding "Issue #1 reveal".
+ * block renderers rendered to page faces (per the magazine build spec). This
+ * component does NOT re-implement the page-flip — it composes the existing
+ * {@link PageFlip} runtime (built on the MIT StPageFlip engine): it maps an
+ * Issue's ordered faces onto `PageFlip`'s leaf model (cover → spreads → back
+ * cover) and hands them straight to the engine, which renders the realistic
+ * paper turn. The same reader powers the onboarding "Issue #1 reveal".
  *
  * Contract shape (why faces, not pre-merged spread images):
- *  - `PageFlip` already models the book as **leaves** (a leaf = 2 faces) and
- *    pairs faces into spreads itself (`book.ts`): face 0 is the single cover,
- *    then faces pair up, turning one leaf per spread. Passing FACES (cover
- *    first, back cover last) lets `bookMode` resolve single-vs-spread
- *    responsively — exactly like a real magazine — with no double layout pass.
- *  - Each face is a frozen render: live, crisp, selectable DOM at rest, frozen
- *    to a texture only during a turn (the `PageFaceSource` boundary inside
- *    `PageFlip`). The Issue is immutable, so a face's `render()` is pure.
+ *  - `PageFlip` models the book as **leaves** (a leaf = 2 faces): face 0 is the
+ *    single cover (shown alone), then faces pair up into spreads, turning one
+ *    leaf per spread. Passing FACES (cover first, back cover last) lets the
+ *    layout resolve single-vs-spread responsively — exactly like a real
+ *    magazine — with no double layout pass.
+ *  - Each face is a frozen render: real, selectable DOM the engine turns as a
+ *    page. The Issue is immutable, so a face's `render()` is pure.
  *
  * If a caller has truly pre-baked, full-bleed spread artwork (e.g. an OG-style
  * raster per spread) it can still drive this in `bookMode="single"` and supply
@@ -191,13 +190,12 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
     ? `${issue.title} — Issue No. ${String(issue.issueNumber).padStart(2, '0')}`
     : issue.title;
 
-  // The reveal is the Issue #1 ceremony: it opens as a staged cover-open and
-  // MUST be single-leaf. `bookMode:'auto'` would resolve to a two-page spread on
-  // wide viewports, which renders the cover as a half-width leaf (the collapsed
+  // The reveal is the Issue #1 ceremony: it opens from the cover and MUST be
+  // single-leaf. `bookMode:'auto'` would resolve to a two-page spread on wide
+  // viewports, which renders the cover as a half-width leaf (the collapsed
   // half-spread reveal bug). Forcing single keeps the cover full-bleed; passing
-  // `mode='cover-open'` runs the spine-hinged open (with the staged-2D fallback
-  // when WebGL is unavailable). `read` keeps the responsive, capability-driven
-  // curl exactly as before.
+  // `mode='cover-open'` runs the slower cover-open turn (and degrades to the
+  // flat reader under reduced motion). `read` keeps the responsive engine turn.
   const isReveal = mode === 'reveal';
   const effectiveBookMode: BookModePreference = isReveal ? 'single' : bookMode;
   const flipMode: FlipMode | undefined = isReveal ? 'cover-open' : undefined;

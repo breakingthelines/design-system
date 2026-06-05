@@ -20,7 +20,7 @@ const meta = preview.meta({
           'The standalone "open an issue" experience. An Issue is a frozen snapshot whose ' +
           'spreads come from the page-composition block renderers rendered to page faces; ' +
           'IssueReader maps those ordered faces (cover → interior pages → back cover) onto the ' +
-          'PageFlip leaf model and flips through them with the fragment-shader curl. It does ' +
+          'PageFlip leaf model and flips through them with the StPageFlip paper turn. It does ' +
           'NOT re-implement the flip — it composes the PageFlip runtime. The same reader powers ' +
           'the onboarding Issue #1 reveal (mode="reveal").',
       },
