@@ -108,6 +108,30 @@ const DEFAULT_FREEZE_BG = '#0d0d0d';
 const DEFAULT_PAGE_ASPECT = 0.707;
 /** Base page width handed to the engine (it scales to the container via `stretch`). */
 const ENGINE_BASE_WIDTH = 550;
+/**
+ * `minWidth` floor for the engine in a normal (responsive) build.
+ */
+const ENGINE_MIN_WIDTH = 220;
+/**
+ * `minWidth` used to LOCK the engine into portrait (single-page) layout.
+ *
+ * StPageFlip has no "force portrait" flag — in `stretch` mode it derives the
+ * orientation purely from `blockWidth < minWidth * 2` (with `usePortrait`).
+ * Our responsive `layout` (single vs spread) is computed in React and, for the
+ * Issue-reveal ceremony, FORCED to `single`; but that decision never reached
+ * the engine, so on any container wider than `minWidth * 2` (≈440px — i.e. most
+ * desktops and the full-bleed reveal) the engine silently chose LANDSCAPE and
+ * drew the lone hard cover on the RIGHT half only, leaving the left half blank
+ * (the "cover renders empty" bug). Passing a `minWidth` larger than any sane
+ * reader half-width makes `blockWidth < minWidth * 2` always true, pinning the
+ * engine to portrait so the single cover fills the full frame.
+ *
+ * The matching `min-width` inline style the engine writes on its host is reset
+ * immediately after construction (see the effect) so this large value cannot
+ * leak out and overflow a narrow frame — the engine only consults the *setting*
+ * for the orientation maths, never the host's computed box.
+ */
+const ENGINE_PORTRAIT_LOCK_MIN_WIDTH = 4000;
 
 /**
  * `<PageFlip>` — the BTL "magazine" page-flip runtime, built on the MIT
@@ -239,6 +263,18 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
     );
     if (pageEls.length === 0) return;
 
+    // Drive the ENGINE's orientation from the same `layout` signal the rest of
+    // the component uses (the engine has no orientation flag of its own):
+    //  - `spread`  → `usePortrait: false`, so the engine is always LANDSCAPE
+    //                (a true two-page spread).
+    //  - `single`  → `usePortrait: true` + a `minWidth` larger than any sane
+    //                reader half-width, so `blockWidth < minWidth * 2` is always
+    //                true and the engine is pinned to PORTRAIT. This is what
+    //                makes the lone hard cover fill the WHOLE frame instead of
+    //                collapsing onto the right half (the cover-blank bug).
+    const lockPortrait = layout === 'single';
+    const engineMinWidth = lockPortrait ? ENGINE_PORTRAIT_LOCK_MIN_WIDTH : ENGINE_MIN_WIDTH;
+
     let engine: PageFlipEngine | null = null;
     try {
       engine = new PageFlipEngine(host, {
@@ -246,13 +282,14 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
         size: 'stretch',
         width: ENGINE_BASE_WIDTH,
         height: Math.round(ENGINE_BASE_WIDTH / pageAspectRatio),
-        minWidth: 220,
+        minWidth: engineMinWidth,
         maxWidth: 2000,
-        minHeight: Math.round(220 / pageAspectRatio),
+        minHeight: Math.round(ENGINE_MIN_WIDTH / pageAspectRatio),
         maxHeight: 2400,
-        // Cover shown alone, then opens to a spread.
+        // Cover shown alone, then opens to a spread (landscape) — or stays a
+        // single full-frame page (portrait), per `layout` above.
         showCover: true,
-        usePortrait: true,
+        usePortrait: lockPortrait,
         autoSize: true,
         // Realistic edge shadows.
         drawShadow: true,
@@ -283,6 +320,31 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
       });
 
       engine.loadFromHTML(pageEls);
+
+      // ── Two post-construction corrections the engine's own styles need. ────
+
+      // (1) The engine writes `min-width: <minWidth>px` on its host in its UI
+      // constructor. When we inflate `minWidth` to lock portrait, that style
+      // would otherwise force the host wider than a narrow frame and overflow.
+      // The engine never reads this style back for orientation (it uses the
+      // numeric *setting*), so it's safe to clear it — the host is
+      // `position: absolute; inset: 0` and fills the frame regardless.
+      if (lockPortrait) host.style.minWidth = '0px';
+
+      // (2) Defeat the upstream stylesheet typo. StPageFlip's CSS intends
+      // `.stf__wrapper { position: relative; width: 100%; ... }` but ships it
+      // as `.sft__wrapper`, so the rule never matches and the wrapper collapses
+      // to zero width. On its own that's harmless (the absolutely-positioned
+      // `.stf__block` is sized/positioned against the host, which fills the
+      // frame), but give the wrapper its intended width so any layout reading
+      // the wrapper box is correct. We deliberately do NOT set
+      // `position: relative` here: the block must keep sizing against the
+      // full-frame host, not the wrapper (whose height is only a
+      // padding-bottom ratio — making it the block's containing block would
+      // size the page off the wrong axis and overflow the frame).
+      const wrapper = host.querySelector<HTMLElement>('.stf__wrapper');
+      if (wrapper) wrapper.style.width = '100%';
+
       engineRef.current = engine;
     } catch {
       // The engine threw (locked-down env, zero-size container, etc.). Fall back
@@ -308,6 +370,9 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
     pageAspectRatio,
     shadowStrength,
     resolvedMode,
+    // `layout` drives the engine's orientation (portrait vs landscape), so a
+    // single↔spread re-resolution must rebuild the engine with the right mode.
+    layout,
     initialIndex,
     commitIndex,
     audio,
@@ -454,7 +519,18 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
         ))}
       </div>
 
-      {/* The mount host the engine renders into (kept empty until enhanced). */}
+      {/*
+        The mount host the engine renders into (kept empty until enhanced). The
+        engine positions and sizes the book itself (it writes `width:100%` +
+        `padding-bottom` on its own `.stf__wrapper`), so the host must be a
+        plain full-frame block. It must NOT centre its child with grid/flex:
+        the engine's wrapper has a `.stf__wrapper` rule that the upstream
+        stylesheet misspells as `.sft__wrapper`, so the wrapper has no width of
+        its own and a centring host collapses it to zero width — which shifts
+        the absolutely-positioned `.stf__block` off-centre (the cover then spills
+        past the frame edge). We restore the wrapper geometry imperatively after
+        load (see the effect) and keep this host a simple positioned block.
+      */}
       {usingEngine && (
         <div
           ref={hostRef}
@@ -462,8 +538,6 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
           style={{
             position: 'absolute',
             inset: 0,
-            display: 'grid',
-            placeItems: 'center',
           }}
         />
       )}
