@@ -99,3 +99,18 @@ export type {
   CompetitionStandingsRow,
   CompetitionStandingsTeam,
 } from './competition-standings-table';
+
+export {
+  EntityMetaChips,
+  PLAYER_META_ICONS,
+  MANAGER_META_ICONS,
+  TEAM_META_ICONS,
+} from './entity-meta-chips';
+export type {
+  EntityMetaChipsProps,
+  EntityMetaChip,
+  EntityMetaKind,
+  PlayerMetaField,
+  ManagerMetaField,
+  TeamMetaField,
+} from './entity-meta-chips';
