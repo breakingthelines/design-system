@@ -114,3 +114,10 @@ export type {
   ManagerMetaField,
   TeamMetaField,
 } from './entity-meta-chips';
+
+export { EntityStatsSummary } from './entity-stats-summary';
+export type {
+  EntityStatsSummaryProps,
+  EntityStatsSummaryHeader,
+  EntityStatsMetric,
+} from './entity-stats-summary';
