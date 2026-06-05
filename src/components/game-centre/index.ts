@@ -99,3 +99,34 @@ export type {
   CompetitionStandingsRow,
   CompetitionStandingsTeam,
 } from './competition-standings-table';
+
+export {
+  EntityMetaChips,
+  PLAYER_META_ICONS,
+  MANAGER_META_ICONS,
+  TEAM_META_ICONS,
+} from './entity-meta-chips';
+export type {
+  EntityMetaChipsProps,
+  EntityMetaChip,
+  EntityMetaKind,
+  PlayerMetaField,
+  ManagerMetaField,
+  TeamMetaField,
+} from './entity-meta-chips';
+
+export { EntityStatsSummary } from './entity-stats-summary';
+export type {
+  EntityStatsSummaryProps,
+  EntityStatsSummaryHeader,
+  EntityStatsMetric,
+} from './entity-stats-summary';
+
+export { RatingsReceivedCard } from './ratings-received-card';
+export type { RatingsReceivedCardProps, RatingsReceivedOpponent } from './ratings-received-card';
+
+export { AboutEntityGrid } from './about-entity-grid';
+export type { AboutEntityGridProps } from './about-entity-grid';
+
+export { MediaTile } from './media-tile';
+export type { MediaTileProps } from './media-tile';
