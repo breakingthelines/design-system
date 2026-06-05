@@ -127,3 +127,9 @@ export type {
   RatingsReceivedCardProps,
   RatingsReceivedOpponent,
 } from './ratings-received-card';
+
+export { AboutEntityGrid } from './about-entity-grid';
+export type { AboutEntityGridProps } from './about-entity-grid';
+
+export { MediaTile } from './media-tile';
+export type { MediaTileProps } from './media-tile';
