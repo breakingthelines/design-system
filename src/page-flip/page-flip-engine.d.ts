@@ -57,6 +57,25 @@ declare module 'page-flip' {
     disableFlipByClick: boolean;
   }
 
+  /**
+   * The book's current size and position, in coordinates relative to the
+   * engine's `.stf__block` (which fills the mount host). Returned by
+   * {@link PageFlip.getBoundsRect}. `pageWidth` is the width of ONE page — equal
+   * to the whole book width in portrait, half of it in landscape.
+   *
+   * The visible page edges derive from this:
+   *  - portrait: a single page drawn on the RIGHT slot — spans
+   *    `[left + pageWidth, left + 2*pageWidth]`.
+   *  - landscape: a two-page spread — spans `[left, left + width]`.
+   */
+  export interface PageRect {
+    left: number;
+    top: number;
+    width: number;
+    height: number;
+    pageWidth: number;
+  }
+
   /** Payload shape for the `init` / `update` events. */
   export interface PageFlipPageEvent {
     page: number;
@@ -92,6 +111,8 @@ declare module 'page-flip' {
     getCurrentPageIndex(): number;
     getOrientation(): OrientationName;
     getState(): FlippingStateName;
+    /** Current book size + position (relative to the mount host). */
+    getBoundsRect(): PageRect;
 
     /** Re-measure and re-render (call after a container resize). */
     update(): void;

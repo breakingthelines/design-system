@@ -12,6 +12,7 @@ import {
   PageFlip as PageFlipEngine,
   type FlippingStateName,
   type OrientationName,
+  type PageRect,
 } from 'page-flip';
 
 import { motion } from '#/tokens/motion';
@@ -104,6 +105,15 @@ export interface PageFlipHandle {
 }
 
 const DEFAULT_FREEZE_BG = '#0d0d0d';
+/**
+ * The page LEAF's own surface — a subtly elevated material distinct from the
+ * near-black stage, so an empty/transparent page still reads as a physical leaf
+ * and not a hole in the backdrop. Deliberately dark (this is a dark-themed
+ * magazine) but a clear step above {@link DEFAULT_FREEZE_BG}. The platform
+ * supplies the page CONTENT and may paint its own background on top; the lift
+ * that survives any content colour is the EDGE + SHADOW below, not this fill.
+ */
+const LEAF_SURFACE = '#1a1a1a';
 /** Default page aspect (width / height) — close to an A-series magazine page. */
 const DEFAULT_PAGE_ASPECT = 0.707;
 /** Base page width handed to the engine (it scales to the container via `stretch`). */
@@ -132,6 +142,66 @@ const ENGINE_MIN_WIDTH = 220;
  * for the orientation maths, never the host's computed box.
  */
 const ENGINE_PORTRAIT_LOCK_MIN_WIDTH = 4000;
+
+/**
+ * Surface styling for the engine's page leaves, scoped under
+ * `[data-page-flip-root]` so it only ever touches our flip. The engine rewrites
+ * each leaf's inline `style.cssText` on every animation frame (position + size
+ * only — see StPageFlip `HTMLPage.simpleDraw`), so per-leaf inline styling for
+ * the surface would be wiped. A stylesheet rule survives: the engine never sets
+ * `background`/`box-shadow`/`border-radius`, so these fill in cleanly and give
+ * the leaf a real physical surface that lifts off the near-black stage.
+ *
+ * The platform owns the page CONTENT (which may paint its own background — the
+ * current Issue content is `bg-black`); the lift that reads regardless of the
+ * content fill is the drop SHADOW + the crisp edge, both of which render
+ * outside the content box and so are never covered by it. The `background` here
+ * is a fallback material for transparent / partially-filled pages.
+ */
+const LEAF_SURFACE_STYLE_ID = 'btl-page-flip-leaf-surface';
+const LEAF_SURFACE_CSS = `
+[data-page-flip-root] .stf__item {
+  background-color: ${LEAF_SURFACE};
+}
+/* The page AT REST (static leaf): a crisp rounded edge + layered drop shadow so
+   it reads as a lifted physical page against the near-black stage. We scope the
+   edge + clip to the static leaf only — the FLIPPING leaf uses 3D transforms and
+   absolutely-positioned curl shadows, so clipping it would cut the curl. */
+[data-page-flip-root] .stf__item.--simple {
+  border-radius: 2px;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 2px 6px rgba(0, 0, 0, 0.55),
+    0 18px 50px rgba(0, 0, 0, 0.7);
+}
+/* The hard cover leaf gets a touch more lift — it's the object the reveal opens.
+   No overflow clip (a hard leaf can flip as a rigid panel). */
+[data-page-flip-root] .stf__item.--hard {
+  border-radius: 2px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.09),
+    0 4px 10px rgba(0, 0, 0, 0.6),
+    0 24px 64px rgba(0, 0, 0, 0.78);
+}
+`;
+
+/**
+ * Inject the leaf-surface stylesheet once (client-side). Keyed by a constant id
+ * so multiple `<PageFlip>` instances share a single `<style>` in `<head>`.
+ */
+function useLeafSurfaceStyle(active: boolean): void {
+  useEffect(() => {
+    if (!active || typeof document === 'undefined') return;
+    if (document.getElementById(LEAF_SURFACE_STYLE_ID)) return;
+    const el = document.createElement('style');
+    el.id = LEAF_SURFACE_STYLE_ID;
+    el.textContent = LEAF_SURFACE_CSS;
+    document.head.appendChild(el);
+    // Intentionally left in place: it's a tiny shared rule, and tearing it down
+    // would thrash if another flip is mounting. Harmless to persist.
+  }, [active]);
+}
 
 /**
  * `<PageFlip>` — the BTL "magazine" page-flip runtime, built on the MIT
@@ -207,6 +277,10 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
 
   const usingEngine = resolvedMode === 'curl' || resolvedMode === 'cover-open';
 
+  // Give the engine's leaves a visible physical surface (edge + shadow) once the
+  // engine is in play. No-op in flat mode (the flat deck styles its own pages).
+  useLeafSurfaceStyle(usingEngine);
+
   // ── Index (single source of truth for the hover control + flat layer). ─────
   const [index, setIndex] = useState(() => clampIndex(initialIndex, Math.max(positions, 1)));
   const [isTurning, setIsTurning] = useState(false);
@@ -233,6 +307,42 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
   const hostRef = useRef<HTMLDivElement>(null);
   const bookRef = useRef<HTMLDivElement>(null);
   const engineRef = useRef<PageFlipEngine | null>(null);
+
+  // ── Live geometry of the VISIBLE page, in this root's coordinate space. ────
+  // The engine renders the page as a centred rectangle inside its `.stf__block`
+  // (a portrait page is a narrow centred column; a landscape spread is wider),
+  // sized by the engine's own bounds maths — NOT the full frame. The edge
+  // affordances must hug *that* rectangle's left/right edges, not the host's, or
+  // the hover-curl and click target sit out on the empty stage (the edge-broken
+  // bug). We read the engine's authoritative `getBoundsRect()` and project it to
+  // the visible page box; `null` until measured (or in flat mode).
+  const [pageBox, setPageBox] = useState<VisiblePageBox | null>(null);
+
+  // Read the engine's current geometry and store the visible page box. Cheap
+  // (the engine caches its bounds rect); called on init, on every turn settle,
+  // and on container resize. `.stf__block` is `inset:0` inside the host which is
+  // `inset:0` inside this root, so the engine's block-space rect IS root-space.
+  //
+  // `portraitHint` lets a caller assert the orientation we forced (single-lock):
+  // immediately after construction the engine hasn't run its first frame yet, so
+  // `getOrientation()` can still be `null` — but `getBoundsRect()` already
+  // returns a valid rect. Trusting the hint avoids a one-frame mis-projection of
+  // a portrait page as a spread. Resize/turn callers omit it and read the
+  // engine's settled orientation.
+  const measurePageBox = useCallback((portraitHint?: boolean) => {
+    const engine = engineRef.current;
+    if (!engine) return;
+    let rect: PageRect | null = null;
+    try {
+      rect = engine.getBoundsRect();
+    } catch {
+      rect = null;
+    }
+    if (!rect) return;
+    const reported = safeOrientation(engine);
+    const portrait = portraitHint ?? (reported === 'portrait');
+    setPageBox(visiblePageBox(rect, portrait));
+  }, []);
 
   // Fire onIndexChange exactly once per settle, deriving direction from the move.
   const commitIndex = useCallback(
@@ -276,6 +386,8 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
     const engineMinWidth = lockPortrait ? ENGINE_PORTRAIT_LOCK_MIN_WIDTH : ENGINE_MIN_WIDTH;
 
     let engine: PageFlipEngine | null = null;
+    let ro: ResizeObserver | null = null;
+    let rafId = 0;
     try {
       engine = new PageFlipEngine(host, {
         // Stretch to the container, bounded — the book fills the reader frame.
@@ -311,12 +423,17 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
 
       engine.on('flip', (e) => {
         commitIndex(typeof e.data === 'number' ? e.data : engine!.getCurrentPageIndex());
+        // The visible page can change side/size across a turn (e.g. cover →
+        // first spread); re-measure so the edge affordances follow it.
+        measurePageBox();
       });
       engine.on('changeState', (e) => {
         const state = e.data as FlippingStateName;
         const turning = state === 'flipping' || state === 'user_fold';
         setIsTurning(turning);
         if (turning) audio.playFlip(indexRef.current);
+        // On settle, the engine has re-laid the static pages — measure then.
+        if (state === 'read') measurePageBox();
       });
 
       engine.loadFromHTML(pageEls);
@@ -346,15 +463,32 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
       if (wrapper) wrapper.style.width = '100%';
 
       engineRef.current = engine;
+
+      // Measure the visible page now that it's laid out (trusting the
+      // orientation we forced via `lockPortrait`, since the engine's first frame
+      // — which sets `getOrientation()` — hasn't run yet), then again on the
+      // next frame once the engine has settled its bounds (the source of truth
+      // for the spread case), and on every container resize. A ResizeObserver on
+      // the host keeps the edges glued to the page at any size — including the
+      // portrait column growing as the stage gets taller.
+      measurePageBox(lockPortrait);
+      rafId = requestAnimationFrame(() => measurePageBox(lockPortrait));
+      if (typeof ResizeObserver !== 'undefined') {
+        ro = new ResizeObserver(() => measurePageBox(lockPortrait));
+        ro.observe(host);
+      }
     } catch {
       // The engine threw (locked-down env, zero-size container, etc.). Fall back
       // to the flat column — the page DOM is already rendered, so reading is
       // uninterrupted; we just won't animate.
       engineRef.current = null;
+      setPageBox(null);
       setEnhanced(false);
     }
 
     return () => {
+      ro?.disconnect();
+      if (rafId) cancelAnimationFrame(rafId);
       try {
         engine?.destroy();
       } catch {
@@ -362,6 +496,7 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
         // safe to ignore on unmount.
       }
       engineRef.current = null;
+      setPageBox(null);
     };
   }, [
     usingEngine,
@@ -376,6 +511,7 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
     initialIndex,
     commitIndex,
     audio,
+    measurePageBox,
   ]);
 
   // ── Imperative controls. Route through the engine when present, else flat. ──
@@ -544,12 +680,15 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
 
       {/* Edge interaction layer: hover shows a small page-curl; click turns. NO
           drag. Only when the engine is active (flat mode navigates via the
-          control + page scroll). */}
+          control + page scroll). The zones are positioned on the ACTUAL visible
+          page rectangle (`pageBox`), measured from the engine — so the curl and
+          the click target sit on the page's real edges, not the host's. */}
       {usingEngine && (
         <EdgeAffordances
           atStart={atStart}
           atEnd={atEnd}
           isTurning={isTurning}
+          pageBox={pageBox}
           onPrev={prev}
           onNext={next}
         />
@@ -573,57 +712,139 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
 });
 
 /**
+ * The visible page rectangle, in this root's coordinate space (px). Derived
+ * from the engine's bounds rect — the box the user actually sees and whose
+ * left/right edges the affordances must hug.
+ */
+interface VisiblePageBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Project the engine's `getBoundsRect()` onto the box the user actually sees.
+ *
+ * The engine's bounds rect spans the WHOLE book area (`width = pageWidth * 2`)
+ * centred in its block, but in portrait only ONE page is drawn — on the right
+ * slot, at `[left + pageWidth, left + 2*pageWidth]` (see StPageFlip's
+ * `HTMLPage.simpleDraw`). In landscape the full two-page spread is visible.
+ * The block fills the host which fills this root, so the rect's block-space
+ * coordinates are already this root's coordinates.
+ */
+function visiblePageBox(rect: PageRect, portrait: boolean): VisiblePageBox {
+  return {
+    left: portrait ? rect.left + rect.pageWidth : rect.left,
+    top: rect.top,
+    width: portrait ? rect.pageWidth : rect.width,
+    height: rect.height,
+  };
+}
+
+/** Read the engine orientation defensively (it can throw pre-init). */
+function safeOrientation(engine: PageFlipEngine): OrientationName | null {
+  try {
+    return engine.getOrientation();
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Edge hover-curl + click-to-turn affordances. Two narrow hot-zones hug the
- * left and right edges; hovering one lifts a small paper "peel" triangle from
- * the corner (a hint that the page can be turned), and clicking it turns. This
- * replaces the engine's own corner-fold (we keep `useMouseEvents: false` so
- * there is no drag), giving a deterministic edge-click model.
+ * left and right edges of the VISIBLE page; hovering one lifts a small paper
+ * "peel" triangle from the corner (a hint that the page can be turned), and
+ * clicking it turns. This replaces the engine's own corner-fold (we keep
+ * `useMouseEvents: false` so there is no drag), giving a deterministic
+ * edge-click model.
+ *
+ * Crucially the zones are positioned on `pageBox` — the engine's measured page
+ * rectangle — not on the host. The rendered page is a centred column (portrait)
+ * or spread (landscape) that rarely fills the host; pinning the zones to the
+ * host edges (the old behaviour) put the curl + click target out on the empty
+ * stage, so hovering/clicking the real page edge did nothing. Tracking the page
+ * rect glues them to the edges the user actually sees, at any size/position.
  *
  * The zones are `data-page-flip-exclude` so the rest of the flip chrome ignores
- * them, and they sit above the engine canvas but only along the edges, leaving
- * the page body free for selection / link clicks (which the engine forwards).
+ * them, and they sit above the engine canvas but only along the page edges,
+ * leaving the page body free for selection / link clicks (which the engine
+ * forwards).
  */
 function EdgeAffordances({
   atStart,
   atEnd,
   isTurning,
+  pageBox,
   onPrev,
   onNext,
 }: {
   atStart: boolean;
   atEnd: boolean;
   isTurning: boolean;
+  pageBox: VisiblePageBox | null;
   onPrev: () => void;
   onNext: () => void;
 }) {
+  // Until the engine has been measured we have no page rectangle to hug —
+  // render nothing rather than guess at the host edges (the old bug).
+  if (!pageBox) return null;
   return (
     <>
       <EdgeZone
         side="left"
         disabled={atStart || isTurning}
+        pageBox={pageBox}
         onActivate={onPrev}
         label="Previous page"
       />
-      <EdgeZone side="right" disabled={atEnd || isTurning} onActivate={onNext} label="Next page" />
+      <EdgeZone
+        side="right"
+        disabled={atEnd || isTurning}
+        pageBox={pageBox}
+        onActivate={onNext}
+        label="Next page"
+      />
     </>
   );
 }
 
+/** Width of the edge hot-zone, as a fraction of the visible page width. */
+const EDGE_ZONE_FRACTION = 0.16;
+const EDGE_ZONE_MIN = 36;
+const EDGE_ZONE_MAX = 88;
+/** Peel-triangle size on hover, as a fraction of page width (clamped). */
+const PEEL_FRACTION = 0.14;
+const PEEL_MIN = 44;
+const PEEL_MAX = 72;
+
 function EdgeZone({
   side,
   disabled,
+  pageBox,
   onActivate,
   label,
 }: {
   side: 'left' | 'right';
   disabled: boolean;
+  pageBox: VisiblePageBox;
   onActivate: () => void;
   label: string;
 }) {
   const [hover, setHover] = useState(false);
   const isRight = side === 'right';
-  // The peel triangle sits at the outer-bottom corner and grows on hover.
-  const peelSize = hover && !disabled ? 56 : 0;
+
+  // The hot-zone is a slim band on the page's real edge — sized to the page, so
+  // it stays a sensible touch target whether the page is a wide spread or a
+  // narrow portrait column. We position it absolutely against the page box.
+  const zoneWidth = clampPx(pageBox.width * EDGE_ZONE_FRACTION, EDGE_ZONE_MIN, EDGE_ZONE_MAX);
+  const peelBase = clampPx(pageBox.width * PEEL_FRACTION, PEEL_MIN, PEEL_MAX);
+  const peelSize = hover && !disabled ? peelBase : 0;
+
+  // Left/right offset of the band, measured from the root's left edge: the
+  // left band starts at the page's left edge; the right band ends at the page's
+  // right edge.
+  const leftPx = isRight ? pageBox.left + pageBox.width - zoneWidth : pageBox.left;
 
   return (
     <button
@@ -637,25 +858,26 @@ function EdgeZone({
       onPointerLeave={() => setHover(false)}
       style={{
         position: 'absolute',
-        top: 0,
-        bottom: 0,
-        [side]: 0,
-        width: '12%',
-        maxWidth: 96,
-        minWidth: 40,
+        top: pageBox.top,
+        height: pageBox.height,
+        left: leftPx,
+        width: zoneWidth,
         border: 'none',
         background: 'transparent',
         padding: 0,
         margin: 0,
         cursor: disabled ? 'default' : 'pointer',
         zIndex: 4,
-        // Let pointer events through the body of the zone except where we want
-        // the click target; keeping it a button gives keyboard + a11y for free.
+        // A button gives keyboard + a11y for free; the body is transparent so
+        // the page underneath reads through, only the edge band is interactive.
         pointerEvents: disabled ? 'none' : 'auto',
         outline: 'none',
+        // Smoothly follow the page when it resizes/repositions between turns.
+        transition: `left ${motion.duration.standard}ms ${motion.easing.standard}, width ${motion.duration.standard}ms ${motion.easing.standard}, top ${motion.duration.standard}ms ${motion.easing.standard}, height ${motion.duration.standard}ms ${motion.easing.standard}`,
       }}
     >
-      {/* The page-curl peel hint — a soft folded-corner triangle. */}
+      {/* The page-curl peel hint — a soft folded-corner triangle that lifts from
+          the bottom-outer corner of the VISIBLE page on hover. */}
       <span
         aria-hidden
         style={{
@@ -665,20 +887,22 @@ function EdgeZone({
           width: peelSize,
           height: peelSize,
           transition: `width ${motion.duration.standard}ms ${motion.easing.entrance}, height ${motion.duration.standard}ms ${motion.easing.entrance}`,
-          // A diagonal gradient reads as a lifted paper corner with a soft shadow.
+          // A diagonal gradient reads as a lifted paper corner; the warm paper
+          // tint + soft shadow make the peel read against dark page content.
           background: isRight
-            ? 'linear-gradient(225deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 45%, transparent 55%)'
-            : 'linear-gradient(135deg, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.06) 45%, transparent 55%)',
-          boxShadow:
-            peelSize > 0
-              ? `${isRight ? '-' : ''}6px -6px 12px rgba(0,0,0,0.45)`
-              : 'none',
-          borderRadius: isRight ? '0 0 2px 0' : '0 0 0 2px',
+            ? 'linear-gradient(225deg, rgba(255,253,250,0.55) 0%, rgba(245,242,238,0.20) 42%, transparent 58%)'
+            : 'linear-gradient(135deg, rgba(255,253,250,0.55) 0%, rgba(245,242,238,0.20) 42%, transparent 58%)',
+          boxShadow: peelSize > 0 ? `${isRight ? '-' : ''}7px -7px 16px rgba(0,0,0,0.55)` : 'none',
+          borderRadius: isRight ? '0 0 3px 0' : '0 0 0 3px',
           pointerEvents: 'none',
         }}
       />
     </button>
   );
+}
+
+function clampPx(value: number, min: number, max: number): number {
+  return Math.max(min, Math.min(max, value));
 }
 
 function clampIndex(i: number, count: number): number {
