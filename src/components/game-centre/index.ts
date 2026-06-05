@@ -121,3 +121,9 @@ export type {
   EntityStatsSummaryHeader,
   EntityStatsMetric,
 } from './entity-stats-summary';
+
+export { RatingsReceivedCard } from './ratings-received-card';
+export type {
+  RatingsReceivedCardProps,
+  RatingsReceivedOpponent,
+} from './ratings-received-card';
