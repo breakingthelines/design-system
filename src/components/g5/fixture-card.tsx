@@ -262,9 +262,7 @@ function FixtureCentrepiece({
         <span className="text-[10px] tracking-[0.18em] text-[var(--color-grey-500)] uppercase">
           {kickoff.dateLabel}
         </span>
-        <span className="text-base font-semibold tabular-nums text-white">
-          {kickoff.timeLabel}
-        </span>
+        <span className="text-base font-semibold tabular-nums text-white">{kickoff.timeLabel}</span>
       </div>
     );
   }

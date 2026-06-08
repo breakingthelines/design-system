@@ -134,9 +134,7 @@ function ScorerRow({ scorer, align }: { scorer: MatchScorer; align: 'start' | 'e
   const text = (
     <span className="min-w-0 truncate text-[13px] tracking-tight text-white">
       {label}
-      <span className="ml-1.5 text-[12px] tabular-nums text-white/55">
-        {scorer.minute}&prime;
-      </span>
+      <span className="ml-1.5 text-[12px] tabular-nums text-white/55">{scorer.minute}&prime;</span>
     </span>
   );
   return (

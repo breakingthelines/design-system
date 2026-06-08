@@ -180,7 +180,9 @@ describe('FixtureFilterBar', () => {
     // league control lives beside the bar in the host. It renders only when a
     // press handler is passed (back-compat).
     expect(hasSlot(render(<FixtureFilterBar />), 'fixture-filter-league')).toBe(false);
-    const withLeague = render(<FixtureFilterBar leagueLabel="Premier League" onLeaguePress={() => undefined} />);
+    const withLeague = render(
+      <FixtureFilterBar leagueLabel="Premier League" onLeaguePress={() => undefined} />
+    );
     expect(hasSlot(withLeague, 'fixture-filter-league')).toBe(true);
     expect(slotText(withLeague, 'fixture-filter-league')).toBe('Premier League');
   });
