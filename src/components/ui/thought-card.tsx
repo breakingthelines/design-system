@@ -21,13 +21,35 @@ interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'childr
 
 function ThoughtCard({ className, thought, actions, onClick, ...props }: ThoughtCardProps) {
   const Link = useLinkComponent();
-  const engagementActions: EngagementAction[] = actions ?? [
+  const shareHref =
+    thought.permalinkHref ||
+    (thought.author.handle && thought.id
+      ? `/@${thought.author.handle}/thoughts/${thought.id}`
+      : '');
+  const handleShare = React.useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      if (!shareHref || typeof window === 'undefined') return;
+      const url = new URL(shareHref, window.location.origin).toString();
+      if (navigator.share) {
+        void navigator.share({ title: `Thought by ${thought.author.name}`, url }).catch(() => {});
+        return;
+      }
+      void navigator.clipboard?.writeText(url).catch(() => {});
+    },
+    [shareHref, thought.author.name]
+  );
+  const baseActions: EngagementAction[] = actions ?? [
     { type: 'comment', count: thought.stats.comments },
     { type: 'like', count: thought.stats.likes, active: thought.liked },
     ...(thought.stats.reposts !== undefined
       ? [{ type: 'repost' as const, count: thought.stats.reposts, active: thought.reposted }]
       : []),
   ];
+  const engagementActions = withThoughtUtilityActions(
+    baseActions,
+    shareHref ? handleShare : undefined
+  );
 
   return (
     <article
@@ -78,13 +100,13 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
               {thought.author.handle ? (
                 <Link
                   href={`/@${thought.author.handle}`}
-                  className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap transition-colors hover:text-red-100"
+                  className="font-content text-base font-bold leading-normal text-foreground whitespace-nowrap transition-colors hover:text-red-100"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   {thought.author.name}
                 </Link>
               ) : (
-                <span className="font-display text-base font-bold leading-normal text-foreground whitespace-nowrap">
+                <span className="font-content text-base font-bold leading-normal text-foreground whitespace-nowrap">
                   {thought.author.name}
                 </span>
               )}
@@ -136,7 +158,7 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
                       'cursor-pointer transition-colors hover:bg-foreground/[0.06] hover:border-red-100/60'
                   )}
                 >
-                  <p className="font-serif text-xs leading-relaxed text-foreground/40 italic line-clamp-3">
+                  <p className="font-content text-xs leading-relaxed text-foreground/40 italic line-clamp-3">
                     &ldquo;{thought.anchor!.text!.selectedText}&rdquo;
                   </p>
                 </div>
@@ -186,7 +208,7 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
             <ThoughtBody
               body={thought.body}
               bodyJson={thought.bodyJson}
-              className="font-serif text-sm leading-[18px] text-foreground"
+              className="font-content text-sm leading-[18px] text-foreground"
             />
           )}
 
@@ -238,6 +260,18 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
       </div>
     </article>
   );
+}
+
+function withThoughtUtilityActions(
+  actions: EngagementAction[],
+  onShare?: EngagementAction['onClick']
+): EngagementAction[] {
+  const actionTypes = new Set(actions.map((action) => action.type));
+  return [
+    ...actions,
+    ...(actionTypes.has('bookmark') ? [] : [{ type: 'bookmark' as const }]),
+    ...(actionTypes.has('share') ? [] : [{ type: 'share' as const, onClick: onShare }]),
+  ];
 }
 
 export { ThoughtCard, type ThoughtCardProps };

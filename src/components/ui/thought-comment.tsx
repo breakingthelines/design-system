@@ -6,6 +6,8 @@ import {
   X,
   PushPin,
   ThumbsUp,
+  BookmarkSimple,
+  ShareNetwork,
   Gif,
   Smiley,
   Image as ImageIcon,
@@ -210,6 +212,15 @@ export function ThoughtComment({
   const replies = thought.replies ?? [];
   const replyCount = thought.replyCount ?? 0;
   const hasUnloadedReplies = replyCount > 0 && replies.length === 0;
+  const handleShare = React.useCallback(() => {
+    if (!thought.permalinkHref || typeof window === 'undefined') return;
+    const url = new URL(thought.permalinkHref, window.location.origin).toString();
+    if (navigator.share) {
+      void navigator.share({ title: `Thought by ${thought.author.name}`, url }).catch(() => {});
+      return;
+    }
+    void navigator.clipboard?.writeText(url).catch(() => {});
+  }, [thought.author.name, thought.permalinkHref]);
 
   return (
     <motion.div className="flex flex-col" variants={itemVariants} data-thought-id={thought.id}>
@@ -344,7 +355,7 @@ export function ThoughtComment({
             )}
           </div>
 
-          {/* Actions: Reply + ThumbsUp + count */}
+          {/* Actions: Reply + ThumbsUp + utility icons */}
           <div className="flex items-center gap-4">
             {!isReply && user && (
               <button
@@ -377,6 +388,21 @@ export function ThoughtComment({
                 </span>
               )}
             </div>
+            <button
+              type="button"
+              className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
+              aria-label="Bookmark"
+            >
+              <BookmarkSimple size={14} weight="regular" />
+            </button>
+            <button
+              type="button"
+              onClick={handleShare}
+              className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
+              aria-label="Share"
+            >
+              <ShareNetwork size={14} weight="regular" />
+            </button>
           </div>
         </div>
       </div>

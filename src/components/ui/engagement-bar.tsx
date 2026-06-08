@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
-import { Heart, Chats, ArrowsClockwise, ShareNetwork } from '@phosphor-icons/react';
+import { Heart, Chats, ArrowsClockwise, BookmarkSimple, ShareNetwork } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { formatCount } from '#/lib/format';
@@ -22,10 +22,10 @@ const engagementBarVariants = cva('flex items-center', {
 });
 
 export interface EngagementAction {
-  type: 'like' | 'comment' | 'repost' | 'share';
+  type: 'like' | 'comment' | 'repost' | 'bookmark' | 'share';
   count?: number;
   active?: boolean;
-  onClick?: () => void;
+  onClick?: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 interface EngagementBarProps
@@ -39,8 +39,17 @@ const iconMap = {
   like: Heart,
   comment: Chats,
   repost: ArrowsClockwise,
+  bookmark: BookmarkSimple,
   share: ShareNetwork,
 } as const;
+
+const labelMap: Record<EngagementAction['type'], string> = {
+  like: 'Like',
+  comment: 'Comment',
+  repost: 'Repost',
+  bookmark: 'Bookmark',
+  share: 'Share',
+};
 
 function EngagementBar({ className, variant, actions, ...props }: EngagementBarProps) {
   const isFull = variant === 'full';
@@ -71,8 +80,8 @@ function EngagementBar({ className, variant, actions, ...props }: EngagementBarP
                   ? 'text-cyan-500'
                   : 'text-muted-foreground hover:text-foreground'
             )}
-            onClick={action.onClick}
-            aria-label={action.type}
+            onClick={(event) => action.onClick?.(event)}
+            aria-label={labelMap[action.type]}
             aria-pressed={isActive}
           >
             <Icon weight={isActive ? 'fill' : 'regular'} className={isFull ? 'size-5' : 'size-4'} />

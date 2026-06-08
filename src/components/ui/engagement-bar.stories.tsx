@@ -17,6 +17,7 @@ const defaultActions: EngagementAction[] = [
   { type: 'like', count: 3400 },
   { type: 'comment', count: 97 },
   { type: 'repost', count: 12 },
+  { type: 'bookmark' },
   { type: 'share' },
 ];
 
@@ -45,6 +46,7 @@ export const WithActiveStates = meta.story({
             { type: 'like', count: 3401, active: true },
             { type: 'comment', count: 97 },
             { type: 'repost', count: 12 },
+            { type: 'bookmark' },
             { type: 'share' },
           ]}
         />
@@ -56,6 +58,7 @@ export const WithActiveStates = meta.story({
             { type: 'like', count: 3401, active: true },
             { type: 'comment', count: 97 },
             { type: 'repost', count: 13, active: true },
+            { type: 'bookmark' },
             { type: 'share' },
           ]}
         />
