@@ -16,7 +16,7 @@ import {
   rowResultBayernDortmund,
   rowUpcomingFlamengoVasco,
 } from '../fixtures';
-import { countSlot, getSlotAttr, hasSlot, render, slotText } from './test-utils';
+import { countSlot, getSlotAttr, hasSlot, render, sliceSlot, slotText } from './test-utils';
 
 describe('FixtureRow status branches', () => {
   it('renders a live row with a white minute label and a visible score', () => {
@@ -165,27 +165,42 @@ describe('FixtureGroup', () => {
 });
 
 describe('FixtureFilterBar', () => {
-  it('renders the league pill and three status pills', () => {
+  it('renders four segments — All + the three status filters', () => {
     const markup = render(<FixtureFilterBar />);
     expect(hasSlot(markup, 'fixture-filter-bar')).toBe(true);
-    expect(hasSlot(markup, 'fixture-filter-league')).toBe(true);
-    expect(countSlot(markup, 'fixture-filter-pill')).toBe(3);
+    expect(countSlot(markup, 'fixture-filter-pill')).toBe(4);
+    expect(markup).toContain('data-filter="all"');
     expect(markup).toContain('data-filter="live"');
     expect(markup).toContain('data-filter="results"');
     expect(markup).toContain('data-filter="upcoming"');
   });
 
-  it('defaults the league label to "All" and accepts an override', () => {
-    expect(slotText(render(<FixtureFilterBar />), 'fixture-filter-league')).toBe('All');
-    expect(
-      slotText(render(<FixtureFilterBar leagueLabel="Premier League" />), 'fixture-filter-league')
-    ).toBe('Premier League');
+  it('omits the standalone league pill unless onLeaguePress is supplied', () => {
+    // The condensed control no longer carries an always-on league pill; the
+    // league control lives beside the bar in the host. It renders only when a
+    // press handler is passed (back-compat).
+    expect(hasSlot(render(<FixtureFilterBar />), 'fixture-filter-league')).toBe(false);
+    const withLeague = render(<FixtureFilterBar leagueLabel="Premier League" onLeaguePress={() => undefined} />);
+    expect(hasSlot(withLeague, 'fixture-filter-league')).toBe(true);
+    expect(slotText(withLeague, 'fixture-filter-league')).toBe('Premier League');
   });
 
-  it('marks the active filter pill', () => {
+  it('marks "All" active by default and slides a single highlight pill there', () => {
+    const markup = render(<FixtureFilterBar />);
+    // Exactly one active segment + one highlight pill, on "All".
+    expect(countSlot(markup, 'fixture-filter-active-pill')).toBe(1);
+    const allPill = sliceSlot(markup, 'fixture-filter-pill');
+    expect(allPill).toContain('data-filter="all"');
+    expect(allPill).toContain('aria-pressed="true"');
+    expect(allPill).toContain('data-slot="fixture-filter-active-pill"');
+  });
+
+  it('moves the highlight to the active status filter', () => {
     const markup = render(<FixtureFilterBar activeFilter="live" />);
+    expect(countSlot(markup, 'fixture-filter-active-pill')).toBe(1);
     expect(markup).toContain('data-filter="live"');
     // The active pill carries data-active + aria-pressed.
+    expect(markup).toContain('data-active="true"');
     expect(markup).toContain('aria-pressed="true"');
   });
 });
