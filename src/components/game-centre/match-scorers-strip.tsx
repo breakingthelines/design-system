@@ -86,7 +86,7 @@ export function MatchScorersStrip({ home, away, className }: MatchScorersStripPr
         >
           <span
             data-slot="match-scorers-strip-xg-home"
-            className="font-mono text-[13px] font-semibold tabular-nums text-white"
+            className="text-[13px] font-semibold tabular-nums text-white"
           >
             {formatXg(home.xg)}
           </span>
@@ -95,7 +95,7 @@ export function MatchScorersStrip({ home, away, className }: MatchScorersStripPr
           </span>
           <span
             data-slot="match-scorers-strip-xg-away"
-            className="font-mono text-[13px] font-semibold tabular-nums text-white"
+            className="text-[13px] font-semibold tabular-nums text-white"
           >
             {formatXg(away.xg)}
           </span>
@@ -134,7 +134,7 @@ function ScorerRow({ scorer, align }: { scorer: MatchScorer; align: 'start' | 'e
   const text = (
     <span className="min-w-0 truncate text-[13px] tracking-tight text-white">
       {label}
-      <span className="ml-1.5 font-mono text-[12px] tabular-nums text-white/55">
+      <span className="ml-1.5 text-[12px] tabular-nums text-white/55">
         {scorer.minute}&prime;
       </span>
     </span>

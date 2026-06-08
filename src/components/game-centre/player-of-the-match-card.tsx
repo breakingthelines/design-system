@@ -177,7 +177,7 @@ export function PlayerOfTheMatchCard({
             'border border-[var(--color-red-100)] bg-[var(--color-red-100)]/15'
           )}
         >
-          <span className="font-mono text-lg leading-none font-bold tabular-nums text-[var(--color-red-100)]">
+          <span className="text-lg leading-none font-bold tabular-nums text-[var(--color-red-100)]">
             {formatRating(rating, scaleValue)}
           </span>
           <span className="mt-0.5 text-[9px] tracking-[0.08em] text-[var(--color-red-100)]/80 uppercase">

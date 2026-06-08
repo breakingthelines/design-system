@@ -220,7 +220,7 @@ function Minute({ minute }: { minute?: string }) {
   return (
     <span
       data-slot="match-timeline-minute"
-      className="shrink-0 font-mono text-[12px] tabular-nums text-[var(--color-grey-500)]"
+      className="shrink-0 text-[12px] tabular-nums text-[var(--color-grey-500)]"
     >
       {minute || '--'}
     </span>

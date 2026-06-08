@@ -142,7 +142,7 @@ export function MatchHeader({
               <span
                 data-slot="match-header-kickoff"
                 className={cn(
-                  'font-mono text-2xl font-semibold tabular-nums text-white',
+                  'text-2xl font-semibold tabular-nums text-white',
                   isPhoto &&
                     'rounded-[4px] border border-white/10 bg-white/20 px-3 py-1 backdrop-blur-md'
                 )}
@@ -154,7 +154,7 @@ export function MatchHeader({
             <div
               data-slot="match-header-score"
               className={cn(
-                'flex items-baseline gap-2 font-mono text-3xl font-bold tabular-nums',
+                'flex items-baseline gap-2 text-3xl font-bold tabular-nums',
                 isPhoto &&
                   'rounded-[4px] border border-white/10 bg-white/15 px-3 py-1.5 backdrop-blur-md'
               )}
@@ -178,7 +178,7 @@ export function MatchHeader({
         >
           <span
             data-slot="match-header-xg-home"
-            className="font-mono text-[13px] font-semibold tabular-nums text-white"
+            className="text-[13px] font-semibold tabular-nums text-white"
           >
             {formatXg(xgHome)}
           </span>
@@ -187,7 +187,7 @@ export function MatchHeader({
           </span>
           <span
             data-slot="match-header-xg-away"
-            className="font-mono text-[13px] font-semibold tabular-nums text-white"
+            className="text-[13px] font-semibold tabular-nums text-white"
           >
             {formatXg(xgAway)}
           </span>

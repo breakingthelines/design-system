@@ -103,7 +103,7 @@ export function EntityStatsSummary({ header, metrics, bio, className }: EntitySt
                 <dt className="text-[11px] tracking-tight text-[var(--color-grey-500)]">
                   {metric.label}
                 </dt>
-                <dd className="font-mono text-[13px] font-semibold tabular-nums text-white">
+                <dd className="text-[13px] font-semibold tabular-nums text-white">
                   {metric.value}
                 </dd>
               </div>

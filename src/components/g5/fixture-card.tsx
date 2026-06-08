@@ -262,7 +262,7 @@ function FixtureCentrepiece({
         <span className="text-[10px] tracking-[0.18em] text-[var(--color-grey-500)] uppercase">
           {kickoff.dateLabel}
         </span>
-        <span className="font-mono text-base font-semibold tabular-nums text-white">
+        <span className="text-base font-semibold tabular-nums text-white">
           {kickoff.timeLabel}
         </span>
       </div>
@@ -274,7 +274,7 @@ function FixtureCentrepiece({
   return (
     <div
       data-slot="fixture-score"
-      className="flex w-[88px] shrink-0 items-center justify-center gap-2 px-1 text-center font-mono text-xl font-bold tabular-nums text-white"
+      className="flex w-[88px] shrink-0 items-center justify-center gap-2 px-1 text-center text-xl font-bold tabular-nums text-white"
     >
       <span>{home}</span>
       <span className="text-[var(--color-grey-500)]">:</span>

@@ -192,7 +192,7 @@ function PerformanceBar({ point, isPeak, Link }: PerformanceBarProps) {
       data-peak={isPeak || undefined}
       className={cn(
         'inline-flex items-center justify-center rounded-sm border px-2 py-1',
-        'font-mono text-[13px] font-semibold tabular-nums tracking-tight transition-colors',
+        'text-[13px] font-semibold tabular-nums tracking-tight transition-colors',
         isPeak
           ? 'border-[var(--color-red-100)] bg-[var(--color-red-100)] text-white'
           : 'border-white/10 bg-white/[0.04] text-white/85'

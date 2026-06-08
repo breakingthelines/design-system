@@ -158,7 +158,7 @@ export function MatchRecapStrip({
         <RecapSide side={home} align="end" />
         <span
           data-slot="match-recap-strip-score"
-          className="flex shrink-0 items-center gap-2 font-mono text-[16px] font-semibold tabular-nums text-white"
+          className="flex shrink-0 items-center gap-2 text-[16px] font-semibold tabular-nums text-white"
         >
           <span>{scoreHome}</span>
           <span className="text-[var(--color-grey-500)]">-</span>
