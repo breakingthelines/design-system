@@ -96,17 +96,16 @@ export const Group = meta.story({
 });
 
 export const FilterBar = meta.story({
-  name: 'FixtureFilterBar',
+  name: 'FixtureFilterBar (segmented control)',
   render: () => {
+    // Interactive: clicking a segment slides the highlight pill to it. Sits in
+    // a wide container to show the control stays condensed + left-grouped (it
+    // never swells to fill the row). Playwright drives this story.
     function Demo() {
       const [filter, setFilter] = React.useState<FixtureFilter | null>(null);
       return (
-        <div className="w-[420px]">
-          <FixtureFilterBar
-            activeFilter={filter}
-            onFilterChange={setFilter}
-            onLeaguePress={() => undefined}
-          />
+        <div data-testid="filter-demo" className="w-[640px]">
+          <FixtureFilterBar activeFilter={filter} onFilterChange={setFilter} />
         </div>
       );
     }
@@ -118,7 +117,27 @@ export const FilterBarLiveActive = meta.story({
   name: 'FixtureFilterBar (Live active)',
   render: () => (
     <div className="w-[420px]">
-      <FixtureFilterBar activeFilter="live" leagueLabel="Premier League" />
+      <FixtureFilterBar activeFilter="live" />
     </div>
   ),
+});
+
+export const FilterBarWithLeague = meta.story({
+  name: 'FixtureFilterBar (with league pill)',
+  render: () => {
+    function Demo() {
+      const [filter, setFilter] = React.useState<FixtureFilter | null>('results');
+      return (
+        <div className="w-[480px]">
+          <FixtureFilterBar
+            activeFilter={filter}
+            onFilterChange={setFilter}
+            leagueLabel="Premier League"
+            onLeaguePress={() => undefined}
+          />
+        </div>
+      );
+    }
+    return <Demo />;
+  },
 });

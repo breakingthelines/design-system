@@ -1,11 +1,13 @@
 'use client';
 
 import * as React from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { ChatCircle, Clock, Star, Target } from '@phosphor-icons/react';
 
 import { useLinkComponent } from '#/components/ui/link-context';
 import { formatCount } from '#/lib/format';
 import { cn } from '#/lib/utils';
+import { motion as motionTokens } from '#/tokens/motion';
 
 import type { G5FixtureSide } from './types';
 
@@ -37,8 +39,10 @@ import type { G5FixtureSide } from './types';
  *                          Match Centre); otherwise it is a static row.
  *   - `FixtureGroup`     — a date-header section ("Tuesday, May 19") wrapping a
  *                          run of `FixtureRow`s.
- *   - `FixtureFilterBar` — the league filter ('All', flex-1) + Live / Results /
- *                          Upcoming status pills.
+ *   - `FixtureFilterBar` — a condensed, hug-content segmented control
+ *                          (All / Live / Results / Upcoming) with a single
+ *                          highlight pill that SLIDES to the active segment
+ *                          (framer-motion shared-element `layoutId`).
  *   - `FixtureEngagementBadges` — the optional per-fixture engagement slot
  *                          (thought-pulse count / ratings / predictions).
  *
@@ -427,7 +431,7 @@ export function FixtureGroup({
   );
 }
 
-// ─── FixtureFilterBar (league + status pills) ─────────────────────────────────
+// ─── FixtureFilterBar (animated segmented control) ────────────────────────────
 
 export type FixtureFilter = 'live' | 'results' | 'upcoming';
 
@@ -435,19 +439,52 @@ export interface FixtureFilterBarProps {
   /** Active status filter, or `null` for the default ("All") view. */
   activeFilter?: FixtureFilter | null;
   onFilterChange?: (filter: FixtureFilter | null) => void;
-  /** League selector label (the flex-1 "All" pill). Defaults to "All". */
+  /**
+   * Optional league selector. When `onLeaguePress` is supplied, a trailing
+   * league pill renders after the segmented control (opens a selector
+   * upstream); with no handler the control stands alone. `leagueLabel` is the
+   * pill text. Kept for back-compat; most consumers run their own league
+   * control beside the bar.
+   */
   leagueLabel?: string;
-  /** Fired when the league pill is pressed (opens a league selector upstream). */
   onLeaguePress?: () => void;
   className?: string;
 }
 
-const FILTER_PILLS: ReadonlyArray<{ key: FixtureFilter; label: string }> = [
+/**
+ * The four segments of the control. `key: null` is the "All" segment — it sits
+ * first and is active by default, mirroring the Figma (713-3848) where "All" is
+ * the highlighted lead pill. Each segment is sized to its own label (hug
+ * content); the active one is marked by the sliding highlight, not by growing.
+ */
+const FILTER_SEGMENTS: ReadonlyArray<{ key: FixtureFilter | null; label: string }> = [
+  { key: null, label: 'All' },
   { key: 'live', label: 'Live' },
   { key: 'results', label: 'Results' },
   { key: 'upcoming', label: 'Upcoming' },
 ];
 
+/** Shared-element id for the sliding highlight. `React.useId` keeps each mounted
+ * bar's `layoutId` scope isolated, so two bars on one page (the Thoughts widget
+ * + a Home shell) animate independently. */
+function highlightLayoutId(scope: string): string {
+  return `${scope}-fixture-filter-active`;
+}
+
+/**
+ * Condensed segmented control: All / Live / Results / Upcoming, grouped left and
+ * hugging their labels (NOT full-width — the active segment never swells to fill
+ * the row). The active segment is shown by a single highlight pill that SLIDES
+ * between segments on switch via framer-motion's shared-element `layoutId` (the
+ * standard animated segmented control), springing with the `snappy` motion
+ * token. The active label is emphasised (white); inactive labels are muted and
+ * brighten on hover. Every segment shows `cursor-pointer`. Under
+ * `prefers-reduced-motion` the highlight snaps (no slide).
+ *
+ * Each segment is a real `<button>` with `aria-pressed` reflecting its active
+ * state. Filter semantics are unchanged: pressing a segment selects it; pressing
+ * the active non-"All" segment again clears back to "All" (null).
+ */
 export function FixtureFilterBar({
   activeFilter = null,
   onFilterChange,
@@ -455,47 +492,73 @@ export function FixtureFilterBar({
   onLeaguePress,
   className,
 }: FixtureFilterBarProps) {
+  const prefersReduced = useReducedMotion();
+  const highlightTransition = prefersReduced ? { duration: 0 } : motionTokens.spring.snappy;
+  const scope = React.useId();
+
   return (
-    <div data-slot="fixture-filter-bar" className={cn('flex w-full items-center gap-2', className)}>
-      <button
-        type="button"
-        data-slot="fixture-filter-league"
-        onClick={onLeaguePress}
-        className={cn(
-          'flex min-w-0 flex-1 items-center justify-center rounded-[4px] px-4 py-2',
-          'border border-white/[0.05] bg-[var(--color-grey-300)] backdrop-blur-[15px]',
-          'text-[12px] leading-[18px] tracking-[-0.36px] text-[#ccc4c4]',
-          onLeaguePress
-            ? 'cursor-pointer transition-colors duration-150 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30'
-            : 'cursor-default'
-        )}
+    <div
+      data-slot="fixture-filter-bar"
+      className={cn('flex w-full flex-wrap items-center gap-2', className)}
+    >
+      <div
+        data-slot="fixture-filter-segments"
+        role="group"
+        aria-label="Filter fixtures by status"
+        className="inline-flex shrink-0 items-center gap-0.5 rounded-[4px] border border-white/[0.05] bg-[var(--color-grey-100)] p-0.5 backdrop-blur-[15px]"
       >
-        <span className="truncate">{leagueLabel}</span>
-      </button>
-      {FILTER_PILLS.map((pill) => {
-        const isActive = activeFilter === pill.key;
-        return (
-          <button
-            key={pill.key}
-            type="button"
-            data-slot="fixture-filter-pill"
-            data-filter={pill.key}
-            data-active={isActive || undefined}
-            aria-pressed={isActive}
-            onClick={() => onFilterChange?.(isActive ? null : pill.key)}
-            className={cn(
-              'shrink-0 rounded-[4px] px-4 py-2 backdrop-blur-[15px]',
-              'text-[12px] leading-[18px] tracking-[-0.36px]',
-              'transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30',
-              isActive
-                ? 'border border-white/[0.05] bg-[var(--color-grey-300)] text-white'
-                : 'bg-[var(--color-grey-100)] text-[#ccc4c4] hover:text-white'
-            )}
-          >
-            {pill.label}
-          </button>
-        );
-      })}
+        {FILTER_SEGMENTS.map((segment) => {
+          const isActive = activeFilter === segment.key;
+          // "All" is a pure selection (never toggles to null); the three status
+          // segments toggle off back to "All" when re-pressed.
+          const next: FixtureFilter | null =
+            segment.key === null ? null : isActive ? null : segment.key;
+          return (
+            <button
+              key={segment.label}
+              type="button"
+              data-slot="fixture-filter-pill"
+              data-filter={segment.key ?? 'all'}
+              data-active={isActive || undefined}
+              aria-pressed={isActive}
+              onClick={() => onFilterChange?.(next)}
+              className={cn(
+                'relative flex shrink-0 cursor-pointer items-center justify-center rounded-[3px] px-3 py-1.5',
+                'text-[12px] leading-[18px] font-medium whitespace-nowrap tracking-[-0.36px]',
+                'transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30',
+                isActive ? 'text-white' : 'text-[#ccc4c4] hover:text-white'
+              )}
+            >
+              {isActive ? (
+                <motion.span
+                  layoutId={highlightLayoutId(scope)}
+                  data-slot="fixture-filter-active-pill"
+                  aria-hidden="true"
+                  transition={highlightTransition}
+                  className="absolute inset-0 rounded-[3px] border border-white/[0.06] bg-[var(--color-grey-300)] shadow-[0_1px_2px_rgba(0,0,0,0.3)]"
+                />
+              ) : null}
+              <span className="relative">{segment.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {onLeaguePress ? (
+        <button
+          type="button"
+          data-slot="fixture-filter-league"
+          onClick={onLeaguePress}
+          className={cn(
+            'flex min-w-0 shrink-0 items-center justify-center rounded-[4px] px-4 py-2',
+            'border border-white/[0.05] bg-[var(--color-grey-300)] backdrop-blur-[15px]',
+            'text-[12px] leading-[18px] tracking-[-0.36px] text-[#ccc4c4]',
+            'cursor-pointer transition-colors duration-150 hover:text-white focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30'
+          )}
+        >
+          <span className="truncate">{leagueLabel}</span>
+        </button>
+      ) : null}
     </div>
   );
 }
