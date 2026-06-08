@@ -51,7 +51,7 @@ export const Result = meta.story({
 });
 
 export const Upcoming = meta.story({
-  name: 'Upcoming (clock + transparent score)',
+  name: 'Upcoming (clock + kickoff time, no score)',
   render: () => (
     <div className="w-[420px]">
       <FixtureRow data={rowUpcomingFlamengoVasco} />

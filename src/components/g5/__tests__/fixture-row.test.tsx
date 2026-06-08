@@ -24,8 +24,8 @@ describe('FixtureRow status branches', () => {
     expect(getSlotAttr(markup, 'fixture-row', 'data-status')).toBe('live');
     expect(getSlotAttr(markup, 'fixture-row-lead', 'data-kind')).toBe('minute');
     expect(slotText(markup, 'fixture-row-lead')).toContain('85');
-    // Live scores are not transparent.
-    expect(getSlotAttr(markup, 'fixture-row-score', 'data-transparent')).toBeUndefined();
+    // Live scores render real digits (not an empty placeholder).
+    expect(getSlotAttr(markup, 'fixture-row-score', 'data-empty')).toBeUndefined();
     expect(slotText(markup, 'fixture-row-score')).toContain('1');
     expect(slotText(markup, 'fixture-row-score')).toContain('2');
   });
@@ -42,17 +42,39 @@ describe('FixtureRow status branches', () => {
     expect(getSlotAttr(markup, 'fixture-row', 'data-status')).toBe('result');
     expect(getSlotAttr(markup, 'fixture-row-lead', 'data-kind')).toBe('minute');
     expect(slotText(markup, 'fixture-row-lead')).toBe('FT');
-    expect(getSlotAttr(markup, 'fixture-row-score', 'data-transparent')).toBeUndefined();
+    // Result scores render real digits (not an empty placeholder).
+    expect(getSlotAttr(markup, 'fixture-row-score', 'data-empty')).toBeUndefined();
+    expect(slotText(markup, 'fixture-row-score')).toContain('1');
   });
 
-  it('renders an upcoming row with a clock + kickoff time and a TRANSPARENT score', () => {
+  it('renders an upcoming row with a clock + kickoff time and NO score', () => {
     const markup = render(<FixtureRow data={rowUpcomingFlamengoVasco} />);
     expect(getSlotAttr(markup, 'fixture-row', 'data-status')).toBe('upcoming');
     expect(getSlotAttr(markup, 'fixture-row-lead', 'data-kind')).toBe('kickoff');
     expect(slotText(markup, 'fixture-row-lead')).toContain('9 PM');
-    // The score column is present (for alignment) but the digits are transparent.
-    expect(getSlotAttr(markup, 'fixture-row-score', 'data-transparent')).toBe('true');
-    expect(markup).toContain('text-transparent');
+    // The centre column is an empty placeholder (holds alignment), never a score:
+    // no "0 - 0" glyph leaks even where the compiled CSS drops text-transparent.
+    expect(getSlotAttr(markup, 'fixture-row-score', 'data-empty')).toBe('true');
+    expect(slotText(markup, 'fixture-row-score')).toBe('');
+  });
+
+  it('suppresses the score for an upcoming row even when score values are present', () => {
+    // A scheduled fixture whose summary still carries a zeroed score (the staging
+    // bug): the row must show the kickoff time only, with no "0 - 0".
+    const upcomingWithScore: FixtureRowData = {
+      ...rowUpcomingFlamengoVasco,
+      scoreHome: 0,
+      scoreAway: 0,
+    };
+    const markup = render(<FixtureRow data={upcomingWithScore} />);
+    expect(getSlotAttr(markup, 'fixture-row-score', 'data-empty')).toBe('true');
+    expect(slotText(markup, 'fixture-row-score')).toBe('');
+  });
+
+  it('does not leak a "00" trailing-spacer glyph on a row without engagement', () => {
+    const markup = render(<FixtureRow data={rowUpcomingFlamengoVasco} />);
+    expect(hasSlot(markup, 'fixture-row-trailing')).toBe(true);
+    expect(slotText(markup, 'fixture-row-trailing')).toBe('');
   });
 });
 
