@@ -130,3 +130,6 @@ export type { AboutEntityGridProps } from './about-entity-grid';
 
 export { MediaTile } from './media-tile';
 export type { MediaTileProps } from './media-tile';
+
+export { MatchDaySubTabs } from './match-day-sub-tabs';
+export type { MatchDaySubTabsProps, MatchDaySubTabItem } from './match-day-sub-tabs';
