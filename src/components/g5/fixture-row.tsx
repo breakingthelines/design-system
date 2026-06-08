@@ -27,9 +27,9 @@ import type { G5FixtureSide } from './types';
  *                              A live row can be `highlighted` for the gradient
  *                              treatment the design gives the lead fixture.
  *                            • result   — finished minute / "FT" + visible score.
- *                            • upcoming — clock icon + kickoff time (grey) and a
- *                              TRANSPARENT score (the dash stays, the digits are
- *                              invisible) so every row's centre column aligns.
+ *                            • upcoming — clock icon + kickoff time (grey) and NO
+ *                              score; an empty same-width cell holds the centre
+ *                              column's place so every row aligns (Figma 713-3848).
  *                          Anatomy mirrors the mock: minute · [home name+crest]
  *                          · score · [away crest+name] · (engagement badges).
  *                          When the row carries an `href` it links via the
@@ -79,7 +79,7 @@ export interface FixtureRowData {
   kickoffIso?: string;
   /** Explicit upcoming time label ("9 PM"); overrides the derived one. */
   kickoffLabel?: string;
-  /** Score — required for live/result, ignored (rendered transparent) for upcoming. */
+  /** Score — shown for live/result; not rendered for upcoming (kickoff time only). */
   scoreHome?: number;
   scoreAway?: number;
   /** Optional engagement counters rendered in the trailing badge slot. */
@@ -122,11 +122,11 @@ export function FixtureRow({
         className={cn('flex shrink-0 items-center', density === 'compact' ? 'gap-3' : 'gap-4')}
       >
         <FixtureTeam side={data.home} align="end" widthClass={sideWidth} />
-        <FixtureScore
-          scoreHome={data.scoreHome}
-          scoreAway={data.scoreAway}
-          transparent={isUpcoming}
-        />
+        {isUpcoming ? (
+          <FixtureScorePlaceholder />
+        ) : (
+          <FixtureScore scoreHome={data.scoreHome} scoreAway={data.scoreAway} />
+        )}
         <FixtureTeam side={data.away} align="start" widthClass={sideWidth} />
       </div>
       <FixtureTrailingCell data={data} density={density} />
@@ -217,19 +217,19 @@ function FixtureTrailingCell({
   if (hasBadges) {
     return <FixtureEngagementBadges engagement={data.engagement as FixtureEngagement} />;
   }
-  // No badges: mirror the lead cell width with an invisible spacer so the teams
-  // block stays optically centred (matching the design's opacity-0 minute).
+  // No badges: mirror the lead cell width with an empty spacer so the teams
+  // block stays optically centred. The `min-w-*` classes carry the width, so the
+  // span holds no text — an earlier "00" filler leaked as a visible glyph
+  // wherever the consumer's compiled CSS dropped `opacity-0`.
   return (
     <span
       data-slot="fixture-row-trailing"
       aria-hidden="true"
       className={cn(
-        'pointer-events-none shrink-0 select-none font-mono text-[12px] tabular-nums opacity-0',
+        'pointer-events-none shrink-0 select-none',
         density === 'compact' ? 'min-w-[24px]' : 'min-w-[32px]'
       )}
-    >
-      {data.minuteLabel ?? '00'}
-    </span>
+    />
   );
 }
 
@@ -366,25 +366,29 @@ function FixtureRowCrest({
   );
 }
 
-function FixtureScore({
-  scoreHome,
-  scoreAway,
-  transparent,
-}: {
-  scoreHome?: number;
-  scoreAway?: number;
-  transparent: boolean;
-}) {
+function FixtureScore({ scoreHome, scoreAway }: { scoreHome?: number; scoreAway?: number }) {
   return (
     <span
       data-slot="fixture-row-score"
-      data-transparent={transparent || undefined}
-      className="flex w-[39px] shrink-0 items-center justify-between font-mono text-[14px] font-semibold tabular-nums tracking-[-0.42px]"
+      className="flex w-[39px] shrink-0 items-center justify-between font-mono text-[14px] font-semibold tabular-nums tracking-[-0.42px] text-white"
     >
-      <span className={transparent ? 'text-transparent' : 'text-white'}>{scoreHome ?? 0}</span>
-      <span className="text-white">-</span>
-      <span className={transparent ? 'text-transparent' : 'text-white'}>{scoreAway ?? 0}</span>
+      <span>{scoreHome ?? 0}</span>
+      <span>-</span>
+      <span>{scoreAway ?? 0}</span>
     </span>
+  );
+}
+
+/**
+ * Upcoming rows show the kickoff time, NOT a score (Figma 713-3848). This is the
+ * same-width empty cell that holds the centre column's place so the two team
+ * blocks stay optically centred — it renders no digits and no dash (an earlier
+ * "transparent score" approach leaked a literal "0 - 0" wherever the consumer's
+ * compiled CSS dropped `text-transparent`).
+ */
+function FixtureScorePlaceholder() {
+  return (
+    <span data-slot="fixture-row-score" data-empty="true" aria-hidden="true" className="w-[39px] shrink-0" />
   );
 }
 

@@ -109,15 +109,19 @@ describe('WhatsHappeningPanel a11y', () => {
     expect(markup).toContain('aria-label="What is happening"');
   });
 
-  it('does not leak transparent score digits into the accessible text', () => {
-    // The upcoming row's score digits are visually transparent; the dash stays.
+  it('shows the kickoff time but no score for an upcoming row', () => {
+    // Upcoming rows render the kickoff time only — no score, so no "0 - 0" can
+    // leak into the panel's accessible text (the staging fixtures-panel bug).
     const markup = render(
       <WhatsHappeningPanel
         groups={[{ id: 'd', dateLabel: 'Wed', fixtures: [rowUpcomingFlamengoVasco] }]}
       />
     );
-    // Sanity: the row + group rendered.
-    expect(textContent(markup)).toContain('Flamengo');
-    expect(textContent(markup)).toContain('Vasco');
+    const text = textContent(markup);
+    expect(text).toContain('Flamengo');
+    expect(text).toContain('Vasco');
+    expect(text).toContain('9 PM');
+    expect(text).not.toContain('0 - 0');
+    expect(text).not.toContain('0-0');
   });
 });
