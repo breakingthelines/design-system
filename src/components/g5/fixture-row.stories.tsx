@@ -98,13 +98,19 @@ export const Group = meta.story({
 export const FilterBar = meta.story({
   name: 'FixtureFilterBar (segmented control)',
   render: () => {
-    // Interactive: clicking a segment slides the highlight pill to it. Sits in
-    // a wide container to show the control stays condensed + left-grouped (it
-    // never swells to fill the row). Playwright drives this story.
+    // Interactive: clicking a segment GLIDES the prominent active pill to it.
+    // Sits in a wide dark panel (matching the "What is happening" surface) to
+    // show the control stays condensed + left-grouped (it never swells to fill
+    // the row) and that the active pill is a clearly larger, lighter filled pill
+    // — not a thin highlight. Playwright drives this story (sampling the active
+    // pill's x mid-flight to confirm a smooth glide, not a jump).
     function Demo() {
       const [filter, setFilter] = React.useState<FixtureFilter | null>(null);
       return (
-        <div data-testid="filter-demo" className="w-[640px]">
+        <div
+          data-testid="filter-demo"
+          className="w-[640px] rounded-[8px] border border-white/[0.05] bg-[var(--color-grey-200)] p-5"
+        >
           <FixtureFilterBar activeFilter={filter} onFilterChange={setFilter} />
         </div>
       );

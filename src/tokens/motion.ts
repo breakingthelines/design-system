@@ -34,6 +34,12 @@ export const motion = {
     gentle: { type: 'spring' as const, stiffness: 200, damping: 20, mass: 1 },
     pop: { type: 'spring' as const, stiffness: 300, damping: 20, mass: 1 },
     shift: { type: 'spring' as const, stiffness: 250, damping: 25, mass: 1 },
+    // A slick, well-damped "glide" for travelling elements (e.g. a segmented
+    // control's sliding active pill). Softer than `snappy` (400/30 reads stiff
+    // and robotic) but quicker to settle than `shift`: it eases off the start,
+    // carries a touch of natural follow-through, and lands without a visible
+    // bounce. Tuned for the FixtureFilterBar pill slide.
+    glide: { type: 'spring' as const, stiffness: 340, damping: 32, mass: 1 },
   },
 
   // ─────────────────────────────────────────────────
