@@ -96,20 +96,20 @@ export const Group = meta.story({
 });
 
 export const FilterBar = meta.story({
-  name: 'FixtureFilterBar (segmented control)',
+  name: 'FixtureFilterBar (panel — active elongated)',
   render: () => {
-    // Interactive: clicking a segment GLIDES the prominent active pill to it.
-    // Sits in a wide dark panel (matching the "What is happening" surface) to
-    // show the control stays condensed + left-grouped (it never swells to fill
-    // the row) and that the active pill is a clearly larger, lighter filled pill
-    // — not a thin highlight. Playwright drives this story (sampling the active
-    // pill's x mid-flight to confirm a smooth glide, not a jump).
+    // Interactive, in the ~560px "What is happening" panel. The ACTIVE segment
+    // is an elongated filled pill (flex-1, absorbs the leftover width) and the
+    // inactive ones hug their label — the group fills the panel like the owner's
+    // reference. Clicking a segment MORPHS the elongated pill to it (the old one
+    // shrinks to hug, the new one grows). Playwright drives this story (sampling
+    // the active pill's width mid-flight to confirm a smooth morph, not a jump).
     function Demo() {
       const [filter, setFilter] = React.useState<FixtureFilter | null>(null);
       return (
         <div
           data-testid="filter-demo"
-          className="w-[640px] rounded-[8px] border border-white/[0.05] bg-[var(--color-grey-200)] p-5"
+          className="w-[560px] rounded-[8px] border border-white/[0.05] bg-[var(--color-grey-200)] p-4"
         >
           <FixtureFilterBar activeFilter={filter} onFilterChange={setFilter} />
         </div>
@@ -119,10 +119,35 @@ export const FilterBar = meta.story({
   },
 });
 
+export const FilterBarWide = meta.story({
+  name: 'FixtureFilterBar (wide page — capped, left-aligned)',
+  render: () => {
+    // The /game/football case: a very wide row. The control must NOT stretch the
+    // active pill across the whole page — it caps at its max-width and sits left,
+    // with the search to its right (mirroring the platform row layout). Playwright
+    // asserts the active pill width here stays bounded (not page-spanning).
+    function Demo() {
+      const [filter, setFilter] = React.useState<FixtureFilter | null>(null);
+      return (
+        <div
+          data-testid="filter-demo-wide"
+          className="flex w-[1400px] items-center gap-4 rounded-[8px] border border-white/[0.05] bg-[var(--color-grey-200)] p-4"
+        >
+          <FixtureFilterBar activeFilter={filter} onFilterChange={setFilter} />
+          <div className="flex h-[34px] flex-1 items-center rounded-[4px] bg-[var(--color-grey-100)] px-4 text-[12px] text-[#ccc4c4]">
+            Search teams, players…
+          </div>
+        </div>
+      );
+    }
+    return <Demo />;
+  },
+});
+
 export const FilterBarLiveActive = meta.story({
-  name: 'FixtureFilterBar (Live active)',
+  name: 'FixtureFilterBar (Live active — elongated)',
   render: () => (
-    <div className="w-[420px]">
+    <div className="w-[560px] rounded-[8px] border border-white/[0.05] bg-[var(--color-grey-200)] p-4">
       <FixtureFilterBar activeFilter="live" />
     </div>
   ),

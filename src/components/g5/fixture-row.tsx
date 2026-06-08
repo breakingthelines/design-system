@@ -39,11 +39,13 @@ import type { G5FixtureSide } from './types';
  *                          Match Centre); otherwise it is a static row.
  *   - `FixtureGroup`     — a date-header section ("Tuesday, May 19") wrapping a
  *                          run of `FixtureRow`s.
- *   - `FixtureFilterBar` — a condensed, hug-content segmented control
- *                          (All / Live / Results / Upcoming) as a gap-8 row of
- *                          filled pills; the active one is a prominent, lighter
- *                          `grey-300` pill that GLIDES to the active segment
- *                          (framer-motion shared-element `layoutId`).
+ *   - `FixtureFilterBar` — a width-bounded segmented control
+ *                          (All / Live / Results / Upcoming) where the ACTIVE
+ *                          segment is an ELONGATED `grey-300` pill (`flex-1`,
+ *                          absorbs the leftover width) and the inactive ones HUG
+ *                          their label; the elongated pill MORPHS between
+ *                          segments on switch (framer-motion `layout` +
+ *                          shared-element `layoutId`, `glide` spring).
  *   - `FixtureEngagementBadges` — the optional per-fixture engagement slot
  *                          (thought-pulse count / ratings / predictions).
  *
@@ -459,9 +461,9 @@ export interface FixtureFilterBarProps {
 
 /**
  * The four segments of the control. `key: null` is the "All" segment — it sits
- * first and is active by default, mirroring the Figma (713-3848) where "All" is
- * the highlighted lead pill. Each segment is sized to its own label (hug
- * content); the active one is marked by the sliding highlight, not by growing.
+ * first and is active by default, mirroring the Figma (2150:10938) where "All"
+ * is the elongated lead pill. The ACTIVE segment stretches (`flex-1`) to absorb
+ * the leftover width; the inactive ones hug their own label.
  */
 const FILTER_SEGMENTS: ReadonlyArray<{ key: FixtureFilter | null; label: string }> = [
   { key: null, label: 'All' },
@@ -470,28 +472,41 @@ const FILTER_SEGMENTS: ReadonlyArray<{ key: FixtureFilter | null; label: string 
   { key: 'upcoming', label: 'Upcoming' },
 ];
 
-/** Shared-element id for the sliding highlight. `React.useId` keeps each mounted
- * bar's `layoutId` scope isolated, so two bars on one page (the Thoughts widget
- * + a Home shell) animate independently. */
+/** Shared-element id for the morphing active fill. `React.useId` keeps each
+ * mounted bar's `layoutId` scope isolated, so two bars on one page (the Thoughts
+ * widget + a Home shell) animate independently. */
 function highlightLayoutId(scope: string): string {
   return `${scope}-fixture-filter-active`;
 }
 
+/** Max width the segmented control is allowed to grow to. In the ~560px
+ * "What is happening" panel the group is narrower than this, so it FILLS the
+ * panel (active pill elongates to the reference proportions). On a wide page
+ * (e.g. /game/football) the group CAPS here instead of stretching the active
+ * pill across the whole row — it sits left, search to its right. ~36rem matches
+ * the compact panel's natural width. */
+const FILTER_GROUP_MAX_WIDTH = '36rem';
+
 /**
- * Condensed segmented control: All / Live / Results / Upcoming, grouped left and
- * hugging their labels (NOT full-width — the active segment never swells to fill
- * the row). Each segment is a free-standing, generously sized pill in a gap-8
- * row (Figma 2150:10938): `px-4 py-2` → a 34px-tall pill, `rounded-[4px]`,
- * `backdrop-blur-[15px]`. Inactive pills rest on the darker `grey-100` fill with
- * muted `#ccc4c4` text; the ACTIVE pill is a clearly more prominent, lighter
- * `grey-300` FILLED pill (plus a white/5 hairline) with white text. That active
- * fill is a single highlight pill that SLIDES between segments on switch via
- * framer-motion's shared-element `layoutId` (the standard animated segmented
- * control), gliding with the `glide` motion spring — a soft, well-damped travel
- * with a touch of follow-through (not the old stiff `snappy` snap). A subtle
- * label scale on the active segment adds a hair of liveliness to the handoff.
- * Every segment shows `cursor-pointer`. Under `prefers-reduced-motion` the
- * highlight snaps instantly (no slide).
+ * Segmented control: All / Live / Results / Upcoming, where the ACTIVE segment
+ * is an ELONGATED filled pill that absorbs the leftover width (`flex-1`) and the
+ * inactive segments HUG their own label (Figma 2150:10938). Active fill is the
+ * lighter `grey-300` (plus a white/5 hairline) with white text; inactive pills
+ * rest on the darker `grey-100` with muted `#ccc4c4` text. `px-4 py-2` →
+ * ~34px-tall pills, `rounded-[4px]`, `backdrop-blur-[15px]`, in a gap-2 row.
+ *
+ * The group is `w-full` but bounded by `max-width` (`FILTER_GROUP_MAX_WIDTH`):
+ * in the narrow panel it fills the panel and looks like the owner's reference;
+ * on a wide page it caps at the max-width (active stays ~proportional, NOT
+ * page-spanning); on very narrow/mobile the inactive pills shrink/hug so nothing
+ * overflows.
+ *
+ * On switch the elongated pill MORPHS to the newly-active segment — the old one
+ * shrinks to hug, the new one grows to `flex-1`. framer-motion `layout` on each
+ * button interpolates the widths (no jump) and a shared-element `layoutId` on
+ * the active fill slides/morphs it across, both gliding with the `glide` motion
+ * spring (stiffness 340 / damping 32). Under `prefers-reduced-motion` the layout
+ * snaps instantly (no morph). Every segment shows `cursor-pointer`.
  *
  * Each segment is a real `<button>` with `aria-pressed` reflecting its active
  * state. Filter semantics are unchanged: pressing a segment selects it; pressing
@@ -505,7 +520,10 @@ export function FixtureFilterBar({
   className,
 }: FixtureFilterBarProps) {
   const prefersReduced = useReducedMotion();
-  const highlightTransition = prefersReduced ? { duration: 0 } : motionTokens.spring.glide;
+  // `glide` morph for the layout + fill; under reduced-motion we snap (and skip
+  // the `layout` prop entirely so widths jump instead of interpolating).
+  const morphTransition = prefersReduced ? { duration: 0 } : motionTokens.spring.glide;
+  const animateLayout = !prefersReduced;
   const scope = React.useId();
 
   return (
@@ -517,7 +535,11 @@ export function FixtureFilterBar({
         data-slot="fixture-filter-segments"
         role="group"
         aria-label="Filter fixtures by status"
-        className="inline-flex shrink-0 items-center gap-2"
+        // `w-full` so it fills the narrow panel; `max-w` so it caps on wide
+        // pages (the active pill never spans the whole row). `flex` (not
+        // inline-flex) lets the children's `flex-1` claim the leftover width.
+        className="flex w-full min-w-0 items-center gap-2"
+        style={{ maxWidth: FILTER_GROUP_MAX_WIDTH }}
       >
         {FILTER_SEGMENTS.map((segment) => {
           const isActive = activeFilter === segment.key;
@@ -526,24 +548,27 @@ export function FixtureFilterBar({
           const next: FixtureFilter | null =
             segment.key === null ? null : isActive ? null : segment.key;
           return (
-            <button
+            <motion.button
               key={segment.label}
               type="button"
+              layout={animateLayout}
+              transition={morphTransition}
               data-slot="fixture-filter-pill"
               data-filter={segment.key ?? 'all'}
               data-active={isActive || undefined}
               aria-pressed={isActive}
               onClick={() => onFilterChange?.(next)}
               className={cn(
-                'relative flex shrink-0 cursor-pointer items-center justify-center rounded-[4px] px-4 py-2 backdrop-blur-[15px]',
+                'relative flex min-w-0 cursor-pointer items-center justify-center rounded-[4px] px-4 py-2 backdrop-blur-[15px]',
                 'text-[12px] leading-[18px] font-medium whitespace-nowrap tracking-[-0.36px]',
                 'transition-colors duration-150 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/30',
-                // Inactive pills carry the resting grey-100 fill; the active
-                // segment's fill is supplied by the sliding grey-300 pill below,
-                // so it stays transparent here to avoid double-painting.
+                // Active = elongated: claim the leftover width. Inactive = hug
+                // its own label (shrink-0 so it never stretches). The active
+                // fill is the shared layoutId pill below, so the active button
+                // stays transparent here to avoid double-painting.
                 isActive
-                  ? 'text-white'
-                  : 'bg-[var(--color-grey-100)] text-[#ccc4c4] hover:text-white'
+                  ? 'flex-1 text-white'
+                  : 'shrink-0 bg-[var(--color-grey-100)] text-[#ccc4c4] hover:text-white'
               )}
             >
               {isActive ? (
@@ -551,18 +576,12 @@ export function FixtureFilterBar({
                   layoutId={highlightLayoutId(scope)}
                   data-slot="fixture-filter-active-pill"
                   aria-hidden="true"
-                  transition={highlightTransition}
+                  transition={morphTransition}
                   className="absolute inset-0 rounded-[4px] border border-white/[0.05] bg-[var(--color-grey-300)] shadow-[0_1px_3px_rgba(0,0,0,0.35)]"
                 />
               ) : null}
-              <motion.span
-                className="relative"
-                animate={isActive ? { scale: 1.02 } : { scale: 1 }}
-                transition={highlightTransition}
-              >
-                {segment.label}
-              </motion.span>
-            </button>
+              <span className="relative truncate">{segment.label}</span>
+            </motion.button>
           );
         })}
       </div>
