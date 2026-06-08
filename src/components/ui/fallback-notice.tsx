@@ -235,8 +235,8 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
     body: 'Our provider has not published a play-by-play feed for this fixture.',
   },
   rich_actions_unavailable: {
-    title: 'Rich actions unavailable',
-    body: 'Heatmaps, passing networks, and shot maps are not enabled for this competition.',
+    title: 'Shot maps not available',
+    body: "Detailed shot data isn't published for this match yet.",
   },
   live_score_stale: {
     title: 'Live score paused',
@@ -255,8 +255,8 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
     body: 'The match has ended but results have not yet been settled by our provider.',
   },
   potm_not_reported: {
-    title: 'Player of the match not reported',
-    body: 'The match POTM has not been published for this fixture.',
+    title: 'No Player of the Match yet',
+    body: 'Voting opens when the final whistle blows.',
   },
   rpc_not_available: {
     title: 'Service unavailable',
@@ -268,7 +268,7 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   },
   no_ratings_yet: {
     title: 'No ratings yet',
-    body: 'Player ratings will appear after the match.',
+    body: 'Be the first to rate this game.',
   },
   no_active_prediction_league: {
     title: 'No active prediction league',
@@ -420,7 +420,7 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   },
   rating_period_closed: {
     title: 'Ratings closed',
-    body: 'The rating window for this match has closed. Aggregate ratings are below.',
+    body: 'The final ratings are in. Aggregate scores below.',
   },
 
   // v0.15.0 Prediction-window lifecycle
@@ -429,8 +429,8 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
     body: 'Kickoff has passed. Picks are no longer accepted for this fixture.',
   },
   prediction_not_yet_open: {
-    title: 'Predictions not open yet',
-    body: 'The prediction window for this gameweek has not opened.',
+    title: 'Predictions open soon',
+    body: 'Picks open closer to kickoff.',
   },
 };
 
@@ -466,11 +466,11 @@ export function FallbackNotice({
         data-variant="compact"
         data-reason-count={normalised.length}
         className={cn(
-          'inline-flex items-center gap-1.5 text-[11px] tracking-[0.04em] text-amber-100',
+          'inline-flex items-center gap-1.5 text-[11px] tracking-[0.04em] text-white/70',
           className
         )}
       >
-        <span aria-hidden="true" className="size-1.5 rounded-full bg-amber-200/80" />
+        <span aria-hidden="true" className="size-1.5 rounded-full bg-white/30" />
         <span data-slot="fallback-notice-title">
           {title ?? FALLBACK_REASON_COPY[normalised[0]].title}
         </span>
@@ -478,24 +478,31 @@ export function FallbackNotice({
     );
   }
 
+  // Default variant. Single-reason notices (~99% of in-game uses) lead with the
+  // reason title in white — no universal "Some data is missing" eyebrow. Multi-
+  // reason notices keep the eyebrow so the list reads as a roll-up.
+  const singleReason = normalised.length === 1 && !title;
+
   return (
     <section
       data-slot="fallback-notice"
       data-variant="default"
       data-reason-count={normalised.length}
       className={cn(
-        'flex flex-col gap-2 border border-amber-200/20 bg-amber-200/[0.04]',
+        'flex flex-col gap-2 border border-white/10 bg-white/[0.03]',
         'px-4 py-3 text-white',
         className
       )}
     >
-      <header
-        data-slot="fallback-notice-eyebrow"
-        className="text-[10px] tracking-[0.16em] uppercase text-amber-100/90"
-      >
-        {title ?? 'Some data is missing'}
-      </header>
-      <ul className="flex flex-col gap-1.5 text-[12px] text-white/80">
+      {singleReason ? null : (
+        <header
+          data-slot="fallback-notice-eyebrow"
+          className="text-[10px] tracking-[0.16em] uppercase text-white/50"
+        >
+          {title ?? 'Some data is missing'}
+        </header>
+      )}
+      <ul className="flex flex-col gap-1.5 text-[12px] text-white/60">
         {normalised.map((reason) => {
           const copy = FALLBACK_REASON_COPY[reason];
           return (
