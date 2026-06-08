@@ -223,7 +223,7 @@ interface StandingsRowItemProps {
 }
 
 function StandingsRowItem({ row, highlighted, showForm, Link }: StandingsRowItemProps) {
-  const numericCell = 'px-2 py-2 text-right font-mono tabular-nums';
+  const numericCell = 'px-2 py-2 text-right tabular-nums';
   return (
     <tr
       data-slot="competition-standings-row"

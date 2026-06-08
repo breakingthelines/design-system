@@ -183,7 +183,7 @@ function FixtureLeadCell({ data }: { data: FixtureRowData }) {
         className="flex shrink-0 items-center gap-1 text-[var(--color-grey-500)]"
       >
         <Clock weight="regular" aria-hidden="true" className="size-4 shrink-0" />
-        <span className="font-mono text-[12px] tabular-nums tracking-[-0.36px]">{time}</span>
+        <span className="text-[12px] tabular-nums tracking-[-0.36px]">{time}</span>
       </div>
     );
   }
@@ -195,7 +195,7 @@ function FixtureLeadCell({ data }: { data: FixtureRowData }) {
       data-kind="minute"
       data-late={isLate || undefined}
       className={cn(
-        'shrink-0 font-mono text-[12px] tabular-nums tracking-[-0.36px]',
+        'shrink-0 text-[12px] tabular-nums tracking-[-0.36px]',
         isLate ? 'text-[var(--color-red-100)]' : 'text-white'
       )}
     >
@@ -281,7 +281,7 @@ export function FixtureEngagementBadges({
           className="inline-flex items-center gap-1 text-[var(--color-grey-500)]"
         >
           <span className="text-[var(--color-grey-500)]">{item.icon}</span>
-          <span className="font-mono text-[11px] tabular-nums tracking-[-0.33px] text-white/80">
+          <span className="text-[11px] tabular-nums tracking-[-0.33px] text-white/80">
             {formatCount(item.value)}
           </span>
           <span className="sr-only">{item.label}</span>
@@ -370,7 +370,7 @@ function FixtureScore({ scoreHome, scoreAway }: { scoreHome?: number; scoreAway?
   return (
     <span
       data-slot="fixture-row-score"
-      className="flex w-[39px] shrink-0 items-center justify-between font-mono text-[14px] font-semibold tabular-nums tracking-[-0.42px] text-white"
+      className="flex w-[39px] shrink-0 items-center justify-between text-[14px] font-semibold tabular-nums tracking-[-0.42px] text-white"
     >
       <span>{scoreHome ?? 0}</span>
       <span>-</span>

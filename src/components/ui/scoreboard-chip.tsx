@@ -79,7 +79,7 @@ export function ScoreboardChip({ status, clockLabel, className }: ScoreboardChip
       ) : null}
       <span data-slot="scoreboard-chip-label">{label}</span>
       {clockLabel ? (
-        <span data-slot="scoreboard-chip-clock" className="font-mono tabular-nums text-white/70">
+        <span data-slot="scoreboard-chip-clock" className="tabular-nums text-white/70">
           {clockLabel}
         </span>
       ) : null}

@@ -138,7 +138,7 @@ export function RatingsReceivedCard({
           title={`${descriptor.label} · lower is better`}
           className="flex shrink-0 items-center gap-2 leading-none"
         >
-          <span className="font-mono text-[64px] leading-none font-semibold tabular-nums text-white">
+          <span className="text-[64px] leading-none font-semibold tabular-nums text-white">
             {formatRating(value, scaleValue)}
           </span>
           <Star weight="fill" aria-hidden="true" className="size-8 text-[var(--color-red-100)]" />

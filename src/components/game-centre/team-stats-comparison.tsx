@@ -216,7 +216,7 @@ function TeamStatRowItem({ row, homeName, awayName, homeColor, awayColor }: Team
       <div className="flex items-baseline justify-between gap-3">
         <span
           data-slot="team-stats-comparison-home-value"
-          className="font-mono text-[15px] font-semibold tabular-nums tracking-tight text-white"
+          className="text-[15px] font-semibold tabular-nums tracking-tight text-white"
         >
           {homeDisplay}
         </span>
@@ -228,7 +228,7 @@ function TeamStatRowItem({ row, homeName, awayName, homeColor, awayColor }: Team
         </span>
         <span
           data-slot="team-stats-comparison-away-value"
-          className="font-mono text-[15px] font-semibold tabular-nums tracking-tight text-white"
+          className="text-[15px] font-semibold tabular-nums tracking-tight text-white"
         >
           {awayDisplay}
         </span>
