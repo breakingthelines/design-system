@@ -281,8 +281,8 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
 
   // v0.15.0 Arena (L1)
   follow_graph_empty: {
-    title: 'Your football graph is empty',
-    body: 'Follow players, teams, managers or competitions to populate this strip.',
+    title: 'Nothing followed yet',
+    body: 'Follow players, teams, managers or competitions to fill this in.',
   },
   no_moves_pending: {
     title: 'No moves pending',
