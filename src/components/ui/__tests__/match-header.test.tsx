@@ -7,7 +7,7 @@ const baseHome = { label: 'Arsenal', shortLabel: 'ARS' };
 const baseAway = { label: 'Manchester United', shortLabel: 'MUN' };
 
 describe('MatchHeader', () => {
-  it('renders kickoff date+time for scheduled fixtures', () => {
+  it('renders kickoff time + date in the eyebrow for scheduled fixtures', () => {
     const markup = render(
       <MatchHeader
         home={baseHome}
@@ -16,12 +16,13 @@ describe('MatchHeader', () => {
         kickoffIso="2026-08-15T19:30:00Z"
         competitionLabel="Premier League"
         venueLabel="Emirates Stadium"
+        variant="flat"
       />
     );
     expect(getSlotAttr(markup, 'match-header', 'data-status')).toBe('scheduled');
-    expect(hasSlot(markup, 'match-header-kickoff')).toBe(true);
-    expect(hasSlot(markup, 'match-header-score')).toBe(false);
-    expect(slotText(markup, 'match-header-competition')).toBe('Premier League');
+    // Score plaque renders the kickoff time when scheduled (no scoreboard chip).
+    expect(hasSlot(markup, 'match-header-score')).toBe(true);
+    expect(slotText(markup, 'match-header-eyebrow')).toContain('Premier League');
     expect(slotText(markup, 'match-header-venue').toLowerCase()).toContain('emirates');
   });
 
@@ -37,20 +38,18 @@ describe('MatchHeader', () => {
       />
     );
     expect(hasSlot(markup, 'match-header-score')).toBe(true);
-    expect(hasSlot(markup, 'match-header-kickoff')).toBe(false);
     const scoreText = slotText(markup, 'match-header-score');
     expect(scoreText).toContain('2');
     expect(scoreText).toContain('1');
-    // The chip text reflects status; the clock label flows through to the chip.
-    expect(slotText(markup, 'scoreboard-chip')).toMatch(/Live/i);
-    expect(slotText(markup, 'scoreboard-chip-clock')).toContain("78'");
+    // Clock label flows into the score plaque as the status caption.
+    expect(scoreText).toContain("78'");
   });
 
   it('renders the final score for finished fixtures', () => {
     const markup = render(
       <MatchHeader home={baseHome} away={baseAway} status="finished" scoreHome={1} scoreAway={3} />
     );
-    expect(slotText(markup, 'scoreboard-chip')).toMatch(/Full time/i);
+    expect(slotText(markup, 'match-header-score')).toMatch(/FT/i);
   });
 
   it('renders one side block per team, in home/away order', () => {
@@ -63,8 +62,8 @@ describe('MatchHeader photo-hero variant', () => {
   const home = { label: 'Arsenal', shortLabel: 'ARS', standingLabel: '2nd in Premier League' };
   const away = { label: 'Chelsea', shortLabel: 'CHE', standingLabel: '1st in Premier League' };
 
-  it('renders the flat variant by default', () => {
-    const markup = render(<MatchHeader home={home} away={away} status="finished" />);
+  it('renders the flat variant when no image is supplied', () => {
+    const markup = render(<MatchHeader home={home} away={away} status="finished" variant="flat" />);
     expect(getSlotAttr(markup, 'match-header', 'data-variant')).toBe('flat');
     expect(hasSlot(markup, 'match-header-backdrop')).toBe(false);
   });
@@ -84,9 +83,10 @@ describe('MatchHeader photo-hero variant', () => {
     expect(getSlotAttr(markup, 'match-header', 'data-variant')).toBe('photo');
     expect(hasSlot(markup, 'match-header-backdrop')).toBe(true);
     expect(markup).toContain('https://example.com/stadium.jpg');
-    // 20px blur on the image, plus a 50% black scrim over it.
     expect(markup).toContain('blur-[20px]');
-    expect(markup).toContain('bg-black/50');
+    // Photo variant uses bg-black/60 (darker scrim than previous bg-black/50)
+    // to keep the white scoreboard text legible on busy stadium photos.
+    expect(markup).toContain('bg-black/60');
   });
 
   it('degrades to flat when variant=photo but no image is supplied', () => {
@@ -119,6 +119,38 @@ describe('MatchHeader photo-hero variant', () => {
     const withoutXg = render(<MatchHeader home={home} away={away} status="finished" />);
     expect(hasSlot(withoutXg, 'match-header-xg')).toBe(false);
   });
+
+  it('renders the inline scorers strip when scorers are supplied (Wave 6.1)', () => {
+    const markup = render(
+      <MatchHeader
+        home={{
+          ...home,
+          scorers: [{ name: 'B. Saka', minute: "35'", kind: 'goal' }],
+        }}
+        away={{
+          ...away,
+          scorers: [
+            { name: 'C. Palmer', minute: "55'", kind: 'goal' },
+            { name: 'E. Fernández', minute: "85'", kind: 'penalty' },
+          ],
+        }}
+        status="finished"
+        scoreHome={1}
+        scoreAway={2}
+      />
+    );
+    expect(hasSlot(markup, 'match-header-scorers')).toBe(true);
+    const scorers = slotText(markup, 'match-header-scorers');
+    expect(scorers).toContain('B. Saka');
+    expect(scorers).toContain("35'");
+    expect(scorers).toContain('C. Palmer');
+    expect(scorers).toContain('E. Fernández');
+  });
+
+  it('omits the scorers strip when neither side has scorers', () => {
+    const markup = render(<MatchHeader home={home} away={away} status="finished" />);
+    expect(hasSlot(markup, 'match-header-scorers')).toBe(false);
+  });
 });
 
 describe('MatchHeader helpers', () => {
@@ -144,9 +176,12 @@ describe('MatchHeader helpers', () => {
     });
   });
 
-  it('formatMatchKickoff returns padded HH:MM and upper-case dateLabel', () => {
+  it('formatMatchKickoff returns padded HH:MM and a title-case dateLabel (Wave 6.1)', () => {
     const result = formatMatchKickoff('2026-05-19T19:30:00Z');
     expect(result.timeLabel).toMatch(/^\d{2}:\d{2}$/);
-    expect(result.dateLabel).toBe(result.dateLabel.toUpperCase());
+    // Wave 6.1 drops the ALL-CAPS shouting in the eyebrow; dateLabel is now
+    // title case ("Tue 19 May") to match Image #1.
+    expect(result.dateLabel).toContain('Tue');
+    expect(result.dateLabel).toContain('May');
   });
 });
