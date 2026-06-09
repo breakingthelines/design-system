@@ -50,6 +50,8 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
     baseActions,
     shareHref ? handleShare : undefined
   );
+  const primaryActions = engagementActions.filter((action) => action.type !== 'share');
+  const shareActions = engagementActions.filter((action) => action.type === 'share');
 
   return (
     <article
@@ -100,13 +102,13 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
               {thought.author.handle ? (
                 <Link
                   href={`/@${thought.author.handle}`}
-                  className="font-content text-base font-bold leading-normal text-foreground whitespace-nowrap transition-colors hover:text-red-100"
+                  className="font-content text-[15px] font-semibold leading-5 text-foreground whitespace-nowrap transition-colors hover:text-red-100"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   {thought.author.name}
                 </Link>
               ) : (
-                <span className="font-content text-base font-bold leading-normal text-foreground whitespace-nowrap">
+                <span className="font-content text-[15px] font-semibold leading-5 text-foreground whitespace-nowrap">
                   {thought.author.name}
                 </span>
               )}
@@ -255,7 +257,10 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
           )}
 
           {/* Engagement — compact variant, gap-2 between actions */}
-          <EngagementBar variant="compact" actions={engagementActions} />
+          <div className="flex items-center justify-between gap-3">
+            <EngagementBar variant="compact" actions={primaryActions} />
+            {shareActions.length > 0 && <EngagementBar variant="compact" actions={shareActions} />}
+          </div>
         </div>
       </div>
     </article>
