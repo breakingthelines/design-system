@@ -110,7 +110,7 @@ export interface ThoughtCommentProps {
   /** Called when the user removes this thought from bookmarks. */
   onUnbookmark?: (id: string) => void;
   /** Called when the user opens share for this thought. */
-  onShare?: (thought: ThoughtCommentThought) => void;
+  onShare?: (thought: ThoughtCommentThought, event?: React.MouseEvent<HTMLElement>) => void;
   /** Whether this comment is itself a reply (hides reply button, uses smaller avatar, indents) */
   isReply?: boolean;
   /** GIF items — enables built-in GIF picker in the reply composer */
@@ -228,19 +228,23 @@ export function ThoughtComment({
   const replyCount = thought.replyCount ?? 0;
   const hasUnloadedReplies = replyCount > 0 && replies.length === 0;
   const thoughtIsBookmarked = getBookmarkState?.(thought.id) ?? isBookmarked;
-  const handleShare = React.useCallback(() => {
-    if (onShare) {
-      onShare(thought);
-      return;
-    }
-    if (!thought.permalinkHref || typeof window === 'undefined') return;
-    const url = new URL(thought.permalinkHref, window.location.origin).toString();
-    if (navigator.share) {
-      void navigator.share({ title: `Thought by ${thought.author.name}`, url }).catch(() => {});
-      return;
-    }
-    void navigator.clipboard?.writeText(url).catch(() => {});
-  }, [onShare, thought]);
+  const handleShare = React.useCallback(
+    (event?: React.MouseEvent<HTMLElement>) => {
+      event?.stopPropagation();
+      if (onShare) {
+        onShare(thought, event);
+        return;
+      }
+      if (!thought.permalinkHref || typeof window === 'undefined') return;
+      const url = new URL(thought.permalinkHref, window.location.origin).toString();
+      if (navigator.share) {
+        void navigator.share({ title: `Thought by ${thought.author.name}`, url }).catch(() => {});
+        return;
+      }
+      void navigator.clipboard?.writeText(url).catch(() => {});
+    },
+    [onShare, thought]
+  );
 
   return (
     <motion.div className="flex flex-col" variants={itemVariants} data-thought-id={thought.id}>
