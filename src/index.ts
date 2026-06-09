@@ -123,7 +123,9 @@ export {
   formatMatchKickoff,
   initialsFromMatchLabel,
   type MatchHeaderProps,
+  type MatchHeaderScorer,
   type MatchHeaderSide,
+  type MatchHeaderStatus,
   type MatchHeaderVariant,
 } from './components/ui/match-header';
 

@@ -4,74 +4,104 @@ import * as React from 'react';
 
 import { cn } from '#/lib/utils';
 
-import { ScoreboardChip, type ScoreboardChipStatus } from '#/components/ui/scoreboard-chip';
-
 /* ─────────────────────────────────────────────────────────────────────────────
- * MatchHeader
+ * MatchHeader (Wave 6.1 redesign)
  *
- * The masthead of a Match (Game Centre) page. Renders the two teams, the
- * score (or kickoff time), the competition, the venue, the date, each side's
- * league standing, and an optional team-xG row. The score column always
- * reflects status: for SCHEDULED games we show the kickoff date+time; for
- * LIVE / FINISHED we show the live score.
+ * The masthead of a Match (Game Centre) page. Photo-hero by default with a
+ * stadium image bleed; flat fallback when no image is available.
  *
- * Two visual treatments, selected by `variant`:
- *   - `flat` (default) — a solid grey-200 card. Close to the original masthead.
- *   - `photo` — a stadium photo bleed behind the scoreboard. The image is
- *     blurred (20px) and darkened with an rgba(0,0,0,0.5) scrim so the white
- *     team names, score and captions stay legible. Mirrors Figma 2177-9474 /
- *     2177-9283. Falls back to the flat surface when no `backgroundImageUrl`
- *     is supplied, so `variant="photo"` is always safe.
+ * Anatomy (matches Wave 6.1 spec):
  *
- * Like every other G6 primitive, MatchHeader is render-only. Consumers map
- * their proto/REST data to the props.
+ *   ┌─────────────────────────────────────────────────────────────────────────┐
+ *   │  [stadium photo, blurred + scrim]                                       │
+ *   │                                                                         │
+ *   │           Tue 19 May 2026                                                │
+ *   │            Premier League                                                │
+ *   │                                                                         │
+ *   │  ARSENAL  [crest] [ 1 – 2 ]  [crest]  CHELSEA                            │
+ *   │  2nd in PL          FT                1st in PL                          │
+ *   │                                                                         │
+ *   │  B. Saka 35'  ⚽          xG          ⚽ C. Palmer 55'                   │
+ *   │              0.25                1.25 ⚽ E. Fernández 85'                │
+ *   │                                                                         │
+ *   │  Emirates Stadium                                                        │
+ *   └─────────────────────────────────────────────────────────────────────────┘
+ *
+ * Each side may render an optional standings caption ("2nd in Premier League")
+ * and an array of `scorers` with goal icons inline. xG row renders only when
+ * either side supplies a value. Score plaque sits centered with a darker
+ * backdrop for contrast against the photo.
  * ──────────────────────────────────────────────────────────────────────────── */
+
+export interface MatchHeaderScorer {
+  /** Full or abbreviated player name. */
+  name: string;
+  /** Minute as string, e.g. "35'" or "85' (pen)". */
+  minute: string;
+  /** Goal kind. Defaults to 'goal'. */
+  kind?: 'goal' | 'own_goal' | 'penalty' | 'penalty_missed';
+}
 
 export interface MatchHeaderSide {
   label: string;
   shortLabel?: string;
   imageUrl?: string;
   accentColor?: string;
-  /** League standing caption, e.g. "1st in Premier League". */
+  /** League standing caption, e.g. "2nd in Premier League". */
   standingLabel?: string;
+  /** Scorers rendered inline below the score plaque (home left, away right). */
+  scorers?: readonly MatchHeaderScorer[];
 }
 
 export type MatchHeaderVariant = 'flat' | 'photo';
 
+export type MatchHeaderStatus =
+  | 'scheduled'
+  | 'live'
+  | 'half_time'
+  | 'finished'
+  | 'postponed'
+  | 'cancelled';
+
 export interface MatchHeaderProps {
   home: MatchHeaderSide;
   away: MatchHeaderSide;
-  status: ScoreboardChipStatus;
-  /** Visual treatment. Default: `flat`. */
+  status: MatchHeaderStatus;
+  /** Visual treatment. Default: `photo`. */
   variant?: MatchHeaderVariant;
-  /**
-   * Stadium / atmosphere image rendered behind the scoreboard when
-   * `variant="photo"`. Ignored for the flat variant. When the photo variant
-   * is requested without an image, the header degrades to the flat surface.
-   */
+  /** Stadium photo. */
   backgroundImageUrl?: string;
-  /** Score (rendered when status ≠ scheduled). */
+  /** Score (renders when status ≠ scheduled). */
   scoreHome?: number;
   scoreAway?: number;
-  /** Kickoff ISO datetime (rendered when status === scheduled). */
+  /** Kickoff ISO. Drives both pre-match clock display and "Tue 19 May 2026" caption. */
   kickoffIso?: string;
   /** Optional clock label for in-play games ("78'", "HT"). */
   clockLabel?: string;
   competitionLabel?: string;
   venueLabel?: string;
-  /** Team xG. The row renders only when at least one value is supplied. */
+  /** Team xG. Row renders only when either is supplied. */
   xgHome?: number;
   xgAway?: number;
-  /** IANA timezone for kickoff rendering (e.g., "America/New_York"). Defaults to "Europe/London". */
+  /** IANA timezone. Defaults to "Europe/London". */
   timeZone?: string;
   className?: string;
 }
+
+const STATUS_LABEL: Record<MatchHeaderStatus, string> = {
+  scheduled: '',
+  live: 'LIVE',
+  half_time: 'HT',
+  finished: 'FT',
+  postponed: 'POSTPONED',
+  cancelled: 'CANCELLED',
+};
 
 export function MatchHeader({
   home,
   away,
   status,
-  variant = 'flat',
+  variant = 'photo',
   backgroundImageUrl,
   scoreHome,
   scoreAway,
@@ -86,9 +116,9 @@ export function MatchHeader({
 }: MatchHeaderProps) {
   const isScheduled = status === 'scheduled' || status === 'postponed' || status === 'cancelled';
   const kickoff = formatMatchKickoff(kickoffIso, timeZone);
-  // The photo treatment only engages when there is actually an image to show.
   const isPhoto = variant === 'photo' && Boolean(backgroundImageUrl);
   const showXg = xgHome !== undefined || xgAway !== undefined;
+  const statusLabel = clockLabel ?? STATUS_LABEL[status];
 
   return (
     <header
@@ -96,8 +126,9 @@ export function MatchHeader({
       data-status={status}
       data-variant={isPhoto ? 'photo' : 'flat'}
       className={cn(
-        'relative isolate flex w-full flex-col gap-4 overflow-hidden border border-white/10 text-white',
-        'px-5 py-5',
+        'relative isolate flex w-full flex-col gap-5 overflow-hidden text-white',
+        'rounded-[4px] border border-white/10',
+        'px-6 py-7 sm:px-8 sm:py-8',
         isPhoto ? 'bg-[var(--color-black)]' : 'bg-[var(--color-grey-200)]',
         className
       )}
@@ -114,177 +145,137 @@ export function MatchHeader({
             loading="lazy"
             className="absolute inset-0 size-full scale-110 object-cover blur-[20px]"
           />
-          <div className="absolute inset-0 bg-black/50" />
+          <div className="absolute inset-0 bg-black/60" />
         </div>
       ) : null}
 
       <div
         data-slot="match-header-eyebrow"
-        className="flex items-center justify-between gap-3 text-[10px] tracking-[0.16em] uppercase text-[var(--color-grey-500)]"
+        className="flex flex-col items-center gap-0.5 text-center"
       >
-        <span data-slot="match-header-competition" className="truncate">
-          {competitionLabel ?? 'Match'}
+        <span className="text-xs tracking-[0.04em] text-white/85">
+          {isScheduled ? kickoff.dateLabel : kickoff.fullDateLabel}
         </span>
-        <ScoreboardChip status={status} clockLabel={clockLabel} />
+        {competitionLabel ? (
+          <span className="text-xs tracking-[0.04em] text-white/55">{competitionLabel}</span>
+        ) : null}
       </div>
 
-      <div className="flex items-center gap-4">
-        <MatchHeaderSideBlock align="end" side={home} />
-        <div
-          data-slot="match-header-centre"
-          className="flex w-[120px] shrink-0 flex-col items-center justify-center gap-1"
-        >
-          {isScheduled ? (
-            <>
-              <span className="text-[10px] tracking-[0.18em] uppercase text-[var(--color-grey-500)]">
-                {kickoff.dateLabel}
-              </span>
-              <span
-                data-slot="match-header-kickoff"
-                className={cn(
-                  'text-2xl font-semibold tabular-nums text-white',
-                  isPhoto &&
-                    'rounded-[4px] border border-white/10 bg-white/20 px-3 py-1 backdrop-blur-md'
-                )}
-              >
-                {kickoff.timeLabel}
-              </span>
-            </>
-          ) : (
-            <div
-              data-slot="match-header-score"
-              className={cn(
-                'flex items-baseline gap-2 text-3xl font-bold tabular-nums',
-                isPhoto &&
-                  'rounded-[4px] border border-white/10 bg-white/15 px-3 py-1.5 backdrop-blur-md'
-              )}
-            >
-              <span>{scoreHome ?? 0}</span>
-              <span className="text-[var(--color-grey-500)]">:</span>
-              <span>{scoreAway ?? 0}</span>
-            </div>
-          )}
-        </div>
-        <MatchHeaderSideBlock align="start" side={away} />
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-6 gap-y-3">
+        <SideBlock side={home} align="end" />
+        <ScorePlaque
+          isScheduled={isScheduled}
+          kickoffTime={kickoff.timeLabel}
+          scoreHome={scoreHome}
+          scoreAway={scoreAway}
+          statusLabel={statusLabel}
+          variant={isPhoto ? 'photo' : 'flat'}
+        />
+        <SideBlock side={away} align="start" />
       </div>
 
       {showXg ? (
         <div
           data-slot="match-header-xg"
-          className={cn(
-            'flex items-center justify-between gap-3',
-            'border-t border-white/[0.06] pt-3'
-          )}
+          className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-6"
         >
           <span
             data-slot="match-header-xg-home"
-            className="text-[13px] font-semibold tabular-nums text-white"
+            className="text-right text-sm font-semibold tabular-nums text-white"
           >
             {formatXg(xgHome)}
           </span>
-          <span className="text-[10px] tracking-[0.16em] text-[var(--color-grey-500)] uppercase">
-            xG
-          </span>
+          <span className="text-[10px] tracking-[0.18em] uppercase text-white/55">xG</span>
           <span
             data-slot="match-header-xg-away"
-            className="text-[13px] font-semibold tabular-nums text-white"
+            className="text-left text-sm font-semibold tabular-nums text-white"
           >
             {formatXg(xgAway)}
           </span>
         </div>
       ) : null}
 
-      {venueLabel || kickoffIso ? (
-        <footer
-          data-slot="match-header-footer"
-          className={cn(
-            'flex flex-wrap items-center gap-x-4 gap-y-1 pt-3 text-[11px] text-[var(--color-grey-500)]',
-            // The xG row already drew a divider; avoid stacking two rules.
-            !showXg && 'border-t border-white/[0.06]'
-          )}
-        >
-          {kickoffIso ? (
-            <span data-slot="match-header-date" className="tracking-[0.04em] uppercase">
-              {kickoff.fullDateLabel}
-            </span>
-          ) : null}
-          {venueLabel ? (
-            <span data-slot="match-header-venue" className="tracking-[0.04em] uppercase">
-              {venueLabel}
-            </span>
-          ) : null}
-        </footer>
+      <ScorersRow home={home.scorers ?? []} away={away.scorers ?? []} />
+
+      {venueLabel ? (
+        <div data-slot="match-header-venue" className="text-center text-xs text-white/55">
+          {venueLabel}
+        </div>
       ) : null}
     </header>
   );
 }
 
-function MatchHeaderSideBlock({ align, side }: { align: 'start' | 'end'; side: MatchHeaderSide }) {
+function SideBlock({ side, align }: { side: MatchHeaderSide; align: 'start' | 'end' }) {
   return (
     <div
       data-slot="match-header-side"
       data-align={align}
       className={cn(
-        'flex min-w-0 flex-1 items-center gap-3',
-        align === 'end' ? 'justify-end text-right' : 'justify-start text-left'
+        'flex min-w-0 items-center gap-3 sm:gap-4',
+        align === 'end' ? 'justify-end' : 'justify-start'
       )}
     >
       {align === 'end' ? (
         <>
-          <MatchHeaderLabel side={side} align={align} />
-          <MatchHeaderCrest side={side} />
+          <SideText side={side} align={align} />
+          <SideCrest side={side} />
         </>
       ) : (
         <>
-          <MatchHeaderCrest side={side} />
-          <MatchHeaderLabel side={side} align={align} />
+          <SideCrest side={side} />
+          <SideText side={side} align={align} />
         </>
       )}
     </div>
   );
 }
 
-function MatchHeaderLabel({ side, align }: { side: MatchHeaderSide; align: 'start' | 'end' }) {
+function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'end' }) {
   return (
     <div
-      className={cn('flex min-w-0 flex-col gap-1.5', align === 'end' ? 'items-end' : 'items-start')}
+      className={cn(
+        'flex min-w-0 flex-col gap-0.5',
+        align === 'end' ? 'items-end text-right' : 'items-start text-left'
+      )}
     >
-      <p
+      <span
         data-slot="match-header-side-label"
-        className="min-w-0 truncate text-xl font-bold tracking-tight text-white"
+        className="text-xl font-bold tracking-tight text-white sm:text-2xl"
       >
         {side.label}
-      </p>
+      </span>
       {side.standingLabel ? (
-        <p
+        <span
           data-slot="match-header-side-standing"
-          className="min-w-0 truncate text-[12px] font-medium tracking-tight text-white/75"
+          className="text-xs tracking-tight text-white/65"
         >
           {side.standingLabel}
-        </p>
+        </span>
       ) : null}
     </div>
   );
 }
 
-function MatchHeaderCrest({ side }: { side: MatchHeaderSide }) {
+function SideCrest({ side }: { side: MatchHeaderSide }) {
   const initials = initialsFromMatchLabel(side.shortLabel ?? side.label);
   return (
     <span
       data-slot="match-header-crest"
       aria-hidden="true"
-      style={{ backgroundColor: side.accentColor ?? 'var(--color-grey-300)' }}
+      style={{ backgroundColor: side.accentColor ?? 'transparent' }}
       className={cn(
-        'relative inline-flex size-12 shrink-0 items-center justify-center',
-        'rounded-full border border-white/10 text-xs font-bold tracking-tight text-white',
-        'overflow-hidden'
+        'relative inline-flex size-14 shrink-0 items-center justify-center sm:size-16',
+        'rounded-full text-sm font-bold tracking-tight text-white',
+        'overflow-hidden',
+        !side.imageUrl && 'border border-white/15'
       )}
     >
       {side.imageUrl ? (
         <img
           src={side.imageUrl}
           alt=""
-          className="absolute inset-0 size-full object-cover"
+          className="absolute inset-0 size-full object-contain"
           loading="lazy"
         />
       ) : (
@@ -292,6 +283,111 @@ function MatchHeaderCrest({ side }: { side: MatchHeaderSide }) {
       )}
     </span>
   );
+}
+
+function ScorePlaque({
+  isScheduled,
+  kickoffTime,
+  scoreHome,
+  scoreAway,
+  statusLabel,
+  variant,
+}: {
+  isScheduled: boolean;
+  kickoffTime: string;
+  scoreHome?: number;
+  scoreAway?: number;
+  statusLabel: string;
+  variant: 'photo' | 'flat';
+}) {
+  return (
+    <div
+      data-slot="match-header-score"
+      className={cn(
+        'flex flex-col items-center justify-center gap-1 rounded-[4px] px-4 py-2',
+        'min-w-[120px]',
+        variant === 'photo'
+          ? 'border border-white/10 bg-black/45 backdrop-blur-md'
+          : 'border border-white/10 bg-black/40'
+      )}
+    >
+      {isScheduled ? (
+        <span className="text-2xl font-bold tabular-nums text-white">{kickoffTime}</span>
+      ) : (
+        <div className="flex items-baseline gap-2 text-3xl font-bold tabular-nums sm:text-4xl">
+          <span>{scoreHome ?? 0}</span>
+          <span className="text-white/55">–</span>
+          <span>{scoreAway ?? 0}</span>
+        </div>
+      )}
+      {statusLabel ? (
+        <span className="text-[10px] tracking-[0.18em] uppercase text-white/65">{statusLabel}</span>
+      ) : null}
+    </div>
+  );
+}
+
+function ScorersRow({
+  home,
+  away,
+}: {
+  home: readonly MatchHeaderScorer[];
+  away: readonly MatchHeaderScorer[];
+}) {
+  if (home.length === 0 && away.length === 0) return null;
+  return (
+    <div
+      data-slot="match-header-scorers"
+      className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-6 gap-y-1"
+    >
+      <ul data-side="home" className="flex min-w-0 flex-col items-end gap-1 text-right">
+        {home.map((scorer, idx) => (
+          <ScorerEntry key={`h-${idx}-${scorer.name}`} scorer={scorer} align="end" />
+        ))}
+      </ul>
+      <span aria-hidden="true" className="size-1" />
+      <ul data-side="away" className="flex min-w-0 flex-col items-start gap-1 text-left">
+        {away.map((scorer, idx) => (
+          <ScorerEntry key={`a-${idx}-${scorer.name}`} scorer={scorer} align="start" />
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'start' | 'end' }) {
+  const icon = scorerIcon(scorer.kind ?? 'goal');
+  return (
+    <li
+      data-slot="match-header-scorer"
+      data-kind={scorer.kind ?? 'goal'}
+      className={cn(
+        'flex items-center gap-1.5 text-xs text-white/85',
+        align === 'end' ? 'flex-row-reverse' : 'flex-row'
+      )}
+    >
+      <span aria-hidden="true" className="text-[11px]">
+        {icon}
+      </span>
+      <span className="tracking-tight">
+        {scorer.name} <span className="tabular-nums text-white/65">{scorer.minute}</span>
+      </span>
+    </li>
+  );
+}
+
+function scorerIcon(kind: NonNullable<MatchHeaderScorer['kind']>): string {
+  switch (kind) {
+    case 'own_goal':
+      return '⊘';
+    case 'penalty':
+      return '⚽';
+    case 'penalty_missed':
+      return '✕';
+    case 'goal':
+    default:
+      return '⚽';
+  }
 }
 
 export function initialsFromMatchLabel(label: string): string {
@@ -306,14 +402,6 @@ function formatXg(value: number | undefined): string {
   return value.toFixed(2);
 }
 
-/**
- * Read individual date parts from `formatToParts` so we can assemble strings
- * with explicit separators. Different ICU implementations (Bun vs V8 vs Node)
- * emit slightly different separator characters for `en-GB` weekday formats —
- * sometimes "FRIDAY, 8 AUGUST 2025", sometimes "FRIDAY 8 AUGUST 2025". For
- * SSR + client hydration the bytes must match exactly, so we control the
- * separators ourselves rather than letting locale punctuation decide.
- */
 function intlPartsLookup(parts: Intl.DateTimeFormatPart[]): Record<string, string> {
   const result: Record<string, string> = {};
   for (const part of parts) {
@@ -345,9 +433,8 @@ export function formatMatchKickoff(
       timeZone,
     }).formatToParts(date)
   );
-  const dateLabel = `${shortParts.weekday ?? ''} ${shortParts.day ?? ''} ${shortParts.month ?? ''}`
-    .trim()
-    .toUpperCase();
+  const dateLabel =
+    `${shortParts.weekday ?? ''} ${shortParts.day ?? ''} ${shortParts.month ?? ''}`.trim();
   const timeParts = intlPartsLookup(
     new Intl.DateTimeFormat('en-GB', {
       hour: '2-digit',
@@ -359,16 +446,14 @@ export function formatMatchKickoff(
   const timeLabel = `${timeParts.hour ?? '00'}:${timeParts.minute ?? '00'}`;
   const longParts = intlPartsLookup(
     new Intl.DateTimeFormat('en-GB', {
-      weekday: 'long',
+      weekday: 'short',
       day: 'numeric',
-      month: 'long',
+      month: 'short',
       year: 'numeric',
       timeZone,
     }).formatToParts(date)
   );
   const fullDateLabel =
-    `${longParts.weekday ?? ''} ${longParts.day ?? ''} ${longParts.month ?? ''} ${longParts.year ?? ''}`
-      .trim()
-      .toUpperCase();
+    `${longParts.weekday ?? ''} ${longParts.day ?? ''} ${longParts.month ?? ''} ${longParts.year ?? ''}`.trim();
   return { dateLabel, timeLabel, fullDateLabel };
 }
