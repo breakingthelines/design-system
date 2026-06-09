@@ -133,3 +133,16 @@ export type { MediaTileProps } from './media-tile';
 
 export { MatchDaySubTabs } from './match-day-sub-tabs';
 export type { MatchDaySubTabsProps, MatchDaySubTabItem } from './match-day-sub-tabs';
+
+export { MatchRatingCard } from './match-rating-card';
+export type { MatchRatingCardProps } from './match-rating-card';
+
+export { PredictionCountdownCard } from './prediction-countdown-card';
+export type { PredictionCountdownCardProps, CountdownPhase } from './prediction-countdown-card';
+
+export { PredictionPulseCard } from './prediction-pulse-card';
+export type {
+  PredictionPulseCardProps,
+  PredictionPulse,
+  PredictionPickSummary,
+} from './prediction-pulse-card';

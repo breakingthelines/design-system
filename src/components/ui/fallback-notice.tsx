@@ -133,7 +133,9 @@ export type FallbackReasonKey =
   | 'rating_period_closed'
   // v0.15.0 Prediction-window lifecycle (L2 + L4)
   | 'prediction_locked'
-  | 'prediction_not_yet_open';
+  | 'prediction_not_yet_open'
+  // v0.20.0 Wave 6 Lineups
+  | 'lineup_not_yet_announced';
 
 /** Proto-string accepted as input. We normalise to FallbackReasonKey. */
 export type FallbackReasonInput = FallbackReasonKey | string | number;
@@ -185,6 +187,7 @@ const NUMERIC_TAG_TO_KEY: Record<number, FallbackReasonKey> = {
   44: 'rating_period_closed',
   45: 'prediction_locked',
   46: 'prediction_not_yet_open',
+  47: 'lineup_not_yet_announced',
 };
 
 const ALL_KEYS: ReadonlyArray<FallbackReasonKey> = Object.values(NUMERIC_TAG_TO_KEY);
@@ -431,6 +434,10 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   prediction_not_yet_open: {
     title: 'Predictions open soon',
     body: 'Picks open closer to kickoff.',
+  },
+  lineup_not_yet_announced: {
+    title: 'Lineup not yet announced',
+    body: 'Confirmed XI lands ahead of kickoff.',
   },
 };
 
