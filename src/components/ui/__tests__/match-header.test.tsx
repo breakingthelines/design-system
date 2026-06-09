@@ -125,9 +125,7 @@ describe('MatchHeader photo-hero variant', () => {
       <MatchHeader
         home={{
           ...home,
-          scorers: [
-            { name: 'B. Saka', minute: "35'", kind: 'goal' },
-          ],
+          scorers: [{ name: 'B. Saka', minute: "35'", kind: 'goal' }],
         }}
         away={{
           ...away,
