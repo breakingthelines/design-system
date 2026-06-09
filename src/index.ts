@@ -240,7 +240,10 @@ export {
 } from './components/ui/opportunity-card';
 
 export {
+  DEFAULT_EXTERNAL_MEDIA_KIND_COPY,
   ExternalMediaPicker,
+  type ExternalMediaKindCopy,
+  type ExternalMediaPickerCopy,
   type ExternalMediaPickerProps,
   type ExternalMediaKind,
 } from './components/ui/external-media-picker';

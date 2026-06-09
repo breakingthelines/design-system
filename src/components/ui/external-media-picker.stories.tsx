@@ -54,12 +54,12 @@ export const Resolved = meta.story({
     <div className="w-[640px]">
       <ExternalMediaPicker
         kind="podcast"
-        url="https://open.spotify.com/episode/abc123"
+        url="https://example.com/podcasts/the-break/rss.xml"
         previewNode={
           <div className="rounded border border-white/[0.12] bg-white/[0.04] p-3 text-sm text-white">
-            <p className="font-semibold">Episode 42 — Rebuilding from the back</p>
+            <p className="font-semibold">Episode 42 - Rebuilding from the back</p>
             <p className="text-white/60">
-              A 48-minute conversation about Arsenal's defensive shape.
+              RSS feed resolved with Apple Podcasts, Spotify, and direct audio fallbacks.
             </p>
           </div>
         }

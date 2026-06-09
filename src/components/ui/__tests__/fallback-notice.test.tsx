@@ -126,6 +126,16 @@ describe('FallbackNotice', () => {
     expect(markup.toLowerCase()).not.toContain('placeholder');
   });
 
+  it('uses RSS-first external-only podcast fallback copy', () => {
+    const markup = render(<FallbackNotice reasons={['EXTERNAL_PODCAST_UNAVAILABLE']} />);
+    const text = markup.toLowerCase();
+
+    expect(text).toContain('rss enclosure');
+    expect(text).toContain('provider or source externally');
+    expect(text).not.toContain('spotify');
+    expect(text).not.toContain('apple');
+  });
+
   it('returns null when every reason is unknown / UNSPECIFIED', () => {
     const markup = render(<FallbackNotice reasons={[0, 'garbage']} />);
     expect(markup).toBe('');

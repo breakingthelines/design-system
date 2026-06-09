@@ -386,8 +386,8 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
     body: 'The embedded YouTube video is private, deleted, or geo-blocked.',
   },
   external_podcast_unavailable: {
-    title: 'Podcast unavailable',
-    body: 'The Spotify or Apple feed is unreachable for this episode.',
+    title: 'Podcast source unavailable',
+    body: 'No playable RSS enclosure is available here. Open the provider or source externally to listen.',
   },
   visual_renderer_unavailable: {
     title: 'Visual renderer unavailable',
