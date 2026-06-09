@@ -138,7 +138,7 @@ function StatusPill({ status }: { status: G5FixtureStatus }) {
   }
   if (status === 'postponed') {
     return (
-      <span data-slot="fixture-status" data-status="postponed" className="text-amber-200/80">
+      <span data-slot="fixture-status" data-status="postponed" className="text-white/60">
         Postponed
       </span>
     );

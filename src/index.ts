@@ -114,6 +114,10 @@ export {
   type RatingDistributionProps,
 } from './components/ui/rating-distribution';
 
+export { GradeBox, type GradeBoxProps, type GradeBoxSize } from './components/ui/grade-box';
+
+export { MeanBox, type MeanBoxProps } from './components/ui/mean-box';
+
 export {
   MatchHeader,
   formatMatchKickoff,

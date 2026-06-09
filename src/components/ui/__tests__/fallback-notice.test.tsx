@@ -53,6 +53,7 @@ describe('normaliseFallbackReason', () => {
     expect(normaliseFallbackReason(43)).toBe('rating_not_yet_open');
     expect(normaliseFallbackReason(45)).toBe('prediction_locked');
     expect(normaliseFallbackReason(46)).toBe('prediction_not_yet_open');
+    expect(normaliseFallbackReason(47)).toBe('lineup_not_yet_announced');
   });
 
   it('returns undefined for the UNSPECIFIED proto value (0)', () => {
@@ -60,7 +61,7 @@ describe('normaliseFallbackReason', () => {
   });
 
   it('returns undefined for numeric tags above the known range', () => {
-    expect(normaliseFallbackReason(47)).toBeUndefined();
+    expect(normaliseFallbackReason(48)).toBeUndefined();
     expect(normaliseFallbackReason(1000)).toBeUndefined();
   });
 
