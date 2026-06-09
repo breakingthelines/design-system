@@ -126,15 +126,8 @@ export function MatchTimeline({ events, fallbackReason, limit, className }: Matc
   return (
     <div
       data-slot="match-timeline"
-      className={cn('relative flex w-full flex-col gap-4', className)}
+      className={cn('relative flex w-full flex-col gap-5', className)}
     >
-      {/* Centre axis: a hairline rule running the full height behind the rows. */}
-      <div
-        aria-hidden="true"
-        data-slot="match-timeline-axis"
-        className="pointer-events-none absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-white/[0.06]"
-      />
-
       {groups.map((group, groupIdx) => (
         <div
           key={group.phase ? `phase-${group.phase}-${groupIdx}` : `group-${groupIdx}`}
@@ -158,12 +151,12 @@ function PhaseDivider({ phase }: { phase: string }) {
     <div
       data-slot="match-timeline-phase"
       data-phase={phase}
-      className="relative flex items-center gap-4"
+      className="relative flex items-center gap-3"
     >
-      <span className="relative z-10 shrink-0 rounded-[4px] border border-white/[0.05] bg-[var(--color-grey-300)] px-2 py-1 text-[12px] tracking-tight text-white backdrop-blur-md">
+      <span className="relative z-10 shrink-0 rounded-[4px] border border-white/10 bg-[var(--color-grey-300)] px-2.5 py-1 text-[12px] tracking-tight text-white">
         {phase}
       </span>
-      <span aria-hidden="true" className="h-px flex-1 bg-white/[0.06]" />
+      <span aria-hidden="true" className="h-px flex-1 bg-white/15" />
     </div>
   );
 }
