@@ -119,14 +119,19 @@ export function FixtureRow({
   const isInteractive = Boolean(data.href);
 
   const padding = density === 'compact' ? 'px-2 py-1' : 'px-3 py-2';
-  const sideWidth = density === 'compact' ? 'w-[80px]' : 'w-[104px]';
+  // Teams flex to fill the row so full names expand into the available width
+  // rather than truncating inside a fixed cell — compact panels have the room.
+  const sideWidth = 'min-w-0 flex-1';
 
   const body = (
     <>
       <FixtureLeadCell data={data} />
       <div
         data-slot="fixture-row-teams"
-        className={cn('flex shrink-0 items-center', density === 'compact' ? 'gap-3' : 'gap-4')}
+        className={cn(
+          'flex min-w-0 flex-1 items-center justify-center',
+          density === 'compact' ? 'gap-3' : 'gap-4'
+        )}
       >
         <FixtureTeam side={data.home} align="end" widthClass={sideWidth} />
         {isUpcoming ? (
@@ -320,7 +325,7 @@ function FixtureTeam({
       data-slot="fixture-row-team"
       data-align={align}
       className={cn(
-        'flex shrink-0 items-center gap-1',
+        'flex min-w-0 items-center gap-1',
         widthClass,
         align === 'end' ? 'justify-end' : 'justify-start'
       )}
