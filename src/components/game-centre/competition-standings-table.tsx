@@ -88,8 +88,9 @@ export interface CompetitionStandingsTableProps {
   fallbackReason?: FallbackReason;
   /**
    * Compact mode for narrow panels (e.g. the Arena Office): drops the GF/GA
-   * columns (keeping # · Team · P W D L · GD · Pts), shrinks the type and
-   * removes the min-width so the table fits without horizontal scroll.
+   * columns (keeping # · Team · P W D L · GD · Pts) and shrinks the type. Keeps
+   * a smaller min-width (440px) so the table scrolls horizontally in a narrow
+   * panel instead of squeezing/truncating the team names.
    */
   compact?: boolean;
   className?: string;
@@ -174,7 +175,7 @@ export function CompetitionStandingsTable({
       <table
         className={cn(
           'w-full border-collapse text-white/85',
-          compact ? 'text-xs' : 'min-w-[520px] text-sm'
+          compact ? 'min-w-[440px] text-xs' : 'min-w-[520px] text-sm'
         )}
       >
         <caption className="sr-only">{caption}</caption>
