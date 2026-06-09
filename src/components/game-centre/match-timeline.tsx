@@ -13,6 +13,7 @@ import {
 } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import { useLinkComponent } from '#/components/ui/link-context';
 
 import { FallbackState, type FallbackReason } from './fallback-state';
 
@@ -88,8 +89,12 @@ export interface MatchTimelineEvent {
   kind: MatchTimelineEventKind;
   /** Primary line, usually the player name ("Saka", "E. Fernández"). */
   player: string;
+  /** Optional href for the primary player line. When present, the name renders as a link. */
+  playerHref?: string;
   /** Optional secondary line ("Header from Corner", "K. Havertz" off). */
   detail?: string;
+  /** Optional href for the secondary line (e.g. the player coming off in a sub). */
+  detailHref?: string;
   /** Which side the event belongs to. Drives left/right placement. */
   side?: MatchTimelineSide;
   /**
@@ -177,7 +182,13 @@ function TimelineRow({ event }: { event: MatchTimelineEvent }) {
         <div className="flex items-center gap-3 rounded-[4px] bg-[var(--color-grey-200)] px-2">
           <Minute minute={event.minute} />
           <EventIcon kind={event.kind} />
-          <EventText player={event.player} detail={event.detail} align="start" />
+          <EventText
+            player={event.player}
+            playerHref={event.playerHref}
+            detail={event.detail}
+            detailHref={event.detailHref}
+            align="start"
+          />
         </div>
       </li>
     );
@@ -196,13 +207,25 @@ function TimelineRow({ event }: { event: MatchTimelineEvent }) {
         <div className="col-start-1 flex items-center justify-start gap-3">
           <Minute minute={event.minute} />
           <EventIcon kind={event.kind} />
-          <EventText player={event.player} detail={event.detail} align="start" />
+          <EventText
+            player={event.player}
+            playerHref={event.playerHref}
+            detail={event.detail}
+            detailHref={event.detailHref}
+            align="start"
+          />
         </div>
       ) : (
         <div className="col-start-2 flex flex-row-reverse items-center justify-start gap-3">
           <Minute minute={event.minute} />
           <EventIcon kind={event.kind} />
-          <EventText player={event.player} detail={event.detail} align="end" />
+          <EventText
+            player={event.player}
+            playerHref={event.playerHref}
+            detail={event.detail}
+            detailHref={event.detailHref}
+            align="end"
+          />
         </div>
       )}
     </li>
@@ -222,13 +245,18 @@ function Minute({ minute }: { minute?: string }) {
 
 function EventText({
   player,
+  playerHref,
   detail,
+  detailHref,
   align,
 }: {
   player: string;
+  playerHref?: string;
   detail?: string;
+  detailHref?: string;
   align: 'start' | 'end';
 }) {
+  const LinkComponent = useLinkComponent();
   return (
     <span
       data-slot="match-timeline-event-text"
@@ -237,16 +265,36 @@ function EventText({
         align === 'end' && 'flex-row-reverse text-right'
       )}
     >
-      <span className="min-w-0 truncate text-[14px] font-semibold tracking-tight text-white">
-        {player}
-      </span>
-      {detail ? (
-        <span
-          data-slot="match-timeline-event-detail"
-          className="min-w-0 truncate text-[12px] text-[var(--color-grey-500)]"
+      {playerHref ? (
+        <LinkComponent
+          href={playerHref}
+          data-slot="match-timeline-event-player-link"
+          className="min-w-0 truncate text-[14px] font-semibold tracking-tight text-white hover:underline"
         >
-          {detail}
+          {player}
+        </LinkComponent>
+      ) : (
+        <span className="min-w-0 truncate text-[14px] font-semibold tracking-tight text-white">
+          {player}
         </span>
+      )}
+      {detail ? (
+        detailHref ? (
+          <LinkComponent
+            href={detailHref}
+            data-slot="match-timeline-event-detail"
+            className="min-w-0 truncate text-[12px] text-[var(--color-grey-500)] hover:underline"
+          >
+            {detail}
+          </LinkComponent>
+        ) : (
+          <span
+            data-slot="match-timeline-event-detail"
+            className="min-w-0 truncate text-[12px] text-[var(--color-grey-500)]"
+          >
+            {detail}
+          </span>
+        )
       ) : null}
     </span>
   );
