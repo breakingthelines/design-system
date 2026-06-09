@@ -43,6 +43,32 @@ describe('ExternalMediaPicker', () => {
     expect(markup.toLowerCase()).toContain('viz subtype');
   });
 
+  it('uses RSS-first podcast source copy', () => {
+    const markup = render(<ExternalMediaPicker kind="podcast" url="" />);
+    const text = markup.toLowerCase();
+
+    expect(text).toContain('rss feed');
+    expect(text).toContain('apple podcasts');
+    expect(text).toContain('spotify');
+    expect(text).toContain('direct audio');
+    expect(markup).toContain('Podcast source URL');
+    expect(markup).toContain('https://example.com/podcast/rss.xml');
+  });
+
+  it('allows additive copy overrides for host-specific language', () => {
+    const markup = render(
+      <ExternalMediaPicker
+        kind="podcast"
+        url=""
+        copy={{ podcast: { label: 'Feed source', description: 'Paste the canonical feed.' } }}
+      />
+    );
+
+    expect(markup).toContain('Feed source');
+    expect(markup).toContain('Paste the canonical feed.');
+    expect(markup).toContain('Podcast source URL');
+  });
+
   it('renders the resolve CTA when supplied', () => {
     const markup = render(
       <ExternalMediaPicker kind="publisher_url" url="" resolveCta={<button>Resolve</button>} />

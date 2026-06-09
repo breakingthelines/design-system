@@ -8,7 +8,7 @@ import { cn } from '#/lib/utils';
  * ExternalMediaPicker (L8 — Studio external media composer)
  *
  * Composer surface for embedding an external media reference (publisher URL,
- * YouTube video, Spotify/Apple podcast, viz subtype). The primitive renders:
+ * YouTube video, podcast source, viz subtype). The primitive renders:
  *
  *   - Source kind toggle  (Publisher URL | Video | Podcast | Visual)
  *   - URL / identifier input (controlled)
@@ -25,6 +25,17 @@ import { cn } from '#/lib/utils';
 
 export type ExternalMediaKind = 'publisher_url' | 'video' | 'podcast' | 'visual';
 
+export interface ExternalMediaKindCopy {
+  label: string;
+  description: string;
+  inputLabel: string;
+  placeholder: string;
+}
+
+export type ExternalMediaPickerCopy = Partial<
+  Record<ExternalMediaKind, Partial<ExternalMediaKindCopy>>
+>;
+
 export interface ExternalMediaPickerProps {
   /** Current source kind selection. */
   kind: ExternalMediaKind;
@@ -40,6 +51,8 @@ export interface ExternalMediaPickerProps {
   placeholder?: string;
   /** Optional input label override. */
   inputLabel?: string;
+  /** Optional additive copy override for labels, descriptions, and placeholders. */
+  copy?: ExternalMediaPickerCopy;
   /** Resolved preview node — typically the consumer renders an embed. */
   previewNode?: React.ReactNode;
   /** Error / fallback node — typically a `<FallbackState />` with the matching proto reason. */
@@ -53,28 +66,35 @@ export interface ExternalMediaPickerProps {
   className?: string;
 }
 
-const KIND_LABEL: Record<ExternalMediaKind, string> = {
-  publisher_url: 'Publisher URL',
-  video: 'Video',
-  podcast: 'Podcast',
-  visual: 'Visual',
+export const DEFAULT_EXTERNAL_MEDIA_KIND_COPY: Record<ExternalMediaKind, ExternalMediaKindCopy> = {
+  publisher_url: {
+    label: 'Publisher URL',
+    description: 'OG-card preview from any public URL.',
+    inputLabel: 'Publisher URL',
+    placeholder: 'https://example.com/article',
+  },
+  video: {
+    label: 'Video',
+    description: 'YouTube video URL.',
+    inputLabel: 'Video URL',
+    placeholder: 'https://www.youtube.com/watch?v=...',
+  },
+  podcast: {
+    label: 'Podcast',
+    description:
+      'Start with an RSS feed. Apple Podcasts, Spotify, and direct audio URLs are also supported.',
+    inputLabel: 'Podcast source URL',
+    placeholder: 'https://example.com/podcast/rss.xml',
+  },
+  visual: {
+    label: 'Visual',
+    description: 'Identifier of a viz subtype registered in viz-service.',
+    inputLabel: 'Visual identifier',
+    placeholder: 'viz subtype id (e.g. shot-map-v2)',
+  },
 };
 
-const KIND_DESCRIPTION: Record<ExternalMediaKind, string> = {
-  publisher_url: 'OG-card preview from any public URL.',
-  video: 'YouTube video URL.',
-  podcast: 'Spotify or Apple Podcasts episode URL.',
-  visual: 'Identifier of a viz subtype registered in viz-service.',
-};
-
-const KIND_PLACEHOLDER: Record<ExternalMediaKind, string> = {
-  publisher_url: 'https://example.com/article',
-  video: 'https://www.youtube.com/watch?v=…',
-  podcast: 'https://open.spotify.com/episode/…',
-  visual: 'viz subtype id (e.g. shot-map-v2)',
-};
-
-const KIND_INPUT_TYPE: Record<ExternalMediaKind, string> = {
+const KIND_INPUT_TYPE: Record<ExternalMediaKind, React.HTMLInputTypeAttribute> = {
   publisher_url: 'url',
   video: 'url',
   podcast: 'url',
@@ -88,6 +108,16 @@ const KIND_ORDER: ReadonlyArray<ExternalMediaKind> = [
   'visual',
 ];
 
+function getKindCopy(
+  kind: ExternalMediaKind,
+  copy?: ExternalMediaPickerCopy
+): ExternalMediaKindCopy {
+  return {
+    ...DEFAULT_EXTERNAL_MEDIA_KIND_COPY[kind],
+    ...copy?.[kind],
+  };
+}
+
 export function ExternalMediaPicker({
   kind,
   onKindChange,
@@ -96,6 +126,7 @@ export function ExternalMediaPicker({
   onResolve,
   placeholder,
   inputLabel,
+  copy,
   previewNode,
   errorNode,
   resolveCta,
@@ -104,6 +135,8 @@ export function ExternalMediaPicker({
   className,
 }: ExternalMediaPickerProps) {
   const inputId = React.useId();
+  const activeCopy = getKindCopy(kind, copy);
+
   return (
     <section
       data-slot="external-media-picker"
@@ -122,8 +155,8 @@ export function ExternalMediaPicker({
         >
           External media
         </span>
-        <h3 className="text-sm font-semibold tracking-tight">{KIND_LABEL[kind]}</h3>
-        <p className="text-[11px] leading-snug text-white/65">{KIND_DESCRIPTION[kind]}</p>
+        <h3 className="text-sm font-semibold tracking-tight">{activeCopy.label}</h3>
+        <p className="text-[11px] leading-snug text-white/65">{activeCopy.description}</p>
       </header>
 
       <div
@@ -134,6 +167,7 @@ export function ExternalMediaPicker({
       >
         {KIND_ORDER.map((option) => {
           const active = option === kind;
+          const optionCopy = getKindCopy(option, copy);
           return (
             <button
               key={option}
@@ -155,7 +189,7 @@ export function ExternalMediaPicker({
                 'disabled:opacity-60 disabled:cursor-not-allowed'
               )}
             >
-              {KIND_LABEL[option]}
+              {optionCopy.label}
             </button>
           );
         })}
@@ -167,7 +201,7 @@ export function ExternalMediaPicker({
       >
         <label htmlFor={inputId} className="flex min-w-0 flex-1 flex-col gap-1">
           <span className="text-[10px] tracking-[0.12em] uppercase text-[var(--color-grey-500)]">
-            {inputLabel ?? `${KIND_LABEL[kind]} URL`}
+            {inputLabel ?? activeCopy.inputLabel}
           </span>
           <input
             id={inputId}
@@ -177,7 +211,7 @@ export function ExternalMediaPicker({
             autoComplete="off"
             spellCheck={false}
             value={url}
-            placeholder={placeholder ?? KIND_PLACEHOLDER[kind]}
+            placeholder={placeholder ?? activeCopy.placeholder}
             disabled={disabled}
             onChange={(event) => onUrlChange?.(event.target.value)}
             onKeyDown={(event) => {
