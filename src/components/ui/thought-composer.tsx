@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Image, Gif, Smiley, X, SpinnerGap } from '@phosphor-icons/react';
+import { Image, Smiley, X, SpinnerGap } from '@phosphor-icons/react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
@@ -254,12 +254,14 @@ function ThoughtComposer({
 
   // Preview for both GIF and image
   const hasMediaPreview = selectedGif || imagePreview;
+  const toolbarButtonClass =
+    'flex h-8 cursor-pointer items-center justify-center rounded-[4px] text-[#807c7c] transition-colors hover:text-white disabled:pointer-events-none disabled:opacity-50';
 
   return (
     <div
       data-slot="thought-composer"
       className={cn(
-        'flex flex-col gap-2 rounded-[4px] border border-grey-300 bg-grey-200 px-8 py-3 backdrop-blur-[15px]',
+        'flex min-h-[168px] flex-col gap-6 rounded-[4px] border border-white/[0.05] bg-[#151515]/90 px-7 py-7 shadow-[0_18px_60px_rgba(0,0,0,0.24)] backdrop-blur-[18px]',
         disabled && 'opacity-50',
         className
       )}
@@ -277,8 +279,8 @@ function ThoughtComposer({
       )}
 
       {/* Prompt row */}
-      <div className="flex items-center gap-2 cursor-text" onClick={handleExpand}>
-        <Avatar size="default" className="shrink-0">
+      <div className="flex cursor-text items-center gap-5" onClick={handleExpand}>
+        <Avatar className="size-[42px] shrink-0">
           {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
           <AvatarFallback>{initials ?? '?'}</AvatarFallback>
         </Avatar>
@@ -296,12 +298,12 @@ function ThoughtComposer({
               onChange={(text) => setHasText(text.length > 0)}
               onRemainingChange={setRemaining}
               onMentionSearch={onMentionSearch}
-              className="text-base font-medium leading-6 tracking-[-0.42px] text-foreground min-h-0 sm:text-sm"
-              placeholderClassName="text-white/30 font-medium tracking-[-0.42px]"
+              className="min-h-[34px] text-xl font-medium leading-7 text-foreground sm:text-xl"
+              placeholderClassName="text-white/45 font-medium"
             />
           </div>
         ) : (
-          <span className="text-sm font-medium leading-6 tracking-[-0.42px] text-white/30 select-none">
+          <span className="text-xl font-medium leading-7 text-white/45 select-none">
             {placeholder}...
           </span>
         )}
@@ -348,17 +350,17 @@ function ThoughtComposer({
       {imageError && <p className="text-xs text-red-100">{imageError}</p>}
 
       {/* Bottom row — action icons + submit */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1">
+      <div className="mt-auto flex items-center justify-between gap-4">
+        <div className="flex items-center gap-9 pl-[62px]">
           {showImageButton && (
             <button
               type="button"
               aria-label="Add image"
-              className="flex cursor-pointer items-center justify-center rounded-[4px] p-[9.5px] text-red-100 transition-colors hover:bg-red-100/10 hover:text-red-300 disabled:pointer-events-none disabled:opacity-50"
+              className={toolbarButtonClass}
               onClick={handleImageButtonClick}
               disabled={disabled || imageUploading}
             >
-              <Image weight="regular" className="size-[15px]" />
+              <Image weight="regular" className="size-4" />
             </button>
           )}
           {showGifButton && (
@@ -366,10 +368,9 @@ function ThoughtComposer({
               type="button"
               aria-label="Add GIF"
               className={cn(
-                'flex cursor-pointer items-center justify-center rounded-[4px] p-[9.5px] transition-colors disabled:pointer-events-none disabled:opacity-50',
-                activePicker === 'gif'
-                  ? 'bg-red-100/15 text-red-300'
-                  : 'text-red-100 hover:bg-red-100/10 hover:text-red-300'
+                toolbarButtonClass,
+                'text-xs font-semibold tracking-[0.01em]',
+                activePicker === 'gif' && 'text-white'
               )}
               onClick={() => {
                 if (useBuiltInGif) togglePicker('gif');
@@ -377,26 +378,21 @@ function ThoughtComposer({
               }}
               disabled={disabled}
             >
-              <Gif weight="regular" className="size-[15px]" />
+              GIF
             </button>
           )}
           {showEmojiButton && (
             <button
               type="button"
               aria-label="Add emoji"
-              className={cn(
-                'flex cursor-pointer items-center justify-center rounded-[4px] p-[9.5px] transition-colors disabled:pointer-events-none disabled:opacity-50',
-                activePicker === 'emoji'
-                  ? 'bg-red-100/15 text-red-300'
-                  : 'text-red-100 hover:bg-red-100/10 hover:text-red-300'
-              )}
+              className={cn(toolbarButtonClass, activePicker === 'emoji' && 'text-white')}
               onClick={() => {
                 if (useBuiltInEmoji) togglePicker('emoji');
                 else onEmojiClick?.();
               }}
               disabled={disabled}
             >
-              <Smiley weight="regular" className="size-[15px]" />
+              <Smiley weight="regular" className="size-4" />
             </button>
           )}
         </div>

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-import { ArrowsClockwise, Clock } from '@phosphor-icons/react';
+import { ArrowsClockwise, Clock, UploadSimple } from '@phosphor-icons/react';
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
@@ -51,7 +51,7 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
     shareHref ? handleShare : undefined
   );
   const primaryActions = engagementActions.filter((action) => action.type !== 'share');
-  const shareActions = engagementActions.filter((action) => action.type === 'share');
+  const shareAction = engagementActions.find((action) => action.type === 'share');
 
   return (
     <article
@@ -102,13 +102,13 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
               {thought.author.handle ? (
                 <Link
                   href={`/@${thought.author.handle}`}
-                  className="font-content text-[15px] font-semibold leading-5 text-foreground whitespace-nowrap transition-colors hover:text-red-100"
+                  className="font-content text-sm font-semibold leading-5 text-foreground whitespace-nowrap transition-colors hover:text-red-100"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   {thought.author.name}
                 </Link>
               ) : (
-                <span className="font-content text-[15px] font-semibold leading-5 text-foreground whitespace-nowrap">
+                <span className="font-content text-sm font-semibold leading-5 text-foreground whitespace-nowrap">
                   {thought.author.name}
                 </span>
               )}
@@ -258,8 +258,22 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
 
           {/* Engagement — compact variant, gap-2 between actions */}
           <div className="flex items-center justify-between gap-3">
-            <EngagementBar variant="compact" actions={primaryActions} />
-            {shareActions.length > 0 && <EngagementBar variant="compact" actions={shareActions} />}
+            <EngagementBar
+              variant="compact"
+              actions={primaryActions}
+              className="w-full max-w-[340px] justify-between gap-8"
+            />
+            {shareAction && (
+              <button
+                type="button"
+                className="inline-flex cursor-pointer items-center gap-2 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground"
+                onClick={(event) => shareAction.onClick?.(event)}
+                aria-label="Share"
+              >
+                <UploadSimple weight="regular" className="size-4" />
+                <span>Share</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
