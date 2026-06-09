@@ -69,13 +69,14 @@ describe('MatchTimeline', () => {
     expect(slotText(markup, 'game-centre-fallback-state').length).toBeGreaterThan(0);
   });
 
-  it('places home events left and away events right of the axis', () => {
+  it('places home events left and away events right (Wave 6.2.8: flex justify, not grid)', () => {
     const markup = render(<MatchTimeline events={events} />);
     expect(markup).toContain('data-side="home"');
     expect(markup).toContain('data-side="away"');
-    // Home rows lead with the home column (col-start-1); away rows use col-start-2.
-    expect(markup).toContain('col-start-1');
-    expect(markup).toContain('col-start-2');
+    // The row now uses flex with justify-start (home) / justify-end (away)
+    // so the minute sits at the OUTER edge of the panel for both sides.
+    expect(markup).toMatch(/data-side="home"[^>]*justify-start/);
+    expect(markup).toMatch(/data-side="away"[^>]*justify-end/);
   });
 
   it('centres unknown-side events across the axis', () => {
