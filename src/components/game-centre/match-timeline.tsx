@@ -7,6 +7,7 @@ import {
   Flag,
   FlagCheckered,
   Prohibit,
+  Sneaker,
   SoccerBall,
   VideoCamera,
   Warning,
@@ -95,6 +96,13 @@ export interface MatchTimelineEvent {
   detail?: string;
   /** Optional href for the secondary line (e.g. the player coming off in a sub). */
   detailHref?: string;
+  /**
+   * When `true`, the detail line is rendered with a small assist-boot icon
+   * before the name, marking it as the assist for a goal. Set this only on
+   * goal-type rows where the secondary player is the assist provider; not for
+   * generic reason/summary text or sub-off rows.
+   */
+  detailIsAssist?: boolean;
   /** Which side the event belongs to. Drives left/right placement. */
   side?: MatchTimelineSide;
   /**
@@ -187,6 +195,7 @@ function TimelineRow({ event }: { event: MatchTimelineEvent }) {
             playerHref={event.playerHref}
             detail={event.detail}
             detailHref={event.detailHref}
+            detailIsAssist={event.detailIsAssist}
             align="start"
           />
         </div>
@@ -218,6 +227,7 @@ function TimelineRow({ event }: { event: MatchTimelineEvent }) {
             playerHref={event.playerHref}
             detail={event.detail}
             detailHref={event.detailHref}
+            detailIsAssist={event.detailIsAssist}
             align="start"
           />
         </div>
@@ -228,6 +238,7 @@ function TimelineRow({ event }: { event: MatchTimelineEvent }) {
             playerHref={event.playerHref}
             detail={event.detail}
             detailHref={event.detailHref}
+            detailIsAssist={event.detailIsAssist}
             align="end"
           />
           <EventIcon kind={event.kind} />
@@ -242,7 +253,7 @@ function Minute({ minute }: { minute?: string }) {
   return (
     <span
       data-slot="match-timeline-minute"
-      className="shrink-0 text-[12px] tabular-nums text-[var(--color-grey-500)]"
+      className="inline-flex h-4 shrink-0 items-center text-[12px] leading-none tabular-nums text-[var(--color-grey-500)]"
     >
       {minute || '--'}
     </span>
@@ -254,12 +265,14 @@ function EventText({
   playerHref,
   detail,
   detailHref,
+  detailIsAssist,
   align,
 }: {
   player: string;
   playerHref?: string;
   detail?: string;
   detailHref?: string;
+  detailIsAssist?: boolean;
   align: 'start' | 'end';
 }) {
   const LinkComponent = useLinkComponent();
@@ -275,32 +288,47 @@ function EventText({
         <LinkComponent
           href={playerHref}
           data-slot="match-timeline-event-player-link"
-          className="min-w-0 truncate text-[14px] font-semibold tracking-tight text-white transition-colors hover:text-[var(--color-red-100)]"
+          className="inline-flex h-4 min-w-0 items-center truncate text-[14px] leading-none font-semibold tracking-tight text-white transition-colors hover:text-[var(--color-red-100)]"
         >
           {player}
         </LinkComponent>
       ) : (
-        <span className="min-w-0 truncate text-[14px] font-semibold tracking-tight text-white">
+        <span className="inline-flex h-4 min-w-0 items-center truncate text-[14px] leading-none font-semibold tracking-tight text-white">
           {player}
         </span>
       )}
       {detail ? (
-        detailHref ? (
-          <LinkComponent
-            href={detailHref}
-            data-slot="match-timeline-event-detail"
-            className="min-w-0 truncate text-[12px] text-[var(--color-grey-500)] transition-colors hover:text-[var(--color-red-100)]"
-          >
-            {detail}
-          </LinkComponent>
-        ) : (
-          <span
-            data-slot="match-timeline-event-detail"
-            className="min-w-0 truncate text-[12px] text-[var(--color-grey-500)]"
-          >
-            {detail}
-          </span>
-        )
+        <span
+          data-slot="match-timeline-event-detail-group"
+          className={cn(
+            'inline-flex h-4 min-w-0 items-center gap-1 leading-none',
+            align === 'end' && 'flex-row-reverse'
+          )}
+        >
+          {detailIsAssist ? (
+            <Sneaker
+              aria-hidden="true"
+              weight="fill"
+              className="size-3 shrink-0 text-[var(--color-grey-500)]"
+            />
+          ) : null}
+          {detailHref ? (
+            <LinkComponent
+              href={detailHref}
+              data-slot="match-timeline-event-detail"
+              className="inline-flex h-4 min-w-0 items-center truncate text-[12px] leading-none text-[var(--color-grey-500)] transition-colors hover:text-[var(--color-red-100)]"
+            >
+              {detail}
+            </LinkComponent>
+          ) : (
+            <span
+              data-slot="match-timeline-event-detail"
+              className="inline-flex h-4 min-w-0 items-center truncate text-[12px] leading-none text-[var(--color-grey-500)]"
+            >
+              {detail}
+            </span>
+          )}
+        </span>
       ) : null}
     </span>
   );
