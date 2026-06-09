@@ -298,12 +298,12 @@ function ThoughtComposer({
               onChange={(text) => setHasText(text.length > 0)}
               onRemainingChange={setRemaining}
               onMentionSearch={onMentionSearch}
-              className="min-h-[34px] text-xl font-medium leading-7 text-foreground sm:text-xl"
-              placeholderClassName="text-white/45 font-medium"
+              className="min-h-[34px] text-sm font-medium leading-6 text-foreground"
+              placeholderClassName="text-sm font-medium leading-6 text-white/45"
             />
           </div>
         ) : (
-          <span className="text-xl font-medium leading-7 text-white/45 select-none">
+          <span className="text-sm font-medium leading-6 text-white/45 select-none">
             {placeholder}...
           </span>
         )}
