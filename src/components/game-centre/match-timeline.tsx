@@ -269,7 +269,7 @@ function EventText({
         <LinkComponent
           href={playerHref}
           data-slot="match-timeline-event-player-link"
-          className="min-w-0 truncate text-[14px] font-semibold tracking-tight text-white hover:underline"
+          className="min-w-0 truncate text-[14px] font-semibold tracking-tight text-white transition-colors hover:text-[var(--color-red-100)]"
         >
           {player}
         </LinkComponent>
@@ -283,7 +283,7 @@ function EventText({
           <LinkComponent
             href={detailHref}
             data-slot="match-timeline-event-detail"
-            className="min-w-0 truncate text-[12px] text-[var(--color-grey-500)] hover:underline"
+            className="min-w-0 truncate text-[12px] text-[var(--color-grey-500)] transition-colors hover:text-[var(--color-red-100)]"
           >
             {detail}
           </LinkComponent>
