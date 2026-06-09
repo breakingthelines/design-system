@@ -3,6 +3,7 @@
 import * as React from 'react';
 
 import { cn } from '#/lib/utils';
+import { useLinkComponent } from '#/components/ui/link-context';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * MatchHeader (Wave 6.1 redesign)
@@ -40,6 +41,8 @@ export interface MatchHeaderScorer {
   minute: string;
   /** Goal kind. Defaults to 'goal'. */
   kind?: 'goal' | 'own_goal' | 'penalty' | 'penalty_missed';
+  /** Optional href — when present the scorer's name renders as a link. */
+  href?: string;
 }
 
 export interface MatchHeaderSide {
@@ -51,6 +54,8 @@ export interface MatchHeaderSide {
   standingLabel?: string;
   /** Scorers rendered inline below the score plaque (home left, away right). */
   scorers?: readonly MatchHeaderScorer[];
+  /** Optional href — when present the team label + crest become a link. */
+  href?: string;
 }
 
 export type MatchHeaderVariant = 'flat' | 'photo';
@@ -79,6 +84,8 @@ export interface MatchHeaderProps {
   /** Optional clock label for in-play games ("78'", "HT"). */
   clockLabel?: string;
   competitionLabel?: string;
+  /** Optional href for the competition eyebrow. */
+  competitionHref?: string;
   venueLabel?: string;
   /** Team xG. Row renders only when either is supplied. */
   xgHome?: number;
@@ -108,12 +115,14 @@ export function MatchHeader({
   kickoffIso,
   clockLabel,
   competitionLabel,
+  competitionHref,
   venueLabel,
   xgHome,
   xgAway,
   timeZone,
   className,
 }: MatchHeaderProps) {
+  const LinkComponent = useLinkComponent();
   const isScheduled = status === 'scheduled' || status === 'postponed' || status === 'cancelled';
   const kickoff = formatMatchKickoff(kickoffIso, timeZone);
   const isPhoto = variant === 'photo' && Boolean(backgroundImageUrl);
@@ -157,7 +166,17 @@ export function MatchHeader({
           {isScheduled ? kickoff.dateLabel : kickoff.fullDateLabel}
         </span>
         {competitionLabel ? (
-          <span className="text-xs tracking-[0.04em] text-white/55">{competitionLabel}</span>
+          competitionHref ? (
+            <LinkComponent
+              href={competitionHref}
+              data-slot="match-header-competition-link"
+              className="text-xs tracking-[0.04em] text-white/55 hover:text-white/85 hover:underline"
+            >
+              {competitionLabel}
+            </LinkComponent>
+          ) : (
+            <span className="text-xs tracking-[0.04em] text-white/55">{competitionLabel}</span>
+          )
         ) : null}
       </div>
 
@@ -232,6 +251,8 @@ function SideBlock({ side, align }: { side: MatchHeaderSide; align: 'start' | 'e
 }
 
 function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'end' }) {
+  const LinkComponent = useLinkComponent();
+  const labelClass = 'text-xl font-bold tracking-tight text-white sm:text-2xl';
   return (
     <div
       className={cn(
@@ -239,12 +260,19 @@ function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'en
         align === 'end' ? 'items-end text-right' : 'items-start text-left'
       )}
     >
-      <span
-        data-slot="match-header-side-label"
-        className="text-xl font-bold tracking-tight text-white sm:text-2xl"
-      >
-        {side.label}
-      </span>
+      {side.href ? (
+        <LinkComponent
+          href={side.href}
+          data-slot="match-header-side-label"
+          className={cn(labelClass, 'hover:underline')}
+        >
+          {side.label}
+        </LinkComponent>
+      ) : (
+        <span data-slot="match-header-side-label" className={labelClass}>
+          {side.label}
+        </span>
+      )}
       {side.standingLabel ? (
         <span
           data-slot="match-header-side-standing"
@@ -357,6 +385,12 @@ function ScorersRow({
 
 function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'start' | 'end' }) {
   const icon = scorerIcon(scorer.kind ?? 'goal');
+  const LinkComponent = useLinkComponent();
+  const inner = (
+    <>
+      {scorer.name} <span className="tabular-nums text-white/65">{scorer.minute}</span>
+    </>
+  );
   return (
     <li
       data-slot="match-header-scorer"
@@ -369,9 +403,17 @@ function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'sta
       <span aria-hidden="true" className="text-[11px]">
         {icon}
       </span>
-      <span className="tracking-tight">
-        {scorer.name} <span className="tabular-nums text-white/65">{scorer.minute}</span>
-      </span>
+      {scorer.href ? (
+        <LinkComponent
+          href={scorer.href}
+          data-slot="match-header-scorer-link"
+          className="tracking-tight hover:underline"
+        >
+          {inner}
+        </LinkComponent>
+      ) : (
+        <span className="tracking-tight">{inner}</span>
+      )}
     </li>
   );
 }
