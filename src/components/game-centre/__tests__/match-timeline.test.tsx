@@ -44,10 +44,10 @@ const events: readonly MatchTimelineEvent[] = [
 ];
 
 describe('MatchTimeline', () => {
-  it('renders the timeline root with a centre axis', () => {
+  it('renders the timeline root (Wave 6.2.1: centre axis dropped — alignment alone conveys side)', () => {
     const markup = render(<MatchTimeline events={events} />);
     expect(hasSlot(markup, 'match-timeline')).toBe(true);
-    expect(hasSlot(markup, 'match-timeline-axis')).toBe(true);
+    expect(hasSlot(markup, 'match-timeline-axis')).toBe(false);
   });
 
   it('renders a row per event', () => {
