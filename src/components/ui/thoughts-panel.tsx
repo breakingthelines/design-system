@@ -81,6 +81,14 @@ interface ThoughtsPanelProps {
   scrollToThoughtId?: string;
   /** Called when user clicks a quoted passage or timestamp anchor on a thought */
   onAnchorClick?: (anchor: import('#/types/content').ThoughtAnchor) => void;
+  /** Current bookmark state for thoughts in the panel. */
+  getBookmarkState?: (thoughtId: string) => boolean;
+  /** Called when the user bookmarks a thought. */
+  onBookmark?: (thoughtId: string) => void;
+  /** Called when the user removes a thought from bookmarks. */
+  onUnbookmark?: (thoughtId: string) => void;
+  /** Called when the user opens share for a thought. */
+  onShare?: (thought: PanelThought, event?: React.MouseEvent<HTMLElement>) => void;
   /** Additional class names on the panel container */
   className?: string;
 }
@@ -140,6 +148,10 @@ function ThoughtsPanel({
   isLoading = false,
   scrollToThoughtId,
   onAnchorClick,
+  getBookmarkState,
+  onBookmark,
+  onUnbookmark,
+  onShare,
   className,
 }: ThoughtsPanelProps) {
   const composerRef = React.useRef<MiniEditorHandle>(null);
@@ -555,6 +567,11 @@ function ThoughtsPanel({
                       onUnlike={onUnlike}
                       onLoadReplies={onLoadReplies}
                       onAnchorClick={onAnchorClick}
+                      isBookmarked={getBookmarkState?.(thought.id) ?? false}
+                      getBookmarkState={getBookmarkState}
+                      onBookmark={onBookmark}
+                      onUnbookmark={onUnbookmark}
+                      onShare={onShare}
                       gifs={gifs}
                       gifsLoading={gifsLoading}
                       gifsError={gifsError}
