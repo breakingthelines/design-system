@@ -101,6 +101,16 @@ export interface ThoughtCommentProps {
   onLoadReplies?: (id: string) => void;
   /** Called when the user clicks a quoted passage or timestamp anchor */
   onAnchorClick?: (anchor: ThoughtAnchor) => void;
+  /** Current bookmark state for this thought. */
+  isBookmarked?: boolean;
+  /** Optional lookup used by threaded callers so replies can render their own bookmark state. */
+  getBookmarkState?: (id: string) => boolean;
+  /** Called when the user bookmarks this thought. */
+  onBookmark?: (id: string) => void;
+  /** Called when the user removes this thought from bookmarks. */
+  onUnbookmark?: (id: string) => void;
+  /** Called when the user opens share for this thought. */
+  onShare?: (thought: ThoughtCommentThought) => void;
   /** Whether this comment is itself a reply (hides reply button, uses smaller avatar, indents) */
   isReply?: boolean;
   /** GIF items — enables built-in GIF picker in the reply composer */
@@ -134,6 +144,11 @@ export function ThoughtComment({
   onUnlike,
   onLoadReplies,
   onAnchorClick,
+  isBookmarked = false,
+  getBookmarkState,
+  onBookmark,
+  onUnbookmark,
+  onShare,
   isReply = false,
   gifs,
   gifsLoading,
@@ -212,7 +227,12 @@ export function ThoughtComment({
   const replies = thought.replies ?? [];
   const replyCount = thought.replyCount ?? 0;
   const hasUnloadedReplies = replyCount > 0 && replies.length === 0;
+  const thoughtIsBookmarked = getBookmarkState?.(thought.id) ?? isBookmarked;
   const handleShare = React.useCallback(() => {
+    if (onShare) {
+      onShare(thought);
+      return;
+    }
     if (!thought.permalinkHref || typeof window === 'undefined') return;
     const url = new URL(thought.permalinkHref, window.location.origin).toString();
     if (navigator.share) {
@@ -220,7 +240,7 @@ export function ThoughtComment({
       return;
     }
     void navigator.clipboard?.writeText(url).catch(() => {});
-  }, [thought.author.name, thought.permalinkHref]);
+  }, [onShare, thought]);
 
   return (
     <motion.div className="flex flex-col" variants={itemVariants} data-thought-id={thought.id}>
@@ -390,10 +410,17 @@ export function ThoughtComment({
             </div>
             <button
               type="button"
-              className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
+              onClick={() =>
+                thoughtIsBookmarked ? onUnbookmark?.(thought.id) : onBookmark?.(thought.id)
+              }
+              className={cn(
+                'cursor-pointer transition-colors',
+                thoughtIsBookmarked ? 'text-white' : 'text-[#807c7c] hover:text-white'
+              )}
               aria-label="Bookmark"
+              aria-pressed={thoughtIsBookmarked}
             >
-              <BookmarkSimple size={14} weight="regular" />
+              <BookmarkSimple size={14} weight={thoughtIsBookmarked ? 'fill' : 'regular'} />
             </button>
             <button
               type="button"
@@ -685,6 +712,11 @@ export function ThoughtComment({
               onLike={onLike}
               onUnlike={onUnlike}
               onAnchorClick={onAnchorClick}
+              isBookmarked={getBookmarkState?.(reply.id) ?? false}
+              getBookmarkState={getBookmarkState}
+              onBookmark={onBookmark}
+              onUnbookmark={onUnbookmark}
+              onShare={onShare}
               isReply
               gifs={gifs}
               gifsLoading={gifsLoading}
