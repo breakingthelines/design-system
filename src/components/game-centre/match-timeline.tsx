@@ -6,10 +6,10 @@ import {
   Clock,
   Flag,
   FlagCheckered,
+  MonitorPlay,
   Prohibit,
   Sneaker,
   SoccerBall,
-  VideoCamera,
   Warning,
 } from '@phosphor-icons/react';
 
@@ -306,11 +306,16 @@ function EventText({
           )}
         >
           {detailIsAssist ? (
-            <Sneaker
+            <span
+              data-slot="match-timeline-assist-icon"
               aria-hidden="true"
-              weight="fill"
-              className="size-3 shrink-0 text-[var(--color-grey-500)]"
-            />
+              className="inline-flex h-4 w-4 shrink-0 items-center justify-center"
+            >
+              <Sneaker
+                weight="regular"
+                className="size-3.5 -translate-y-px text-[var(--color-grey-500)]"
+              />
+            </span>
           ) : null}
           {detailHref ? (
             <LinkComponent
@@ -342,7 +347,7 @@ function EventIcon({ kind }: { kind: MatchTimelineEventKind }) {
       data-slot="match-timeline-icon"
       data-kind={kind}
       aria-hidden="true"
-      className="flex size-4 shrink-0 items-center justify-center"
+      className="inline-flex size-4 shrink-0 items-center justify-center leading-none"
     >
       {node}
     </span>
@@ -369,7 +374,7 @@ function EventIcon({ kind }: { kind: MatchTimelineEventKind }) {
         <ArrowsLeftRight weight="bold" className="size-4 text-[var(--color-grey-500)]" />
       );
     case 'var':
-      return wrap(<VideoCamera weight="fill" className="size-4 text-[var(--color-grey-500)]" />);
+      return wrap(<MonitorPlay weight="fill" className="size-4 text-[var(--color-grey-500)]" />);
     case 'kickoff':
       return wrap(<Flag weight="fill" className="size-4 text-[var(--color-grey-500)]" />);
     case 'half_time':
