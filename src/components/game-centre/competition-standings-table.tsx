@@ -167,70 +167,71 @@ export function CompetitionStandingsTable({
   }
 
   return (
-    <div
-      data-slot="competition-standings-table"
-      data-state="ready"
-      className={cn('overflow-x-auto', wrapper)}
-    >
-      <table
-        className={cn(
-          'w-full border-collapse text-white/85',
-          compact ? 'min-w-[440px] text-xs' : 'min-w-[520px] text-sm'
-        )}
-      >
-        <caption className="sr-only">{caption}</caption>
-        <thead
+    <div data-slot="competition-standings-table" data-state="ready" className={wrapper}>
+      {/* Inner scroller — kept separate from the rounded `overflow-hidden`
+          wrapper so the horizontal scroll isn't clipped (twMerge would drop a
+          sibling `overflow-x-auto` against the wrapper's `overflow-hidden`). */}
+      <div className="overflow-x-auto">
+        <table
           className={cn(
-            'bg-white/[0.04] tracking-wide text-white/55 uppercase',
-            compact ? 'text-[10px]' : 'text-[11px]'
+            'w-full border-collapse text-white/85',
+            compact ? 'min-w-[440px] text-xs' : 'min-w-[520px] text-sm'
           )}
         >
-          <tr>
-            <th scope="col" className="px-2 py-2 text-right font-medium">
-              <abbr title="Position" className="no-underline">
-                #
-              </abbr>
-            </th>
-            <th scope="col" className="px-2 py-2 text-left font-medium">
-              Team
-            </th>
-            {numericColumns.map((col) => (
-              <th key={col.key} scope="col" className="px-2 py-2 text-right font-medium">
-                <abbr title={col.full} className="no-underline">
-                  {col.short}
+          <caption className="sr-only">{caption}</caption>
+          <thead
+            className={cn(
+              'bg-white/[0.04] tracking-wide text-white/55 uppercase',
+              compact ? 'text-[10px]' : 'text-[11px]'
+            )}
+          >
+            <tr>
+              <th scope="col" className="px-2 py-2 text-right font-medium">
+                <abbr title="Position" className="no-underline">
+                  #
                 </abbr>
               </th>
-            ))}
-            <th scope="col" className="px-2 py-2 text-right font-medium">
-              <abbr title="Goal difference" className="no-underline">
-                GD
-              </abbr>
-            </th>
-            <th scope="col" className="px-2 py-2 text-right font-medium">
-              <abbr title="Points" className="no-underline">
-                Pts
-              </abbr>
-            </th>
-            {showForm ? (
               <th scope="col" className="px-2 py-2 text-left font-medium">
-                Form
+                Team
               </th>
-            ) : null}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <StandingsRowItem
-              key={row.team.id ?? `rank-${row.rank}`}
-              row={row}
-              highlighted={isHighlighted(row, highlightTeamId)}
-              showForm={showForm}
-              numericColumns={numericColumns}
-              Link={Link}
-            />
-          ))}
-        </tbody>
-      </table>
+              {numericColumns.map((col) => (
+                <th key={col.key} scope="col" className="px-2 py-2 text-right font-medium">
+                  <abbr title={col.full} className="no-underline">
+                    {col.short}
+                  </abbr>
+                </th>
+              ))}
+              <th scope="col" className="px-2 py-2 text-right font-medium">
+                <abbr title="Goal difference" className="no-underline">
+                  GD
+                </abbr>
+              </th>
+              <th scope="col" className="px-2 py-2 text-right font-medium">
+                <abbr title="Points" className="no-underline">
+                  Pts
+                </abbr>
+              </th>
+              {showForm ? (
+                <th scope="col" className="px-2 py-2 text-left font-medium">
+                  Form
+                </th>
+              ) : null}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <StandingsRowItem
+                key={row.team.id ?? `rank-${row.rank}`}
+                row={row}
+                highlighted={isHighlighted(row, highlightTeamId)}
+                showForm={showForm}
+                numericColumns={numericColumns}
+                Link={Link}
+              />
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
