@@ -196,15 +196,21 @@ function TimelineRow({ event }: { event: MatchTimelineEvent }) {
 
   const isHome = side === 'home';
 
+  // Home rows: [minute][icon][name][detail] flush LEFT.
+  // Away rows: [detail][name][icon][minute] flush RIGHT.
+  // Minute always sits at the outer edge of the panel; nothing is centred.
   return (
     <li
       data-slot="match-timeline-row"
       data-kind={event.kind}
       data-side={side}
-      className="relative z-10 grid grid-cols-2 items-center gap-x-8"
+      className={cn(
+        'relative z-10 flex w-full items-center',
+        isHome ? 'justify-start' : 'justify-end'
+      )}
     >
       {isHome ? (
-        <div className="col-start-1 flex items-center justify-start gap-3">
+        <div className="flex items-center gap-2.5">
           <Minute minute={event.minute} />
           <EventIcon kind={event.kind} />
           <EventText
@@ -216,9 +222,7 @@ function TimelineRow({ event }: { event: MatchTimelineEvent }) {
           />
         </div>
       ) : (
-        <div className="col-start-2 flex flex-row-reverse items-center justify-start gap-3">
-          <Minute minute={event.minute} />
-          <EventIcon kind={event.kind} />
+        <div className="flex items-center gap-2.5">
           <EventText
             player={event.player}
             playerHref={event.playerHref}
@@ -226,6 +230,8 @@ function TimelineRow({ event }: { event: MatchTimelineEvent }) {
             detailHref={event.detailHref}
             align="end"
           />
+          <EventIcon kind={event.kind} />
+          <Minute minute={event.minute} />
         </div>
       )}
     </li>
