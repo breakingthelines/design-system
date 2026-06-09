@@ -170,7 +170,7 @@ export function MatchHeader({
             <LinkComponent
               href={competitionHref}
               data-slot="match-header-competition-link"
-              className="text-xs tracking-[0.04em] text-white/55 hover:text-white/85 hover:underline"
+              className="text-xs tracking-[0.04em] text-white/55 transition-colors hover:text-[var(--color-red-100)]"
             >
               {competitionLabel}
             </LinkComponent>
@@ -264,7 +264,7 @@ function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'en
         <LinkComponent
           href={side.href}
           data-slot="match-header-side-label"
-          className={cn(labelClass, 'hover:underline')}
+          className={cn(labelClass, 'transition-colors hover:text-[var(--color-red-100)]')}
         >
           {side.label}
         </LinkComponent>
@@ -407,7 +407,7 @@ function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'sta
         <LinkComponent
           href={scorer.href}
           data-slot="match-header-scorer-link"
-          className="tracking-tight hover:underline"
+          className="tracking-tight transition-colors hover:text-[var(--color-red-100)]"
         >
           {inner}
         </LinkComponent>
