@@ -86,6 +86,12 @@ export interface CompetitionStandingsTableProps {
   state?: 'ready' | 'empty' | 'loading';
   /** Fallback override (used when empty). Defaults to `NO_DATA_FOR_SEASON`. */
   fallbackReason?: FallbackReason;
+  /**
+   * Compact mode for narrow panels (e.g. the Arena Office): drops the GF/GA
+   * columns (keeping # · Team · P W D L · GD · Pts), shrinks the type and
+   * removes the min-width so the table fits without horizontal scroll.
+   */
+  compact?: boolean;
   className?: string;
 }
 
@@ -112,6 +118,7 @@ export function CompetitionStandingsTable({
   caption = 'League standings',
   state = 'ready',
   fallbackReason,
+  compact = false,
   className,
 }: CompetitionStandingsTableProps) {
   const Link = useLinkComponent();
@@ -120,6 +127,11 @@ export function CompetitionStandingsTable({
     className
   );
   const showForm = rows.some((row) => Boolean(row.form));
+  // Compact drops the goals-for / goals-against columns so the panel only has
+  // to fit # · Team · P W D L · GD · Pts.
+  const numericColumns = compact
+    ? NUMERIC_COLUMNS.filter((col) => col.key !== 'goalsFor' && col.key !== 'goalsAgainst')
+    : NUMERIC_COLUMNS;
 
   if (state === 'loading') {
     return (
@@ -159,9 +171,19 @@ export function CompetitionStandingsTable({
       data-state="ready"
       className={cn('overflow-x-auto', wrapper)}
     >
-      <table className="w-full min-w-[520px] border-collapse text-sm text-white/85">
+      <table
+        className={cn(
+          'w-full border-collapse text-white/85',
+          compact ? 'text-xs' : 'min-w-[520px] text-sm'
+        )}
+      >
         <caption className="sr-only">{caption}</caption>
-        <thead className="bg-white/[0.04] text-[11px] tracking-wide text-white/55 uppercase">
+        <thead
+          className={cn(
+            'bg-white/[0.04] tracking-wide text-white/55 uppercase',
+            compact ? 'text-[10px]' : 'text-[11px]'
+          )}
+        >
           <tr>
             <th scope="col" className="px-2 py-2 text-right font-medium">
               <abbr title="Position" className="no-underline">
@@ -171,7 +193,7 @@ export function CompetitionStandingsTable({
             <th scope="col" className="px-2 py-2 text-left font-medium">
               Team
             </th>
-            {NUMERIC_COLUMNS.map((col) => (
+            {numericColumns.map((col) => (
               <th key={col.key} scope="col" className="px-2 py-2 text-right font-medium">
                 <abbr title={col.full} className="no-underline">
                   {col.short}
@@ -202,6 +224,7 @@ export function CompetitionStandingsTable({
               row={row}
               highlighted={isHighlighted(row, highlightTeamId)}
               showForm={showForm}
+              numericColumns={numericColumns}
               Link={Link}
             />
           ))}
@@ -219,10 +242,17 @@ interface StandingsRowItemProps {
   row: CompetitionStandingsRow;
   highlighted: boolean;
   showForm: boolean;
+  numericColumns: readonly NumericColumn[];
   Link: ReturnType<typeof useLinkComponent>;
 }
 
-function StandingsRowItem({ row, highlighted, showForm, Link }: StandingsRowItemProps) {
+function StandingsRowItem({
+  row,
+  highlighted,
+  showForm,
+  numericColumns,
+  Link,
+}: StandingsRowItemProps) {
   const numericCell = 'px-2 py-2 text-right tabular-nums';
   return (
     <tr
@@ -260,12 +290,11 @@ function StandingsRowItem({ row, highlighted, showForm, Link }: StandingsRowItem
           )}
         </span>
       </th>
-      <td className={numericCell}>{row.played}</td>
-      <td className={numericCell}>{row.won}</td>
-      <td className={numericCell}>{row.drawn}</td>
-      <td className={numericCell}>{row.lost}</td>
-      <td className={numericCell}>{row.goalsFor}</td>
-      <td className={numericCell}>{row.goalsAgainst}</td>
+      {numericColumns.map((col) => (
+        <td key={col.key} className={numericCell}>
+          {row[col.key]}
+        </td>
+      ))}
       <td className={numericCell}>{formatGoalDifference(row.goalDifference)}</td>
       <td className={cn(numericCell, 'font-semibold text-white')}>{row.points}</td>
       {showForm ? (

@@ -146,7 +146,7 @@ export function FixtureRow({
   );
 
   const baseClass = cn(
-    'group/fixture-row relative flex w-full items-center justify-between rounded-[4px]',
+    'group/fixture-row relative flex w-full items-center gap-2.5 rounded-[4px]',
     padding,
     'text-left text-white',
     isHighlighted
