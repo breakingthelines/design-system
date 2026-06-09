@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { motion } from 'framer-motion';
-import { Heart, Chats, ArrowsClockwise, BookmarkSimple, ShareNetwork } from '@phosphor-icons/react';
+import { Heart, Chats, ArrowsClockwise, BookmarkSimple, ShareFat } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { formatCount } from '#/lib/format';
@@ -40,7 +40,7 @@ const iconMap = {
   comment: Chats,
   repost: ArrowsClockwise,
   bookmark: BookmarkSimple,
-  share: ShareNetwork,
+  share: ShareFat,
 } as const;
 
 const labelMap: Record<EngagementAction['type'], string> = {
