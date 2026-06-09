@@ -6,8 +6,8 @@ import {
   X,
   PushPin,
   ThumbsUp,
-  BookmarkSimple,
-  ShareNetwork,
+  Bookmark,
+  UploadSimple,
   Gif,
   Smiley,
   Image as ImageIcon,
@@ -420,7 +420,7 @@ export function ThoughtComment({
               aria-label="Bookmark"
               aria-pressed={thoughtIsBookmarked}
             >
-              <BookmarkSimple size={14} weight={thoughtIsBookmarked ? 'fill' : 'regular'} />
+              <Bookmark size={14} weight={thoughtIsBookmarked ? 'fill' : 'regular'} />
             </button>
             <button
               type="button"
@@ -428,7 +428,7 @@ export function ThoughtComment({
               className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
               aria-label="Share"
             >
-              <ShareNetwork size={14} weight="regular" />
+              <UploadSimple size={14} weight="regular" />
             </button>
           </div>
         </div>
