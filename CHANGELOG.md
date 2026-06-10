@@ -5,6 +5,35 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] — 2026-06-10
+
+### Added — Grade submission modal primitives (Wave 6.4.10)
+
+- **`VerticalGradeScale`** (`game-centre/vertical-grade-scale.tsx`)
+  Six clickable rows arranged vertically with a red-intensity gradient from
+  row 1 (full BTL red) at the top to row 6 (greyed-out, ~10% opacity) at the
+  bottom. Tip labels: "Excellent" anchored on row 1 and "Poor" on row 6 are
+  always visible; intermediate descriptors (Very Good / Good / Satisfactory /
+  Below Standard) surface on hover or selection. Selected row gets a white
+  ring + slight scale-up. Built for the redesigned BTL grade submission sheet
+  where the vertical axis carries the qualitative story without needing a
+  "Lower is better" header. Distinct from the existing `GradeScale` composite
+  (which is a horizontal row-per-grade with bar/count readouts for the Match
+  Centre Ratings sub-tab).
+  Props: `value?: RatingScaleValue; onSelect?: (value) => void;
+disabled?: boolean; className?: string`.
+  `data-direction="lower-is-better"` invariant + `data-value` per row.
+
+### Changed — ThoughtComposer compact mode
+
+- **`ThoughtComposer`** gained a `compact` prop and a continuous
+  `onChange(text, mentions)` callback. In compact mode the composer is
+  always expanded, the avatar + click-to-expand chrome is dropped, and the
+  internal Post button is suppressed — the host owns submission. Built for
+  the redesigned grade submission sheet so the modal's "Submit grade" CTA is
+  the canonical submit while the composer is just the input surface. Default
+  remains `compact={false}` so existing thoughts pages keep their behaviour.
+
 ## [0.4.0] — 2026-05-25
 
 ### Added — L1 Beta Polish primitives + FallbackReason expansion

@@ -155,6 +155,9 @@ export type {
   GradeScaleCounts,
 } from './grade-scale';
 
+export { VerticalGradeScale } from './vertical-grade-scale';
+export type { VerticalGradeScaleProps } from './vertical-grade-scale';
+
 export { TeamToggledPlayerGradeList } from './team-toggled-player-grade-list';
 export type {
   TeamToggledPlayerGradeListProps,
