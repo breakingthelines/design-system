@@ -157,10 +157,7 @@ export function CompetitionStandingsTable({
     return (
       <div data-slot="competition-standings-table" data-state="empty" className={wrapper}>
         <div className="px-5 py-4">
-          <FallbackState
-            reason={fallbackReason ?? 'NO_DATA_FOR_SEASON'}
-            title="Standings not available yet."
-          />
+          <FallbackState reason={fallbackReason ?? 'NO_DATA_FOR_SEASON'} />
         </div>
       </div>
     );

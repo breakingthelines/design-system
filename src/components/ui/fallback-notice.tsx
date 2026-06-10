@@ -336,8 +336,8 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
 
   // v0.15.0 Game Centre entity pages
   no_data_for_season: {
-    title: 'No data for this season',
-    body: 'Pick a different season or check back when fixtures are published.',
+    title: 'Nothing for this season yet',
+    body: "Check back as the season's matches are played.",
   },
 
   // v0.15.0 Studio cockpit
