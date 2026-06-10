@@ -21,10 +21,10 @@ import { FallbackState, type FallbackReason } from './fallback-state';
  *
  *   [avatar] [abbreviated name] [qualitative label] [GradeBox]
  *
- * The pill toggle defaults to `home`. Default render caps the list at 11
- * rows (the starting XI). A "Show subs" / "Hide subs" link appears when
- * either side has more than 11 entries; toggling reveals the remaining
- * rows in the same sorted order.
+ * The pill toggle defaults to `home`. Every row passed in is rendered —
+ * the host is responsible for filtering the source data (e.g. dropping
+ * subs who never came on). `isSub` stays on the row as metadata for
+ * styling hooks (`data-sub`); it no longer drives visibility (Wave 6.14).
  *
  * The component is render-only. The host owns the source data (lineups +
  * BTL averages projected per-side, abbreviated names already cut) and
@@ -48,7 +48,11 @@ export interface PlayerGradeRow {
   grade?: RatingScaleValue;
   /** Optional explicit qualitative label override. Defaults to `ratingDescriptor(grade).shortLabel`. */
   qualitative?: string;
-  /** Mark as a substitute (renders behind the "Show subs" toggle). */
+  /**
+   * Marks the row as a substitute. Exposed as `data-sub` on the row so
+   * hosts can hang styling/annotations off it (e.g. "Sub - came on 67'");
+   * no longer drives visibility (Wave 6.14 — host filters subs upstream).
+   */
   isSub?: boolean;
 }
 
@@ -75,11 +79,6 @@ export interface TeamToggledPlayerGradeListProps extends React.ComponentProps<'d
    * a single source of truth. Defaults to `false`.
    */
   hideToggle?: boolean;
-  /**
-   * Number of starting players to show before the "Show subs" affordance
-   * kicks in. Defaults to 11 (the football starting XI).
-   */
-  startersCap?: number;
   /** Fallback reason for an empty side. Defaults to `NO_RATINGS_YET`. */
   emptyReason?: FallbackReason;
   /**
@@ -108,14 +107,12 @@ function TeamToggledPlayerGradeList({
   side,
   onSideChange,
   hideToggle = false,
-  startersCap = 11,
   emptyReason = 'NO_RATINGS_YET',
   onGrade,
   className,
   ...props
 }: TeamToggledPlayerGradeListProps) {
   const [internalSide, setInternalSide] = React.useState<'home' | 'away'>(defaultSide);
-  const [showSubs, setShowSubs] = React.useState(false);
 
   const activeSide = side ?? internalSide;
   const handleSideChange = (next: 'home' | 'away') => {
@@ -126,11 +123,6 @@ function TeamToggledPlayerGradeList({
   const sortedHome = React.useMemo(() => sortRows(teams.home), [teams.home]);
   const sortedAway = React.useMemo(() => sortRows(teams.away), [teams.away]);
   const rows = activeSide === 'home' ? sortedHome : sortedAway;
-
-  const starters = rows.slice(0, startersCap);
-  const subs = rows.slice(startersCap);
-  const hasSubs = subs.length > 0;
-  const visibleRows = showSubs ? rows : starters;
 
   return (
     <div
@@ -164,33 +156,15 @@ function TeamToggledPlayerGradeList({
         </div>
       )}
 
-      {visibleRows.length === 0 ? (
+      {rows.length === 0 ? (
         <FallbackState reason={emptyReason} />
       ) : (
         <ol data-slot="team-toggled-player-grade-list-rows" className="flex flex-col gap-0.5">
-          {visibleRows.map((row) => (
+          {rows.map((row) => (
             <PlayerGradeListRow key={row.id} row={row} onGrade={onGrade} />
           ))}
         </ol>
       )}
-
-      {hasSubs ? (
-        <button
-          type="button"
-          data-slot="team-toggled-player-grade-list-subs-toggle"
-          data-expanded={showSubs}
-          onClick={() => setShowSubs((s) => !s)}
-          className={cn(
-            'inline-flex w-fit items-center gap-1 self-start rounded-full px-2 py-1',
-            'text-[11px] font-semibold tracking-[0.12em] text-white/60 uppercase',
-            'transition-colors hover:text-white focus-visible:outline-none',
-            'focus-visible:text-[var(--color-red-100)]'
-          )}
-          aria-expanded={showSubs}
-        >
-          {showSubs ? 'Hide subs' : `Show subs (${subs.length})`}
-        </button>
-      ) : null}
     </div>
   );
 }

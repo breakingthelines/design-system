@@ -38,16 +38,18 @@ describe('TeamToggledPlayerGradeList', () => {
     expect(getSlotAttr(markup, 'team-toggled-player-grade-list', 'data-active-side')).toBe('home');
   });
 
-  it('caps the starters list at startersCap (default 11) and shows the subs toggle', () => {
+  it('renders every row passed in (subs visible by default, host filters upstream)', () => {
     const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} />);
-    // Home has 13 rows; default cap shows 11.
-    expect(countSlot(markup, 'team-toggled-player-grade-list-row')).toBe(11);
-    expect(hasSlot(markup, 'team-toggled-player-grade-list-subs-toggle')).toBe(true);
-    expect(slotText(markup, 'team-toggled-player-grade-list-subs-toggle')).toContain('Show subs');
+    // Home has 13 rows (incl. 2 subs); all 13 render — no internal cap.
+    expect(countSlot(markup, 'team-toggled-player-grade-list-row')).toBe(home.length);
+    // No subs toggle ships any more (Wave 6.14).
+    expect(hasSlot(markup, 'team-toggled-player-grade-list-subs-toggle')).toBe(false);
+    // `isSub` still rides through as `data-sub` for styling hooks.
+    expect(markup).toContain('data-sub="true"');
   });
 
   it('sorts by grade ascending (best first)', () => {
-    const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} startersCap={20} />);
+    const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} />);
     // Saliba, Rice, Saka — grade 1, sorted alphabetically by name within tier
     const saka = markup.indexOf('B. Saka');
     const rice = markup.indexOf('D. Rice');
@@ -86,9 +88,7 @@ describe('TeamToggledPlayerGradeList', () => {
   });
 
   it('suppresses the internal toggle when hideToggle is true', () => {
-    const markup = render(
-      <TeamToggledPlayerGradeList teams={{ home, away }} hideToggle />
-    );
+    const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} hideToggle />);
     // Rows still render; the pill toggle is gone.
     expect(hasSlot(markup, 'team-toggled-player-grade-list-toggle')).toBe(false);
     expect(hasSlot(markup, 'team-toggled-player-grade-list-rows')).toBe(true);
