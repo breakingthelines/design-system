@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
@@ -94,23 +94,17 @@ function AvatarStack({
       className={cn('flex items-center -space-x-2', className)}
       {...props}
     >
-      {/* No entrance animation: avatars resolve from async data (member list,
-          then user details), so an entrance reads as a "fly-in" every load and
-          re-fires as the data settles. initial={false} on each item means they
-          appear in place whether present at first paint or added later; exit +
-          layout still animate removals and reflow. */}
-      <AnimatePresence mode="popLayout" initial={false}>
-        {visibleUsers.map((user, index) => (
-          <motion.div
-            key={user.id}
-            initial={false}
-            animate={motionTokens.presets.avatarEnter.animate}
-            exit={motionTokens.presets.avatarExit.exit}
-            transition={motionTokens.spring.shift}
-            layout
-            className="relative"
-            style={{ zIndex: hoveredId === user.id ? 50 : visibleUsers.length - index }}
-          >
+      {/* Plain divs, no framer-motion. The stack fills from async data (member
+          list, then user details), so any entrance or layout animation — including
+          AnimatePresence popLayout, which projects from a transformed position and
+          ignores initial={false} — reads as avatars "flying in" on every load.
+          Render them in place; the host can animate the container if it wants. */}
+      {visibleUsers.map((user, index) => (
+        <div
+          key={user.id}
+          className="relative"
+          style={{ zIndex: hoveredId === user.id ? 50 : visibleUsers.length - index }}
+        >
             <Tooltip>
               <TooltipTrigger
                 render={
@@ -161,9 +155,8 @@ function AvatarStack({
                 </div>
               </TooltipContent>
             </Tooltip>
-          </motion.div>
+          </div>
         ))}
-      </AnimatePresence>
 
       {overflowCount > 0 && (
         <motion.button
