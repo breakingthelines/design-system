@@ -161,9 +161,9 @@ export type {
   PlayerGradeRow,
 } from './team-toggled-player-grade-list';
 
-export { MatchFormationGradeHero } from './match-formation-grade-hero';
-export type {
-  MatchFormationGradeHeroProps,
-  MatchFormationGradeHeroTeam,
-  PlayerGradeMarker,
-} from './match-formation-grade-hero';
+// MatchFormationGradeHero (Wave 6.4.5) was deleted in 0.23.0. The bespoke
+// inline SVG pitch was redundant with `@breakingthelines/viz` `PlayerRatingBoard`
+// and its formation_slot → coordinate mapping mishandled formations like
+// "4-2-3-1". Consumers should swap to viz `PlayerRatingBoard` directly; see
+// `viz-adapters.ts` `teamSheetToFormation` in the BTL platform for the
+// proto → viz Formation projection.
