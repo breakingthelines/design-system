@@ -203,7 +203,13 @@ export function MentionPlugin({
       ) =>
         anchorElementRef.current && options.length > 0
           ? createPortal(
-              <ul className="z-50 mt-1 max-h-72 min-w-[220px] max-w-[320px] list-none overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+              // z-[70] (Wave 6.4.15): the Lexical typeahead anchor is appended
+              // to `document.body`, NOT to the editor's DOM tree. The grade /
+              // prediction submission sheets are full-screen `z-[60]` overlays,
+              // so a `z-50` menu rendered into `document.body` is covered by the
+              // sheet and never appears. `z-[70]` lifts the menu above every
+              // current platform overlay while staying below toasts.
+              <ul className="z-[70] mt-1 max-h-72 min-w-[220px] max-w-[320px] list-none overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
                 {options.map((option, index) => (
                   <MentionRow
                     key={option.key}
