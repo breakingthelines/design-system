@@ -82,6 +82,26 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
   onEmojiClick?: () => void;
   userId?: string;
   disabled?: boolean;
+  /**
+   * Compact mode (Wave 6.4.10): the composer is always expanded, the avatar +
+   * prompt chrome shrinks, and the internal Post button is hidden — the host
+   * owns submission via its own button + the {@link onChange} callback. Built
+   * for the grade-submission sheet (the modal's "Submit grade" CTA is the
+   * canonical submit; the composer is just the input surface). Defaults to
+   * `false` so existing consumers keep the click-to-expand behaviour.
+   */
+  compact?: boolean;
+  /**
+   * Continuous change callback (Wave 6.4.10): fires on every text change with
+   * the plain text + the current mention list. Use this in compact mode where
+   * the host owns the submit button — read the latest text + mentions here
+   * and pass them into the host's submit handler. The legacy {@link onSubmit}
+   * still fires when the user presses Cmd+Enter (or the internal button in
+   * non-compact mode). Independent of the existing `onChange` MiniEditor wire
+   * — this one bundles mentions so the host doesn't need to plumb an
+   * editorRef in.
+   */
+  onChange?: (text: string, mentions: MentionItem[]) => void;
 }
 
 function ThoughtComposer({
@@ -103,11 +123,17 @@ function ThoughtComposer({
   onEmojiClick,
   userId: _userId,
   disabled = false,
+  compact = false,
+  onChange,
   ...props
 }: ThoughtComposerProps) {
   const editorRef = React.useRef<MiniEditorHandle>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [expanded, setExpanded] = React.useState(false);
+  // In compact mode the composer is always expanded — there's no avatar/prompt
+  // intermediary because the host (e.g. the grade-submit sheet) already has
+  // its own context header. The internal Post button is also suppressed; the
+  // host owns submit via the bundled `onChange(text, mentions)` callback.
+  const [expanded, setExpanded] = React.useState(compact);
   const [remaining, setRemaining] = React.useState(MAX_CHARS);
   const [hasText, setHasText] = React.useState(false);
   const [activePicker, setActivePicker] = React.useState<ActivePicker>(null);
@@ -260,8 +286,10 @@ function ThoughtComposer({
   return (
     <div
       data-slot="thought-composer"
+      data-compact={compact || undefined}
       className={cn(
-        'flex min-h-[168px] flex-col gap-6 rounded-[4px] border border-white/[0.05] bg-[#151515]/90 px-7 py-7 shadow-[0_18px_60px_rgba(0,0,0,0.24)] backdrop-blur-[18px]',
+        'flex flex-col rounded-[4px] border border-white/[0.05] bg-[#151515]/90 shadow-[0_18px_60px_rgba(0,0,0,0.24)] backdrop-blur-[18px]',
+        compact ? 'min-h-[120px] gap-3 px-4 py-3' : 'min-h-[168px] gap-6 px-7 py-7',
         disabled && 'opacity-50',
         className
       )}
@@ -278,36 +306,67 @@ function ThoughtComposer({
         />
       )}
 
-      {/* Prompt row */}
-      <div className="flex cursor-text items-center gap-5" onClick={handleExpand}>
-        <Avatar className="size-[42px] shrink-0">
-          {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
-          <AvatarFallback>{initials ?? '?'}</AvatarFallback>
-        </Avatar>
+      {/* Prompt row — compact mode drops the avatar + click-to-expand wrapper */}
+      {compact ? (
+        <div className="flex-1 min-w-0">
+          <MiniEditor
+            placeholder={`${placeholder}`}
+            submitOn="mod-enter"
+            maxLength={MAX_CHARS}
+            multiline
+            disabled={disabled}
+            editorRef={editorRef}
+            onSubmit={handleSubmit}
+            onChange={(text) => {
+              setHasText(text.length > 0);
+              if (onChange) {
+                const mentions = editorRef.current?.getMentions() ?? [];
+                onChange(text, mentions);
+              }
+            }}
+            onRemainingChange={setRemaining}
+            onMentionSearch={onMentionSearch}
+            className="min-h-[60px] text-sm font-medium leading-6 text-foreground"
+            placeholderClassName="text-sm font-medium leading-6 text-white/45"
+          />
+        </div>
+      ) : (
+        <div className="flex cursor-text items-center gap-5" onClick={handleExpand}>
+          <Avatar className="size-[42px] shrink-0">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
+            <AvatarFallback>{initials ?? '?'}</AvatarFallback>
+          </Avatar>
 
-        {expanded ? (
-          <div className="flex-1 min-w-0">
-            <MiniEditor
-              placeholder={`${placeholder}...`}
-              submitOn="mod-enter"
-              maxLength={MAX_CHARS}
-              multiline
-              disabled={disabled}
-              editorRef={editorRef}
-              onSubmit={handleSubmit}
-              onChange={(text) => setHasText(text.length > 0)}
-              onRemainingChange={setRemaining}
-              onMentionSearch={onMentionSearch}
-              className="min-h-[34px] text-sm font-medium leading-6 text-foreground"
-              placeholderClassName="text-sm font-medium leading-6 text-white/45"
-            />
-          </div>
-        ) : (
-          <span className="text-sm font-medium leading-6 text-white/45 select-none">
-            {placeholder}...
-          </span>
-        )}
-      </div>
+          {expanded ? (
+            <div className="flex-1 min-w-0">
+              <MiniEditor
+                placeholder={`${placeholder}...`}
+                submitOn="mod-enter"
+                maxLength={MAX_CHARS}
+                multiline
+                disabled={disabled}
+                editorRef={editorRef}
+                onSubmit={handleSubmit}
+                onChange={(text) => {
+                  setHasText(text.length > 0);
+                  if (onChange) {
+                    const mentions = editorRef.current?.getMentions() ?? [];
+                    onChange(text, mentions);
+                  }
+                }}
+                onRemainingChange={setRemaining}
+                onMentionSearch={onMentionSearch}
+                className="min-h-[34px] text-sm font-medium leading-6 text-foreground"
+                placeholderClassName="text-sm font-medium leading-6 text-white/45"
+              />
+            </div>
+          ) : (
+            <span className="text-sm font-medium leading-6 text-white/45 select-none">
+              {placeholder}...
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Media preview (GIF or image — mutually exclusive) */}
       <AnimatePresence>
@@ -349,9 +408,14 @@ function ThoughtComposer({
       {/* Image error message */}
       {imageError && <p className="text-xs text-red-100">{imageError}</p>}
 
-      {/* Bottom row — action icons + submit */}
+      {/* Bottom row — action icons + submit (submit hidden in compact mode) */}
       <div className="mt-auto flex items-center justify-between gap-4">
-        <div className="flex items-center gap-9 pl-[62px]">
+        <div
+          className={cn(
+            'flex items-center',
+            compact ? 'gap-6 pl-0' : 'gap-9 pl-[62px]'
+          )}
+        >
           {showImageButton && (
             <button
               type="button"
@@ -397,7 +461,7 @@ function ThoughtComposer({
           )}
         </div>
 
-        {expanded && (
+        {expanded && !compact && (
           <div className="flex items-center gap-3">
             {hasText && (
               <span
@@ -431,6 +495,23 @@ function ThoughtComposer({
               Post
             </Button>
           </div>
+        )}
+
+        {/* Compact mode: just show the remaining-chars counter — submit owned by host */}
+        {compact && hasText && (
+          <span
+            data-slot="thought-composer-remaining"
+            className={cn(
+              'text-xs tabular-nums',
+              isOverLimit
+                ? 'text-red-100'
+                : remaining <= 50
+                  ? 'text-yellow-500'
+                  : 'text-muted-foreground'
+            )}
+          >
+            {remaining}
+          </span>
         )}
       </div>
 
