@@ -270,8 +270,7 @@ function PlayerGradeListRow({
       }
       className={cn(
         'flex items-center gap-3 rounded-[4px] px-2 py-2 hover:bg-white/[0.03]',
-        isClickable &&
-          'cursor-pointer focus-visible:bg-white/[0.05] focus-visible:outline-none',
+        isClickable && 'cursor-pointer focus-visible:bg-white/[0.05] focus-visible:outline-none'
       )}
     >
       <Avatar size="sm" className="shrink-0 border border-white/10">
@@ -281,13 +280,14 @@ function PlayerGradeListRow({
         </AvatarFallback>
       </Avatar>
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      {/* Wave 6.13: items-start + w-fit caps each text element to its content width so empty row space bubbles to the row's onClick. */}
+      <div className="flex min-w-0 flex-1 flex-col items-start">
         {row.href ? (
           <Link
             href={row.href}
             data-slot="team-toggled-player-grade-list-name"
             onClick={stopRowBubble}
-            className="truncate text-[13px] font-semibold tracking-tight text-white hover:text-[var(--color-red-100)]"
+            className="block w-fit max-w-full truncate text-[13px] font-semibold tracking-tight text-white hover:text-[var(--color-red-100)]"
           >
             {row.name}
           </Link>
@@ -295,14 +295,14 @@ function PlayerGradeListRow({
           <span
             data-slot="team-toggled-player-grade-list-name"
             onClick={isClickable ? stopRowBubble : undefined}
-            className="truncate text-[13px] font-semibold tracking-tight text-white"
+            className="block w-fit max-w-full truncate text-[13px] font-semibold tracking-tight text-white"
           >
             {row.name}
           </span>
         )}
         <span
           data-slot="team-toggled-player-grade-list-qualitative"
-          className="truncate text-[11px] text-white/55"
+          className="block w-fit max-w-full truncate text-[11px] text-white/55"
         >
           {qualitative}
         </span>
