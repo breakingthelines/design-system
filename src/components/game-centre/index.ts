@@ -164,6 +164,12 @@ export type {
   PlayerGradeRow,
 } from './team-toggled-player-grade-list';
 
+export { PlayerMultiSelectField } from './player-multi-select-field';
+export type {
+  PlayerMultiSelectFieldProps,
+  PlayerMultiSelectOption,
+} from './player-multi-select-field';
+
 // MatchFormationGradeHero (Wave 6.4.5) was deleted in 0.23.0. The bespoke
 // inline SVG pitch was redundant with `@breakingthelines/viz` `PlayerRatingBoard`
 // and its formation_slot → coordinate mapping mishandled formations like
