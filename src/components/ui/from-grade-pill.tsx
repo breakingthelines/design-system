@@ -59,7 +59,7 @@ function FromGradePill({ data, tone = 'light', className }: FromGradePillProps) 
       className={cn(
         'inline-flex items-center gap-2 rounded-full py-1 pl-1 pr-3',
         palette.base,
-        data.matchHref && cn('transition-colors', palette.hover),
+        data.matchHref && cn('transition-colors', palette.hover)
       )}
     >
       <GradeBox value={data.value} size="xs" showLabel={false} />
