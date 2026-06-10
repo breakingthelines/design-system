@@ -84,10 +84,7 @@ function PredictionCountdownCard({
           className="flex flex-wrap items-center justify-between gap-3"
         >
           {caption ? (
-            <span
-              data-slot="prediction-countdown-caption"
-              className="text-sm text-white/60"
-            >
+            <span data-slot="prediction-countdown-caption" className="text-sm text-white/60">
               {caption}
             </span>
           ) : null}

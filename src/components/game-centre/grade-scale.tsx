@@ -171,10 +171,7 @@ function GradeScale({
         );
       })}
       {showReadout && total === 0 ? (
-        <p
-          data-slot="grade-scale-empty"
-          className="px-1 pt-1 text-[11px] text-white/55"
-        >
+        <p data-slot="grade-scale-empty" className="px-1 pt-1 text-[11px] text-white/55">
           No grades yet.
         </p>
       ) : null}
@@ -219,9 +216,7 @@ function GradeScaleRow({
       }
     : {
         role: 'presentation' as const,
-        'aria-label': `Grade ${value}, ${label}, ${bucket} ${
-          bucket === 1 ? 'vote' : 'votes'
-        }`,
+        'aria-label': `Grade ${value}, ${label}, ${bucket} ${bucket === 1 ? 'vote' : 'votes'}`,
       };
 
   return (
@@ -244,10 +239,7 @@ function GradeScaleRow({
       <GradeBox value={value} size="sm" showLabel={false} />
       <span
         data-slot="grade-scale-row-label"
-        className={cn(
-          'flex-1 text-[12px] tracking-tight',
-          active ? 'text-white' : 'text-white/70'
-        )}
+        className={cn('flex-1 text-[12px] tracking-tight', active ? 'text-white' : 'text-white/70')}
       >
         {label}
       </span>
@@ -265,9 +257,7 @@ function GradeScaleRow({
             <span
               className={cn(
                 'block h-full rounded-full',
-                bucket === 0
-                  ? 'bg-transparent'
-                  : 'bg-[var(--color-red-100)]/80'
+                bucket === 0 ? 'bg-transparent' : 'bg-[var(--color-red-100)]/80'
               )}
               style={{ width: `${Math.round(ratio * 100)}%` }}
             />
@@ -312,9 +302,7 @@ function MeanIndicator({ mean, count }: { mean: number; count: number }) {
         >
           {mean.toFixed(1)}
         </span>
-        <span className="text-[10px] tracking-wide text-white/70 uppercase">
-          BTL avg
-        </span>
+        <span className="text-[10px] tracking-wide text-white/70 uppercase">BTL avg</span>
         <span className="text-[10px] text-white/50">
           · {count} {count === 1 ? 'grade' : 'grades'}
         </span>

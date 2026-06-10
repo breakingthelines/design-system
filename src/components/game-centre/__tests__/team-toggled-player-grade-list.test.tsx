@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  TeamToggledPlayerGradeList,
-  type PlayerGradeRow,
-} from '../team-toggled-player-grade-list';
+import { TeamToggledPlayerGradeList, type PlayerGradeRow } from '../team-toggled-player-grade-list';
 import { countSlot, getSlotAttr, hasSlot, render, slotText } from './test-utils';
 
 const home: readonly PlayerGradeRow[] = [
@@ -30,27 +27,19 @@ const away: readonly PlayerGradeRow[] = [
 
 describe('TeamToggledPlayerGradeList', () => {
   it('renders the toggle and a rows list', () => {
-    const markup = render(
-      <TeamToggledPlayerGradeList teams={{ home, away }} />
-    );
+    const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} />);
     expect(hasSlot(markup, 'team-toggled-player-grade-list')).toBe(true);
     expect(hasSlot(markup, 'team-toggled-player-grade-list-toggle')).toBe(true);
     expect(hasSlot(markup, 'team-toggled-player-grade-list-rows')).toBe(true);
   });
 
   it('defaults to the home side', () => {
-    const markup = render(
-      <TeamToggledPlayerGradeList teams={{ home, away }} />
-    );
-    expect(getSlotAttr(markup, 'team-toggled-player-grade-list', 'data-active-side')).toBe(
-      'home'
-    );
+    const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} />);
+    expect(getSlotAttr(markup, 'team-toggled-player-grade-list', 'data-active-side')).toBe('home');
   });
 
   it('caps the starters list at startersCap (default 11) and shows the subs toggle', () => {
-    const markup = render(
-      <TeamToggledPlayerGradeList teams={{ home, away }} />
-    );
+    const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} />);
     // Home has 13 rows; default cap shows 11.
     expect(countSlot(markup, 'team-toggled-player-grade-list-row')).toBe(11);
     expect(hasSlot(markup, 'team-toggled-player-grade-list-subs-toggle')).toBe(true);
@@ -58,9 +47,7 @@ describe('TeamToggledPlayerGradeList', () => {
   });
 
   it('sorts by grade ascending (best first)', () => {
-    const markup = render(
-      <TeamToggledPlayerGradeList teams={{ home, away }} startersCap={20} />
-    );
+    const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} startersCap={20} />);
     // Saliba, Rice, Saka — grade 1, sorted alphabetically by name within tier
     const saka = markup.indexOf('B. Saka');
     const rice = markup.indexOf('D. Rice');
@@ -76,20 +63,14 @@ describe('TeamToggledPlayerGradeList', () => {
   });
 
   it('renders the away side when controlled', () => {
-    const markup = render(
-      <TeamToggledPlayerGradeList teams={{ home, away }} side="away" />
-    );
-    expect(getSlotAttr(markup, 'team-toggled-player-grade-list', 'data-active-side')).toBe(
-      'away'
-    );
+    const markup = render(<TeamToggledPlayerGradeList teams={{ home, away }} side="away" />);
+    expect(getSlotAttr(markup, 'team-toggled-player-grade-list', 'data-active-side')).toBe('away');
     expect(countSlot(markup, 'team-toggled-player-grade-list-row')).toBe(away.length);
     expect(markup).toContain('R. S');
   });
 
   it('renders a fallback when the active side is empty', () => {
-    const markup = render(
-      <TeamToggledPlayerGradeList teams={{ home: [], away }} />
-    );
+    const markup = render(<TeamToggledPlayerGradeList teams={{ home: [], away }} />);
     expect(hasSlot(markup, 'team-toggled-player-grade-list-row')).toBe(false);
     expect(slotText(markup, 'game-centre-fallback-state').length).toBeGreaterThan(0);
   });

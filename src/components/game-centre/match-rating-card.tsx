@@ -98,9 +98,7 @@ function MatchRatingCard({
         <h3 className="font-display text-sm font-semibold tracking-tight text-white">
           {headerLabel}
         </h3>
-        {state === 'locked' ? (
-          <FallbackNotice reasons={[lockedReason]} variant="compact" />
-        ) : null}
+        {state === 'locked' ? <FallbackNotice reasons={[lockedReason]} variant="compact" /> : null}
       </header>
 
       <GradeScale

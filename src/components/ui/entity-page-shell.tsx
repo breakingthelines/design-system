@@ -8,7 +8,7 @@ import { cn } from '#/lib/utils';
  * EntityPageShell
  *
  * The universal skeleton for an entity-page: Player, Team, Manager,
- * Competition, Prediction League, Rating Club. All entity pages share the
+ * Competition, Prediction League, Grading Club. All entity pages share the
  * same hero-then-tabs anatomy. EntityPageShell crystallises that anatomy as
  * a layout primitive so the surfaces stay visually identical even when the
  * data sources diverge.
@@ -39,7 +39,7 @@ const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
   manager: 'Manager',
   competition: 'Competition',
   prediction_league: 'Prediction League',
-  rating_club: 'Rating Club',
+  rating_club: 'Grading Club',
 };
 
 export interface EntityPageShellMeta {
