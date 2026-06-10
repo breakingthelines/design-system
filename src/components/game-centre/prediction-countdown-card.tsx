@@ -3,29 +3,26 @@
 import * as React from 'react';
 
 import { cn } from '#/lib/utils';
-import { FallbackNotice, type FallbackReasonInput } from '#/components/ui/fallback-notice';
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * PredictionCountdownCard
+ * PredictionCountdownCard (Wave 6.4: two-row collapse)
  *
- * Wave 6 Predictions sub-tab top card. Lean four-row composition:
+ * The Predictions sub-tab top card. Trimmed to TWO rows max:
  *
- *   countdown          (time-adaptive — see below)
- *   competition + round + venue
- *   lifecycle copy slot (e.g. "Picks open closer to kickoff")
- *   primary CTA
+ *   Row 1 — countdown OR FT/Live status
+ *   Row 2 — competition + round (left) · CTA (right) — single line
+ *
+ * The previous standalone lifecycle-copy slot (`lifecycleReason`) and
+ * venue caption are gone. Lifecycle copy is communicated once on the
+ * sibling cards; venue lives in the match header.
  *
  * Time-adaptive countdown format (host computes the phase + label):
  *   - >7d out: absolute ("Kicks off Tue 17 Jun, 20:00 GMT")
  *   - 1-7d out: "Kickoff in 6d 2h"
  *   - <24h: "Kickoff in 4h 12m"
- *   - <1h: same as <24h but rendered in BTL red (cross-cutting urgency rule)
+ *   - <1h: same as <24h but rendered in BTL red (urgency tint)
  *   - LIVE: "Live · 67'"
  *   - FT: "FT"
- *
- * The component is presentational. The lifecycle reason (if any) renders via
- * FallbackNotice with the matching key. The CTA is a node — wrap your own
- * button (GatedAction, anchor, etc.).
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export type CountdownPhase =
@@ -43,14 +40,6 @@ export interface PredictionCountdownCardProps extends React.ComponentProps<'div'
   phase: CountdownPhase;
   /** Competition + round caption, e.g. "Premier League · Matchday 12". */
   caption?: string;
-  /** Venue name. */
-  venue?: string;
-  /**
-   * Lifecycle reason key. Renders the matching FallbackNotice copy in
-   * 'compact' variant. Common keys: 'prediction_not_yet_open',
-   * 'prediction_locked', 'league_not_started'.
-   */
-  lifecycleReason?: FallbackReasonInput;
   /** Primary CTA. Typically <GatedAction>...<button>Make pick</button>... */
   cta?: React.ReactNode;
 }
@@ -59,8 +48,6 @@ function PredictionCountdownCard({
   countdownLabel,
   phase,
   caption,
-  venue,
-  lifecycleReason,
   cta,
   className,
   ...props
@@ -79,34 +66,36 @@ function PredictionCountdownCard({
       )}
       {...props}
     >
-      <div className="flex flex-col gap-1">
-        <span
-          data-slot="prediction-countdown-label"
-          className={cn(
-            'text-3xl leading-none font-bold tracking-tight',
-            isUrgent
-              ? 'text-[var(--color-red-100)]'
-              : isLive
-                ? 'text-[var(--color-red-100)]'
-                : 'text-white'
-          )}
+      {/* Row 1: countdown / status */}
+      <span
+        data-slot="prediction-countdown-label"
+        className={cn(
+          'text-3xl leading-none font-bold tracking-tight',
+          isUrgent || isLive ? 'text-[var(--color-red-100)]' : 'text-white'
+        )}
+      >
+        {countdownLabel}
+      </span>
+
+      {/* Row 2: caption (left) + CTA (right) on a single line */}
+      {caption || cta ? (
+        <div
+          data-slot="prediction-countdown-meta-row"
+          className="flex flex-wrap items-center justify-between gap-3"
         >
-          {countdownLabel}
-        </span>
-        {caption || venue ? (
-          <span className="text-sm text-white/60">
-            {[caption, venue].filter(Boolean).join(' · ')}
-          </span>
-        ) : null}
-      </div>
-
-      {lifecycleReason !== undefined ? (
-        <FallbackNotice reasons={[lifecycleReason]} variant="compact" />
-      ) : null}
-
-      {cta !== undefined ? (
-        <div data-slot="prediction-countdown-cta" className="pt-1">
-          {cta}
+          {caption ? (
+            <span
+              data-slot="prediction-countdown-caption"
+              className="text-sm text-white/60"
+            >
+              {caption}
+            </span>
+          ) : null}
+          {cta !== undefined ? (
+            <div data-slot="prediction-countdown-cta" className="ml-auto">
+              {cta}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

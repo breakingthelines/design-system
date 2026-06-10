@@ -358,9 +358,9 @@ function EventIcon({ kind }: { kind: MatchTimelineEventKind }) {
     case 'penalty_goal':
       return wrap(<SoccerBall weight="fill" className="size-4 text-white" />);
     case 'own_goal':
-      // Own goal: ball tinted with the home-accent red so it is never confused
-      // with a normal goal.
-      return wrap(<SoccerBall weight="fill" className="size-4 text-[var(--color-red-300)]" />);
+      // Wave 6.4 — own goal: keep the SoccerBall glyph (no Prohibit), tinted
+      // BTL red so it never reads as a normal goal.
+      return wrap(<SoccerBall weight="fill" className="size-4 text-[var(--color-red-100)]" />);
     case 'penalty_missed':
       return wrap(<Prohibit weight="bold" className="size-4 text-[var(--color-grey-500)]" />);
     case 'yellow_card':
