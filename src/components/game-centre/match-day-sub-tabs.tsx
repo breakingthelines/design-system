@@ -70,8 +70,8 @@ export function MatchDaySubTabs<TabId extends string = string>({
             onClick={() => onChange(id)}
             className={
               active
-                ? 'inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-medium text-white'
-                : 'inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1 text-[11px] font-medium text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white'
+                ? 'inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-medium text-white'
+                : 'inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-transparent px-3 py-1 text-[11px] font-medium text-white/55 transition-colors hover:bg-white/[0.06] hover:text-white'
             }
           >
             {label}
