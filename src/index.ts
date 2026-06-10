@@ -53,6 +53,7 @@ export * from './components/ui/thought-body';
 export * from './components/ui/thought-card';
 export * from './components/ui/thought-comment';
 export * from './components/ui/thought-composer';
+export * from './components/ui/thought-overflow-menu';
 export * from './components/ui/thoughts-panel';
 export * from './components/ui/toggle';
 export * from './components/ui/toggle-group';
