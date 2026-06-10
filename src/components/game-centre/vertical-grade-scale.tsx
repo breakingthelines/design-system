@@ -22,10 +22,12 @@ import {
  *     descriptor labels + bar/count readouts (cast-CTA + aggregate readout
  *     for the Match Centre ratings sub-tab).
  *   - `VerticalGradeScale` is a single visual column of large numbered
- *     tiles — the grade input axis IS the vertical visual axis. Tip
- *     labels only at the anchors (1 = Excellent, 6 = Poor) since the
- *     gradient carries the story; on hover/selection the qualitative
- *     label (e.g. "Very Good") slides out to the side.
+ *     tiles — the grade input axis IS the vertical visual axis. Every
+ *     row carries its qualitative descriptor (Excellent / Very Good /
+ *     Good / Average / Poor / Very Poor) at all times so viewers can
+ *     scan the meaning of every grade without hovering or selecting.
+ *     Wave 6.4.15: labels are always-visible on every row (was anchor +
+ *     hover/selected only in Wave 6.4.10).
  *
  * Direction invariant: 1 (best) is at the TOP; 6 (worst) at the BOTTOM.
  * The slot `data-direction="lower-is-better"` and per-row `data-value`
@@ -54,13 +56,6 @@ const ROW_FILL: Record<RatingScaleValue, string> = {
   6: 'bg-[color-mix(in_srgb,var(--color-red-100)_10%,transparent)] text-white/60',
 };
 
-// Always-visible anchor labels — "Excellent" at row 1, "Poor" at row 6.
-// The intermediate descriptors surface on hover/selection only.
-const ANCHOR_LABELS: Partial<Record<RatingScaleValue, string>> = {
-  1: 'Excellent',
-  6: 'Poor',
-};
-
 function VerticalGradeScale({
   value,
   onSelect,
@@ -81,13 +76,11 @@ function VerticalGradeScale({
     >
       {RATING_SCALE.map((entry) => {
         const active = value === entry.value;
-        const anchorLabel = ANCHOR_LABELS[entry.value];
         return (
           <VerticalGradeRow
             key={entry.value}
             value={entry.value}
             descriptor={entry.label}
-            anchorLabel={anchorLabel}
             active={active}
             interactive={interactive}
             disabled={disabled}
@@ -102,7 +95,6 @@ function VerticalGradeScale({
 interface VerticalGradeRowProps {
   value: RatingScaleValue;
   descriptor: string;
-  anchorLabel?: string;
   active: boolean;
   interactive: boolean;
   disabled: boolean;
@@ -112,7 +104,6 @@ interface VerticalGradeRowProps {
 function VerticalGradeRow({
   value,
   descriptor,
-  anchorLabel,
   active,
   interactive,
   disabled,
@@ -137,10 +128,9 @@ function VerticalGradeRow({
         'aria-label': `Grade ${value}, ${descriptor}`,
       };
 
-  // Tip label visibility: anchor labels always show; intermediate labels
-  // surface on hover/focus + when selected. The host's CSS hover state
-  // toggles them via the `group-hover` / `peer-*` cascade; we encode it
-  // as a per-row group with the label as a child that fades in.
+  // Tip label visibility (Wave 6.4.15): the qualitative descriptor for
+  // every row is always visible. The active row's label brightens to
+  // confirm selection; idle rows stay legible at a softer weight.
   return (
     <Element
       data-slot="vertical-grade-row"
@@ -170,20 +160,17 @@ function VerticalGradeRow({
         {value}
       </span>
 
-      {/* Tip label slot — anchor labels always visible; intermediates on hover/active */}
+      {/* Tip label slot — every row's qualitative descriptor is always
+          visible (Wave 6.4.15). Selection lifts to full white; idle rows
+          stay legible at a softer weight. */}
       <span
         data-slot="vertical-grade-row-label"
         className={cn(
-          'font-content text-xs tracking-tight transition-opacity duration-150',
-          // Anchor labels always show; intermediates need either hover, focus, or active.
-          anchorLabel
-            ? 'opacity-90 text-white/80'
-            : active
-              ? 'opacity-100 text-white'
-              : 'opacity-0 group-hover:opacity-90 group-focus-visible:opacity-100 text-white/70'
+          'font-content text-xs tracking-tight transition-colors duration-150',
+          active ? 'text-white' : 'text-white/70 group-hover:text-white/90'
         )}
       >
-        {anchorLabel ?? ratingDescriptor(value).label}
+        {ratingDescriptor(value).label}
       </span>
     </Element>
   );
