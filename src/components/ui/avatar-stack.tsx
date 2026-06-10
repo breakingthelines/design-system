@@ -94,13 +94,16 @@ function AvatarStack({
       className={cn('flex items-center -space-x-2', className)}
       {...props}
     >
-      {/* initial={false} skips the enter animation for avatars present on first
-          paint (no fly-in on load) while still springing in members added live. */}
+      {/* No entrance animation: avatars resolve from async data (member list,
+          then user details), so an entrance reads as a "fly-in" every load and
+          re-fires as the data settles. initial={false} on each item means they
+          appear in place whether present at first paint or added later; exit +
+          layout still animate removals and reflow. */}
       <AnimatePresence mode="popLayout" initial={false}>
         {visibleUsers.map((user, index) => (
           <motion.div
             key={user.id}
-            initial={motionTokens.presets.avatarEnter.initial}
+            initial={false}
             animate={motionTokens.presets.avatarEnter.animate}
             exit={motionTokens.presets.avatarExit.exit}
             transition={motionTokens.spring.shift}
