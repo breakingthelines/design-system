@@ -203,13 +203,17 @@ export function MentionPlugin({
       ) =>
         anchorElementRef.current && options.length > 0
           ? createPortal(
-              // z-[70] (Wave 6.4.15): the Lexical typeahead anchor is appended
+              // z-[100] (Wave 6.4.15a): the Lexical typeahead anchor is appended
               // to `document.body`, NOT to the editor's DOM tree. The grade /
-              // prediction submission sheets are full-screen `z-[60]` overlays,
-              // so a `z-50` menu rendered into `document.body` is covered by the
-              // sheet and never appears. `z-[70]` lifts the menu above every
-              // current platform overlay while staying below toasts.
-              <ul className="z-[70] mt-1 max-h-72 min-w-[220px] max-w-[320px] list-none overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+              // prediction submission sheets are full-screen `z-[60]` overlays.
+              // Wave 6.4.15's initial fix used `z-[70]` but Tailwind's JIT
+              // scanner didn't pick up that arbitrary value from the ds dist,
+              // so the className rendered but the CSS rule never compiled and
+              // the menu stayed at default stacking. `z-[100]` is already in
+              // the platform's Tailwind output (compiled from other consumers),
+              // so the rule definitely exists and the menu lifts cleanly above
+              // every overlay.
+              <ul className="z-[100] mt-1 max-h-72 min-w-[220px] max-w-[320px] list-none overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
                 {options.map((option, index) => (
                   <MentionRow
                     key={option.key}
