@@ -81,3 +81,19 @@ export const EmptySide = meta.story({
     </div>
   ),
 });
+
+export const HideToggle = meta.story({
+  name: 'Hide internal toggle (host-driven side)',
+  args: {
+    teams: { home, away },
+    homeLabel: 'Arsenal',
+    awayLabel: 'Chelsea',
+    hideToggle: true,
+    side: 'away',
+  },
+  render: (args) => (
+    <div className="w-[460px]">
+      <TeamToggledPlayerGradeList {...args} />
+    </div>
+  ),
+});

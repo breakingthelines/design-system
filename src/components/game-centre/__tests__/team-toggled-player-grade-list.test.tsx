@@ -84,4 +84,21 @@ describe('TeamToggledPlayerGradeList', () => {
     );
     expect(markup).toContain('data-reason="LIST_RATINGS_RPC_PENDING"');
   });
+
+  it('suppresses the internal toggle when hideToggle is true', () => {
+    const markup = render(
+      <TeamToggledPlayerGradeList teams={{ home, away }} hideToggle />
+    );
+    // Rows still render; the pill toggle is gone.
+    expect(hasSlot(markup, 'team-toggled-player-grade-list-toggle')).toBe(false);
+    expect(hasSlot(markup, 'team-toggled-player-grade-list-rows')).toBe(true);
+  });
+
+  it('still honours controlled side when hideToggle is true', () => {
+    const markup = render(
+      <TeamToggledPlayerGradeList teams={{ home, away }} hideToggle side="away" />
+    );
+    expect(getSlotAttr(markup, 'team-toggled-player-grade-list', 'data-active-side')).toBe('away');
+    expect(countSlot(markup, 'team-toggled-player-grade-list-row')).toBe(away.length);
+  });
 });
