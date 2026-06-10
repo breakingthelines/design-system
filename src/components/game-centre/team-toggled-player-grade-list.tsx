@@ -75,6 +75,13 @@ export interface TeamToggledPlayerGradeListProps extends React.ComponentProps<'d
   startersCap?: number;
   /** Fallback reason for an empty side. Defaults to `NO_RATINGS_YET`. */
   emptyReason?: FallbackReason;
+  /**
+   * Clicking anywhere on a row (except the name link) fires this with the
+   * row data. Hosts wire this to open the grading sheet for that player.
+   * The name link still navigates to the player page via `href` and
+   * stops bubbling, so it never double-fires.
+   */
+  onGrade?: (row: PlayerGradeRow) => void;
 }
 
 function sortRows(rows: readonly PlayerGradeRow[]): PlayerGradeRow[] {
@@ -95,6 +102,7 @@ function TeamToggledPlayerGradeList({
   onSideChange,
   startersCap = 11,
   emptyReason = 'NO_RATINGS_YET',
+  onGrade,
   className,
   ...props
 }: TeamToggledPlayerGradeListProps) {
@@ -130,7 +138,7 @@ function TeamToggledPlayerGradeList({
         data-slot="team-toggled-player-grade-list-toggle"
         role="tablist"
         aria-label="Team grade list"
-        className="inline-flex w-fit gap-1 rounded-full border border-white/10 bg-[var(--color-grey-300)] p-0.5"
+        className="inline-flex w-fit items-center gap-0.5 self-start rounded-[6px] bg-white/[0.04] p-0.5 backdrop-blur"
       >
         <SideToggleButton
           label={homeLabel}
@@ -151,7 +159,7 @@ function TeamToggledPlayerGradeList({
       ) : (
         <ol data-slot="team-toggled-player-grade-list-rows" className="flex flex-col gap-0.5">
           {visibleRows.map((row) => (
-            <PlayerGradeListRow key={row.id} row={row} />
+            <PlayerGradeListRow key={row.id} row={row} onGrade={onGrade} />
           ))}
         </ol>
       )}
@@ -198,8 +206,8 @@ function SideToggleButton({
       data-active={active || undefined}
       onClick={onClick}
       className={cn(
-        'inline-flex items-center rounded-full px-3 py-1 text-[12px] font-semibold tracking-tight transition-colors',
-        active ? 'bg-[var(--color-red-100)] text-white' : 'text-white/70 hover:text-white'
+        'inline-flex cursor-pointer items-center rounded-[6px] px-3 py-1 text-[12px] font-semibold tracking-tight transition-colors',
+        active ? 'bg-white/[0.08] text-white' : 'text-white/55 hover:text-white'
       )}
     >
       {label}
@@ -207,11 +215,33 @@ function SideToggleButton({
   );
 }
 
-function PlayerGradeListRow({ row }: { row: PlayerGradeRow }) {
+// Stop bubbling on the name link so clicking the player name only navigates;
+// anywhere else on the row opens the grading sheet. Hoisted to module scope so
+// the same function reference is reused across rows (no per-render allocation).
+function stopRowBubble(event: React.MouseEvent<HTMLAnchorElement | HTMLSpanElement>) {
+  event.stopPropagation();
+}
+
+function PlayerGradeListRow({
+  row,
+  onGrade,
+}: {
+  row: PlayerGradeRow;
+  onGrade?: (row: PlayerGradeRow) => void;
+}) {
   const Link = useLinkComponent();
   const initials = initialsFromName(row.name);
   const qualitative =
     row.qualitative ?? (row.grade !== undefined ? ratingDescriptor(row.grade).shortLabel : '—');
+
+  const isClickable = typeof onGrade === 'function';
+  const handleRowKeyDown = (event: React.KeyboardEvent<HTMLLIElement>) => {
+    if (!isClickable) return;
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      onGrade?.(row);
+    }
+  };
 
   return (
     <li
@@ -219,7 +249,20 @@ function PlayerGradeListRow({ row }: { row: PlayerGradeRow }) {
       data-player-id={row.id}
       data-grade={row.grade ?? 'ungraded'}
       data-sub={row.isSub || undefined}
-      className="flex items-center gap-3 rounded-[4px] px-2 py-2 hover:bg-white/[0.03]"
+      onClick={isClickable ? () => onGrade?.(row) : undefined}
+      onKeyDown={isClickable ? handleRowKeyDown : undefined}
+      role={isClickable ? 'button' : undefined}
+      tabIndex={isClickable ? 0 : undefined}
+      aria-label={
+        isClickable
+          ? `Grade ${row.name}${row.grade !== undefined ? `, currently ${row.grade}` : ''}`
+          : undefined
+      }
+      className={cn(
+        'flex items-center gap-3 rounded-[4px] px-2 py-2 hover:bg-white/[0.03]',
+        isClickable &&
+          'cursor-pointer focus-visible:bg-white/[0.05] focus-visible:outline-none',
+      )}
     >
       <Avatar size="sm" className="shrink-0 border border-white/10">
         {row.avatarUrl ? <AvatarImage src={row.avatarUrl} alt="" /> : null}
@@ -233,6 +276,7 @@ function PlayerGradeListRow({ row }: { row: PlayerGradeRow }) {
           <Link
             href={row.href}
             data-slot="team-toggled-player-grade-list-name"
+            onClick={stopRowBubble}
             className="truncate text-[13px] font-semibold tracking-tight text-white hover:text-[var(--color-red-100)]"
           >
             {row.name}
@@ -240,6 +284,7 @@ function PlayerGradeListRow({ row }: { row: PlayerGradeRow }) {
         ) : (
           <span
             data-slot="team-toggled-player-grade-list-name"
+            onClick={isClickable ? stopRowBubble : undefined}
             className="truncate text-[13px] font-semibold tracking-tight text-white"
           >
             {row.name}

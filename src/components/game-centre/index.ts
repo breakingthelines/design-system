@@ -160,3 +160,10 @@ export type {
   TeamToggledPlayerGradeListProps,
   PlayerGradeRow,
 } from './team-toggled-player-grade-list';
+
+export { MatchFormationGradeHero } from './match-formation-grade-hero';
+export type {
+  MatchFormationGradeHeroProps,
+  MatchFormationGradeHeroTeam,
+  PlayerGradeMarker,
+} from './match-formation-grade-hero';
