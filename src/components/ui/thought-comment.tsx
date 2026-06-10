@@ -338,9 +338,7 @@ export function ThoughtComment({
               <ThoughtOverflowMenu
                 thought={thought}
                 canDelete={!!viewerId && !!thought.publisherId && thought.publisherId === viewerId}
-                onExpandToArticle={
-                  onExpandToArticle ? () => onExpandToArticle(thought) : undefined
-                }
+                onExpandToArticle={onExpandToArticle ? () => onExpandToArticle(thought) : undefined}
                 onReport={onReport ? () => onReport(thought) : undefined}
                 onDelete={onDelete ? () => onDelete(thought) : undefined}
                 tone="dark"

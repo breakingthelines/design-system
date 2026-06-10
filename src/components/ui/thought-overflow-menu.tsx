@@ -2,7 +2,12 @@
 
 import * as React from 'react';
 
-import { DotsThreeVerticalIcon, ArticleNyTimesIcon, FlagIcon, TrashIcon } from '@phosphor-icons/react';
+import {
+  DotsThreeVerticalIcon,
+  ArticleNyTimesIcon,
+  FlagIcon,
+  TrashIcon,
+} from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import {
