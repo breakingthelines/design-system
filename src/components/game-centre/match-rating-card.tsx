@@ -3,37 +3,26 @@
 import * as React from 'react';
 
 import { cn } from '#/lib/utils';
-import { GradeBox } from '#/components/ui/grade-box';
-import { MeanBox } from '#/components/ui/mean-box';
-import { RatingDistribution, type RatingCounts } from '#/components/ui/rating-distribution';
-import { RatingScale, type RatingScaleValue } from '#/components/ui/rating-scale';
 import { FallbackNotice, type FallbackReasonInput } from '#/components/ui/fallback-notice';
+import { type RatingScaleValue } from '#/components/ui/rating-scale';
+
+import { GradeScale, type GradeScaleAggregate, type GradeScaleCounts } from './grade-scale';
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * MatchRatingCard
+ * MatchRatingCard (Wave 6.4: single-card collapse)
  *
- * Wave 6 Ratings sub-tab hero card. Two-row vertical layout:
+ * The Ratings sub-tab hero card. Previously a two-row layout (Your grade /
+ * BTL average). Wave 6.4 collapses both rows into ONE vertical card backed
+ * by the new `GradeScale` composite mode:
  *
- *   Row 1 — Your grade  (RatingScale tiles; tap to cast a grade)
- *   Row 2 — BTL average  (MeanBox + RatingDistribution histogram)
+ *   header   "Grade this match" (or "BTL Grades" once cast)
+ *   body     <GradeScale mode="composite" ...>
  *
- * Card chrome `bg-grey-200 border-white/5 rounded-[4px] p-5` matching the
- * universal card chrome contract. Empty state replaces the whole card with
- * the FallbackNotice "Be the first to grade this game."
+ * The standalone "BTL average" eyebrow block is gone — the mean indicator
+ * inside the scale subsumes it. Locked state still renders the readout-only
+ * scale; empty state renders the canonical "Be the first to grade" fallback.
  *
- * The component is presentational — it does NOT submit grades; the
- * `onSelectGrade` callback is the host's hook into the rating sheet /
- * write flow.
- *
- * Anonymous viewers see the BTL average row + the RatingScale tiles
- * (tapping triggers a sign-in prompt via the host).
- *
- * Composes:
- *   - GradeBox      → viewer's cast grade summary
- *   - RatingScale   → tile row for the cast action
- *   - MeanBox       → BTL aggregate readout
- *   - RatingDistribution → 1-6 histogram
- *   - FallbackNotice (greyscale) → empty state
+ * Anonymous viewers see the scale enabled (taps trigger sign-in via the host).
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export interface MatchRatingCardProps extends React.ComponentProps<'div'> {
@@ -41,20 +30,20 @@ export interface MatchRatingCardProps extends React.ComponentProps<'div'> {
   myGrade?: RatingScaleValue;
   /** BTL aggregate mean and count. Omit when none have landed yet. */
   btlAverage?: { value: number; count: number };
-  /** Per-grade counts for the histogram. */
-  distribution?: RatingCounts;
+  /** Per-grade counts for the distribution. */
+  distribution?: GradeScaleCounts;
   /** Tap handler for casting/changing a grade. */
   onSelectGrade?: (value: RatingScaleValue) => void;
   /**
    * Render mode:
-   *  - 'ready'   → full two-row card
-   *  - 'partial' → renders any present data, dims the absent sub-row
+   *  - 'ready'   → composite scale (input + readout)
+   *  - 'partial' → composite scale, host data may be sparse
    *  - 'empty'   → full-card FallbackNotice ("Be the first to grade…")
-   *  - 'locked'  → render the readout row only, scale is disabled
+   *  - 'locked'  → readout-only scale, scale is disabled
    *  - 'loading' → skeleton placeholder
    */
   state: 'ready' | 'partial' | 'empty' | 'locked' | 'loading';
-  /** FallbackReason override for `empty`. Defaults to `no_ratings_yet`. */
+  /** FallbackReason override for `empty`. Defaults to `no_grades_yet`. */
   emptyReason?: FallbackReasonInput;
   /** FallbackReason for `locked`. Defaults to `rating_period_closed`. */
   lockedReason?: FallbackReasonInput;
@@ -67,13 +56,13 @@ function MatchRatingCard({
   onSelectGrade,
   state,
   emptyReason = 'no_ratings_yet',
-  lockedReason: _lockedReason = 'rating_period_closed',
+  lockedReason = 'rating_period_closed',
   className,
   ...props
 }: MatchRatingCardProps) {
   const chrome = cn(
     'bg-grey-200 border border-white/5 rounded-[4px] p-5',
-    'flex flex-col gap-5',
+    'flex flex-col gap-4',
     className
   );
 
@@ -88,58 +77,40 @@ function MatchRatingCard({
   if (state === 'loading') {
     return (
       <div data-slot="match-rating-card" data-state="loading" className={chrome} {...props}>
-        <div className="h-10 w-1/2 animate-pulse rounded bg-white/5" />
-        <div className="h-20 w-full animate-pulse rounded bg-white/5" />
+        <div className="h-4 w-1/3 animate-pulse rounded bg-white/5" />
+        <div className="h-48 w-full animate-pulse rounded bg-white/5" />
       </div>
     );
   }
 
+  const aggregate: GradeScaleAggregate | undefined = btlAverage
+    ? { mean: btlAverage.value, count: btlAverage.count }
+    : undefined;
+
+  const headerLabel = myGrade !== undefined ? 'BTL Grades' : 'Grade this match';
+
   return (
     <div data-slot="match-rating-card" data-state={state} className={chrome} {...props}>
-      {/* Row 1: Your grade */}
-      <div data-slot="match-rating-card-row" data-row="your-grade" className="flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs uppercase tracking-wide text-white/50">
-              {state === 'locked' ? 'Final grade' : 'Your grade'}
-            </span>
-            <span className="text-sm text-white/80">
-              {myGrade !== undefined
-                ? `You graded this ${myGrade}`
-                : state === 'locked'
-                  ? lockedReason === 'rating_period_closed'
-                    ? 'Ratings closed.'
-                    : 'Grading window closed.'
-                  : 'Pick a grade (1 = excellent, 6 = poor).'}
-            </span>
-          </div>
-          {myGrade !== undefined ? <GradeBox value={myGrade} size="lg" /> : null}
-        </div>
-        {state !== 'locked' ? (
-          <RatingScale value={myGrade} variant="compact" onSelect={onSelectGrade} />
-        ) : null}
-      </div>
-
-      {/* Row 2: BTL average */}
-      <div
-        data-slot="match-rating-card-row"
-        data-row="btl-average"
-        className="flex flex-col gap-3 border-t border-white/5 pt-5"
+      <header
+        data-slot="match-rating-card-header"
+        className="flex items-center justify-between gap-3"
       >
-        <div className="flex items-end justify-between gap-4">
-          <div className="flex flex-col gap-0.5">
-            <span className="text-xs uppercase tracking-wide text-white/50">BTL average</span>
-            {btlAverage !== undefined ? (
-              <MeanBox value={btlAverage.value} count={btlAverage.count} size="lg" />
-            ) : (
-              <span className="text-sm text-white/60">Picks haven't started landing yet.</span>
-            )}
-          </div>
-        </div>
-        {distribution !== undefined && btlAverage !== undefined ? (
-          <RatingDistribution counts={distribution} mean={btlAverage.value} />
+        <h3 className="font-display text-sm font-semibold tracking-tight text-white">
+          {headerLabel}
+        </h3>
+        {state === 'locked' ? (
+          <FallbackNotice reasons={[lockedReason]} variant="compact" />
         ) : null}
-      </div>
+      </header>
+
+      <GradeScale
+        mode={state === 'locked' ? 'readout' : 'composite'}
+        userGrade={myGrade}
+        counts={distribution}
+        aggregate={aggregate}
+        onSelect={onSelectGrade}
+        disabled={state === 'locked'}
+      />
     </div>
   );
 }

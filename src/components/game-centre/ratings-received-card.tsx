@@ -157,7 +157,7 @@ function RatingsReceivedTitle() {
       data-slot="ratings-received-card-title"
       className="font-display text-sm font-semibold tracking-tight text-white"
     >
-      Ratings received
+      Grades received
     </h5>
   );
 }
