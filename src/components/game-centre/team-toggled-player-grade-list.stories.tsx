@@ -1,9 +1,6 @@
 import preview from '#.storybook/preview';
 
-import {
-  TeamToggledPlayerGradeList,
-  type PlayerGradeRow,
-} from './team-toggled-player-grade-list';
+import { TeamToggledPlayerGradeList, type PlayerGradeRow } from './team-toggled-player-grade-list';
 
 const meta = preview.meta({
   title: 'GameCentre/TeamToggledPlayerGradeList',

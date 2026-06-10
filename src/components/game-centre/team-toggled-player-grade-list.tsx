@@ -52,8 +52,7 @@ export interface PlayerGradeRow {
   isSub?: boolean;
 }
 
-export interface TeamToggledPlayerGradeListProps
-  extends React.ComponentProps<'div'> {
+export interface TeamToggledPlayerGradeListProps extends React.ComponentProps<'div'> {
   /** Lineups, split by side. Each list is sorted internally by grade ASC. */
   teams: {
     home: readonly PlayerGradeRow[];
@@ -99,9 +98,7 @@ function TeamToggledPlayerGradeList({
   className,
   ...props
 }: TeamToggledPlayerGradeListProps) {
-  const [internalSide, setInternalSide] = React.useState<'home' | 'away'>(
-    defaultSide
-  );
+  const [internalSide, setInternalSide] = React.useState<'home' | 'away'>(defaultSide);
   const [showSubs, setShowSubs] = React.useState(false);
 
   const activeSide = side ?? internalSide;
@@ -152,10 +149,7 @@ function TeamToggledPlayerGradeList({
       {visibleRows.length === 0 ? (
         <FallbackState reason={emptyReason} />
       ) : (
-        <ol
-          data-slot="team-toggled-player-grade-list-rows"
-          className="flex flex-col gap-0.5"
-        >
+        <ol data-slot="team-toggled-player-grade-list-rows" className="flex flex-col gap-0.5">
           {visibleRows.map((row) => (
             <PlayerGradeListRow key={row.id} row={row} />
           ))}
@@ -205,9 +199,7 @@ function SideToggleButton({
       onClick={onClick}
       className={cn(
         'inline-flex items-center rounded-full px-3 py-1 text-[12px] font-semibold tracking-tight transition-colors',
-        active
-          ? 'bg-[var(--color-red-100)] text-white'
-          : 'text-white/70 hover:text-white'
+        active ? 'bg-[var(--color-red-100)] text-white' : 'text-white/70 hover:text-white'
       )}
     >
       {label}
@@ -219,8 +211,7 @@ function PlayerGradeListRow({ row }: { row: PlayerGradeRow }) {
   const Link = useLinkComponent();
   const initials = initialsFromName(row.name);
   const qualitative =
-    row.qualitative ??
-    (row.grade !== undefined ? ratingDescriptor(row.grade).shortLabel : '—');
+    row.qualitative ?? (row.grade !== undefined ? ratingDescriptor(row.grade).shortLabel : '—');
 
   return (
     <li
