@@ -21,7 +21,7 @@ describe('EntityPageShell', () => {
     ).toBe('Prediction League');
     expect(
       slotText(render(<EntityPageShell kind="rating_club" name="x" />), 'entity-page-shell-eyebrow')
-    ).toBe('Rating Club');
+    ).toBe('Grading Club');
   });
 
   it('renders the display name into the title slot', () => {
