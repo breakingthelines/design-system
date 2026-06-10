@@ -69,6 +69,13 @@ export interface TeamToggledPlayerGradeListProps extends React.ComponentProps<'d
   /** Side-change callback for controlled mode. */
   onSideChange?: (side: 'home' | 'away') => void;
   /**
+   * When true, suppress the internal home/away pill toggle. The component
+   * still honours the controlled `side` prop, so the host can drive the
+   * active side from an upstream toggle (e.g. a formation hero) and keep
+   * a single source of truth. Defaults to `false`.
+   */
+  hideToggle?: boolean;
+  /**
    * Number of starting players to show before the "Show subs" affordance
    * kicks in. Defaults to 11 (the football starting XI).
    */
@@ -100,6 +107,7 @@ function TeamToggledPlayerGradeList({
   defaultSide = 'home',
   side,
   onSideChange,
+  hideToggle = false,
   startersCap = 11,
   emptyReason = 'NO_RATINGS_YET',
   onGrade,
@@ -134,25 +142,27 @@ function TeamToggledPlayerGradeList({
       )}
       {...props}
     >
-      <div
-        data-slot="team-toggled-player-grade-list-toggle"
-        role="tablist"
-        aria-label="Team grade list"
-        className="inline-flex w-fit items-center gap-0.5 self-start rounded-[6px] bg-white/[0.04] p-0.5 backdrop-blur"
-      >
-        <SideToggleButton
-          label={homeLabel}
-          active={activeSide === 'home'}
-          onClick={() => handleSideChange('home')}
-          side="home"
-        />
-        <SideToggleButton
-          label={awayLabel}
-          active={activeSide === 'away'}
-          onClick={() => handleSideChange('away')}
-          side="away"
-        />
-      </div>
+      {hideToggle ? null : (
+        <div
+          data-slot="team-toggled-player-grade-list-toggle"
+          role="tablist"
+          aria-label="Team grade list"
+          className="inline-flex w-fit items-center gap-0.5 self-start rounded-[6px] bg-white/[0.04] p-0.5 backdrop-blur"
+        >
+          <SideToggleButton
+            label={homeLabel}
+            active={activeSide === 'home'}
+            onClick={() => handleSideChange('home')}
+            side="home"
+          />
+          <SideToggleButton
+            label={awayLabel}
+            active={activeSide === 'away'}
+            onClick={() => handleSideChange('away')}
+            side="away"
+          />
+        </div>
+      )}
 
       {visibleRows.length === 0 ? (
         <FallbackState reason={emptyReason} />
