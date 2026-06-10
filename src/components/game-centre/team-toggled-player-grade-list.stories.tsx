@@ -8,6 +8,10 @@ const meta = preview.meta({
   tags: ['autodocs'],
 });
 
+// Every row is rendered (Wave 6.14). The host is responsible for filtering
+// the source data — e.g. dropping subs who never came on — before passing
+// rows in. Subs that did come on stay flagged with `isSub: true` (surfaced
+// as `data-sub` on the row) so styling hooks can target them.
 const home: readonly PlayerGradeRow[] = [
   { id: 'h1', name: 'D. Raya', grade: 3 },
   { id: 'h2', name: 'B. White', grade: 2 },
