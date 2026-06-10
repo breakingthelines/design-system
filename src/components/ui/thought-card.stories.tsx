@@ -133,3 +133,32 @@ export const FromGradePill = meta.story({
     </div>
   ),
 });
+
+export const FromGradePillFallback = meta.story({
+  name: 'From-grade pill (Wave 6.16) — no label hydration',
+  render: () => (
+    <div className="w-[500px]">
+      <ThoughtCard
+        thought={{
+          ...thought,
+          id: 'grade-3',
+          author: {
+            name: 'Tommy',
+            handle: 'tommy',
+            initials: 'T',
+          },
+          body: 'Pre-6.16 fan-out left the subject ref unhydrated; pill should still render the cast value even with a placeholder label.',
+          createdAt: 'Just now',
+          stats: { likes: 4, comments: 0 },
+          fromGrade: {
+            value: 3,
+            // Mapper degrades to "Grade" when neither person nor game ref
+            // carries a label. Pinning this shape into the story so the
+            // visual contract is documented.
+            subjectLabel: 'Grade',
+          },
+        }}
+      />
+    </div>
+  ),
+});
