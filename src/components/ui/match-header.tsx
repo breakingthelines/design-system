@@ -443,9 +443,7 @@ function ScorerIcon({ kind }: { kind: NonNullable<MatchHeaderScorer['kind']> }) 
     case 'goal':
     case 'penalty':
     default:
-      return (
-        <SoccerBall aria-hidden="true" weight="fill" className="size-3 shrink-0 text-white" />
-      );
+      return <SoccerBall aria-hidden="true" weight="fill" className="size-3 shrink-0 text-white" />;
   }
 }
 

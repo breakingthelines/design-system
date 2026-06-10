@@ -105,58 +105,56 @@ function AvatarStack({
           className="relative"
           style={{ zIndex: hoveredId === user.id ? 50 : visibleUsers.length - index }}
         >
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <motion.button
-                    type="button"
-                    whileHover={motionTokens.presets.avatar.hover}
-                    whileTap={onUserClick ? motionTokens.presets.avatar.tap : undefined}
-                    transition={motionTokens.spring.pop}
-                    className={cn(
-                      'relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-                      selectedUserId === user.id && 'ring-2 ring-offset-2 ring-offset-background'
-                    )}
-                    style={
-                      selectedUserId === user.id
-                        ? ({ '--tw-ring-color': user.cursorColor } as React.CSSProperties)
-                        : undefined
-                    }
-                    aria-label={user.tooltip ? `${user.name}. ${user.tooltip}` : user.name}
-                    onClick={() => onUserClick?.(user.id)}
-                    onMouseEnter={() => handleHover(user.id)}
-                    onMouseLeave={() => handleHover(null)}
-                  />
-                }
-              >
-                <Avatar size={size} cursorColor={user.cursorColor} status={user.status}>
-                  {user.avatarUrl ? (
-                    <AvatarImage src={user.avatarUrl} alt={user.name} />
-                  ) : (
-                    <AvatarFallback fallbackColor={user.cursorColor}>
-                      {user.initials || user.name.charAt(0).toUpperCase()}
-                    </AvatarFallback>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <motion.button
+                  type="button"
+                  whileHover={motionTokens.presets.avatar.hover}
+                  whileTap={onUserClick ? motionTokens.presets.avatar.tap : undefined}
+                  transition={motionTokens.spring.pop}
+                  className={cn(
+                    'relative rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                    selectedUserId === user.id && 'ring-2 ring-offset-2 ring-offset-background'
                   )}
-                </Avatar>
-              </TooltipTrigger>
-              <TooltipContent
-                side="bottom"
-                sideOffset={8}
-                showArrow={false}
-                className="rounded-[10px] border border-white/10 bg-black/90 px-3 py-2 text-left text-white shadow-xl backdrop-blur-sm"
-              >
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-medium">{user.name}</span>
-                  {user.tooltip ? (
-                    <span className="text-[11px] leading-relaxed text-white/70">
-                      {user.tooltip}
-                    </span>
-                  ) : null}
-                </div>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        ))}
+                  style={
+                    selectedUserId === user.id
+                      ? ({ '--tw-ring-color': user.cursorColor } as React.CSSProperties)
+                      : undefined
+                  }
+                  aria-label={user.tooltip ? `${user.name}. ${user.tooltip}` : user.name}
+                  onClick={() => onUserClick?.(user.id)}
+                  onMouseEnter={() => handleHover(user.id)}
+                  onMouseLeave={() => handleHover(null)}
+                />
+              }
+            >
+              <Avatar size={size} cursorColor={user.cursorColor} status={user.status}>
+                {user.avatarUrl ? (
+                  <AvatarImage src={user.avatarUrl} alt={user.name} />
+                ) : (
+                  <AvatarFallback fallbackColor={user.cursorColor}>
+                    {user.initials || user.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+            </TooltipTrigger>
+            <TooltipContent
+              side="bottom"
+              sideOffset={8}
+              showArrow={false}
+              className="rounded-[10px] border border-white/10 bg-black/90 px-3 py-2 text-left text-white shadow-xl backdrop-blur-sm"
+            >
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium">{user.name}</span>
+                {user.tooltip ? (
+                  <span className="text-[11px] leading-relaxed text-white/70">{user.tooltip}</span>
+                ) : null}
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      ))}
 
       {overflowCount > 0 && (
         <motion.button
