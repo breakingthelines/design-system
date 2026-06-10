@@ -19,6 +19,7 @@ import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
+import { FromGradePill } from '#/components/ui/from-grade-pill';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { ThoughtBody } from '#/components/ui/thought-body';
 import {
@@ -353,6 +354,13 @@ export function ThoughtComment({
                 </span>
               </span>
             )}
+
+            {/* From-grade pill — Wave 6.16. Marks a comment that was spawned
+                by a GLOBAL grade fan-out (game-service). Same primitive as
+                ThoughtCard's pill, dark-tone so it reads on the match panel's
+                near-black background. PRIVATE grades never reach this path —
+                privacy is enforced upstream in the fan-out. */}
+            {thought.fromGrade && <FromGradePill data={thought.fromGrade} tone="dark" />}
 
             {/* Body */}
             {thought.body && (

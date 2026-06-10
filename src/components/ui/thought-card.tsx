@@ -7,10 +7,10 @@ import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
-import { GradeBox } from '#/components/ui/grade-box';
+import { FromGradePill } from '#/components/ui/from-grade-pill';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { ThoughtBody } from '#/components/ui/thought-body';
-import type { ThoughtFromGrade, ThoughtItem } from '#/types/content';
+import type { ThoughtItem } from '#/types/content';
 
 interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
   thought: ThoughtItem;
@@ -299,57 +299,6 @@ function withThoughtUtilityActions(
     ...(actionTypes.has('bookmark') ? [] : [{ type: 'bookmark' as const }]),
     ...(actionTypes.has('share') ? [] : [{ type: 'share' as const, onClick: onShare }]),
   ];
-}
-
-/**
- * Slim "from grade" pill rendered above a thought body when the thought
- * was spawned by the game-service grade-review fan-out. Visual: tiny
- * GradeBox (xs, label suppressed) + subject line + match context, with
- * a tap-through to the match when the host supplies `matchHref`. Stays
- * intentionally small — the body and engagement bar remain the primary
- * visual hierarchy; the pill is metadata, not content.
- */
-function FromGradePill({ data }: { data: ThoughtFromGrade }) {
-  const Link = useLinkComponent();
-  const body = (
-    <span
-      data-slot="thought-from-grade"
-      className={cn(
-        'inline-flex items-center gap-2 rounded-full bg-foreground/[0.04] py-1 pl-1 pr-3',
-        data.matchHref &&
-          'transition-colors hover:bg-foreground/[0.08] focus-visible:bg-foreground/[0.08]'
-      )}
-    >
-      <GradeBox value={data.value} size="xs" showLabel={false} />
-      <span className="flex min-w-0 items-center gap-1.5 text-xs leading-tight">
-        <span className="truncate font-medium text-foreground">{data.subjectLabel}</span>
-        {data.matchLabel && (
-          <>
-            <span aria-hidden="true" className="text-foreground/30">
-              ·
-            </span>
-            <span className="truncate text-foreground/60">{data.matchLabel}</span>
-          </>
-        )}
-      </span>
-    </span>
-  );
-
-  if (!data.matchHref) {
-    return <div className="-mt-2">{body}</div>;
-  }
-
-  return (
-    <div className="-mt-2">
-      <Link
-        href={data.matchHref}
-        className="inline-block max-w-full"
-        onClick={(event: React.MouseEvent) => event.stopPropagation()}
-      >
-        {body}
-      </Link>
-    </div>
-  );
 }
 
 export { ThoughtCard, type ThoughtCardProps };
