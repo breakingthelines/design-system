@@ -84,3 +84,52 @@ export const Feed = meta.story({
     </div>
   ),
 });
+
+export const FromGradePill = meta.story({
+  name: 'From-grade pill (Wave 6.8)',
+  render: () => (
+    <div className="w-[500px]">
+      <ThoughtCard
+        thought={{
+          ...thought,
+          id: 'grade-1',
+          author: {
+            name: 'Tommy',
+            handle: 'tommy',
+            initials: 'T',
+            avatarUrl: 'https://i.pravatar.cc/150?u=tommy',
+          },
+          body: 'Get this dude off my team man. Two glaring chances, zero hunger. Walking through games like the badge owes him something.',
+          createdAt: 'Just now',
+          stats: { likes: 12, comments: 3 },
+          fromGrade: {
+            value: 5,
+            subjectLabel: 'Saka',
+            matchLabel: 'Arsenal v Spurs',
+            matchHref: '/game/football/arsenal-spurs/season-25-26',
+          },
+        }}
+      />
+      <ThoughtCard
+        thought={{
+          ...thought,
+          id: 'grade-2',
+          author: {
+            name: 'Tommy',
+            handle: 'tommy',
+            initials: 'T',
+          },
+          body: 'Imperious. Closed the game by himself in the last 20.',
+          createdAt: '10m ago',
+          stats: { likes: 86, comments: 4 },
+          fromGrade: {
+            value: 1,
+            subjectLabel: 'Rodri',
+            matchLabel: 'Man City v Liverpool',
+            matchHref: '/game/football/city-liverpool/season-25-26',
+          },
+        }}
+      />
+    </div>
+  ),
+});
