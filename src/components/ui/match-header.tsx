@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Prohibit, SoccerBall } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { useLinkComponent } from '#/components/ui/link-context';
@@ -384,7 +385,6 @@ function ScorersRow({
 }
 
 function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'start' | 'end' }) {
-  const icon = scorerIcon(scorer.kind ?? 'goal');
   const LinkComponent = useLinkComponent();
   const inner = (
     <>
@@ -400,9 +400,7 @@ function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'sta
         align === 'end' ? 'flex-row-reverse' : 'flex-row'
       )}
     >
-      <span aria-hidden="true" className="text-[11px]">
-        {icon}
-      </span>
+      <ScorerIcon kind={scorer.kind ?? 'goal'} />
       {scorer.href ? (
         <LinkComponent
           href={scorer.href}
@@ -418,17 +416,36 @@ function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'sta
   );
 }
 
-function scorerIcon(kind: NonNullable<MatchHeaderScorer['kind']>): string {
+/**
+ * Hero scorer icon. Goals + penalties render Phosphor SoccerBall (filled
+ * white). Own goals render the same ball tinted BTL red so they sit visually
+ * apart from a regular goal but never read as "blocked" or "cancelled".
+ * Penalty-missed keeps a Prohibit glyph (the timeline convention).
+ */
+function ScorerIcon({ kind }: { kind: NonNullable<MatchHeaderScorer['kind']> }) {
   switch (kind) {
     case 'own_goal':
-      return '⊘';
-    case 'penalty':
-      return '⚽';
+      return (
+        <SoccerBall
+          aria-hidden="true"
+          weight="fill"
+          className="size-3 shrink-0 text-[var(--color-red-100)]"
+        />
+      );
     case 'penalty_missed':
-      return '✕';
+      return (
+        <Prohibit
+          aria-hidden="true"
+          weight="bold"
+          className="size-3 shrink-0 text-[var(--color-grey-500)]"
+        />
+      );
     case 'goal':
+    case 'penalty':
     default:
-      return '⚽';
+      return (
+        <SoccerBall aria-hidden="true" weight="fill" className="size-3 shrink-0 text-white" />
+      );
   }
 }
 
