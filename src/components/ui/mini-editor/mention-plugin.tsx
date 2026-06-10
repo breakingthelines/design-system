@@ -203,17 +203,19 @@ export function MentionPlugin({
       ) =>
         anchorElementRef.current && options.length > 0
           ? createPortal(
-              // z-[100] (Wave 6.4.15a): the Lexical typeahead anchor is appended
-              // to `document.body`, NOT to the editor's DOM tree. The grade /
-              // prediction submission sheets are full-screen `z-[60]` overlays.
-              // Wave 6.4.15's initial fix used `z-[70]` but Tailwind's JIT
-              // scanner didn't pick up that arbitrary value from the ds dist,
-              // so the className rendered but the CSS rule never compiled and
-              // the menu stayed at default stacking. `z-[100]` is already in
-              // the platform's Tailwind output (compiled from other consumers),
-              // so the rule definitely exists and the menu lifts cleanly above
-              // every overlay.
-              <ul className="z-[100] mt-1 max-h-72 min-w-[220px] max-w-[320px] list-none overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+              // relative z-[100] (Wave 6.4.15b): the Lexical typeahead anchor
+              // is appended to `document.body`, NOT to the editor's DOM tree,
+              // and the grade / prediction submission sheets are full-screen
+              // `z-[60]` overlays. Earlier waves (6.4.15, 6.4.15a) tried `z-[70]`
+              // then `z-[100]` alone — both were no-ops because the UL is
+              // `position: static` by default and `z-index` only applies to
+              // positioned elements. Without `relative`, the menu inherited the
+              // sheet's stacking context and rendered behind the modal body.
+              // Diagnosed at runtime via Playwright on staging (Wave 6.4.15b):
+              // the dropdown DOM existed, was visible, had z-[100], but
+              // `elementsFromPoint` confirmed the sheet content was on top.
+              // Adding `relative` lifts the menu above every overlay.
+              <ul className="relative z-[100] mt-1 max-h-72 min-w-[220px] max-w-[320px] list-none overflow-y-auto overscroll-contain rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
                 {options.map((option, index) => (
                   <MentionRow
                     key={option.key}
