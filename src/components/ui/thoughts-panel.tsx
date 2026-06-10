@@ -89,6 +89,18 @@ interface ThoughtsPanelProps {
   onUnbookmark?: (thoughtId: string) => void;
   /** Called when the user opens share for a thought. */
   onShare?: (thought: PanelThought, event?: React.MouseEvent<HTMLElement>) => void;
+  /**
+   * Current viewer id (Wave 6.19). Forwarded to every {@link ThoughtComment}
+   * so the overflow menu can decide whether to surface the destructive
+   * Delete affordance.
+   */
+  viewerId?: string;
+  /** Fired when the viewer picks "Expand to article" from a thought's overflow menu. */
+  onExpandToArticle?: (thought: PanelThought) => void;
+  /** Fired when the viewer picks "Report". */
+  onReport?: (thought: PanelThought) => void;
+  /** Fired when the author picks "Delete". */
+  onDelete?: (thought: PanelThought) => void;
   /** Additional class names on the panel container */
   className?: string;
 }
@@ -152,6 +164,10 @@ function ThoughtsPanel({
   onBookmark,
   onUnbookmark,
   onShare,
+  viewerId,
+  onExpandToArticle,
+  onReport,
+  onDelete,
   className,
 }: ThoughtsPanelProps) {
   const composerRef = React.useRef<MiniEditorHandle>(null);
@@ -581,6 +597,10 @@ function ThoughtsPanel({
                       onImageUpload={onImageUpload}
                       onMentionSearch={onMentionSearch}
                       emojiEnabled={emojiEnabled}
+                      viewerId={viewerId}
+                      onExpandToArticle={onExpandToArticle}
+                      onReport={onReport}
+                      onDelete={onDelete}
                     />
                   ))}
                 </motion.div>

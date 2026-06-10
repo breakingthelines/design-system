@@ -10,6 +10,7 @@ import { EngagementBar, type EngagementAction } from '#/components/ui/engagement
 import { FromGradePill } from '#/components/ui/from-grade-pill';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { ThoughtBody } from '#/components/ui/thought-body';
+import { ThoughtOverflowMenu } from '#/components/ui/thought-overflow-menu';
 import type { ThoughtItem } from '#/types/content';
 
 interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'children'> {
@@ -18,9 +19,31 @@ interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'childr
   actions?: EngagementAction[];
   /** Click handler for the card */
   onClick?: () => void;
+  /**
+   * Current viewer id. Used to decide whether the destructive Delete item
+   * appears in the overflow menu (`thought.publisherId === viewerId`).
+   * Optional — when omitted, Delete is never offered.
+   */
+  viewerId?: string;
+  /** Fired when the viewer picks "Expand to article" from the overflow menu. */
+  onExpandToArticle?: (thought: ThoughtItem) => void;
+  /** Fired when the viewer picks "Report". */
+  onReport?: (thought: ThoughtItem) => void;
+  /** Fired when the author picks "Delete". */
+  onDelete?: (thought: ThoughtItem) => void;
 }
 
-function ThoughtCard({ className, thought, actions, onClick, ...props }: ThoughtCardProps) {
+function ThoughtCard({
+  className,
+  thought,
+  actions,
+  onClick,
+  viewerId,
+  onExpandToArticle,
+  onReport,
+  onDelete,
+  ...props
+}: ThoughtCardProps) {
   const Link = useLinkComponent();
   const shareHref =
     thought.permalinkHref ||
@@ -142,6 +165,17 @@ function ThoughtCard({ className, thought, actions, onClick, ...props }: Thought
                 )}
               </>
             )}
+            {/* Overflow `…` — pinned right. Renders only when at least one
+                handler is wired; the menu itself self-skips a no-op render. */}
+            <ThoughtOverflowMenu
+              thought={thought}
+              canDelete={!!viewerId && !!thought.publisherId && thought.publisherId === viewerId}
+              onExpandToArticle={onExpandToArticle}
+              onReport={onReport}
+              onDelete={onDelete}
+              tone="light"
+              className="ml-auto"
+            />
           </div>
 
           {/* Quoted passage anchor — links back to the source passage */}

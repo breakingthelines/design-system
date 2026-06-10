@@ -115,8 +115,38 @@ export interface ThoughtFromGrade {
   matchHref?: string;
 }
 
+/**
+ * Canonical subject reference attached to a thought — mirrors the proto
+ * `btl.context.v1.SubjectRef` shape, narrowed to the fields the card
+ * actually needs to forward into the Studio "Expand to article" deep-link.
+ * Each pair encodes one tagged entity (e.g. `PLAYER:btl_football_player_xxx`).
+ */
+export interface ThoughtSubjectRef {
+  /**
+   * Subject kind as the canonical `SubjectType` enum name (e.g. `PLAYER`,
+   * `GAME`, `TEAM`, `COACH`). Stays as a string so the design-system stays
+   * proto-free; the platform passes the proto enum name directly.
+   */
+  type: string;
+  /** Canonical entity id (BTL `btl_football_*` ids in production). */
+  id: string;
+}
+
 export interface ThoughtItem {
   id: string;
+  /**
+   * Author principal id — typically the `publisher_id` on the proto Thought.
+   * When present and equal to the viewer's id, the overflow menu surfaces
+   * the destructive Delete affordance. Absent on legacy/anonymous renders.
+   */
+  publisherId?: string;
+  /**
+   * Canonical subject refs carried on the thought (proto
+   * `context.subjects[]`). Forwarded into the Studio "Expand to article"
+   * deep-link so the spawned article inherits the same entity tagging
+   * without the user re-attaching every chip by hand.
+   */
+  subjectRefs?: ThoughtSubjectRef[];
   /** Plain-text body. Always present — the search/preview text and the legacy fallback for rendering. */
   body: string;
   /**

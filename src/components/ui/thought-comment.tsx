@@ -20,6 +20,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { FromGradePill } from '#/components/ui/from-grade-pill';
+import { ThoughtOverflowMenu } from '#/components/ui/thought-overflow-menu';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { ThoughtBody } from '#/components/ui/thought-body';
 import {
@@ -132,6 +133,17 @@ export interface ThoughtCommentProps {
   onMentionSearch?: (query: string) => Promise<MentionItem[]>;
   /** Enables built-in emoji picker in reply composer */
   emojiEnabled?: boolean;
+  /**
+   * Current viewer id. Drives the destructive Delete affordance in the
+   * overflow menu (Wave 6.19). When omitted, Delete is never offered.
+   */
+  viewerId?: string;
+  /** Fired when the viewer picks "Expand to article" from the overflow menu. */
+  onExpandToArticle?: (thought: ThoughtCommentThought) => void;
+  /** Fired when the viewer picks "Report". */
+  onReport?: (thought: ThoughtCommentThought) => void;
+  /** Fired when the author picks "Delete". */
+  onDelete?: (thought: ThoughtCommentThought) => void;
 }
 
 export function ThoughtComment({
@@ -160,6 +172,10 @@ export function ThoughtComment({
   onImageUpload,
   onMentionSearch,
   emojiEnabled = false,
+  viewerId,
+  onExpandToArticle,
+  onReport,
+  onDelete,
 }: ThoughtCommentProps) {
   const Link = useLinkComponent();
   const isOP = thought.isOriginalAuthor;
@@ -317,6 +333,17 @@ export function ThoughtComment({
                   {thought.createdAt}
                 </span>
               )}
+              {/* Overflow `…` — pinned right. Dark tone so it reads on
+                  the near-black match Thoughts panel. */}
+              <ThoughtOverflowMenu
+                thought={thought}
+                canDelete={!!viewerId && !!thought.publisherId && thought.publisherId === viewerId}
+                onExpandToArticle={onExpandToArticle ? () => onExpandToArticle(thought) : undefined}
+                onReport={onReport ? () => onReport(thought) : undefined}
+                onDelete={onDelete ? () => onDelete(thought) : undefined}
+                tone="dark"
+                className="ml-auto"
+              />
             </div>
 
             {/* Content anchor quote — clickable when onAnchorClick provided */}
@@ -739,6 +766,10 @@ export function ThoughtComment({
               onImageUpload={onImageUpload}
               onMentionSearch={onMentionSearch}
               emojiEnabled={emojiEnabled}
+              viewerId={viewerId}
+              onExpandToArticle={onExpandToArticle}
+              onReport={onReport}
+              onDelete={onDelete}
             />
           ))}
         </div>
