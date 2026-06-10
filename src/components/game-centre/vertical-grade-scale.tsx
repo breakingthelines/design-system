@@ -110,10 +110,7 @@ function VerticalGradeRow({
   onSelect,
 }: VerticalGradeRowProps) {
   const Element = interactive ? 'button' : 'div';
-  const handleClick =
-    interactive && onSelect
-      ? () => onSelect(value)
-      : undefined;
+  const handleClick = interactive && onSelect ? () => onSelect(value) : undefined;
 
   const interactiveProps = interactive
     ? {
@@ -153,7 +150,8 @@ function VerticalGradeRow({
           ROW_FILL[value],
           active
             ? 'ring-2 ring-white shadow-[0_0_0_2px_rgba(0,0,0,0.4)] scale-[1.02]'
-            : interactive && 'group-hover:ring-1 group-hover:ring-white/40 opacity-90 group-hover:opacity-100',
+            : interactive &&
+                'group-hover:ring-1 group-hover:ring-white/40 opacity-90 group-hover:opacity-100',
           !interactive && 'opacity-80'
         )}
       >

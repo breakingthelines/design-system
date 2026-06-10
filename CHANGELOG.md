@@ -5,6 +5,28 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.26.0] — 2026-06-10
+
+### Added — "From grade" pill on ThoughtCard (Wave 6.8)
+
+When a user casts a GLOBAL grade with a note, game-service mirrors the
+note as a Thought. Today that thought rendered as a normal note on
+profile feeds + match Thought panels with no signal that it came from
+a grade. The card now optionally renders a slim pill above the body
+— a tiny `GradeBox` (size `xs`) + subject name + match context, with
+a tap-through to the match when the host supplies a `matchHref`.
+
+- New `ThoughtFromGrade` type on `types/content.ts`:
+  `value` (BTL 1-6 inverse scale) + `subjectLabel` + optional
+  `matchLabel` + optional `matchHref`. Hosts derive this from the
+  proto `ContextEnvelope`'s new `rating_value` / `rating_id` fields
+  (protos v0.42.0) plus the existing `subjects[]` list.
+- `ThoughtItem.fromGrade` is optional — absent value preserves the
+  legacy "plain thought" rendering, so legacy thoughts are unaffected.
+- PRIVATE grades never reach this path; privacy is enforced upstream
+  in the game-service rating fan-out, NOT by the card.
+- New `FromGradePill` story under `UI/ThoughtCard`.
+
 ## [0.24.0] — 2026-06-10
 
 ### Added — Grade submission modal primitives (Wave 6.4.10)

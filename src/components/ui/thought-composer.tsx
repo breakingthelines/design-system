@@ -410,12 +410,7 @@ function ThoughtComposer({
 
       {/* Bottom row — action icons + submit (submit hidden in compact mode) */}
       <div className="mt-auto flex items-center justify-between gap-4">
-        <div
-          className={cn(
-            'flex items-center',
-            compact ? 'gap-6 pl-0' : 'gap-9 pl-[62px]'
-          )}
-        >
+        <div className={cn('flex items-center', compact ? 'gap-6 pl-0' : 'gap-9 pl-[62px]')}>
           {showImageButton && (
             <button
               type="button"
