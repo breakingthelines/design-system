@@ -94,7 +94,9 @@ function AvatarStack({
       className={cn('flex items-center -space-x-2', className)}
       {...props}
     >
-      <AnimatePresence mode="popLayout">
+      {/* initial={false} skips the enter animation for avatars present on first
+          paint (no fly-in on load) while still springing in members added live. */}
+      <AnimatePresence mode="popLayout" initial={false}>
         {visibleUsers.map((user, index) => (
           <motion.div
             key={user.id}
@@ -163,7 +165,7 @@ function AvatarStack({
       {overflowCount > 0 && (
         <motion.button
           type="button"
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={false}
           animate={{ opacity: 1, scale: 1 }}
           transition={motionTokens.spring.shift}
           whileHover={{ scale: 1.05 }}
