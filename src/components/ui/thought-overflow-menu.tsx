@@ -105,7 +105,7 @@ function ThoughtOverflowMenu({
           className
         )}
       >
-        <DotsThreeIcon weight="bold" className="size-4" />
+        <DotsThreeIcon weight="bold" className="size-5" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
