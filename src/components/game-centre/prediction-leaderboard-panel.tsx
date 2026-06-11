@@ -29,7 +29,7 @@ import { cn } from '#/lib/utils';
  * as a sticky footer row separated from the list by a hairline rule.
  * ──────────────────────────────────────────────────────────────────────────── */
 
-export interface PredictionLeaderboardEntry {
+export interface PredictionLeaderboardPanelEntry {
   /** 1-based rank within the league. */
   rank: number;
   /** Stable user handle (without leading `@`). */
@@ -50,13 +50,13 @@ export interface PredictionLeaderboardPanelProps {
   /** Optional squad eyebrow ("breakingthelines"). Rendered without leading `@`. */
   squadHandle?: string;
   /** Top-of-leaderboard entries (already sorted by rank ascending). */
-  entries: readonly PredictionLeaderboardEntry[];
+  entries: readonly PredictionLeaderboardPanelEntry[];
   /**
    * Viewer's own row when not in the top-N. Rendered as a sticky footer row
    * with a hairline divider above it. Omit when the viewer isn't enrolled
    * or when their row already appears in `entries`.
    */
-  viewerEntry?: PredictionLeaderboardEntry;
+  viewerEntry?: PredictionLeaderboardPanelEntry;
   /**
    * Optional footer note — typically "Pending GW7 · Picks lock at kickoff
    * in 14:13:29" composed by the host. Rendered below the list.
@@ -161,7 +161,7 @@ export function PredictionLeaderboardPanel({
   );
 }
 
-function LeaderboardRow({ entry }: { entry: PredictionLeaderboardEntry }) {
+function LeaderboardRow({ entry }: { entry: PredictionLeaderboardPanelEntry }) {
   const route = entry.route ?? `/@${entry.userHandle}`;
   const name = entry.userName?.trim() || `@${entry.userHandle}`;
   return (

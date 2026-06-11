@@ -179,7 +179,7 @@ export type {
 export { PredictionLeaderboardPanel } from './prediction-leaderboard-panel';
 export type {
   PredictionLeaderboardPanelProps,
-  PredictionLeaderboardEntry,
+  PredictionLeaderboardPanelEntry,
 } from './prediction-leaderboard-panel';
 
 export { GradeScale } from './grade-scale';
