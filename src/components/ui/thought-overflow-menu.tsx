@@ -2,12 +2,7 @@
 
 import * as React from 'react';
 
-import {
-  DotsThreeVerticalIcon,
-  ArticleNyTimesIcon,
-  FlagIcon,
-  TrashIcon,
-} from '@phosphor-icons/react';
+import { ArrowsOutIcon, DotsThreeIcon, FlagIcon, TrashIcon } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import {
@@ -110,7 +105,7 @@ function ThoughtOverflowMenu({
           className
         )}
       >
-        <DotsThreeVerticalIcon weight="bold" className="size-4" />
+        <DotsThreeIcon weight="bold" className="size-4" />
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
@@ -128,7 +123,7 @@ function ThoughtOverflowMenu({
               onExpandToArticle(thought);
             }}
           >
-            <ArticleNyTimesIcon />
+            <ArrowsOutIcon />
             <span>Expand to article</span>
           </DropdownMenuItem>
         )}
