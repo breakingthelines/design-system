@@ -5,7 +5,10 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.36.0] — 2026-06-11
+## [0.36.1] — 2026-06-11
+
+> `0.36.0` was published concurrently by another change; this `MatchHeader`
+> work ships as `0.36.1`.
 
 ### Changed — `MatchHeader` central stack + responsive pass (Wave 6.28)
 
