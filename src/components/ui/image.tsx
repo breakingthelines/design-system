@@ -46,6 +46,15 @@ interface ImageProps extends Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'lo
   onLoad?: React.ReactEventHandler<HTMLImageElement>;
   /** Callback on load error. */
   onError?: React.ReactEventHandler<HTMLImageElement>;
+  /**
+   * Secondary image source tried when `src` fails to load. On the primary
+   * source erroring the component swaps to `fallbackSrc` once; if that also
+   * fails it falls through to the `fallback` node / placeholder (never a
+   * broken-image glyph). Mirrors the layered resolution the entity-image
+   * resolver uses (own art → mirrored provider → placeholder). The swap resets
+   * whenever `src` changes, so a new entity always retries its primary source.
+   */
+  fallbackSrc?: string;
   /** Placeholder shown when the image is missing or fails to load. */
   fallback?: React.ReactNode;
   /** Optional smart featured-image presentation controls. */
@@ -95,6 +104,7 @@ function Image({
   style,
   onLoad,
   onError,
+  fallbackSrc,
   fallback,
   presentation,
   ...props
@@ -102,6 +112,9 @@ function Image({
   const [loaded, setLoaded] = useState(false);
   const [inView, setInView] = useState(loading === 'eager');
   const [errored, setErrored] = useState(false);
+  // Set once when the primary `src` fails and a `fallbackSrc` is available, so
+  // the rendered source swaps to the fallback. Reset on `src` change below.
+  const [usedFallback, setUsedFallback] = useState(false);
   const [resolvedSrc, setResolvedSrc] = useState<string | undefined>(undefined);
   const observerRef = useRef<IntersectionObserver | null>(null);
   const containerNodeRef = useRef<HTMLDivElement | null>(null);
@@ -110,12 +123,21 @@ function Image({
   const [containFrame, setContainFrame] = useState<ContainedImageFrame | null>(null);
 
   const normalizedSrc = typeof src === 'string' ? src.trim() : src;
-  const hasSource = typeof normalizedSrc === 'string' ? normalizedSrc.length > 0 : !!normalizedSrc;
+  const normalizedFallbackSrc =
+    typeof fallbackSrc === 'string' && fallbackSrc.trim().length > 0
+      ? fallbackSrc.trim()
+      : undefined;
+  // Once the primary source has failed, render the fallback as the effective
+  // source. The fallback is a plain image URL (not a YouTube thumbnail), so it
+  // bypasses the `resolvedSrc` oEmbed-rewrite path below.
+  const effectiveSrc =
+    usedFallback && normalizedFallbackSrc ? normalizedFallbackSrc : normalizedSrc;
+  const hasSource = typeof effectiveSrc === 'string' ? effectiveSrc.length > 0 : !!effectiveSrc;
   const containBleed = isContainBleedPresentation(presentation);
   const imagePresentation = resolveImagePresentation(presentation, {
     containForeground: containBleed,
   });
-  const imageSource = resolvedSrc ?? normalizedSrc;
+  const imageSource = resolvedSrc ?? effectiveSrc;
   const imgStyle: React.CSSProperties | undefined =
     imagePresentation || fadeDuration > 0
       ? {
@@ -183,6 +205,7 @@ function Image({
     prevSrcRef.current = src;
     setLoaded(false);
     setErrored(false);
+    setUsedFallback(false);
     setResolvedSrc(undefined);
     setYtChecking(!!ytVideoId && ytCache.get(ytVideoId) === undefined);
     setNaturalSize(null);
@@ -333,10 +356,19 @@ function Image({
         setResolvedSrc(fallbackUrl);
         return;
       }
+      // The primary source has exhausted its retries. If a distinct
+      // `fallbackSrc` is available and not yet tried, swap to it once (resetting
+      // the load state so it fades in) rather than declaring the image broken.
+      if (!usedFallback && normalizedFallbackSrc && normalizedFallbackSrc !== effectiveSrc) {
+        setUsedFallback(true);
+        setLoaded(false);
+        setResolvedSrc(undefined);
+        return;
+      }
       setErrored(true);
       onError?.(e);
     },
-    [onError, resolvedSrc, normalizedSrc]
+    [onError, resolvedSrc, normalizedSrc, usedFallback, normalizedFallbackSrc, effectiveSrc]
   );
 
   // Don't start loading the image while the YouTube check is in-flight —
@@ -402,6 +434,10 @@ function Image({
             draggable={false}
           />
           <img
+            // Keyed on the rendered source so the element is replaced (not
+            // reused) when the source swaps to `fallbackSrc` or changes between
+            // entities, clearing any latched error state on the DOM node.
+            key={imageSource}
             ref={imgRefCallback}
             src={imageSource}
             alt={alt}
@@ -420,6 +456,9 @@ function Image({
         </div>
       ) : shouldLoad ? (
         <img
+          // See note above — replace the element on source change/swap so a
+          // failed load never sticks to a stale DOM node.
+          key={imageSource}
           ref={imgRefCallback}
           src={imageSource}
           alt={alt}

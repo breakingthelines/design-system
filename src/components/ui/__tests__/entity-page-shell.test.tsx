@@ -61,12 +61,20 @@ describe('EntityPageShell', () => {
 
   it('renders a contain-fit logo crest for team / competition and a cover-fit avatar for player / manager', () => {
     const logo = render(
-      <EntityPageShell kind="competition" name="Premier League" imageUrl="https://cdn.example/pl.png" />
+      <EntityPageShell
+        kind="competition"
+        name="Premier League"
+        imageUrl="https://cdn.example/pl.png"
+      />
     );
     expect(getSlotAttr(logo, 'entity-page-shell-crest', 'data-variant')).toBe('logo');
 
     const portrait = render(
-      <EntityPageShell kind="player" name="Mohamed Salah" imageUrl="https://cdn.example/salah.jpg" />
+      <EntityPageShell
+        kind="player"
+        name="Mohamed Salah"
+        imageUrl="https://cdn.example/salah.jpg"
+      />
     );
     expect(getSlotAttr(portrait, 'entity-page-shell-crest', 'data-variant')).toBe('avatar');
   });

@@ -5,6 +5,25 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.5] — 2026-06-11
+
+### Added — `Image` `fallbackSrc` prop (layered onError fallback)
+
+- New optional `fallbackSrc` prop on `Image`. When the primary `src` fails to
+  load, the component swaps to `fallbackSrc` once; if the fallback also fails
+  it falls through to the existing `fallback` node / `BtlPlaceholder` (never a
+  broken-image glyph). This mirrors the layered resolution the entity-image
+  resolver uses (own art → mirrored provider → placeholder).
+- The swap is implemented with an `onError` event handler plus internal state
+  (no effect). The failed-source state resets whenever `src` changes, so a new
+  entity always retries its primary source first. The rendered `<img>` is keyed
+  on the effective source, so a failed element is replaced rather than reused.
+- Off by default for back-compat — consumers that pass no `fallbackSrc` see no
+  behavioural change.
+- Motivating use: the entity-page right-column hero now points at the high-res
+  Wikimedia portrait with the api-football headshot as `fallbackSrc`, so the
+  big hero is sharp while gracefully degrading when no portrait is mirrored.
+
 ## [0.38.1] — 2026-06-11
 
 ### Fixed — `PlayerMultiSelectField` row height alignment (Wave 6.25p)
