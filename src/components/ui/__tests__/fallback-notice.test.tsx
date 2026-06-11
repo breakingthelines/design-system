@@ -121,7 +121,7 @@ describe('FallbackNotice', () => {
 
   it('uses each reasons honest copy — never invents fill', () => {
     const markup = render(<FallbackNotice reasons={['LINEUPS_MISSING']} />);
-    expect(markup.toLowerCase()).toContain('lineups not announced');
+    expect(markup.toLowerCase()).toContain('lineups coming soon');
     expect(markup.toLowerCase()).not.toContain('mock');
     expect(markup.toLowerCase()).not.toContain('placeholder');
   });
