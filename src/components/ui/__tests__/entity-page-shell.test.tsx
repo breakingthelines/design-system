@@ -73,4 +73,18 @@ describe('EntityPageShell', () => {
     const markup = render(<EntityPageShell kind="player" name="x" />);
     expect(hasSlot(markup, 'entity-page-shell-meta')).toBe(false);
   });
+
+  it('prefers the metaChips slot over the plain-text meta row when both are given', () => {
+    const markup = render(
+      <EntityPageShell
+        kind="player"
+        name="Mohamed Salah"
+        meta={[{ id: 'pos', label: 'Position', value: 'RW' }]}
+        metaChips={<span data-slot="chips-test">chips</span>}
+      />
+    );
+    expect(hasSlot(markup, 'chips-test')).toBe(true);
+    // the plain-text rows are suppressed once the composed chip strip is supplied
+    expect(countSlot(markup, 'entity-page-shell-meta-entry')).toBe(0);
+  });
 });
