@@ -6,12 +6,12 @@ import {
   Crosshair,
   Flag,
   MapPin,
-  MoneyWavy,
+  Money,
+  Ruler,
   Scroll,
   SneakerMove,
   TShirt,
   Trophy,
-  User,
   UsersThree,
   type Icon,
 } from '@phosphor-icons/react';
@@ -38,8 +38,10 @@ import { cn } from '#/lib/utils';
 export type EntityMetaKind = 'player' | 'manager' | 'team';
 
 export interface EntityMetaChip {
-  /** Phosphor icon component (16px). */
-  icon: Icon;
+  /** Phosphor icon component (16px). Omit when `flagSrc` is set. */
+  icon?: Icon;
+  /** Circular flag image URL (a country chip) — rendered instead of `icon`. */
+  flagSrc?: string;
   /** Display value, e.g. "England", "27 (b. 1998)", "Right". */
   value: React.ReactNode;
   /** Optional stable key. Falls back to the field index. */
@@ -65,9 +67,9 @@ export const PLAYER_META_ICONS = {
   dob: Cake,
   position: Crosshair,
   foot: SneakerMove,
-  height: User,
+  height: Ruler,
   shirt: TShirt,
-  marketValue: MoneyWavy,
+  marketValue: Money,
   contract: Scroll,
 } satisfies Record<string, Icon>;
 
@@ -75,7 +77,7 @@ export const MANAGER_META_ICONS = {
   nationality: Flag,
   role: Crosshair,
   dob: Cake,
-  height: User,
+  height: Ruler,
   contract: Scroll,
 } satisfies Record<string, Icon>;
 
@@ -107,12 +109,22 @@ export function EntityMetaChips({ kind, chips, className }: EntityMetaChipsProps
             data-slot="entity-meta-chip"
             className="inline-flex items-center gap-1.5"
           >
-            <ChipIcon
-              aria-hidden={chip.label ? undefined : true}
-              aria-label={chip.label}
-              weight="regular"
-              className="size-4 shrink-0 text-[var(--color-grey-500)]"
-            />
+            {chip.flagSrc ? (
+              <img
+                src={chip.flagSrc}
+                alt={chip.label ?? ''}
+                aria-hidden={chip.label ? undefined : true}
+                loading="lazy"
+                className="size-4 shrink-0 rounded-full object-cover"
+              />
+            ) : ChipIcon ? (
+              <ChipIcon
+                aria-hidden={chip.label ? undefined : true}
+                aria-label={chip.label}
+                weight="regular"
+                className="size-4 shrink-0 text-[var(--color-grey-500)]"
+              />
+            ) : null}
             <span className="text-[12px] leading-none tracking-tight text-white">{chip.value}</span>
           </li>
         );
