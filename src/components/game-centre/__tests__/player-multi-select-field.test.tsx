@@ -149,4 +149,109 @@ describe('PlayerMultiSelectField', () => {
       expect(hasSlot(markup, 'player-multi-select-field-empty')).toBe(true);
     });
   });
+
+  // Wave 6.25n — per-player counter mode for the goalscorers field.
+  describe('counter mode', () => {
+    it('renders per-row decrement + count + increment controls', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={PLAYERS}
+          mode="counter"
+          counts={{}}
+          onCountsChange={vi.fn()}
+        />
+      );
+      // Mode is reflected on the root for CSS targeting.
+      expect(markup).toContain('data-mode="counter"');
+      // Each row carries a row-variant marker + a count attribute.
+      expect(markup).toContain('data-row-variant="counter"');
+      expect(countSlot(markup, 'player-multi-select-field-counter-decrement')).toBe(PLAYERS.length);
+      expect(countSlot(markup, 'player-multi-select-field-counter-increment')).toBe(PLAYERS.length);
+      expect(countSlot(markup, 'player-multi-select-field-counter-value')).toBe(PLAYERS.length);
+    });
+
+    it('defaults missing keys to 0', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={PLAYERS}
+          mode="counter"
+          counts={{}}
+          onCountsChange={vi.fn()}
+        />
+      );
+      // Every row's data-count is 0; we just sanity-check at least one.
+      expect(markup).toContain('data-count="0"');
+      // None of the rows are picked.
+      expect(markup).not.toContain('data-checked="true"');
+    });
+
+    it('reflects per-player counts on the row', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={PLAYERS}
+          mode="counter"
+          counts={{ 'p-1': 3, 'p-2': 1 }}
+          onCountsChange={vi.fn()}
+        />
+      );
+      // Saka has count 3 and is picked.
+      expect(markup).toContain('data-player-id="p-1"');
+      expect(markup).toContain('data-count="3"');
+      // Ødegaard has count 1.
+      expect(markup).toContain('data-count="1"');
+      // Picked rows carry data-checked.
+      expect(markup).toContain('data-checked="true"');
+    });
+
+    it('disables the decrement button when count is 0', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={[PLAYERS[0]!]}
+          mode="counter"
+          counts={{}}
+          onCountsChange={vi.fn()}
+        />
+      );
+      // Decrement button is the one with `disabled=""` and the
+      // counter-decrement slot — the order of attributes on the <button>
+      // is React's; assert both markers appear on the same tag.
+      expect(markup).toMatch(
+        /<button[^>]*disabled[^>]*data-slot="player-multi-select-field-counter-decrement"/
+      );
+    });
+
+    it('disables the increment button when maxPerPlayer cap is reached', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={[PLAYERS[0]!]}
+          mode="counter"
+          counts={{ 'p-1': 2 }}
+          onCountsChange={vi.fn()}
+          maxPerPlayer={2}
+        />
+      );
+      // Increment button is disabled when count >= cap.
+      expect(markup).toMatch(
+        /<button[^>]*disabled[^>]*data-slot="player-multi-select-field-counter-increment"/
+      );
+    });
+
+    it('does NOT render data-at-cap in counter mode (no aggregate cap)', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={PLAYERS}
+          mode="counter"
+          counts={{ 'p-1': 5, 'p-2': 5, 'p-3': 5 }}
+          onCountsChange={vi.fn()}
+        />
+      );
+      expect(markup).not.toContain('data-at-cap');
+    });
+  });
 });
