@@ -320,9 +320,7 @@ describe('PlayerMultiSelectField', () => {
         // The picked row's decrement is NOT disabled — the user must be
         // able to clear room without the cap interfering. (Decrement on
         // a zero-count row is still disabled by the count==0 rule.)
-        const pickedRowMatch = markup.match(
-          /<li[^>]*data-player-id="p-1"[\s\S]*?<\/li>/
-        );
+        const pickedRowMatch = markup.match(/<li[^>]*data-player-id="p-1"[\s\S]*?<\/li>/);
         expect(pickedRowMatch).not.toBeNull();
         const pickedRow = pickedRowMatch?.[0] ?? '';
         const decrementMatch = pickedRow.match(
@@ -349,9 +347,7 @@ describe('PlayerMultiSelectField', () => {
         expect(markup).toContain('data-at-total-cap="true"');
         // Picks are still visible on their rows.
         expect(markup).toContain('data-player-id="p-1"');
-        expect(markup).toMatch(
-          /<li[^>]*data-player-id="p-1"[^>]*data-count="2"/
-        );
+        expect(markup).toMatch(/<li[^>]*data-player-id="p-1"[^>]*data-count="2"/);
       });
     });
   });

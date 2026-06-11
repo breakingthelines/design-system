@@ -179,7 +179,5 @@ export const CounterMaxTotalCount = meta.story({
     hint: 'Predicted home score: 2 · 0 picks remaining',
     players: ARSENAL,
   },
-  render: (args) => (
-    <CounterWrapper {...args} initialCounts={{ 'p-saka': 2 }} maxTotalCount={2} />
-  ),
+  render: (args) => <CounterWrapper {...args} initialCounts={{ 'p-saka': 2 }} maxTotalCount={2} />,
 });
