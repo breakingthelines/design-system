@@ -91,3 +91,27 @@ export const Empty = meta.story({
   },
   render: (args) => <GoalscorersWrapper {...args} />,
 });
+
+// Wave 6.25m — searchable variant. Full match-day squads (~23 per side) are
+// painful to scan; the input filters visible rows by case-insensitive
+// substring on `player.name`.
+const FULL_SQUAD: PlayerMultiSelectOption[] = [
+  ...ARSENAL,
+  ...CHELSEA,
+  { id: 'p-rashford', name: 'M. Rashford', jerseyNumber: 10, caption: 'Man Utd' },
+  { id: 'p-bruno', name: 'B. Fernandes', jerseyNumber: 8, caption: 'Man Utd' },
+  { id: 'p-salah', name: 'M. Salah', jerseyNumber: 11, caption: 'Liverpool' },
+  { id: 'p-mbappe', name: 'K. Mbappé', jerseyNumber: 7, caption: 'PSG' },
+];
+
+export const Searchable = meta.story({
+  name: 'Searchable — full match-day squad',
+  args: {
+    label: 'Goalscorers',
+    description: 'Type a surname to filter the squad list.',
+    players: FULL_SQUAD,
+    selectedIds: ['p-saka'],
+    searchable: true,
+  },
+  render: (args) => <GoalscorersWrapper {...args} />,
+});

@@ -27,6 +27,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar';
  *
  * No score gating in here — gating belongs to the host. The hint slot is
  * purely advisory copy.
+ *
+ * Wave 6.25m — `searchable` prop adds a small case-insensitive search input
+ * above the list. When the roster is a full match-day squad (~23 players per
+ * side, or 46 across both) scanning by sight is painful; the search lets the
+ * viewer type a surname to filter visible rows. Selections persist across
+ * filters; the cap is computed against the full selection set.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export interface PlayerMultiSelectOption {
@@ -73,6 +79,19 @@ export interface PlayerMultiSelectFieldProps extends Omit<
    * kickoff."). Defaults to a generic line.
    */
   emptyCopy?: string;
+  /**
+   * Wave 6.25m — when true, the field renders a small search input above
+   * the list. The query filters rows by a case-insensitive substring on
+   * `player.name`. Selections are preserved across filters (a hidden row
+   * stays selected), and the at-cap state is computed against the full
+   * selection set, not the visible subset. Off by default for back-compat
+   * — existing consumers see no visual change unless they opt in.
+   */
+  searchable?: boolean;
+  /**
+   * Optional placeholder for the search input. Defaults to "Search players".
+   */
+  searchPlaceholder?: string;
 }
 
 function PlayerMultiSelectField({
@@ -84,12 +103,26 @@ function PlayerMultiSelectField({
   onChange,
   maxSelectable,
   emptyCopy = 'No players available yet.',
+  searchable = false,
+  searchPlaceholder = 'Search players',
   className,
   ...props
 }: PlayerMultiSelectFieldProps) {
   // Keep a stable lookup so we don't allocate per row.
   const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
   const atCap = typeof maxSelectable === 'number' && selectedSet.size >= maxSelectable;
+
+  // Wave 6.25m — local search state. Off by default; only allocated when the
+  // host opts in via `searchable`. Filter is a case-insensitive substring on
+  // `player.name`. We deliberately do NOT filter on jersey or caption — name
+  // is the field viewers reach for.
+  const [query, setQuery] = React.useState('');
+  const visiblePlayers = React.useMemo(() => {
+    if (!searchable) return players;
+    const q = query.trim().toLowerCase();
+    if (q === '') return players;
+    return players.filter((p) => p.name.toLowerCase().includes(q));
+  }, [searchable, players, query]);
 
   const handleToggle = React.useCallback(
     (id: string) => {
@@ -138,12 +171,31 @@ function PlayerMultiSelectField({
         ) : null}
       </div>
 
+      {searchable && players.length > 0 ? (
+        <input
+          data-slot="player-multi-select-field-search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={searchPlaceholder}
+          aria-label={`Search ${label}`}
+          className="font-content rounded-[3px] border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:border-white/20 focus:bg-white/[0.06] focus:outline-none"
+        />
+      ) : null}
+
       {players.length === 0 ? (
         <p
           data-slot="player-multi-select-field-empty"
           className="font-content rounded border border-white/10 bg-white/[0.04] p-3 text-xs text-white/55"
         >
           {emptyCopy}
+        </p>
+      ) : visiblePlayers.length === 0 ? (
+        <p
+          data-slot="player-multi-select-field-no-matches"
+          className="font-content rounded border border-white/10 bg-white/[0.04] p-3 text-xs text-white/55"
+        >
+          No players match {`"${query}"`}.
         </p>
       ) : (
         <ul
@@ -152,7 +204,7 @@ function PlayerMultiSelectField({
           aria-label={label}
           className="flex max-h-72 flex-col gap-0.5 overflow-y-auto"
         >
-          {players.map((player) => {
+          {visiblePlayers.map((player) => {
             const checked = selectedSet.has(player.id);
             const disabled = !checked && atCap;
             return (
