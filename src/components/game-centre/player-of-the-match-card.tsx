@@ -55,6 +55,15 @@ export interface PlayerOfTheMatchCardProps {
   state?: 'ready' | 'empty' | 'loading';
   /** Fallback override (used when empty). Defaults to `POTM_NOT_REPORTED`. */
   fallbackReason?: FallbackReason;
+  /**
+   * Whether to render the inner "PLAYER OF THE MATCH" eyebrow (star icon +
+   * uppercase label). Defaults to `true` — back-compat with hosts that
+   * embed the card without an external heading. Set to `false` when an
+   * external SectionHeading already announces the section (e.g. the Match
+   * Centre Game Day Timeline sub-tab) to avoid duplicating the label.
+   * Wave 6.24b.
+   */
+  showEyebrow?: boolean;
   className?: string;
 }
 
@@ -70,6 +79,7 @@ export function PlayerOfTheMatchCard({
   href,
   state = 'ready',
   fallbackReason,
+  showEyebrow = true,
   className,
 }: PlayerOfTheMatchCardProps) {
   const Link = useLinkComponent();
@@ -89,7 +99,7 @@ export function PlayerOfTheMatchCard({
   if (state === 'loading') {
     return (
       <div data-slot="player-of-the-match-card" data-state="loading" className={wrapper}>
-        <PotmEyebrow />
+        {showEyebrow ? <PotmEyebrow /> : null}
         <div className="flex items-center gap-3">
           <div className="size-9 shrink-0 animate-pulse rounded-full bg-white/[0.04]" />
           <div className="flex-1 space-y-2">
@@ -110,7 +120,7 @@ export function PlayerOfTheMatchCard({
   if (state === 'empty' || scaleValue === undefined) {
     return (
       <div data-slot="player-of-the-match-card" data-state="empty" className={wrapper}>
-        <PotmEyebrow />
+        {showEyebrow ? <PotmEyebrow /> : null}
         <FallbackState reason={fallbackReason ?? 'POTM_NOT_REPORTED'} />
       </div>
     );
