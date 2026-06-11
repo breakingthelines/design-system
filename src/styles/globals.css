@@ -205,6 +205,15 @@
   html {
     @apply font-sans;
   }
+  /* Interactive controls show the pointer cursor. Tailwind v4's Preflight no
+     longer sets this on <button>, so without it every button shows the default
+     arrow. Scoped to enabled controls; utilities (cursor-not-allowed on
+     disabled, cursor-wait, etc.) still win as they sit in a later layer. */
+  button:not(:disabled),
+  [role='button']:not(:disabled),
+  summary {
+    cursor: pointer;
+  }
 }
 
 /* Animation keyframes for collaboration components */
