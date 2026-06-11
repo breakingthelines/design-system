@@ -6,7 +6,8 @@ import { Star } from '@phosphor-icons/react';
 import { cn } from '#/lib/utils';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar';
-import { ratingDescriptor, type RatingScaleValue } from '#/components/ui/rating-scale';
+import { GradeBox } from '#/components/ui/grade-box';
+import { type RatingScaleValue } from '#/components/ui/rating-scale';
 
 import { FallbackState, type FallbackReason } from './fallback-state';
 
@@ -72,8 +73,14 @@ export function PlayerOfTheMatchCard({
   className,
 }: PlayerOfTheMatchCardProps) {
   const Link = useLinkComponent();
+  // Wave 6.24 — wrapper picks up the universal Wave 6 card chrome
+  // (rounded-[4px] + border-white/5 + bg-grey-200 + p-5) so the card reads
+  // as part of the same panel family as the match hero, formation hero,
+  // and player-grade-list. Square corners + heavier border used to make
+  // the card sit alone visually; this aligns it with the rounded chrome
+  // that runs across the page.
   const wrapper = cn(
-    'flex w-full flex-col gap-4 border border-white/10 bg-[var(--color-grey-200)] p-5 text-white',
+    'flex w-full flex-col gap-4 rounded-[4px] border border-white/5 bg-[var(--color-grey-200)] p-5 text-white',
     className
   );
 
@@ -89,7 +96,12 @@ export function PlayerOfTheMatchCard({
             <div className="h-3 w-32 animate-pulse rounded-sm bg-white/[0.04]" />
             <div className="h-2.5 w-20 animate-pulse rounded-sm bg-white/[0.04]" />
           </div>
-          <div className="size-10 shrink-0 animate-pulse rounded-sm bg-white/[0.04]" />
+          {/* Wave 6.24 — skeleton mirrors the new GradeBox sm footprint
+              (~28px square + ~10px label strip beneath). */}
+          <div className="flex shrink-0 flex-col items-center gap-0.5">
+            <div className="h-7 w-7 animate-pulse rounded-[4px] bg-white/[0.04]" />
+            <div className="h-2 w-10 animate-pulse rounded-sm bg-white/[0.04]" />
+          </div>
         </div>
       </div>
     );
@@ -104,7 +116,6 @@ export function PlayerOfTheMatchCard({
     );
   }
 
-  const descriptor = ratingDescriptor(scaleValue);
   const initials = initialsFromName(name);
   const crestInitials = clubName ? initialsFromName(clubName) : undefined;
 
@@ -113,6 +124,7 @@ export function PlayerOfTheMatchCard({
       data-slot="player-of-the-match-card"
       data-state="ready"
       data-direction="lower-is-better"
+      data-rating-max={ratingMax}
       className={wrapper}
     >
       <PotmEyebrow />
@@ -167,23 +179,21 @@ export function PlayerOfTheMatchCard({
           ) : null}
         </div>
 
-        <span
+        {/* Wave 6.24 — the canonical GradeBox replaces the bespoke bordered
+            "value / max" block. Same visual language as every cast grade on
+            the page (player grade rows, from-grade pill, ratings hero):
+            one shape across the system. `sm` (28px square) with the
+            qualitative label underneath gives a compact ~50px footprint
+            that no longer crowds the player name. The aggregate scale
+            (1-6 inverse) is reinforced by the gradient: 1 = deepest red,
+            6 = dim grey — same rhyme the user already reads everywhere. */}
+        <GradeBox
           data-slot="player-of-the-match-card-rating"
-          data-direction="lower-is-better"
-          data-value={scaleValue}
-          title={`${descriptor.label} · lower is better`}
-          className={cn(
-            'flex shrink-0 flex-col items-center justify-center px-2.5 py-1.5',
-            'border border-[var(--color-red-100)] bg-[var(--color-red-100)]/15'
-          )}
-        >
-          <span className="text-lg leading-none font-bold tabular-nums text-[var(--color-red-100)]">
-            {formatRating(rating, scaleValue)}
-          </span>
-          <span className="mt-0.5 text-[9px] tracking-[0.08em] text-[var(--color-red-100)]/80 uppercase">
-            / {ratingMax}
-          </span>
-        </span>
+          value={scaleValue}
+          size="sm"
+          showLabel
+          className="shrink-0"
+        />
       </div>
     </div>
   );
@@ -206,15 +216,6 @@ function toRatingScaleValue(value: number | undefined): RatingScaleValue | undef
   const rounded = Math.round(value);
   if (rounded < 1 || rounded > 6) return undefined;
   return rounded as RatingScaleValue;
-}
-
-/**
- * Display the rating to one decimal when the source value is fractional
- * (e.g. an aggregate "5.2"), otherwise show the rounded integer.
- */
-function formatRating(raw: number | undefined, fallback: RatingScaleValue): string {
-  if (raw === undefined || !Number.isFinite(raw)) return String(fallback);
-  return Number.isInteger(raw) ? String(raw) : raw.toFixed(1);
 }
 
 function initialsFromName(label: string): string {
