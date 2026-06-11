@@ -253,5 +253,106 @@ describe('PlayerMultiSelectField', () => {
       );
       expect(markup).not.toContain('data-at-cap');
     });
+
+    // Wave 6.25s — aggregate total cap (sum of counts across all rows).
+    describe('maxTotalCount', () => {
+      it('does NOT flag data-at-total-cap when the sum is below the cap', () => {
+        const markup = render(
+          <PlayerMultiSelectField
+            label="Goalscorers"
+            players={PLAYERS}
+            mode="counter"
+            counts={{ 'p-1': 1 }}
+            onCountsChange={vi.fn()}
+            maxTotalCount={2}
+          />
+        );
+        expect(markup).not.toContain('data-at-total-cap');
+      });
+
+      it('flags data-at-total-cap on the fieldset when the sum hits the cap', () => {
+        const markup = render(
+          <PlayerMultiSelectField
+            label="Goalscorers"
+            players={PLAYERS}
+            mode="counter"
+            counts={{ 'p-1': 1, 'p-2': 1 }}
+            onCountsChange={vi.fn()}
+            maxTotalCount={2}
+          />
+        );
+        expect(markup).toContain('data-at-total-cap="true"');
+      });
+
+      it('disables every row increment when the cap is reached', () => {
+        const markup = render(
+          <PlayerMultiSelectField
+            label="Goalscorers"
+            players={PLAYERS}
+            mode="counter"
+            counts={{ 'p-1': 2 }}
+            onCountsChange={vi.fn()}
+            maxTotalCount={2}
+          />
+        );
+        // Every increment button — picked or not — should be disabled.
+        const incrementMatches = markup.matchAll(
+          /<button[^>]*data-slot="player-multi-select-field-counter-increment"[^>]*>/g
+        );
+        const buttons = Array.from(incrementMatches).map((m) => m[0]);
+        expect(buttons.length).toBe(PLAYERS.length);
+        for (const btn of buttons) {
+          expect(btn).toContain('disabled');
+        }
+      });
+
+      it('keeps decrement buttons enabled at the cap (recovery path)', () => {
+        const markup = render(
+          <PlayerMultiSelectField
+            label="Goalscorers"
+            players={PLAYERS}
+            mode="counter"
+            counts={{ 'p-1': 2 }}
+            onCountsChange={vi.fn()}
+            maxTotalCount={2}
+          />
+        );
+        // The picked row's decrement is NOT disabled — the user must be
+        // able to clear room without the cap interfering. (Decrement on
+        // a zero-count row is still disabled by the count==0 rule.)
+        const pickedRowMatch = markup.match(
+          /<li[^>]*data-player-id="p-1"[\s\S]*?<\/li>/
+        );
+        expect(pickedRowMatch).not.toBeNull();
+        const pickedRow = pickedRowMatch?.[0] ?? '';
+        const decrementMatch = pickedRow.match(
+          /<button[^>]*data-slot="player-multi-select-field-counter-decrement"[^>]*>/
+        );
+        expect(decrementMatch).not.toBeNull();
+        expect(decrementMatch?.[0]).not.toContain('disabled');
+      });
+
+      it('preserves picks above a shrinking cap without mutating state', () => {
+        // Cap=1 but the existing counts already sum to 3. The component
+        // must NOT silently drop counts — it should expose the at-cap
+        // state and leave the user to clear with −.
+        const markup = render(
+          <PlayerMultiSelectField
+            label="Goalscorers"
+            players={PLAYERS}
+            mode="counter"
+            counts={{ 'p-1': 2, 'p-2': 1 }}
+            onCountsChange={vi.fn()}
+            maxTotalCount={1}
+          />
+        );
+        expect(markup).toContain('data-at-total-cap="true"');
+        // Picks are still visible on their rows.
+        expect(markup).toContain('data-player-id="p-1"');
+        expect(markup).toMatch(
+          /<li[^>]*data-player-id="p-1"[^>]*data-count="2"/
+        );
+      });
+    });
   });
 });

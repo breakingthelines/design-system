@@ -42,6 +42,25 @@ import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar';
  * `min(picked_count, actual_goals) * pointsPerPick` per player, with no
  * aggregate cap on the field. Other props (`label`, `description`,
  * `hint`, `searchable`, `emptyCopy`) work identically in counter mode.
+ *
+ * Wave 6.25s — `maxTotalCount` HARD cap on the SUM of counts across all
+ * rows (counter mode only). When the sum reaches the cap every row's
+ * increment button is disabled; the user must − a different row to free
+ * room. Used by the prediction modal to gate the goalscorer counter by
+ * the predicted side score (home picks ≤ predicted home score, away
+ * picks ≤ predicted away score — each picker is filtered to one side
+ * and carries its own `maxTotalCount`). When the cap is reached the
+ * field renders `data-at-total-cap="true"` on the fieldset so callers
+ * can style the surrounding scaffolding (e.g. fade the heading badge).
+ * Decrement is never blocked by the total cap — only the per-row
+ * increment.
+ *
+ * Lowering the cap below the current sum (e.g. user picked 2 then
+ * lowered the predicted score to 1) does NOT silently drop picks; it
+ * leaves the existing counts intact and disables every row's
+ * increment. The user clears room manually via −. This mirrors how the
+ * multi-mode `maxSelectable` cap is enforced — picks above the cap are
+ * preserved when the cap shrinks under them.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export interface PlayerMultiSelectOption {
@@ -124,6 +143,7 @@ interface PlayerMultiSelectFieldMultiProps extends PlayerMultiSelectFieldBasePro
   counts?: never;
   onCountsChange?: never;
   maxPerPlayer?: never;
+  maxTotalCount?: never;
 }
 
 interface PlayerMultiSelectFieldCounterProps extends PlayerMultiSelectFieldBaseProps {
@@ -140,11 +160,20 @@ interface PlayerMultiSelectFieldCounterProps extends PlayerMultiSelectFieldBaseP
   onCountsChange: (counts: Record<string, number>) => void;
   /**
    * Optional HARD cap on the count per individual player. Defaults to no
-   * per-player cap. The aggregate (sum across all players) is never
-   * capped — settlement on the server clamps per player via
-   * `min(picked_count, actual_goals)`.
+   * per-player cap. The aggregate (sum across all players) is governed
+   * separately via `maxTotalCount`.
    */
   maxPerPlayer?: number;
+  /**
+   * Wave 6.25s — Optional HARD cap on the SUM of counts across all rows.
+   * When the sum reaches the cap, every row's increment button is
+   * disabled; decrement stays enabled so the user can clear room. Omit
+   * (or pass `undefined`) for an unbounded aggregate. The cap is computed
+   * against the full `counts` map, not the visible (post-search) subset.
+   * Lowering the cap below the current sum does NOT mutate state — picks
+   * remain visible and the user clears room with −.
+   */
+  maxTotalCount?: number;
   // Multi-mode props are not allowed in counter mode.
   selectedIds?: never;
   onChange?: never;
@@ -200,7 +229,10 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
       : null;
 
   // Pre-compute at-cap state for the multi-mode HTML attribute. Counter
-  // mode has no aggregate cap, so the attribute is omitted entirely.
+  // mode has no aggregate-cap-by-count, but Wave 6.25s introduces an
+  // optional `maxTotalCount` cap on the SUM across all rows; that drives
+  // a separate `data-at-total-cap` attribute on the fieldset so the
+  // surrounding scaffolding can react.
   const selectedSet = React.useMemo(
     () => new Set(multiProps?.selectedIds ?? []),
     [multiProps?.selectedIds]
@@ -209,6 +241,22 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
     multiProps != null &&
     typeof multiProps.maxSelectable === 'number' &&
     selectedSet.size >= multiProps.maxSelectable;
+
+  // Wave 6.25s — counter-mode aggregate total + cap state. Computed
+  // against the FULL counts map (not the visible/search-filtered subset)
+  // so cap enforcement stays stable while the user filters by name.
+  const totalCount = React.useMemo(() => {
+    if (!counterProps) return 0;
+    let sum = 0;
+    for (const v of Object.values(counterProps.counts)) {
+      if (typeof v === 'number' && v > 0) sum += v;
+    }
+    return sum;
+  }, [counterProps]);
+  const atTotalCap =
+    counterProps != null &&
+    typeof counterProps.maxTotalCount === 'number' &&
+    totalCount >= counterProps.maxTotalCount;
 
   // ─── Multi-mode handlers ────────────────────────────────────────────
   const handleToggle = React.useCallback(
@@ -235,14 +283,21 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
   const handleIncrement = React.useCallback(
     (id: string) => {
       if (!counterProps) return;
-      const { counts, onCountsChange, maxPerPlayer } = counterProps;
+      const { counts, onCountsChange, maxPerPlayer, maxTotalCount } = counterProps;
       const next = (counts[id] ?? 0) + 1;
       if (typeof maxPerPlayer === 'number' && next > maxPerPlayer) {
         return;
       }
+      // Wave 6.25s — refuse any increment that would push the SUM of
+      // counts past `maxTotalCount`. Decrement-then-increment another
+      // row is the recovery path; the row-level disabled state guides
+      // the user there.
+      if (typeof maxTotalCount === 'number' && totalCount >= maxTotalCount) {
+        return;
+      }
       onCountsChange({ ...counts, [id]: next });
     },
-    [counterProps]
+    [counterProps, totalCount]
   );
 
   const handleDecrement = React.useCallback(
@@ -272,12 +327,14 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
   delete fieldsetRest.counts;
   delete fieldsetRest.onCountsChange;
   delete fieldsetRest.maxPerPlayer;
+  delete fieldsetRest.maxTotalCount;
 
   return (
     <fieldset
       data-slot="player-multi-select-field"
       data-mode={mode}
       data-at-cap={atCap || undefined}
+      data-at-total-cap={atTotalCap || undefined}
       className={cn('flex flex-col gap-2 border-0 p-0', className)}
       {...fieldsetRest}
     >
@@ -342,8 +399,12 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
           {visiblePlayers.map((player) => {
             if (mode === 'counter' && counterProps) {
               const count = counterProps.counts[player.id] ?? 0;
-              const capReached =
+              // Disable `+` when EITHER the per-player cap or the
+              // aggregate total cap (Wave 6.25s) is reached. Decrement
+              // is unaffected so the user can clear room.
+              const perPlayerCapped =
                 typeof counterProps.maxPerPlayer === 'number' && count >= counterProps.maxPerPlayer;
+              const capReached = perPlayerCapped || atTotalCap;
               return (
                 <PlayerMultiSelectCounterRow
                   key={player.id}

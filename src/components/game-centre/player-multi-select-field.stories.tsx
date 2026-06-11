@@ -124,9 +124,13 @@ function CounterWrapper(
   props: Omit<
     React.ComponentProps<typeof PlayerMultiSelectField>,
     'mode' | 'selectedIds' | 'onChange' | 'counts' | 'onCountsChange'
-  > & { initialCounts?: Record<string, number>; maxPerPlayer?: number }
+  > & {
+    initialCounts?: Record<string, number>;
+    maxPerPlayer?: number;
+    maxTotalCount?: number;
+  }
 ) {
-  const { initialCounts = {}, maxPerPlayer, ...rest } = props;
+  const { initialCounts = {}, maxPerPlayer, maxTotalCount, ...rest } = props;
   const [counts, setCounts] = React.useState<Record<string, number>>({ ...initialCounts });
   return (
     <div className="w-[420px] rounded-[6px] border border-white/10 bg-neutral-950 p-4">
@@ -136,6 +140,7 @@ function CounterWrapper(
         counts={counts}
         onCountsChange={setCounts}
         maxPerPlayer={maxPerPlayer}
+        maxTotalCount={maxTotalCount}
       />
     </div>
   );
@@ -160,4 +165,21 @@ export const CounterSearchable = meta.story({
     searchable: true,
   },
   render: (args) => <CounterWrapper {...args} initialCounts={{ 'p-saka': 2 }} />,
+});
+
+// Wave 6.25s — aggregate total cap. The host caps the SUM of counts across
+// all rows (e.g. predicted home score = 2). When the cap is reached every
+// row's `+` is disabled and the fieldset carries `data-at-total-cap`.
+// Decrement stays live so the user can clear room.
+export const CounterMaxTotalCount = meta.story({
+  name: 'Counter — capped at 2 total (Wave 6.25s)',
+  args: {
+    label: 'Goalscorers · Home',
+    description: '+2 pts per goal. Capped at predicted home score (2).',
+    hint: 'Predicted home score: 2 · 0 picks remaining',
+    players: ARSENAL,
+  },
+  render: (args) => (
+    <CounterWrapper {...args} initialCounts={{ 'p-saka': 2 }} maxTotalCount={2} />
+  ),
 });
