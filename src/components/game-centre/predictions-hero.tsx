@@ -180,25 +180,29 @@ function ScheduledBody({
         </motion.span>
       </div>
 
-      {/* Stakes line + CTA row */}
-      <div
-        data-slot="predictions-hero-stakes-row"
-        className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4"
-      >
-        {stakesTotal !== undefined ? (
-          <div data-slot="predictions-hero-stakes" className="flex items-center gap-3">
-            <PredictionStakesBadge points={stakesTotal} modifier="pts" tone="total" />
-            <span className="font-content text-xs text-white/55">on offer this match</span>
-          </div>
-        ) : (
-          <span className="font-content text-xs text-white/40">Stakes load with the rubric.</span>
-        )}
-        {cta !== undefined ? (
-          <div data-slot="predictions-hero-cta" className="ml-auto">
-            {cta}
-          </div>
-        ) : null}
-      </div>
+      {/* Stakes line + CTA row.
+          When the rubric hasn't landed yet (`stakesTotal === undefined`) we
+          hide the stakes line entirely instead of surfacing a technical
+          "Stakes load with the rubric." placeholder. The CTA still renders
+          so the lobby remains actionable. Wave 6.25a (B5). */}
+      {stakesTotal !== undefined || cta !== undefined ? (
+        <div
+          data-slot="predictions-hero-stakes-row"
+          className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4"
+        >
+          {stakesTotal !== undefined ? (
+            <div data-slot="predictions-hero-stakes" className="flex items-center gap-3">
+              <PredictionStakesBadge points={stakesTotal} modifier="pts" tone="total" />
+              <span className="font-content text-xs text-white/55">on offer this match</span>
+            </div>
+          ) : null}
+          {cta !== undefined ? (
+            <div data-slot="predictions-hero-cta" className="ml-auto">
+              {cta}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       {/* T-30 imminent: a subtle red border-pulse on the card. We render it as
           an absolute ring that fades in/out, so it stacks on top of the card's
