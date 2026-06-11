@@ -129,7 +129,10 @@ export function EntityPageShell({
                 src={imageUrl}
                 alt=""
                 loading="eager"
-                className={cn('size-full', isLogo ? 'object-contain' : 'absolute inset-0 object-cover')}
+                className={cn(
+                  'size-full',
+                  isLogo ? 'object-contain' : 'absolute inset-0 object-cover'
+                )}
               />
             ) : (
               <span>{initials ?? name.slice(0, 2).toUpperCase()}</span>
