@@ -20,7 +20,7 @@ import { cn } from '#/lib/utils';
  *     only when it adds information (i.e. isn't an `@handle` echo).
  *   - 24px branded Avatar in front of the player cell; falls back to BTL chrome
  *     when no `avatarUrl` is wired.
- *   - Viewer row: subtle `bg-red-100/[0.06]` + 2px left accent border. The
+ *   - Viewer row: quiet `bg-red-100/[0.04]` tint only — no border, no badge. The
  *     "You" badge is gone — the row chrome reads as "this is you".
  *   - Rank chip drops to `text-white/55` (`text-white/70` for top 3) in a
  *     mono-style display face so the leaderboard reads as a table, not a
@@ -221,9 +221,7 @@ function LeaderboardRow({ entry }: { entry: PredictionLeaderboardPanelEntry }) {
       data-viewer={entry.isViewer || undefined}
       className={cn(
         'group flex items-center gap-3 px-3 py-2.5 transition-colors',
-        entry.isViewer
-          ? 'border-l-2 border-red-100 bg-red-100/[0.06] pl-[10px]'
-          : 'border-l-2 border-transparent hover:bg-white/[0.03]'
+        entry.isViewer ? 'bg-red-100/[0.04]' : 'hover:bg-white/[0.03]'
       )}
     >
       <span
