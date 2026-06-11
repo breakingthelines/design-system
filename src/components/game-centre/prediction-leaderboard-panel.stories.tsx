@@ -122,3 +122,29 @@ export const ColdStart = meta.story({
     </div>
   ),
 });
+
+/* Wave 6.25h-a: external SectionHeading mode. The Predictions sub-tab
+ * lifts the panel's "LEADERBOARD" + league title OUT of the card and
+ * renders a section heading above it, matching the "League" + "Kickoff
+ * in" rhythm. `hideHeader={true}` suppresses both the internal eyebrow
+ * and the league title — the card starts directly with the column
+ * header row. */
+export const HideHeader = meta.story({
+  name: 'hideHeader · external SectionHeading rhythm',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: TOP_ENTRIES,
+    viewerEntry: { rank: 12, userHandle: 'tommy', userName: 'Tommy', points: 26 },
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+    hideHeader: true,
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <header className="mb-3">
+        <h2 className="text-sm font-semibold text-white">Leaderboard</h2>
+      </header>
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
