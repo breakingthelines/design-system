@@ -58,6 +58,27 @@ export const ScheduledImminent = meta.story({
   ),
 });
 
+// Wave 6.25h: hosts that render an external "Kickoff in" SectionHeading
+// (e.g. the platform Predictions sub-tab) pass `hideHeader` to drop the
+// in-card eyebrow so the countdown becomes the headline.
+export const ScheduledHostedHeading = meta.story({
+  name: 'Scheduled · external heading (hideHeader)',
+  args: {
+    state: 'scheduled',
+    countdownLabel: '2d 4h',
+    countdownPhase: 'days',
+    stakesTotal: 8,
+    cta,
+    hideHeader: true,
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <h2 className="mb-3 text-sm font-semibold text-white">Kickoff in</h2>
+      <PredictionsHero {...args} />
+    </div>
+  ),
+});
+
 export const Live = meta.story({
   name: 'Live · 67th minute',
   args: {

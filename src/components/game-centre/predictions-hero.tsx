@@ -65,6 +65,13 @@ export interface PredictionsHeroProps extends React.ComponentProps<'div'> {
   pointsEarned?: number;
   /** FINISHED — total points that were on offer. */
   pointsAvailable?: number;
+  /**
+   * SCHEDULED — when true, drops the in-card "Kickoff in" eyebrow so the host
+   * can render an external `SectionHeading` instead. Defaults to false so
+   * existing consumers (Arena widget, stories) keep their in-card label.
+   * Wave 6.25h.
+   */
+  hideHeader?: boolean;
 }
 
 function PredictionsHero({
@@ -83,6 +90,7 @@ function PredictionsHero({
   matchLabel: _matchLabel,
   pointsEarned,
   pointsAvailable,
+  hideHeader = false,
   className,
   ...props
 }: PredictionsHeroProps) {
@@ -115,6 +123,7 @@ function PredictionsHero({
             countdownPhase={countdownPhase ?? 'far'}
             stakesTotal={stakesTotal}
             cta={cta}
+            hideHeader={hideHeader}
           />
         ) : state === 'live' ? (
           <LiveBody key="live" liveClock={liveClock ?? 'Live'} scoreLine={scoreLine} />
@@ -140,11 +149,13 @@ function ScheduledBody({
   countdownPhase,
   stakesTotal,
   cta,
+  hideHeader,
 }: {
   countdownLabel: string;
   countdownPhase: CountdownPhase;
   stakesTotal?: number;
   cta?: React.ReactNode;
+  hideHeader?: boolean;
 }) {
   const isImminent = countdownPhase === 'imminent';
   const isLive = countdownPhase === 'live';
@@ -159,12 +170,14 @@ function ScheduledBody({
       className="flex flex-col gap-4"
     >
       <div className="flex flex-col gap-2">
-        <span
-          data-slot="predictions-hero-eyebrow-status"
-          className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase"
-        >
-          Kickoff in
-        </span>
+        {hideHeader ? null : (
+          <span
+            data-slot="predictions-hero-eyebrow-status"
+            className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase"
+          >
+            Kickoff in
+          </span>
+        )}
         <motion.span
           data-slot="predictions-hero-countdown"
           data-phase={countdownPhase}
