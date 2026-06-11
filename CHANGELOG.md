@@ -5,6 +5,20 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.33.0] — 2026-06-11
+
+### Added — football three-letter country codes
+
+- `countryCode3()` + `COUNTRY_CODE3` resolve a country name to its football
+  (FIFA/IOC) three-letter code ("Brazil" → "BRA", "England" → "ENG"), keyed by
+  the same normalised names as `COUNTRY_ISO2`. Drives the compact nationality
+  chip on entity pages.
+
+### Changed — Inter for entity headings
+
+- `EntityPageShell` title and the `EntityStatsSummary` "Overview" heading now use
+  the sans (Inter) family instead of the display serif.
+
 ## [0.32.2] — 2026-06-11
 
 ### Fixed — `PredictionLeagueSelector` Base UI #31 crash (Wave 6.25b)
