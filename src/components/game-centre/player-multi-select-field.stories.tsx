@@ -148,9 +148,7 @@ export const Counter = meta.story({
     description: '+2 pts per goal. Pick a player N times to predict N goals.',
     players: ALL_PLAYERS,
   },
-  render: (args) => (
-    <CounterWrapper {...args} initialCounts={{ 'p-saka': 3, 'p-palmer': 1 }} />
-  ),
+  render: (args) => <CounterWrapper {...args} initialCounts={{ 'p-saka': 3, 'p-palmer': 1 }} />,
 });
 
 export const CounterSearchable = meta.story({

@@ -184,12 +184,20 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
   // Pluck the rest of the discriminated props out for the render branches.
   // Casts here are safe because the public type is a discriminated union on
   // `mode`; the body just funnels each variant into its own renderer.
-  const multiProps = mode === 'multi'
-    ? (rest as Omit<PlayerMultiSelectFieldMultiProps, keyof PlayerMultiSelectFieldBaseProps | 'mode'>)
-    : null;
-  const counterProps = mode === 'counter'
-    ? (rest as Omit<PlayerMultiSelectFieldCounterProps, keyof PlayerMultiSelectFieldBaseProps | 'mode'>)
-    : null;
+  const multiProps =
+    mode === 'multi'
+      ? (rest as Omit<
+          PlayerMultiSelectFieldMultiProps,
+          keyof PlayerMultiSelectFieldBaseProps | 'mode'
+        >)
+      : null;
+  const counterProps =
+    mode === 'counter'
+      ? (rest as Omit<
+          PlayerMultiSelectFieldCounterProps,
+          keyof PlayerMultiSelectFieldBaseProps | 'mode'
+        >)
+      : null;
 
   // Pre-compute at-cap state for the multi-mode HTML attribute. Counter
   // mode has no aggregate cap, so the attribute is omitted entirely.
@@ -198,9 +206,9 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
     [multiProps?.selectedIds]
   );
   const atCap =
-    multiProps != null
-    && typeof multiProps.maxSelectable === 'number'
-    && selectedSet.size >= multiProps.maxSelectable;
+    multiProps != null &&
+    typeof multiProps.maxSelectable === 'number' &&
+    selectedSet.size >= multiProps.maxSelectable;
 
   // ─── Multi-mode handlers ────────────────────────────────────────────
   const handleToggle = React.useCallback(
@@ -335,8 +343,7 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
             if (mode === 'counter' && counterProps) {
               const count = counterProps.counts[player.id] ?? 0;
               const capReached =
-                typeof counterProps.maxPerPlayer === 'number'
-                && count >= counterProps.maxPerPlayer;
+                typeof counterProps.maxPerPlayer === 'number' && count >= counterProps.maxPerPlayer;
               return (
                 <PlayerMultiSelectCounterRow
                   key={player.id}
@@ -482,9 +489,7 @@ function PlayerMultiSelectCounterRow({
       <div
         className={cn(
           'flex w-full items-center gap-3 rounded-[4px] px-2 py-2 transition-colors',
-          picked
-            ? 'bg-[var(--color-red-100)]/[0.10] text-white'
-            : 'text-white/70'
+          picked ? 'bg-[var(--color-red-100)]/[0.10] text-white' : 'text-white/70'
         )}
       >
         <Avatar size="sm" className="shrink-0 border border-white/10">
