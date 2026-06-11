@@ -35,7 +35,7 @@ function ProfileTabs({ className, tabs, activeTab, onTabChange, ...props }: Prof
             aria-selected={isActive}
             onClick={() => onTabChange?.(tab.id)}
             className={cn(
-              'flex h-[35px] shrink-0 items-center justify-center rounded-[4px] px-4 py-3 text-sm font-semibold tracking-tight transition-colors sm:min-w-[120px]',
+              'flex h-[35px] shrink-0 cursor-pointer items-center justify-center rounded-[4px] px-4 py-3 text-sm font-semibold tracking-tight transition-colors sm:min-w-[120px]',
               isActive
                 ? 'border border-grey-300 bg-grey-200 text-foreground'
                 : 'text-[#807c7c] hover:text-foreground'
