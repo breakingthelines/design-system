@@ -23,7 +23,7 @@ export const Populated = meta.story({
     squadHandle: 'breakingthelines',
     entries: TOP_ENTRIES,
     viewerEntry: { rank: 12, userHandle: 'tommy', userName: 'Tommy', points: 26 },
-    pendingNote: 'Pending GW7 · Picks lock at kickoff in 14:13:29',
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
   },
   render: (args) => (
     <div className="w-[640px] bg-black p-6">
@@ -44,7 +44,47 @@ export const ViewerInTop = meta.story({
       TOP_ENTRIES[3],
       TOP_ENTRIES[4],
     ],
-    pendingNote: 'Pending GW38 · Picks lock at kickoff in 03:42:18',
+    pendingNote: 'Picks lock at kickoff in 03:42:18',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
+export const PreSettlementTie = meta.story({
+  name: 'Pre-settlement · everyone on 1 pick',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: [
+      { rank: 1, userHandle: 'ando', userName: 'Thomas Anderson', points: 1 },
+      { rank: 2, userHandle: 'cruyff14', userName: 'Johan Cruyff', points: 1 },
+      { rank: 3, userHandle: 'tommy', userName: 'Thomas Anderson', points: 1, isViewer: true },
+      { rank: 4, userHandle: 'zachlowy', userName: 'Zach Lowy', points: 1 },
+      { rank: 5, userHandle: 'bestie', userName: 'George Best', points: 1 },
+    ],
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
+export const HandleOnly = meta.story({
+  name: 'Handle-only · no displayName',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: [
+      { rank: 1, userHandle: 'ando', points: 3 },
+      { rank: 2, userHandle: 'cruyff14', points: 2 },
+      { rank: 3, userHandle: 'tommy', points: 1, isViewer: true },
+    ],
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
   },
   render: (args) => (
     <div className="w-[640px] bg-black p-6">
