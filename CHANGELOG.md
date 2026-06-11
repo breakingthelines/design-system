@@ -5,6 +5,28 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.0] — 2026-06-11
+
+### Changed — `MatchHeader` scoreboard refresh (Wave 6.27)
+
+- The kickoff **date line is now bold** (`text-sm font-semibold`); the
+  competition stays lighter beneath it.
+- The **score sits in a darker rounded panel** (`--color-grey-100`,
+  `rounded-lg`). The **game status ("FT", "HT", live minute) moved out of the
+  score panel into its own separate, lighter pill** (`--color-grey-300`,
+  `rounded-full`) directly below the score, matching the mockup. New
+  `data-slot="match-header-status"`; the score panel slot no longer carries the
+  status caption.
+- Scorers now read **`Name - Time`** (a muted separator between the name and the
+  minute) with wider column spacing and a faint divider between the home/away
+  columns.
+
+### Added — `MatchHeaderSide.standingHref`
+
+- The league-standing caption (`standingLabel`) can now link to the competition
+  page when `standingHref` is supplied; it still omits entirely when no
+  `standingLabel` is given (knockout phases / standings unavailable).
+
 ## [0.33.0] — 2026-06-11
 
 ### Added — football three-letter country codes

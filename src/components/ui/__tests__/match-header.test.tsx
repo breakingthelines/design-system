@@ -41,15 +41,46 @@ describe('MatchHeader', () => {
     const scoreText = slotText(markup, 'match-header-score');
     expect(scoreText).toContain('2');
     expect(scoreText).toContain('1');
-    // Clock label flows into the score plaque as the status caption.
-    expect(scoreText).toContain("78'");
+    // Wave 6.27: the clock/status now lives in its own separate pill below the
+    // score panel, not inside the score plaque.
+    expect(scoreText).not.toContain("78'");
+    expect(slotText(markup, 'match-header-status')).toContain("78'");
   });
 
   it('renders the final score for finished fixtures', () => {
     const markup = render(
       <MatchHeader home={baseHome} away={baseAway} status="finished" scoreHome={1} scoreAway={3} />
     );
-    expect(slotText(markup, 'match-header-score')).toMatch(/FT/i);
+    // Score sits in the score panel; "FT" sits in the separate status pill.
+    expect(slotText(markup, 'match-header-score')).toMatch(/1.*3/);
+    expect(slotText(markup, 'match-header-status')).toMatch(/FT/i);
+  });
+
+  it('omits the status pill for a scheduled fixture (no status label)', () => {
+    const markup = render(
+      <MatchHeader
+        home={baseHome}
+        away={baseAway}
+        status="scheduled"
+        kickoffIso="2026-08-15T19:30:00Z"
+      />
+    );
+    expect(hasSlot(markup, 'match-header-status')).toBe(false);
+  });
+
+  it('renders the date line in its own bold slot', () => {
+    const markup = render(
+      <MatchHeader
+        home={baseHome}
+        away={baseAway}
+        status="finished"
+        kickoffIso="2026-05-19T19:00:00Z"
+        scoreHome={1}
+        scoreAway={2}
+      />
+    );
+    expect(hasSlot(markup, 'match-header-date')).toBe(true);
+    expect(slotText(markup, 'match-header-date')).toContain('May');
   });
 
   it('renders one side block per team, in home/away order', () => {
@@ -108,6 +139,22 @@ describe('MatchHeader photo-hero variant', () => {
     expect(hasSlot(without, 'match-header-side-standing')).toBe(false);
   });
 
+  it('links the standing caption to the competition when standingHref is supplied', () => {
+    const markup = render(
+      <MatchHeader
+        home={{
+          label: 'Arsenal',
+          standingLabel: '2nd in Premier League',
+          standingHref: '/comp/pl',
+        }}
+        away={{ label: 'Chelsea', standingLabel: '1st in Premier League' }}
+        status="finished"
+      />
+    );
+    expect(markup).toContain('/comp/pl');
+    expect(slotText(markup, 'match-header-side-standing')).toContain('2nd in Premier League');
+  });
+
   it('renders the xG row only when an xG value is supplied', () => {
     const withXg = render(
       <MatchHeader home={home} away={away} status="finished" xgHome={0.25} xgAway={1.25} />
@@ -145,6 +192,9 @@ describe('MatchHeader photo-hero variant', () => {
     expect(scorers).toContain("35'");
     expect(scorers).toContain('C. Palmer');
     expect(scorers).toContain('E. Fernández');
+    // Wave 6.27: each scorer reads "Name - Time" (the muted separator sits
+    // between the name and the minute).
+    expect(scorers).toMatch(/B\. Saka\s*-\s*35'/);
   });
 
   it('omits the scorers strip when neither side has scorers', () => {
