@@ -5,6 +5,17 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.7] — 2026-06-11
+
+### Changed — `MatchHeader` venue label: bolder, tighter to xG row
+
+- Venue label now renders `font-semibold` (was regular weight), matching the
+  hero's bold typographic register (date eyebrow, team labels, xG label).
+- Venue label sits closer to the xG row via `-mt-2` on its container,
+  trimming the parent `gap-5` rhythm by one step at that seam only. The
+  eyebrow / teams / xG cadence above is unchanged.
+- No prop changes. Tests unchanged.
+
 ## [0.38.6] — 2026-06-11
 
 ### Fixed — `Image` `fallbackSrc` not firing for an SSR pre-hydration error
