@@ -83,7 +83,7 @@ export function LeaderboardRow({
     >
       <div
         data-slot="leaderboard-row-rank"
-        className="flex w-10 shrink-0 flex-col items-center justify-center gap-0.5"
+        className="flex w-10 shrink-0 flex-col items-start justify-center gap-0.5"
       >
         <span className="font-mono text-base font-semibold tabular-nums text-white">{rank}</span>
         {rankDelta !== undefined ? <RankDeltaBadge delta={rankDelta} /> : null}
