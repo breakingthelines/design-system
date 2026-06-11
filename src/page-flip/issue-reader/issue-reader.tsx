@@ -1,4 +1,6 @@
-import { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+
+import { AnimatePresence, motion } from 'framer-motion';
 
 import { positionCount, type FlipDirection } from '../book';
 import { PageFlip, type FlipMode, type PageFlipHandle, type PageFlipPage } from '../page-flip';
@@ -126,6 +128,8 @@ export interface IssueReaderHandle {
  * gating, freezing, audio, and the curl itself to `PageFlip`. Nothing about the
  * flip is re-implemented here.
  */
+const NAV_HINT_SEEN_KEY = 'btl-issue-reader-hint-seen';
+
 export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(function IssueReader(
   {
     issue,
@@ -172,8 +176,27 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
   const reachedEndFired = useRef(false);
   const coverOpenedFired = useRef(false);
 
+  // Reveal-only "close the book" ceremony. Reaching the back cover arms the
+  // close; a beat later the issue folds shut to its FRONT cover (see
+  // ClosingCover) — a real ending, not a flat back page. `read` never closes.
+  const isReveal = mode === 'reveal';
+  const [armedClose, setArmedClose] = useState(false);
+  const [closed, setClosed] = useState(false);
+  // One-time, auto-dismissing nav hint on the cover (reveal only).
+  const [showHint, setShowHint] = useState(false);
+  const dismissHint = () => {
+    setShowHint(false);
+    try {
+      window.sessionStorage?.setItem(NAV_HINT_SEEN_KEY, '1');
+    } catch {
+      /* private mode / no storage — the hint simply re-shows next session */
+    }
+  };
+
   const handleIndexChange = (index: number, direction: FlipDirection) => {
     onTurn?.(index, direction);
+    // Any turn means the user has the hang of it — retire the nav hint.
+    if (index >= 1) dismissHint();
     // The cover has opened once we settle anywhere past the cover (position ≥ 1).
     // Fire exactly once; only relevant to the reveal ceremony.
     if (!coverOpenedFired.current && index >= 1) {
@@ -183,7 +206,42 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
     if (!reachedEndFired.current && index >= lastSinglePosition && direction === 'forward') {
       reachedEndFired.current = true;
       onReachedEnd?.();
+      if (isReveal) setArmedClose(true);
     }
+  };
+
+  // Let the back cover sit for a beat, then fold the issue shut.
+  useEffect(() => {
+    if (!isReveal || !armedClose || closed) return;
+    const t = setTimeout(() => setClosed(true), 1100);
+    return () => clearTimeout(t);
+  }, [isReveal, armedClose, closed]);
+
+  // Surface the nav hint a beat after the reveal opens, then retire it.
+  useEffect(() => {
+    if (!isReveal || typeof window === 'undefined') return;
+    let seen = false;
+    try {
+      seen = window.sessionStorage?.getItem(NAV_HINT_SEEN_KEY) === '1';
+    } catch {
+      seen = false;
+    }
+    if (seen) return;
+    const show = setTimeout(() => setShowHint(true), 900);
+    const hide = setTimeout(() => dismissHint(), 6500);
+    return () => {
+      clearTimeout(show);
+      clearTimeout(hide);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per reveal mount
+  }, [isReveal]);
+
+  // Re-open from the closed cover: flip back to the front and re-arm.
+  const reopen = () => {
+    setClosed(false);
+    setArmedClose(false);
+    reachedEndFired.current = false;
+    flipRef.current?.goTo(0);
   };
 
   const ariaLabel = issue.issueNumber
@@ -196,7 +254,6 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
   // half-spread reveal bug). Forcing single keeps the cover full-bleed; passing
   // `mode='cover-open'` runs the slower cover-open turn (and degrades to the
   // flat reader under reduced motion). `read` keeps the responsive engine turn.
-  const isReveal = mode === 'reveal';
   const effectiveBookMode: BookModePreference = isReveal ? 'single' : bookMode;
   const flipMode: FlipMode | undefined = isReveal ? 'cover-open' : undefined;
 
@@ -208,7 +265,7 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
       data-issue-reader=""
       data-issue-mode={mode}
       data-issue-id={issue.id}
-      style={{ width: '100%', height: '100%' }}
+      style={{ position: 'relative', width: '100%', height: '100%' }}
     >
       <PageFlip
         ref={flipRef}
@@ -223,6 +280,124 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
         className={className}
         style={style}
       />
+      {isReveal && faces[0] ? (
+        <AnimatePresence>
+          {closed ? <ClosingCover key="closed" face={faces[0]} onReopen={reopen} /> : null}
+        </AnimatePresence>
+      ) : null}
+      {isReveal ? (
+        <AnimatePresence>
+          {showHint && !closed ? <NavHint key="hint" onDismiss={dismissHint} /> : null}
+        </AnimatePresence>
+      ) : null}
     </div>
   );
 });
+
+/**
+ * The Issue #1 "close the book" ceremony. When the reader reaches the back
+ * cover in reveal mode, the issue folds shut to its FRONT cover — a satisfying
+ * "that's your issue" beat rather than sitting on a flat back page. Clicking the
+ * closed issue opens it again from the cover. Pure CSS 3D + a spring.
+ */
+function ClosingCover({ face, onReopen }: { face: IssueFace; onReopen: () => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'grid',
+        placeItems: 'center',
+        background: '#0d0d0d',
+        perspective: 1600,
+        zIndex: 20,
+      }}
+    >
+      <motion.button
+        type="button"
+        onClick={onReopen}
+        aria-label="Open the issue again"
+        initial={{ rotateY: -98, opacity: 0.35 }}
+        animate={{ rotateY: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 120, damping: 18, mass: 0.9 }}
+        style={{
+          position: 'relative',
+          height: '88%',
+          maxHeight: '88%',
+          maxWidth: '92%',
+          aspectRatio: '0.707',
+          transformOrigin: 'left center',
+          transformStyle: 'preserve-3d',
+          border: 'none',
+          padding: 0,
+          margin: 0,
+          background: 'transparent',
+          cursor: 'pointer',
+          borderRadius: '3px',
+          overflow: 'hidden',
+          boxShadow:
+            '0 30px 80px rgba(0,0,0,0.7), 0 10px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
+        }}
+      >
+        <div style={{ position: 'absolute', inset: 0 }}>{face.render()}</div>
+        {/* A spine shadow down the binding edge sells the closed book. */}
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            insetBlock: 0,
+            left: 0,
+            width: '12px',
+            background: 'linear-gradient(90deg, rgba(0,0,0,0.5), rgba(0,0,0,0))',
+          }}
+        />
+      </motion.button>
+    </motion.div>
+  );
+}
+
+/**
+ * A one-time, auto-dismissing coach mark on the reveal cover: it names the two
+ * ways to turn the page (edge click, arrows) and retires itself on the first
+ * turn, after a few seconds, or on click — and stays gone for the session.
+ */
+function NavHint({ onDismiss }: { onDismiss: () => void }) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onDismiss}
+      aria-label="Got it"
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      transition={{ duration: 0.3 }}
+      style={{
+        position: 'absolute',
+        left: '50%',
+        bottom: '5.5rem',
+        transform: 'translateX(-50%)',
+        zIndex: 6,
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: '0.5rem',
+        borderRadius: '9999px',
+        border: '1px solid rgba(255,255,255,0.12)',
+        background: 'rgba(0,0,0,0.72)',
+        backdropFilter: 'blur(8px)',
+        padding: '0.5rem 0.9rem',
+        fontSize: '12.5px',
+        fontWeight: 500,
+        color: 'rgba(255,255,255,0.78)',
+        whiteSpace: 'nowrap',
+        cursor: 'pointer',
+        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+      }}
+    >
+      Click a page edge, or use the arrows, to turn.
+    </motion.button>
+  );
+}
