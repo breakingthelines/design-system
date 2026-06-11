@@ -26,13 +26,25 @@ const arsenal = {
   label: 'Arsenal',
   shortLabel: 'ARS',
   standingLabel: '2nd in Premier League',
+  standingHref: '#/competition/premier-league',
+  scorers: [{ name: 'B. Saka', minute: "35'", kind: 'goal' as const }],
 };
 
 const chelsea = {
   label: 'Chelsea',
   shortLabel: 'CHE',
   standingLabel: '1st in Premier League',
+  standingHref: '#/competition/premier-league',
+  scorers: [
+    { name: 'C. Palmer', minute: "55'", kind: 'goal' as const },
+    { name: 'E. Fernández', minute: "85'", kind: 'penalty' as const },
+  ],
 };
+
+// A knockout-phase pairing: no league position, so the standing caption omits
+// gracefully and the layout still reads correctly.
+const knockoutHome = { label: 'Real Madrid', shortLabel: 'RMA' };
+const knockoutAway = { label: 'Bayern München', shortLabel: 'FCB' };
 
 export const PhotoHero = meta.story({
   name: 'Photo hero (finished)',
@@ -131,6 +143,26 @@ export const PhotoFallsBackToFlat = meta.story({
     scoreAway: 2,
     competitionLabel: 'Premier League',
     venueLabel: 'Emirates Stadium',
+  },
+  render: (args) => (
+    <div className="w-[920px]">
+      <MatchHeader {...args} />
+    </div>
+  ),
+});
+
+export const KnockoutNoStanding = meta.story({
+  name: 'Knockout (no league position)',
+  args: {
+    home: knockoutHome,
+    away: knockoutAway,
+    status: 'finished',
+    variant: 'flat',
+    scoreHome: 2,
+    scoreAway: 2,
+    competitionLabel: 'UEFA Champions League',
+    venueLabel: 'Santiago Bernabéu',
+    kickoffIso: '2026-05-19T19:00:00Z',
   },
   render: (args) => (
     <div className="w-[920px]">
