@@ -134,7 +134,7 @@ export function EntityPageShell({
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <h1
               data-slot="entity-page-shell-title"
-              className="font-display text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl"
+              className="font-sans text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl"
             >
               {name}
             </h1>

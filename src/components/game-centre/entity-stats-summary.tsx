@@ -114,7 +114,7 @@ export function EntityStatsSummary({ header, metrics, bio, className }: EntitySt
 
       {bio ? (
         <div data-slot="entity-stats-summary-overview" className="flex flex-col gap-2">
-          <h5 className="font-display text-sm font-semibold tracking-tight text-white">Overview</h5>
+          <h5 className="font-sans text-sm font-semibold tracking-tight text-white">Overview</h5>
           <div className="text-[13px] leading-relaxed text-white/70">{bio}</div>
         </div>
       ) : null}
