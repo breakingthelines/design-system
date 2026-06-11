@@ -137,7 +137,7 @@ export function PlayerOfTheMatchCard({
       data-rating-max={ratingMax}
       className={wrapper}
     >
-      <PotmEyebrow />
+      {showEyebrow ? <PotmEyebrow /> : null}
       <div className="flex items-center gap-3">
         <Avatar size="lg" className="shrink-0 border border-white/10">
           {avatarUrl ? <AvatarImage src={avatarUrl} alt="" /> : null}
