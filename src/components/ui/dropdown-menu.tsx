@@ -22,6 +22,7 @@ function DropdownMenuContent({
   side = 'bottom',
   sideOffset = 4,
   className,
+  children,
   ...props
 }: MenuPrimitive.Popup.Props &
   Pick<MenuPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'>) {
@@ -37,11 +38,23 @@ function DropdownMenuContent({
         <MenuPrimitive.Popup
           data-slot="dropdown-menu-content"
           className={cn(
-            'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 border border-white/10 bg-popover text-popover-foreground min-w-32 rounded-[2px] shadow-xl backdrop-blur-xl duration-100 z-50 max-h-(--available-height) w-(--anchor-width) origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none data-closed:overflow-hidden',
+            // BTL menu chrome — matches the platform share-popover look:
+            // dark surface, hairline border, red-accent gradient line at the
+            // top (added as an absolute child below), 2px corners, dense row
+            // rhythm via `flex flex-col gap-0.5`. The `pt-1` reserves space
+            // for the accent line so it never overlaps the first row.
+            'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 bg-grey-200/90 text-popover-foreground relative flex min-w-32 flex-col gap-0.5 rounded-[2px] border border-white/10 p-1 pt-1 shadow-xl ring-0 backdrop-blur-xl duration-100 z-50 max-h-(--available-height) origin-(--transform-origin) overflow-x-hidden overflow-y-auto outline-none data-closed:overflow-hidden',
             className
           )}
           {...props}
-        />
+        >
+          {/* Red accent line — matches share-popover treatment. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent"
+          />
+          {children}
+        </MenuPrimitive.Popup>
       </MenuPrimitive.Positioner>
     </MenuPrimitive.Portal>
   );
@@ -62,7 +75,12 @@ function DropdownMenuLabel({
     <MenuPrimitive.GroupLabel
       data-slot="dropdown-menu-label"
       data-inset={inset}
-      className={cn('text-muted-foreground px-2 py-2 text-xs data-[inset]:pl-8', className)}
+      // Headings sit in the same dense column as rows but read quieter and
+      // slightly tighter — they're metadata, not affordances.
+      className={cn(
+        'text-muted-text/70 px-4 pt-2 pb-1 text-[10px] tracking-[0.12em] uppercase data-[inset]:pl-8',
+        className
+      )}
       {...props}
     />
   );
@@ -83,7 +101,11 @@ function DropdownMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:bg-destructive/10 dark:data-[variant=destructive]:focus:bg-destructive/20 data-[variant=destructive]:focus:text-destructive data-[variant=destructive]:*:[svg]:text-destructive not-data-[variant=destructive]:focus:**:text-accent-foreground gap-2 rounded-[2px] px-2 py-2 text-xs [&_svg:not([class*='size-'])]:size-4 group/dropdown-menu-item relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        // BTL menu row chrome — matches share-popover rows: dense flex row,
+        // muted text by default, white-on-white/5 hover, UPPERCASE labels with
+        // an open letter-spacing. Variant=destructive paints red, focused or
+        // not, so the affordance reads as dangerous at rest as well as hover.
+        "text-muted-text data-[variant=destructive]:text-destructive data-[variant=destructive]:focus:text-destructive group/dropdown-menu-item relative flex w-full cursor-pointer items-center gap-2.5 rounded-[2px] px-4 py-2.5 text-xs tracking-[0.08em] uppercase outline-hidden transition-colors select-none hover:bg-white/5 hover:text-white focus:bg-white/5 focus:text-white data-disabled:pointer-events-none data-disabled:opacity-50 data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className
       )}
       {...props}
@@ -108,7 +130,9 @@ function DropdownMenuSubTrigger({
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground gap-2 rounded-[2px] px-2 py-2 text-xs [&_svg:not([class*='size-'])]:size-4 flex cursor-default items-center outline-hidden select-none data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        // Mirrors `DropdownMenuItem` chrome so sub-triggers read like any
+        // other row; the caret on the right is positioned via `ml-auto`.
+        "text-muted-text data-open:bg-white/5 data-open:text-white flex w-full cursor-pointer items-center gap-2.5 rounded-[2px] px-4 py-2.5 text-xs tracking-[0.08em] uppercase outline-hidden transition-colors select-none hover:bg-white/5 hover:text-white focus:bg-white/5 focus:text-white data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className
       )}
       {...props}
@@ -130,10 +154,7 @@ function DropdownMenuSubContent({
   return (
     <DropdownMenuContent
       data-slot="dropdown-menu-sub-content"
-      className={cn(
-        'data-open:animate-in data-closed:animate-out data-closed:fade-out-0 data-open:fade-in-0 data-closed:zoom-out-95 data-open:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 border border-white/10 bg-popover text-popover-foreground min-w-[96px] rounded-[2px] shadow-xl backdrop-blur-xl duration-100 w-auto',
-        className
-      )}
+      className={cn('min-w-[96px] w-auto', className)}
       align={align}
       alignOffset={alignOffset}
       side={side}
@@ -153,14 +174,16 @@ function DropdownMenuCheckboxItem({
     <MenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground gap-2 rounded-none py-2 pr-8 pl-2 text-xs [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        // Mirrors `DropdownMenuItem` chrome with reserved right-side gutter
+        // for the check indicator.
+        "text-muted-text relative flex w-full cursor-pointer items-center gap-2.5 rounded-[2px] py-2.5 pr-9 pl-4 text-xs tracking-[0.08em] uppercase outline-hidden transition-colors select-none hover:bg-white/5 hover:text-white focus:bg-white/5 focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className
       )}
       checked={checked}
       {...props}
     >
       <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center pointer-events-none"
+        className="pointer-events-none absolute right-3 flex items-center justify-center pointer-events-none"
         data-slot="dropdown-menu-checkbox-item-indicator"
       >
         <MenuPrimitive.CheckboxItemIndicator>
@@ -181,13 +204,15 @@ function DropdownMenuRadioItem({ className, children, ...props }: MenuPrimitive.
     <MenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground gap-2 rounded-none py-2 pr-8 pl-2 text-xs [&_svg:not([class*='size-'])]:size-4 relative flex cursor-default items-center outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        // Same row chrome as CheckboxItem; the radio dot lives in the right
+        // gutter via the indicator span below.
+        "text-muted-text relative flex w-full cursor-pointer items-center gap-2.5 rounded-[2px] py-2.5 pr-9 pl-4 text-xs tracking-[0.08em] uppercase outline-hidden transition-colors select-none hover:bg-white/5 hover:text-white focus:bg-white/5 focus:text-white data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-3.5",
         className
       )}
       {...props}
     >
       <span
-        className="pointer-events-none absolute right-2 flex items-center justify-center pointer-events-none"
+        className="pointer-events-none absolute right-3 flex items-center justify-center pointer-events-none"
         data-slot="dropdown-menu-radio-item-indicator"
       >
         <MenuPrimitive.RadioItemIndicator>
@@ -203,7 +228,9 @@ function DropdownMenuSeparator({ className, ...props }: MenuPrimitive.Separator.
   return (
     <MenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn('bg-border -mx-1 h-px', className)}
+      // Thin hairline matching the BTL chrome — kept flush (no horizontal
+      // margin) so the rule spans the dense `px-4` row column.
+      className={cn('border-t border-white/5', className)}
       {...props}
     />
   );
