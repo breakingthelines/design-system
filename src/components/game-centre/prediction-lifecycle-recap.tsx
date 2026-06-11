@@ -67,11 +67,18 @@ export interface PredictionLifecycleRecapProps extends React.ComponentProps<'div
   rows: readonly PredictionRecapRow[];
   /** Optional crowd recap line. */
   crowd?: PredictionLifecycleRecapCrowd;
+  /**
+   * Wave 6.25z: when true, drops the in-card "Your pick breakdown" eyebrow
+   * so the host can render an external `SectionHeading` instead. Off-by-
+   * default — back-compat for stories + any other consumer.
+   */
+  hideHeader?: boolean;
 }
 
 function PredictionLifecycleRecap({
   rows,
   crowd,
+  hideHeader = false,
   className,
   ...props
 }: PredictionLifecycleRecapProps) {
@@ -85,9 +92,11 @@ function PredictionLifecycleRecap({
       )}
       {...props}
     >
-      <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
-        Your pick breakdown
-      </span>
+      {hideHeader ? null : (
+        <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
+          Your pick breakdown
+        </span>
+      )}
 
       {hasRows ? (
         <dl data-slot="prediction-lifecycle-recap-rows" className="flex flex-col gap-3">

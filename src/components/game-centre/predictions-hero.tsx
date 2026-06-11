@@ -66,10 +66,12 @@ export interface PredictionsHeroProps extends React.ComponentProps<'div'> {
   /** FINISHED — total points that were on offer. */
   pointsAvailable?: number;
   /**
-   * SCHEDULED — when true, drops the in-card "Kickoff in" eyebrow so the host
+   * Drops the in-card eyebrow on whichever state body is active so the host
    * can render an external `SectionHeading` instead. Defaults to false so
    * existing consumers (Arena widget, stories) keep their in-card label.
-   * Wave 6.25h.
+   *   - SCHEDULED → suppresses "Kickoff in" (Wave 6.25h)
+   *   - LIVE      → suppresses "Picks locked at kickoff" (Wave 6.25z)
+   *   - FINISHED  → suppresses "Full time" (Wave 6.25z)
    */
   hideHeader?: boolean;
 }
@@ -126,13 +128,19 @@ function PredictionsHero({
             hideHeader={hideHeader}
           />
         ) : state === 'live' ? (
-          <LiveBody key="live" liveClock={liveClock ?? 'Live'} scoreLine={scoreLine} />
+          <LiveBody
+            key="live"
+            liveClock={liveClock ?? 'Live'}
+            scoreLine={scoreLine}
+            hideHeader={hideHeader}
+          />
         ) : (
           <FinishedBody
             key="finished"
             scoreLine={scoreLine}
             pointsEarned={pointsEarned}
             pointsAvailable={pointsAvailable}
+            hideHeader={hideHeader}
           />
         )}
       </AnimatePresence>
@@ -239,6 +247,7 @@ function ScheduledBody({
 function LiveBody({
   liveClock,
   scoreLine,
+  hideHeader,
 }: {
   liveClock: string;
   // `matchLabel` is intentionally NOT rendered here (Wave 6.25b): the viewer
@@ -246,6 +255,7 @@ function LiveBody({
   // prop survives on `PredictionsHeroProps` so external surfaces (Arena
   // widget etc.) keep their type, but the hero body itself never paints it.
   scoreLine?: string;
+  hideHeader?: boolean;
 }) {
   return (
     <motion.div
@@ -278,11 +288,13 @@ function LiveBody({
         ) : null}
       </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
-        <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
-          Picks locked at kickoff
-        </span>
-      </div>
+      {hideHeader ? null : (
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
+          <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
+            Picks locked at kickoff
+          </span>
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -295,6 +307,7 @@ function FinishedBody({
   scoreLine,
   pointsEarned,
   pointsAvailable,
+  hideHeader,
 }: {
   // `matchLabel` is intentionally NOT rendered here (Wave 6.25b): the viewer
   // is already on the match page so "CF v THF" in the bottom-right is
@@ -303,6 +316,7 @@ function FinishedBody({
   scoreLine?: string;
   pointsEarned?: number;
   pointsAvailable?: number;
+  hideHeader?: boolean;
 }) {
   const cast = pointsEarned !== undefined;
   return (
@@ -314,9 +328,11 @@ function FinishedBody({
       className="flex flex-col gap-4"
     >
       <div className="flex items-baseline gap-3">
-        <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
-          Full time
-        </span>
+        {hideHeader ? null : (
+          <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
+            Full time
+          </span>
+        )}
         {scoreLine ? (
           <span
             data-slot="predictions-hero-final-score"
