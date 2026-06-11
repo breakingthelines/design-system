@@ -15,11 +15,14 @@ import { cn } from '#/lib/utils';
  *
  * Anatomy (top → bottom):
  *
- *   1. eyebrow  — entity kind ("PLAYER", "TEAM", "PREDICTION LEAGUE")
- *   2. hero     — crest + display name + secondary labels + actions
- *   3. meta     — chip row with secondary identity (position, country, etc.)
- *   4. tabs     — render slot for a TabbedPage rail
- *   5. content  — children
+ *   1. header panel — a contained card holding the eyebrow, hero (crest +
+ *      display name + secondary + actions) and the identity meta strip
+ *   2. tabs         — render slot for a TabbedPage / ProfileTabs rail
+ *   3. content      — children
+ *
+ * The meta strip is either the plain-text `meta` row or, preferred, a
+ * pre-composed `metaChips` node (an icon strip the consumer builds — the
+ * football field→icon mapping stays in the consumer, not this primitive).
  *
  * The shell is *render-only*. Tabs, breadcrumbs and actions are passed in as
  * nodes so the host can wire its own routing.
@@ -61,8 +64,15 @@ export interface EntityPageShellProps {
   initials?: string;
   /** Brand tint behind the crest. */
   accentColor?: string;
-  /** Chip row of identity fields. */
+  /** Chip row of identity fields (plain text). Fallback when `metaChips` is absent. */
   meta?: readonly EntityPageShellMeta[];
+  /**
+   * Pre-composed identity meta strip — typically an `<EntityMetaChips>` icon
+   * strip built by the consumer. Rendered inside the header panel in place of
+   * the plain-text `meta` row when provided, so the football-specific
+   * field→icon mapping stays in the consumer rather than this layout primitive.
+   */
+  metaChips?: React.ReactNode;
   /** Action row (Follow, Subscribe, Manage). */
   actions?: React.ReactNode;
   /** Tabs rail. Typically a `<TabbedPage>` or its sub-rail. */
@@ -82,6 +92,7 @@ export function EntityPageShell({
   initials,
   accentColor,
   meta,
+  metaChips,
   actions,
   tabs,
   notice,
@@ -96,7 +107,7 @@ export function EntityPageShell({
     >
       <header
         data-slot="entity-page-shell-hero"
-        className="flex flex-col gap-4 border-b border-white/10 pb-6"
+        className="flex flex-col gap-4 rounded-lg border border-white/10 bg-[var(--color-grey-100)] p-5 sm:p-6"
       >
         <p
           data-slot="entity-page-shell-eyebrow"
@@ -152,7 +163,9 @@ export function EntityPageShell({
           ) : null}
         </div>
 
-        {meta && meta.length > 0 ? (
+        {metaChips ? (
+          <div data-slot="entity-page-shell-meta">{metaChips}</div>
+        ) : meta && meta.length > 0 ? (
           <ul
             data-slot="entity-page-shell-meta"
             className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[11px] text-[var(--color-grey-500)]"
