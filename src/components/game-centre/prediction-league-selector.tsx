@@ -9,7 +9,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#/components/ui/dropdown-menu';
@@ -141,13 +140,11 @@ export function PredictionLeagueSelector({
                 logical group; the browse affordance below sits outside it
                 under a separator. */}
             <DropdownMenuGroup>
-              {/* `font-content` override (Wave 6.25g): the primitive
-                  `DropdownMenuLabel` doesn't set a font, so the eyebrow can
-                  drift to display when the parent cascade does. Every BTL
-                  eyebrow renders in Inter. */}
-              <DropdownMenuLabel className="font-content">
-                Your prediction leagues
-              </DropdownMenuLabel>
+              {/* Wave 6.25g-a: the "Your prediction leagues" eyebrow was
+                  removed — it was noise above a single-row dropdown. The
+                  `<DropdownMenuGroup>` wrapper stays (Wave 6.25d) so any
+                  future `DropdownMenuLabel` re-add doesn't crash Base UI
+                  (#31 `MenuGroupRootContext is missing`). */}
               {options.map((opt) => {
                 const isActive = opt.leagueInstanceId === active?.leagueInstanceId;
                 return (
