@@ -147,6 +147,27 @@ export type {
   PredictionPickSummary,
 } from './prediction-pulse-card';
 
+export { PredictionsHero } from './predictions-hero';
+export type { PredictionsHeroProps, PredictionsHeroState } from './predictions-hero';
+
+export { PredictionStakesBadge } from './prediction-stakes-badge';
+export type { PredictionStakesBadgeProps } from './prediction-stakes-badge';
+
+export { PredictionStandingCard } from './prediction-standing-card';
+export type {
+  PredictionStandingCardProps,
+  PredictionStandingState,
+  PredictionGwStatus,
+} from './prediction-standing-card';
+
+export { PredictionLifecycleRecap } from './prediction-lifecycle-recap';
+export type {
+  PredictionLifecycleRecapProps,
+  PredictionLifecycleRecapCrowd,
+  PredictionRecapRow,
+  PredictionRecapFieldStatus,
+} from './prediction-lifecycle-recap';
+
 export { GradeScale } from './grade-scale';
 export type {
   GradeScaleProps,
