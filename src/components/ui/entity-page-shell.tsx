@@ -15,8 +15,8 @@ import { cn } from '#/lib/utils';
  *
  * Anatomy (top → bottom):
  *
- *   1. header panel — a contained card holding the eyebrow, hero (crest +
- *      display name + secondary + actions) and the identity meta strip
+ *   1. header panel — a contained card holding the hero (crest + display name +
+ *      secondary + actions) and the identity meta strip
  *   2. tabs         — render slot for a TabbedPage / ProfileTabs rail
  *   3. content      — children
  *
@@ -35,15 +35,6 @@ export type EntityKind =
   | 'competition'
   | 'prediction_league'
   | 'rating_club';
-
-const ENTITY_KIND_LABEL: Record<EntityKind, string> = {
-  player: 'Player',
-  team: 'Team',
-  manager: 'Manager',
-  competition: 'Competition',
-  prediction_league: 'Prediction League',
-  rating_club: 'Grading Club',
-};
 
 export interface EntityPageShellMeta {
   /** Stable key for React lists. */
@@ -82,6 +73,13 @@ export interface EntityPageShellProps {
   /** Body content. */
   children?: React.ReactNode;
   className?: string;
+  /**
+   * Extra classes for the content wrapper. Use to make the body a flex-1,
+   * scrolling region inside a fixed-height shell — e.g. the player entity page
+   * caps the left column height and scrolls the bio: pass the height via
+   * `className` and `lg:min-h-0 lg:flex-1 lg:overflow-y-auto` here.
+   */
+  bodyClassName?: string;
 }
 
 export function EntityPageShell({
@@ -98,6 +96,7 @@ export function EntityPageShell({
   notice,
   children,
   className,
+  bodyClassName,
 }: EntityPageShellProps) {
   return (
     <section
@@ -109,13 +108,6 @@ export function EntityPageShell({
         data-slot="entity-page-shell-hero"
         className="flex flex-col gap-4 rounded-lg border border-white/10 bg-[var(--color-grey-100)] p-5 sm:p-6"
       >
-        <p
-          data-slot="entity-page-shell-eyebrow"
-          className="text-[10px] tracking-[0.18em] uppercase text-[var(--color-grey-500)]"
-        >
-          {ENTITY_KIND_LABEL[kind]}
-        </p>
-
         <div className="flex items-center gap-4">
           <span
             data-slot="entity-page-shell-crest"
@@ -190,7 +182,9 @@ export function EntityPageShell({
 
       {tabs ? <div data-slot="entity-page-shell-tabs">{tabs}</div> : null}
 
-      <div data-slot="entity-page-shell-content">{children}</div>
+      <div data-slot="entity-page-shell-content" className={bodyClassName}>
+        {children}
+      </div>
     </section>
   );
 }
