@@ -110,7 +110,7 @@ export function FlipHoverControl({
               className
             )}
           >
-            <div className="flex items-center gap-3 rounded-full border border-white/10 bg-black/80 px-3 py-2 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center gap-3 rounded-full border border-white/[0.12] bg-black/85 px-3.5 py-2 shadow-2xl backdrop-blur-2xl">
               <button
                 type="button"
                 onClick={onPrev}
@@ -150,7 +150,7 @@ export function FlipHoverControl({
  * floating bar's ring (red-100 stroke over a faint track, 500ms ease-out).
  */
 function ProgressRing({ progress, size = 28 }: { progress: number; size?: number }) {
-  const strokeWidth = 2.5;
+  const strokeWidth = 2;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (progress / 100) * circumference;
@@ -162,7 +162,7 @@ function ProgressRing({ progress, size = 28 }: { progress: number; size?: number
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="rgba(255,255,255,0.1)"
+        stroke="rgba(255,255,255,0.14)"
         strokeWidth={strokeWidth}
       />
       <circle
@@ -170,7 +170,7 @@ function ProgressRing({ progress, size = 28 }: { progress: number; size?: number
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="var(--color-red-100)"
+        stroke="var(--color-red-300, #bf0000)"
         strokeWidth={strokeWidth}
         strokeDasharray={circumference}
         strokeDashoffset={offset}

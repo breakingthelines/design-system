@@ -128,8 +128,6 @@ export interface IssueReaderHandle {
  * gating, freezing, audio, and the curl itself to `PageFlip`. Nothing about the
  * flip is re-implemented here.
  */
-const NAV_HINT_SEEN_KEY = 'btl-issue-reader-hint-seen';
-
 export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(function IssueReader(
   {
     issue,
@@ -182,21 +180,9 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
   const isReveal = mode === 'reveal';
   const [armedClose, setArmedClose] = useState(false);
   const [closed, setClosed] = useState(false);
-  // One-time, auto-dismissing nav hint on the cover (reveal only).
-  const [showHint, setShowHint] = useState(false);
-  const dismissHint = () => {
-    setShowHint(false);
-    try {
-      window.sessionStorage?.setItem(NAV_HINT_SEEN_KEY, '1');
-    } catch {
-      /* private mode / no storage — the hint simply re-shows next session */
-    }
-  };
 
   const handleIndexChange = (index: number, direction: FlipDirection) => {
     onTurn?.(index, direction);
-    // Any turn means the user has the hang of it — retire the nav hint.
-    if (index >= 1) dismissHint();
     // The cover has opened once we settle anywhere past the cover (position ≥ 1).
     // Fire exactly once; only relevant to the reveal ceremony.
     if (!coverOpenedFired.current && index >= 1) {
@@ -216,25 +202,6 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
     const t = setTimeout(() => setClosed(true), 1100);
     return () => clearTimeout(t);
   }, [isReveal, armedClose, closed]);
-
-  // Surface the nav hint a beat after the reveal opens, then retire it.
-  useEffect(() => {
-    if (!isReveal || typeof window === 'undefined') return;
-    let seen = false;
-    try {
-      seen = window.sessionStorage?.getItem(NAV_HINT_SEEN_KEY) === '1';
-    } catch {
-      seen = false;
-    }
-    if (seen) return;
-    const show = setTimeout(() => setShowHint(true), 900);
-    const hide = setTimeout(() => dismissHint(), 6500);
-    return () => {
-      clearTimeout(show);
-      clearTimeout(hide);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per reveal mount
-  }, [isReveal]);
 
   // Re-open from the closed cover: flip back to the front and re-arm.
   const reopen = () => {
@@ -283,11 +250,6 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
       {isReveal && faces[0] ? (
         <AnimatePresence>
           {closed ? <ClosingCover key="closed" face={faces[0]} onReopen={reopen} /> : null}
-        </AnimatePresence>
-      ) : null}
-      {isReveal ? (
-        <AnimatePresence>
-          {showHint && !closed ? <NavHint key="hint" onDismiss={dismissHint} /> : null}
         </AnimatePresence>
       ) : null}
     </div>
@@ -357,47 +319,5 @@ function ClosingCover({ face, onReopen }: { face: IssueFace; onReopen: () => voi
         />
       </motion.button>
     </motion.div>
-  );
-}
-
-/**
- * A one-time, auto-dismissing coach mark on the reveal cover: it names the two
- * ways to turn the page (edge click, arrows) and retires itself on the first
- * turn, after a few seconds, or on click — and stays gone for the session.
- */
-function NavHint({ onDismiss }: { onDismiss: () => void }) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onDismiss}
-      aria-label="Got it"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: 10 }}
-      transition={{ duration: 0.3 }}
-      style={{
-        position: 'absolute',
-        left: '50%',
-        bottom: '5.5rem',
-        transform: 'translateX(-50%)',
-        zIndex: 6,
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: '0.5rem',
-        borderRadius: '9999px',
-        border: '1px solid rgba(255,255,255,0.12)',
-        background: 'rgba(0,0,0,0.72)',
-        backdropFilter: 'blur(8px)',
-        padding: '0.5rem 0.9rem',
-        fontSize: '12.5px',
-        fontWeight: 500,
-        color: 'rgba(255,255,255,0.78)',
-        whiteSpace: 'nowrap',
-        cursor: 'pointer',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
-      }}
-    >
-      Click a page edge, or use the arrows, to turn.
-    </motion.button>
   );
 }
