@@ -9,19 +9,9 @@ describe('EntityPageShell', () => {
     expect(getSlotAttr(markup, 'entity-page-shell', 'data-kind')).toBe('player');
   });
 
-  it('renders the localised eyebrow per kind', () => {
-    expect(
-      slotText(render(<EntityPageShell kind="player" name="x" />), 'entity-page-shell-eyebrow')
-    ).toBe('Player');
-    expect(
-      slotText(
-        render(<EntityPageShell kind="prediction_league" name="x" />),
-        'entity-page-shell-eyebrow'
-      )
-    ).toBe('Prediction League');
-    expect(
-      slotText(render(<EntityPageShell kind="rating_club" name="x" />), 'entity-page-shell-eyebrow')
-    ).toBe('Grading Club');
+  it('does not render a kind eyebrow (the secondary line carries identity context)', () => {
+    const markup = render(<EntityPageShell kind="player" name="x" />);
+    expect(hasSlot(markup, 'entity-page-shell-eyebrow')).toBe(false);
   });
 
   it('renders the display name into the title slot', () => {
