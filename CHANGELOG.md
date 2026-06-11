@@ -5,6 +5,22 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.3] — 2026-06-11
+
+### Added — `PlayerMultiSelectField` `searchable` prop (Wave 6.25m)
+
+- New `searchable` prop on `PlayerMultiSelectField`. When true, the field
+  renders a small search input above the roster list. Typing filters visible
+  rows by case-insensitive substring on `player.name`; selections persist
+  across the filter and the at-cap state is computed against the full
+  selection set, not the visible subset.
+- Optional `searchPlaceholder` prop overrides the default `"Search players"`.
+- The search input is suppressed when `players` is empty (no search target).
+- Off by default for back-compat — existing consumers see no visual change.
+- Used by `SubmitPredictionSheet`'s Goalscorers + Bookings pickers, where the
+  pre-XI fallback hands the modal a ~23-player squad per side and scanning
+  by sight is painful.
+
 ## [0.36.2] — 2026-06-11
 
 ### Changed — MatchHeader xG label

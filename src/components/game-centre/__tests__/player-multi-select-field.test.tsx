@@ -88,4 +88,65 @@ describe('PlayerMultiSelectField', () => {
     // The unselected row goes into the capped state.
     expect(markup).toContain('data-disabled="capped"');
   });
+
+  // Wave 6.25m — searchable rosters
+  describe('searchable', () => {
+    it('does not render the search input by default (back-compat)', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={PLAYERS}
+          selectedIds={[]}
+          onChange={vi.fn()}
+        />
+      );
+      expect(hasSlot(markup, 'player-multi-select-field-search')).toBe(false);
+    });
+
+    it('renders the search input when `searchable` is true', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={PLAYERS}
+          selectedIds={[]}
+          onChange={vi.fn()}
+          searchable
+        />
+      );
+      expect(hasSlot(markup, 'player-multi-select-field-search')).toBe(true);
+      // Default placeholder.
+      expect(markup).toContain('placeholder="Search players"');
+      // aria-label uses the field label so screen readers read the field name.
+      expect(markup).toContain('aria-label="Search Goalscorers"');
+    });
+
+    it('honours a custom placeholder', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={PLAYERS}
+          selectedIds={[]}
+          onChange={vi.fn()}
+          searchable
+          searchPlaceholder="Find a player"
+        />
+      );
+      expect(markup).toContain('placeholder="Find a player"');
+    });
+
+    it('does not render the search input when the roster is empty (no search target)', () => {
+      const markup = render(
+        <PlayerMultiSelectField
+          label="Goalscorers"
+          players={[]}
+          selectedIds={[]}
+          onChange={vi.fn()}
+          searchable
+        />
+      );
+      expect(hasSlot(markup, 'player-multi-select-field-search')).toBe(false);
+      // Empty state still fires on a zero-length roster.
+      expect(hasSlot(markup, 'player-multi-select-field-empty')).toBe(true);
+    });
+  });
 });
