@@ -5,6 +5,22 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.35.1] — 2026-06-11
+
+### Changed — `PredictionStakesBadge` Wave 6.25j cleanup
+
+- Drop the red horizontal underline added in 6.25i. The badge is now plain text
+  only: `+3 pts` in BTL red, nothing else (no underline, no border, no pill).
+- Switch back to `font-content` (Inter). The Monde Journal display family the
+  6.25i pass tried didn't sit alongside neighbouring section headings; Inter
+  with the BTL red colour carries the stake signal on its own.
+- Pluralise correctly: `+1 pt` (singular) / `+3 pts` (plural) instead of
+  always-uppercase `PT`/`PTS`. The `each` modifier now reads `+2 pts each` /
+  `+1 pt each` with the noun pluralised against `points`.
+- Drop the `flex-col` layout (was carrying the underline rule); the badge is
+  now a single inline baseline-aligned row so hosts can drop it directly next
+  to a section heading without extra wrapping.
+
 ## [0.35.0] — 2026-06-11
 
 ### Changed — `MatchHeader` scoreboard refresh (Wave 6.27)

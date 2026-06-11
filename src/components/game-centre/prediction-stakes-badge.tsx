@@ -5,23 +5,23 @@ import * as React from 'react';
 import { cn } from '#/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * PredictionStakesBadge (Wave 6.5; chrome refresh Wave 6.25i)
+ * PredictionStakesBadge (Wave 6.5; chrome refresh Wave 6.25i; Wave 6.25j cleanup)
  *
  * The "stake" affordance for a prediction rubric field. Each field carries a
- * small editorial eyebrow chip that tells the viewer exactly what it scores:
- * `+1 PT`, `+3 PTS`, `+1 EACH`.
+ * small editorial eyebrow chip that tells the viewer what it scores:
+ * `+1 pt`, `+3 pts`, `+2 pts each`.
  *
- * Visual language (Wave 6.25i):
- *   - Monde Journal (`font-display`) — the display family that already carries
- *     BTL's editorial accents (SectionHeader, ContextSlot eyebrows).
- *   - tight tracking, uppercase, tabular digits.
- *   - a thin BTL-red underline beneath the text — the same red-100 rule the
- *     SectionHeader pattern uses, which keeps the stake chip rhyming with the
- *     rest of the editorial chrome.
- *   - no left border, no rounded pill, no shadow.
+ * Visual language (Wave 6.25j):
+ *   - `font-content` (Inter) — same family the surrounding section headings use,
+ *     so the badge reads as a quiet inline annotation rather than its own
+ *     editorial accent (the Wave 6.25i Monde Journal experiment didn't sit).
+ *   - tight tracking, sentence-case "pt"/"pts" — grammatically correct
+ *     pluralisation (auto-picked from `points`).
+ *   - BTL red colour, no underline, no border. The colour alone carries the
+ *     stake signal.
  *
- * The badge sits inline with the field legend OR right-aligned next to it.
- * Hosts can opt into the `each` modifier for fields that score per-pick.
+ * The badge sits INLINE next to its section heading by default; pass
+ * `tone="total"` for the larger banner usage at the top of the modal.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export interface PredictionStakesBadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -29,16 +29,16 @@ export interface PredictionStakesBadgeProps extends React.HTMLAttributes<HTMLSpa
   points: number;
   /**
    * Modifier copy after the points number.
-   *  - `pt`   → `+1 pt` (default, singular)
-   *  - `pts`  → `+3 pts` (plural; auto-picked if points > 1 and no modifier)
-   *  - `each` → `+1 each` (per-pick fields like goalscorers / bookings)
+   *  - `pt`   → `+1 pt` (auto-picked when points === 1)
+   *  - `pts`  → `+3 pts` (auto-picked when points > 1)
+   *  - `each` → `+2 pts each` (per-pick fields — points still pluralised)
    */
   modifier?: 'pt' | 'pts' | 'each';
   /**
    * Visual emphasis:
-   *  - `default` → red label + red underline (the canonical stake)
+   *  - `default` → red label, sized to sit inline with a section heading.
    *  - `muted`   → white/40 — used when the field is hidden / inactive
-   *  - `total`   → red label + larger size; used in the modal "stakes banner"
+   *  - `total`   → red label + bigger; used in the modal "stakes banner".
    */
   tone?: 'default' | 'muted' | 'total';
   className?: string;
@@ -51,7 +51,9 @@ function PredictionStakesBadge({
   className,
   ...props
 }: PredictionStakesBadgeProps) {
-  const effectiveModifier = modifier ?? (points === 1 ? 'pt' : 'pts');
+  // `each` pluralises the noun based on points: `+1 pt each` / `+2 pts each`.
+  const plural = points === 1 ? 'pt' : 'pts';
+  const effectiveModifier = modifier === 'each' ? `${plural} each` : (modifier ?? plural);
   const isTotal = tone === 'total';
   const isMuted = tone === 'muted';
 
@@ -61,42 +63,24 @@ function PredictionStakesBadge({
       data-tone={tone}
       data-points={points}
       className={cn(
-        'inline-flex flex-col items-start gap-0.5',
+        'font-content inline-flex items-baseline gap-1 tabular-nums',
         isMuted ? 'text-white/40' : 'text-[var(--color-red-100)]',
+        isTotal ? 'text-base font-semibold' : 'text-xs font-semibold',
         className
       )}
       {...props}
     >
+      <span data-slot="prediction-stakes-badge-amount">+{points}</span>
       <span
-        data-slot="prediction-stakes-badge-row"
+        data-slot="prediction-stakes-badge-modifier"
         className={cn(
-          'inline-flex items-baseline gap-1.5',
-          'font-display tracking-[0.16em] uppercase tabular-nums',
-          isTotal ? 'text-sm' : 'text-[10px]'
+          isTotal ? 'text-sm' : 'text-[11px]',
+          'font-medium',
+          isMuted ? 'text-white/40' : 'text-[var(--color-red-100)]/85'
         )}
       >
-        <span
-          data-slot="prediction-stakes-badge-amount"
-          className={cn('font-semibold', isTotal ? 'text-base' : '')}
-        >
-          +{points}
-        </span>
-        <span
-          data-slot="prediction-stakes-badge-modifier"
-          className={cn(
-            'text-[10px] leading-none',
-            isTotal ? 'text-[11px]' : '',
-            isMuted ? 'text-white/40' : 'text-[var(--color-red-100)]/85'
-          )}
-        >
-          {effectiveModifier}
-        </span>
+        {effectiveModifier}
       </span>
-      <span
-        data-slot="prediction-stakes-badge-underline"
-        aria-hidden="true"
-        className={cn('h-px w-full', isMuted ? 'bg-white/25' : 'bg-[var(--color-red-100)]')}
-      />
     </span>
   );
 }
