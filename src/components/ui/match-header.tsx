@@ -12,7 +12,7 @@ import { useLinkComponent } from '#/components/ui/link-context';
  * The masthead of a Match (Game Centre) page. Photo-hero by default with a
  * stadium image bleed; flat fallback when no image is available.
  *
- * Anatomy (Wave 6.27 scoreboard refresh):
+ * Anatomy (Wave 6.28 central-stack + responsive refresh):
  *
  *   ┌─────────────────────────────────────────────────────────────────────────┐
  *   │  [stadium photo, blurred + scrim]                                       │
@@ -20,23 +20,31 @@ import { useLinkComponent } from '#/components/ui/link-context';
  *   │           Tue 19 May 2026   (bold)                                       │
  *   │            Premier League   (lighter)                                    │
  *   │                                                                         │
- *   │  ARSENAL  [crest] [ 1 – 2 ]  [crest]  CHELSEA                            │
- *   │  2nd in PL       ( dark )            1st in PL                           │
- *   │                  [  FT  ]   (separate, lighter pill)                     │
+ *   │  ARSENAL  [crest] ┌ 1 – 2 ┐ [crest]  CHELSEA                             │
+ *   │  2nd in PL        │( dark )│         1st in PL                           │
+ *   │  B. Saka 35' ⚽   └  FT   ┘    ⚽ C. Palmer 55'                          │
+ *   │                  (same width)  ⚽ E. Fernández 85'                       │
  *   │                                                                         │
- *   │  B. Saka - 35' ⚽          xG          ⚽ C. Palmer - 55'                │
- *   │              0.25                1.25 ⚽ E. Fernández - 85'              │
+ *   │              xG (bold) ·  0.25   1.25 (grey)                             │
  *   │                                                                         │
  *   │  Emirates Stadium                                                        │
  *   └─────────────────────────────────────────────────────────────────────────┘
  *
- * The date line is bold; the competition sits lighter beneath it. The score
- * sits in a darker rounded panel; the game status ("FT") is a SEPARATE,
- * lighter pill directly below it (detached from the score panel). Each side may
- * render an optional standings caption ("2nd in Premier League"), which links
- * to the competition when `standingHref` is supplied and omits entirely when
- * absent (knockout phases / standings unavailable). Scorers read "Name - Time"
- * with a goal icon; the xG row renders only when either side supplies a value.
+ * The date line is bold; the competition sits lighter beneath it. The central
+ * column is a STACKED two-panel unit of equal width: a dark score panel over a
+ * lighter-grey status panel ("FT"/clock) of the SAME width — they read as one
+ * scoreboard, not a panel plus a detached pill. Scorers sit UNDER each team's
+ * name + standing block (home left-aligned, away right-aligned), reading
+ * "Name - Time" with a goal icon. Each side may render an optional standings
+ * caption ("2nd in Premier League"), which links to the competition when
+ * `standingHref` is supplied and omits entirely when absent (knockout phases /
+ * standings unavailable). The xG row labels itself with a prominent white "xG"
+ * and muted-grey values; it renders only when either side supplies a value.
+ *
+ * Responsive: the three-column grid (team · scoreboard · team) holds at every
+ * width. Team names never clip — the side columns collapse to zero (`min-w-0`)
+ * and names wrap (`text-balance` + `break-words`) rather than truncate, while
+ * the crest, type, gaps and scoreboard shrink on narrow viewports.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export interface MatchHeaderScorer {
@@ -190,57 +198,40 @@ export function MatchHeader({
         ) : null}
       </div>
 
-      <div className="flex flex-col items-center gap-2">
-        <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-x-6 gap-y-3">
-          <SideBlock side={home} align="end" />
-          <ScorePlaque
-            isScheduled={isScheduled}
-            kickoffTime={kickoff.timeLabel}
-            scoreHome={scoreHome}
-            scoreAway={scoreAway}
-            variant={isPhoto ? 'photo' : 'flat'}
-          />
-          <SideBlock side={away} align="start" />
-        </div>
-        {statusLabel ? (
-          <span
-            data-slot="match-header-status"
-            data-status={status}
-            className={cn(
-              'inline-flex items-center justify-center rounded-full px-3 py-1',
-              'text-[10px] font-semibold tracking-[0.18em] uppercase text-white/80',
-              isPhoto
-                ? 'bg-[var(--color-grey-300)]/80 backdrop-blur-md'
-                : 'bg-[var(--color-grey-300)]'
-            )}
-          >
-            {statusLabel}
-          </span>
-        ) : null}
+      <div className="grid w-full grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-start gap-x-2.5 gap-y-3 sm:gap-x-6">
+        <SideBlock side={home} align="end" />
+        <ScoreStack
+          isScheduled={isScheduled}
+          kickoffTime={kickoff.timeLabel}
+          scoreHome={scoreHome}
+          scoreAway={scoreAway}
+          statusLabel={statusLabel}
+          status={status}
+          variant={isPhoto ? 'photo' : 'flat'}
+        />
+        <SideBlock side={away} align="start" />
       </div>
 
       {showXg ? (
         <div
           data-slot="match-header-xg"
-          className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-6"
+          className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2.5 sm:gap-x-6"
         >
           <span
             data-slot="match-header-xg-home"
-            className="text-right text-sm font-semibold tabular-nums text-white"
+            className="text-right text-sm tabular-nums text-white/55"
           >
             {formatXg(xgHome)}
           </span>
-          <span className="text-[10px] tracking-[0.18em] uppercase text-white/55">xG</span>
+          <span className="text-[11px] font-bold tracking-[0.22em] text-white uppercase">xG</span>
           <span
             data-slot="match-header-xg-away"
-            className="text-left text-sm font-semibold tabular-nums text-white"
+            className="text-left text-sm tabular-nums text-white/55"
           >
             {formatXg(xgAway)}
           </span>
         </div>
       ) : null}
-
-      <ScorersRow home={home.scorers ?? []} away={away.scorers ?? []} />
 
       {venueLabel ? (
         <div data-slot="match-header-venue" className="text-center text-xs text-white/55">
@@ -252,38 +243,48 @@ export function MatchHeader({
 }
 
 function SideBlock({ side, align }: { side: MatchHeaderSide; align: 'start' | 'end' }) {
+  // Mobile: crest stacks above the name (centered) so the name gets the full
+  // column width and breaks on its spaces, not mid-word. From `sm` up it returns
+  // to the desktop row — name beside crest, mirrored per side (home: text · crest,
+  // away: crest · text). One DOM order (crest first) + `sm:flex-row-reverse` on
+  // the home side keeps the markup single-branch.
   return (
     <div
       data-slot="match-header-side"
       data-align={align}
       className={cn(
-        'flex min-w-0 items-center gap-3 sm:gap-4',
-        align === 'end' ? 'justify-end' : 'justify-start'
+        'flex min-w-0 flex-col gap-2',
+        align === 'end' ? 'items-center sm:items-end' : 'items-center sm:items-start'
       )}
     >
-      {align === 'end' ? (
-        <>
-          <SideText side={side} align={align} />
-          <SideCrest side={side} />
-        </>
-      ) : (
-        <>
-          <SideCrest side={side} />
-          <SideText side={side} align={align} />
-        </>
-      )}
+      <div
+        className={cn(
+          'flex w-full min-w-0 flex-col items-center gap-1.5 sm:flex-row sm:items-center sm:gap-4',
+          align === 'end' ? 'sm:flex-row-reverse sm:justify-start' : 'sm:justify-start'
+        )}
+      >
+        <SideCrest side={side} />
+        <SideText side={side} align={align} />
+      </div>
+      <SideScorers scorers={side.scorers ?? []} align={align} />
     </div>
   );
 }
 
 function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'end' }) {
   const LinkComponent = useLinkComponent();
-  const labelClass = 'text-xl font-bold tracking-tight text-white sm:text-2xl';
+  // Names must never clip: the column collapses to zero (`min-w-0`) so the score
+  // panel keeps its width, the name takes the full column (`w-full`) and breaks
+  // on its spaces (`break-words`); `[overflow-wrap:anywhere]` is the last-resort
+  // hard break for a single word longer than the column. Centered on mobile
+  // (under the crest), end/start-aligned from `sm` up (beside the crest).
+  const labelClass =
+    'w-full text-base font-bold tracking-tight break-words [overflow-wrap:anywhere] text-white sm:text-2xl';
   return (
     <div
       className={cn(
-        'flex min-w-0 flex-col gap-0.5',
-        align === 'end' ? 'items-end text-right' : 'items-start text-left'
+        'flex min-w-0 flex-col gap-0.5 text-center',
+        align === 'end' ? 'items-center sm:items-end sm:text-right' : 'items-center sm:items-start sm:text-left'
       )}
     >
       {side.href ? (
@@ -304,14 +305,14 @@ function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'en
           <LinkComponent
             href={side.standingHref}
             data-slot="match-header-side-standing"
-            className="text-xs tracking-tight text-white/60 transition-colors hover:text-[var(--color-red-100)]"
+            className="text-[11px] tracking-tight text-white/60 transition-colors hover:text-[var(--color-red-100)] sm:text-xs"
           >
             {side.standingLabel}
           </LinkComponent>
         ) : (
           <span
             data-slot="match-header-side-standing"
-            className="text-xs tracking-tight text-white/60"
+            className="text-[11px] tracking-tight text-white/60 sm:text-xs"
           >
             {side.standingLabel}
           </span>
@@ -329,8 +330,8 @@ function SideCrest({ side }: { side: MatchHeaderSide }) {
       aria-hidden="true"
       style={{ backgroundColor: side.accentColor ?? 'transparent' }}
       className={cn(
-        'relative inline-flex size-14 shrink-0 items-center justify-center sm:size-16',
-        'rounded-full text-sm font-bold tracking-tight text-white',
+        'relative inline-flex size-11 shrink-0 items-center justify-center sm:size-16',
+        'rounded-full text-xs font-bold tracking-tight text-white sm:text-sm',
         'overflow-hidden',
         !side.imageUrl && 'border border-white/15'
       )}
@@ -349,68 +350,99 @@ function SideCrest({ side }: { side: MatchHeaderSide }) {
   );
 }
 
-function ScorePlaque({
+/**
+ * The central scoreboard column: a dark score panel stacked over a status panel
+ * of the SAME WIDTH (lighter grey). The two read as one unit — score on top,
+ * "FT"/clock beneath — rather than a panel plus a detached pill. Both children
+ * are `w-full`, so the shared `min-w` on the column governs their common width.
+ */
+function ScoreStack({
   isScheduled,
   kickoffTime,
   scoreHome,
   scoreAway,
+  statusLabel,
+  status,
   variant,
 }: {
   isScheduled: boolean;
   kickoffTime: string;
   scoreHome?: number;
   scoreAway?: number;
+  statusLabel: string;
+  status: MatchHeaderStatus;
   variant: 'photo' | 'flat';
 }) {
   return (
-    <div
-      data-slot="match-header-score"
-      className={cn(
-        'flex flex-col items-center justify-center rounded-lg px-5 py-2.5',
-        'min-w-[120px]',
-        variant === 'photo'
-          ? 'border border-white/10 bg-[var(--color-grey-100)]/85 backdrop-blur-md'
-          : 'border border-white/5 bg-[var(--color-grey-100)]'
-      )}
-    >
-      {isScheduled ? (
-        <span className="text-2xl font-bold tabular-nums text-white">{kickoffTime}</span>
-      ) : (
-        <div className="flex items-baseline gap-2.5 text-3xl font-bold tabular-nums sm:text-4xl">
-          <span>{scoreHome ?? 0}</span>
-          <span className="text-white/45">–</span>
-          <span>{scoreAway ?? 0}</span>
-        </div>
-      )}
+    <div className="flex w-[88px] flex-col items-stretch gap-1.5 sm:w-[120px]">
+      <div
+        data-slot="match-header-score"
+        className={cn(
+          'flex w-full flex-col items-center justify-center rounded-lg px-3 py-2.5 sm:px-5',
+          variant === 'photo'
+            ? 'border border-white/10 bg-[var(--color-grey-100)]/85 backdrop-blur-md'
+            : 'border border-white/5 bg-[var(--color-grey-100)]'
+        )}
+      >
+        {isScheduled ? (
+          <span className="text-xl font-bold tabular-nums text-white sm:text-2xl">
+            {kickoffTime}
+          </span>
+        ) : (
+          <div className="flex items-baseline gap-2 text-3xl font-bold tabular-nums sm:gap-2.5 sm:text-4xl">
+            <span>{scoreHome ?? 0}</span>
+            <span className="text-white/45">–</span>
+            <span>{scoreAway ?? 0}</span>
+          </div>
+        )}
+      </div>
+      {statusLabel ? (
+        <span
+          data-slot="match-header-status"
+          data-status={status}
+          className={cn(
+            'flex w-full items-center justify-center rounded-lg px-3 py-1',
+            'text-[10px] font-semibold tracking-[0.18em] text-white/80 uppercase',
+            variant === 'photo'
+              ? 'bg-[var(--color-grey-300)]/80 backdrop-blur-md'
+              : 'bg-[var(--color-grey-300)]'
+          )}
+        >
+          {statusLabel}
+        </span>
+      ) : null}
     </div>
   );
 }
 
-function ScorersRow({
-  home,
-  away,
+/**
+ * One side's scorers, sitting directly under that team's name + standing block
+ * (home left-aligned, away right-aligned). Renders nothing when the side has no
+ * goals, so the unit collapses cleanly for goalless / knockout fixtures.
+ */
+function SideScorers({
+  scorers,
+  align,
 }: {
-  home: readonly MatchHeaderScorer[];
-  away: readonly MatchHeaderScorer[];
+  scorers: readonly MatchHeaderScorer[];
+  align: 'start' | 'end';
 }) {
-  if (home.length === 0 && away.length === 0) return null;
+  if (scorers.length === 0) return null;
   return (
-    <div
+    <ul
       data-slot="match-header-scorers"
-      className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-8 gap-y-1.5"
+      data-side={align === 'end' ? 'home' : 'away'}
+      className={cn(
+        'flex min-w-0 flex-col gap-1 text-center sm:text-left',
+        align === 'end'
+          ? 'items-center sm:items-end sm:text-right'
+          : 'items-center sm:items-start'
+      )}
     >
-      <ul data-side="home" className="flex min-w-0 flex-col items-end gap-1.5 text-right">
-        {home.map((scorer, idx) => (
-          <ScorerEntry key={`h-${idx}-${scorer.name}`} scorer={scorer} align="end" />
-        ))}
-      </ul>
-      <span aria-hidden="true" className="w-px self-stretch bg-white/10" />
-      <ul data-side="away" className="flex min-w-0 flex-col items-start gap-1.5 text-left">
-        {away.map((scorer, idx) => (
-          <ScorerEntry key={`a-${idx}-${scorer.name}`} scorer={scorer} align="start" />
-        ))}
-      </ul>
-    </div>
+      {scorers.map((scorer, idx) => (
+        <ScorerEntry key={`${idx}-${scorer.name}`} scorer={scorer} align={align} />
+      ))}
+    </ul>
   );
 }
 
@@ -432,7 +464,7 @@ function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'sta
       data-slot="match-header-scorer"
       data-kind={scorer.kind ?? 'goal'}
       className={cn(
-        'flex items-center gap-2 text-xs text-white/85',
+        'flex min-w-0 items-center gap-1.5 text-[11px] text-white/85 sm:gap-2 sm:text-xs',
         align === 'end' ? 'flex-row-reverse' : 'flex-row'
       )}
     >
@@ -441,12 +473,12 @@ function ScorerEntry({ scorer, align }: { scorer: MatchHeaderScorer; align: 'sta
         <LinkComponent
           href={scorer.href}
           data-slot="match-header-scorer-link"
-          className="tracking-tight transition-colors hover:text-[var(--color-red-100)]"
+          className="tracking-tight break-words transition-colors hover:text-[var(--color-red-100)]"
         >
           {inner}
         </LinkComponent>
       ) : (
-        <span className="tracking-tight">{inner}</span>
+        <span className="tracking-tight break-words">{inner}</span>
       )}
     </li>
   );

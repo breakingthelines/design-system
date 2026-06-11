@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { MatchHeader, formatMatchKickoff, initialsFromMatchLabel } from '../match-header';
-import { getSlotAttr, hasSlot, render, slotText } from './test-utils';
+import { countSlot, getSlotAttr, hasSlot, render, slotText } from './test-utils';
 
 const baseHome = { label: 'Arsenal', shortLabel: 'ARS' };
 const baseAway = { label: 'Manchester United', shortLabel: 'MUN' };
@@ -167,7 +167,7 @@ describe('MatchHeader photo-hero variant', () => {
     expect(hasSlot(withoutXg, 'match-header-xg')).toBe(false);
   });
 
-  it('renders the inline scorers strip when scorers are supplied (Wave 6.1)', () => {
+  it('renders scorers under each team (Wave 6.28: home + away side lists)', () => {
     const markup = render(
       <MatchHeader
         home={{
@@ -186,18 +186,39 @@ describe('MatchHeader photo-hero variant', () => {
         scoreAway={2}
       />
     );
-    expect(hasSlot(markup, 'match-header-scorers')).toBe(true);
-    const scorers = slotText(markup, 'match-header-scorers');
-    expect(scorers).toContain('B. Saka');
-    expect(scorers).toContain("35'");
-    expect(scorers).toContain('C. Palmer');
-    expect(scorers).toContain('E. Fernández');
-    // Wave 6.27: each scorer reads "Name - Time" (the muted separator sits
-    // between the name and the minute).
-    expect(scorers).toMatch(/B\. Saka\s*-\s*35'/);
+    // Wave 6.28: scorers no longer live in one central strip — each side renders
+    // its own list under the team, so both sides produce a `match-header-scorers`
+    // slot (home first in DOM order).
+    expect(countSlot(markup, 'match-header-scorers')).toBe(2);
+    expect(getSlotAttr(markup, 'match-header-scorers', 'data-side')).toBe('home');
+    // The home slice (the first slot) carries the home scorer in "Name - Time"
+    // form; the away names live in the second, away-side list.
+    const homeScorers = slotText(markup, 'match-header-scorers');
+    expect(homeScorers).toContain('B. Saka');
+    expect(homeScorers).toMatch(/B\. Saka\s*-\s*35'/);
+    expect(homeScorers).not.toContain('C. Palmer');
+
+    const all = slotText(markup, 'match-header');
+    expect(all).toContain('C. Palmer');
+    expect(all).toContain('E. Fernández');
   });
 
-  it('omits the scorers strip when neither side has scorers', () => {
+  it('renders only the scoring side when one team is goalless (Wave 6.28)', () => {
+    const markup = render(
+      <MatchHeader
+        home={{ ...home, scorers: [{ name: 'B. Saka', minute: "35'", kind: 'goal' }] }}
+        away={away}
+        status="finished"
+        scoreHome={1}
+        scoreAway={0}
+      />
+    );
+    // Away has no goals, so only the home side list renders.
+    expect(countSlot(markup, 'match-header-scorers')).toBe(1);
+    expect(getSlotAttr(markup, 'match-header-scorers', 'data-side')).toBe('home');
+  });
+
+  it('omits the scorers lists when neither side has scorers', () => {
     const markup = render(<MatchHeader home={home} away={away} status="finished" />);
     expect(hasSlot(markup, 'match-header-scorers')).toBe(false);
   });

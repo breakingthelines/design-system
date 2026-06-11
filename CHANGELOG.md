@@ -5,6 +5,38 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.0] — 2026-06-11
+
+### Changed — `MatchHeader` central stack + responsive pass (Wave 6.28)
+
+Central scoreboard column (desktop):
+
+- The game status ("FT"/clock) is now a full-width panel matching the score
+  panel, not a narrow pill. The score panel (dark, `grey-100`) and the status
+  panel (lighter, `grey-300`) stack into one equal-width unit, centred label.
+- The xG row swaps its emphasis: the `xG` label is now white and bold (slightly
+  wider tracking), and the home/away xG values are muted grey (`text-white/55`).
+- Scorers moved out of the central row into the team side-columns. Each team's
+  scorers sit directly under its name + standing block (home right-aligned, away
+  left-aligned), keeping the `Name - Time` + goal-icon format. The central
+  `ScorersRow` is gone; each side renders its own `match-header-scorers` list
+  (so two slots appear when both sides score, one when only one side does).
+
+Responsive:
+
+- Team names no longer clip on narrow viewports. The side columns collapse to
+  zero width (`min-w-0`) and the central scoreboard keeps its width.
+- Below `sm`, each side stacks vertically — crest centred above the name — so a
+  long name ("Wolverhampton Wanderers") gets the full column width and breaks on
+  its spaces rather than mid-word or off the edge. From `sm` up the layout
+  returns to the desktop row (name beside crest, mirrored per side).
+- Crest, name type, gaps and the scoreboard all shrink on narrow widths;
+  standings and scorers stay readable and centre under each team on mobile.
+
+No API change: `MatchHeaderSide.scorers` is still consumed per side, so this is
+an internal layout move. `data-slot` hooks are stable (`match-header-status`,
+`match-header-scorers`, `match-header-score`, etc.).
+
 ## [0.35.1] — 2026-06-11
 
 ### Changed — `PredictionStakesBadge` Wave 6.25j cleanup

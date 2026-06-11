@@ -170,3 +170,43 @@ export const KnockoutNoStanding = meta.story({
     </div>
   ),
 });
+
+// Long club names at mobile width. The side columns collapse (`min-w-0`) and the
+// names wrap rather than clip; the central scoreboard keeps its width and the
+// scorers stay under each team. Wrapper is fluid so the viewport drives layout.
+export const NarrowLongNames = meta.story({
+  name: 'Narrow (long names, mobile)',
+  args: {
+    home: {
+      label: 'Sunderland A.F.C.',
+      shortLabel: 'SUN',
+      standingLabel: '17th in Premier League',
+      standingHref: '#/competition/premier-league',
+      scorers: [{ name: 'J. Bellingham', minute: "73'", kind: 'goal' as const }],
+    },
+    away: {
+      label: 'Wolverhampton Wanderers',
+      shortLabel: 'WOL',
+      standingLabel: '14th in Premier League',
+      standingHref: '#/competition/premier-league',
+      scorers: [
+        { name: 'M. Cunha', minute: "45'+2", kind: 'goal' as const },
+        { name: 'P. Sarabia', minute: "88'", kind: 'penalty' as const },
+      ],
+    },
+    status: 'finished',
+    variant: 'flat',
+    scoreHome: 1,
+    scoreAway: 2,
+    competitionLabel: 'Premier League',
+    venueLabel: 'Stadium of Light',
+    kickoffIso: '2026-05-19T19:00:00Z',
+    xgHome: 0.84,
+    xgAway: 1.91,
+  },
+  render: (args) => (
+    <div className="w-[390px] max-w-full">
+      <MatchHeader {...args} />
+    </div>
+  ),
+});
