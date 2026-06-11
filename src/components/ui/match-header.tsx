@@ -234,7 +234,10 @@ export function MatchHeader({
       ) : null}
 
       {venueLabel ? (
-        <div data-slot="match-header-venue" className="text-center text-xs text-white/55">
+        <div
+          data-slot="match-header-venue"
+          className="-mt-2 text-center text-xs font-semibold text-white/55"
+        >
           {venueLabel}
         </div>
       ) : null}
