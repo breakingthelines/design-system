@@ -141,7 +141,13 @@ export function PredictionLeagueSelector({
                 logical group; the browse affordance below sits outside it
                 under a separator. */}
             <DropdownMenuGroup>
-              <DropdownMenuLabel>Your prediction leagues</DropdownMenuLabel>
+              {/* `font-content` override (Wave 6.25g): the primitive
+                  `DropdownMenuLabel` doesn't set a font, so the eyebrow can
+                  drift to display when the parent cascade does. Every BTL
+                  eyebrow renders in Inter. */}
+              <DropdownMenuLabel className="font-content">
+                Your prediction leagues
+              </DropdownMenuLabel>
               {options.map((opt) => {
                 const isActive = opt.leagueInstanceId === active?.leagueInstanceId;
                 return (
@@ -169,11 +175,9 @@ export function PredictionLeagueSelector({
                         </span>
                       ) : null}
                     </span>
-                    {opt.joined === false ? (
-                      <span className="font-content ml-auto self-center rounded bg-white/[0.06] px-2 py-0.5 text-[10px] tracking-[0.12em] text-white/55 uppercase">
-                        Open
-                      </span>
-                    ) : null}
+                    {/* Wave 6.25g: the per-row "Open" badge was noise — the
+                        absence-of-badge IS the signal that the league is open
+                        (closed leagues are filtered out upstream). */}
                   </DropdownMenuItem>
                 );
               })}
