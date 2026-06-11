@@ -115,3 +115,49 @@ export const Searchable = meta.story({
   },
   render: (args) => <GoalscorersWrapper {...args} />,
 });
+
+// Wave 6.25n — per-player counter mode. Picking Saka three times means
+// "Saka scores three goals". Settlement on the server credits
+// min(picked_count, actual_goals) × pointsPerPick per player, with no
+// aggregate cap on the field (a 7-0 game can credit the full prediction).
+function CounterWrapper(
+  props: Omit<
+    React.ComponentProps<typeof PlayerMultiSelectField>,
+    'mode' | 'selectedIds' | 'onChange' | 'counts' | 'onCountsChange'
+  > & { initialCounts?: Record<string, number>; maxPerPlayer?: number }
+) {
+  const { initialCounts = {}, maxPerPlayer, ...rest } = props;
+  const [counts, setCounts] = React.useState<Record<string, number>>({ ...initialCounts });
+  return (
+    <div className="w-[420px] rounded-[6px] border border-white/10 bg-neutral-950 p-4">
+      <PlayerMultiSelectField
+        {...rest}
+        mode="counter"
+        counts={counts}
+        onCountsChange={setCounts}
+        maxPerPlayer={maxPerPlayer}
+      />
+    </div>
+  );
+}
+
+export const Counter = meta.story({
+  name: 'Counter — Saka × 3 (Wave 6.25n)',
+  args: {
+    label: 'Goalscorers',
+    description: '+2 pts per goal. Pick a player N times to predict N goals.',
+    players: ALL_PLAYERS,
+  },
+  render: (args) => <CounterWrapper {...args} initialCounts={{ 'p-saka': 3, 'p-palmer': 1 }} />,
+});
+
+export const CounterSearchable = meta.story({
+  name: 'Counter — searchable squad',
+  args: {
+    label: 'Goalscorers',
+    description: '+2 pts per goal. Type a surname to filter.',
+    players: FULL_SQUAD,
+    searchable: true,
+  },
+  render: (args) => <CounterWrapper {...args} initialCounts={{ 'p-saka': 2 }} />,
+});
