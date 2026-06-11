@@ -318,16 +318,53 @@ function Image({
     [loading, rootMargin]
   );
 
-  // Img ref callback — detects cache hits where onLoad fires before
-  // React attaches the synthetic event handler.
+  // The shared failure path: a YouTube-thumbnail retry, then a one-shot swap to
+  // `fallbackSrc`, then the placeholder. Reached both from the `onError` event
+  // and from `imgRefCallback` (when a load already FINISHED as an error before
+  // React attached its synthetic handler — the error twin of the cache-hit
+  // load below). Returns true when it gave up (so the caller can forward
+  // `onError`). The YouTube branch reads the rewritten `resolvedSrc`, so it is
+  // only meaningful from the live event; the pre-hydration caller never hits it
+  // (a YouTube thumbnail that 404s is handled by the oEmbed check, not here).
+  const failOver = useCallback((): boolean => {
+    const currentUrl = resolvedSrc ?? (typeof normalizedSrc === 'string' ? normalizedSrc : '');
+    const fallbackUrl = nextYtResolution(currentUrl);
+    if (fallbackUrl) {
+      setResolvedSrc(fallbackUrl);
+      return false;
+    }
+    // The primary source has exhausted its retries. If a distinct `fallbackSrc`
+    // is available and not yet tried, swap to it once (resetting the load state
+    // so it fades in) rather than declaring the image broken.
+    if (!usedFallback && normalizedFallbackSrc && normalizedFallbackSrc !== effectiveSrc) {
+      setUsedFallback(true);
+      setLoaded(false);
+      setResolvedSrc(undefined);
+      return false;
+    }
+    setErrored(true);
+    return true;
+  }, [resolvedSrc, normalizedSrc, usedFallback, normalizedFallbackSrc, effectiveSrc]);
+
+  // Img ref callback — detects loads that already FINISHED before React
+  // attached its synthetic handlers (SSR markup, a warm cache, or a fast 404).
+  // A completed image with intrinsic size is a cache-hit load; a completed
+  // image with a real source but zero size is a cache-hit ERROR (e.g. a 404
+  // that resolves before hydration) — without this the `onError` swap to
+  // `fallbackSrc` would never fire for a hero whose primary 404s server-side.
   const imgRefCallback = useCallback(
     (node: HTMLImageElement | null) => {
-      if (node?.complete && node.naturalWidth > 0) {
+      if (!node || !node.complete) return;
+      if (node.naturalWidth > 0) {
         recordNaturalSize(node);
         setLoaded(true);
+      } else if (node.currentSrc && !errored && !usedFallback) {
+        // Finished with no decoded image → treat as an error the synthetic
+        // handler missed. Guarded by `!usedFallback` so it runs at most once.
+        failOver();
       }
     },
-    [recordNaturalSize]
+    [recordNaturalSize, failOver, errored, usedFallback]
   );
 
   const handleLoad = useCallback(
@@ -349,26 +386,9 @@ function Image({
 
   const handleError = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
-      // For YouTube thumbnails, try the next lower resolution before giving up.
-      const currentUrl = resolvedSrc ?? (typeof normalizedSrc === 'string' ? normalizedSrc : '');
-      const fallbackUrl = nextYtResolution(currentUrl);
-      if (fallbackUrl) {
-        setResolvedSrc(fallbackUrl);
-        return;
-      }
-      // The primary source has exhausted its retries. If a distinct
-      // `fallbackSrc` is available and not yet tried, swap to it once (resetting
-      // the load state so it fades in) rather than declaring the image broken.
-      if (!usedFallback && normalizedFallbackSrc && normalizedFallbackSrc !== effectiveSrc) {
-        setUsedFallback(true);
-        setLoaded(false);
-        setResolvedSrc(undefined);
-        return;
-      }
-      setErrored(true);
-      onError?.(e);
+      if (failOver()) onError?.(e);
     },
-    [onError, resolvedSrc, normalizedSrc, usedFallback, normalizedFallbackSrc, effectiveSrc]
+    [onError, failOver]
   );
 
   // Don't start loading the image while the YouTube check is in-flight —
