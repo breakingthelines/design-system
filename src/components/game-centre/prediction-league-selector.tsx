@@ -7,6 +7,7 @@ import { cn } from '#/lib/utils';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -60,9 +61,17 @@ export interface PredictionLeagueSelectorProps {
   onSelect: (leagueInstanceId: string) => void;
   /** Optional "Browse leagues" affordance for the menu's footer. */
   browse?: PredictionLeagueSelectorBrowse;
-  /** Override eyebrow label. Defaults to "Scope". */
+  /**
+   * Optional eyebrow shown above the trigger. The host typically owns the
+   * label (a SectionHeading sits above the selector) so this defaults to
+   * `undefined`. Passing a string renders an inline eyebrow above the
+   * trigger.
+   */
   eyebrow?: string;
-  /** Compact mode — hides the eyebrow row, keeps the trigger only. */
+  /**
+   * Deprecated: kept for back-compat with earlier callers. Use the host
+   * SectionHeading instead — the eyebrow defaults to off.
+   */
   compact?: boolean;
   className?: string;
 }
@@ -72,8 +81,8 @@ export function PredictionLeagueSelector({
   options,
   onSelect,
   browse,
-  eyebrow = 'Scope',
-  compact = false,
+  eyebrow,
+  compact: _compact = false,
   className,
 }: PredictionLeagueSelectorProps) {
   const active = options.find((opt) => opt.leagueInstanceId === value) ?? options[0];
@@ -83,14 +92,14 @@ export function PredictionLeagueSelector({
 
   return (
     <div data-slot="prediction-league-selector" className={cn('w-full', className)}>
-      {compact ? null : (
+      {eyebrow ? (
         <span
           data-slot="prediction-league-selector-eyebrow"
           className="font-content mb-1.5 block text-[10px] tracking-[0.16em] text-white/40 uppercase"
         >
           {eyebrow}
         </span>
-      )}
+      ) : null}
       <DropdownMenu>
         <DropdownMenuTrigger
           data-slot="prediction-league-selector-trigger"
@@ -124,44 +133,51 @@ export function PredictionLeagueSelector({
         {hasOptions ? (
           <DropdownMenuContent
             align="start"
-            className="min-w-[--radix-dropdown-menu-trigger-width] w-[var(--anchor-width,320px)]"
+            className="w-[var(--anchor-width,320px)] min-w-[--anchor-width]"
           >
-            <DropdownMenuLabel>Your prediction leagues</DropdownMenuLabel>
-            {options.map((opt) => {
-              const isActive = opt.leagueInstanceId === active?.leagueInstanceId;
-              return (
-                <DropdownMenuItem
-                  key={opt.leagueInstanceId}
-                  data-slot="prediction-league-selector-option"
-                  data-active={isActive || undefined}
-                  onClick={() => onSelect(opt.leagueInstanceId)}
-                  className={cn(
-                    // The base DropdownMenuItem chrome forces UPPERCASE +
-                    // tracking; we override it here because the row is
-                    // bigger (label + squad handle) and the league name is
-                    // a proper noun, not a label-shaped action.
-                    'flex items-start gap-3 px-3 py-2 tracking-normal normal-case text-white/85',
-                    isActive ? 'bg-white/[0.04] text-white' : null
-                  )}
-                >
-                  <span className="flex min-w-0 flex-col gap-0.5">
-                    <span className="font-content truncate text-sm font-medium text-white">
-                      {opt.label}
+            {/* Base UI requires every `Menu.GroupLabel` to live inside a
+                wrapping `Menu.Group`, otherwise it throws Base UI error #31
+                (`MenuGroupRootContext is missing`). The leagues list is one
+                logical group; the browse affordance below sits outside it
+                under a separator. */}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>Your prediction leagues</DropdownMenuLabel>
+              {options.map((opt) => {
+                const isActive = opt.leagueInstanceId === active?.leagueInstanceId;
+                return (
+                  <DropdownMenuItem
+                    key={opt.leagueInstanceId}
+                    data-slot="prediction-league-selector-option"
+                    data-active={isActive || undefined}
+                    onClick={() => onSelect(opt.leagueInstanceId)}
+                    className={cn(
+                      // The base DropdownMenuItem chrome forces UPPERCASE +
+                      // tracking; we override it here because the row is
+                      // bigger (label + squad handle) and the league name is
+                      // a proper noun, not a label-shaped action.
+                      'flex items-start gap-3 px-3 py-2 tracking-normal normal-case text-white/85',
+                      isActive ? 'bg-white/[0.04] text-white' : null
+                    )}
+                  >
+                    <span className="flex min-w-0 flex-col gap-0.5">
+                      <span className="font-content truncate text-sm font-medium text-white">
+                        {opt.label}
+                      </span>
+                      {opt.squadHandle ? (
+                        <span className="font-content truncate text-[11px] tracking-tight text-white/45">
+                          @{opt.squadHandle}
+                        </span>
+                      ) : null}
                     </span>
-                    {opt.squadHandle ? (
-                      <span className="font-content truncate text-[11px] tracking-tight text-white/45">
-                        @{opt.squadHandle}
+                    {opt.joined === false ? (
+                      <span className="font-content ml-auto self-center rounded bg-white/[0.06] px-2 py-0.5 text-[10px] tracking-[0.12em] text-white/55 uppercase">
+                        Open
                       </span>
                     ) : null}
-                  </span>
-                  {opt.joined === false ? (
-                    <span className="font-content ml-auto self-center rounded bg-white/[0.06] px-2 py-0.5 text-[10px] tracking-[0.12em] text-white/55 uppercase">
-                      Open
-                    </span>
-                  ) : null}
-                </DropdownMenuItem>
-              );
-            })}
+                  </DropdownMenuItem>
+                );
+              })}
+            </DropdownMenuGroup>
             {browse ? (
               <>
                 <DropdownMenuSeparator />

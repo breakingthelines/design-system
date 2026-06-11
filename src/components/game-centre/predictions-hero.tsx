@@ -76,7 +76,11 @@ function PredictionsHero({
   cta,
   liveClock,
   scoreLine,
-  matchLabel,
+  // `matchLabel` survives on the type for external surfaces (Arena widget,
+  // etc.) but the hero body never paints it — the viewer is already on the
+  // match page, so "CF v THF" in the bottom-right of LIVE/FINISHED is
+  // redundant (Wave 6.25b).
+  matchLabel: _matchLabel,
   pointsEarned,
   pointsAvailable,
   className,
@@ -113,16 +117,10 @@ function PredictionsHero({
             cta={cta}
           />
         ) : state === 'live' ? (
-          <LiveBody
-            key="live"
-            liveClock={liveClock ?? 'Live'}
-            matchLabel={matchLabel}
-            scoreLine={scoreLine}
-          />
+          <LiveBody key="live" liveClock={liveClock ?? 'Live'} scoreLine={scoreLine} />
         ) : (
           <FinishedBody
             key="finished"
-            matchLabel={matchLabel}
             scoreLine={scoreLine}
             pointsEarned={pointsEarned}
             pointsAvailable={pointsAvailable}
@@ -227,11 +225,13 @@ function ScheduledBody({
 
 function LiveBody({
   liveClock,
-  matchLabel,
   scoreLine,
 }: {
   liveClock: string;
-  matchLabel?: string;
+  // `matchLabel` is intentionally NOT rendered here (Wave 6.25b): the viewer
+  // is already on the match page so repeating "CF v THF" is redundant. The
+  // prop survives on `PredictionsHeroProps` so external surfaces (Arena
+  // widget etc.) keep their type, but the hero body itself never paints it.
   scoreLine?: string;
 }) {
   return (
@@ -266,16 +266,9 @@ function LiveBody({
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4">
-        <div className="flex flex-col gap-1">
-          {matchLabel ? (
-            <span className="font-content truncate text-sm font-semibold text-white">
-              {matchLabel}
-            </span>
-          ) : null}
-          <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
-            Picks locked at kickoff
-          </span>
-        </div>
+        <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
+          Picks locked at kickoff
+        </span>
       </div>
     </motion.div>
   );
@@ -286,12 +279,14 @@ function LiveBody({
 // ──────────────────────────────────────────────────────────────────
 
 function FinishedBody({
-  matchLabel,
   scoreLine,
   pointsEarned,
   pointsAvailable,
 }: {
-  matchLabel?: string;
+  // `matchLabel` is intentionally NOT rendered here (Wave 6.25b): the viewer
+  // is already on the match page so "CF v THF" in the bottom-right is
+  // redundant. The prop survives on `PredictionsHeroProps` so external
+  // surfaces (Arena widget etc.) keep their type.
   scoreLine?: string;
   pointsEarned?: number;
   pointsAvailable?: number;
@@ -350,9 +345,6 @@ function FinishedBody({
             You didn&apos;t place a pick on this one.
           </span>
         )}
-        {matchLabel ? (
-          <span className="font-content ml-auto truncate text-xs text-white/40">{matchLabel}</span>
-        ) : null}
       </div>
     </motion.div>
   );

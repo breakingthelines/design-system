@@ -5,6 +5,37 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.32.2] — 2026-06-11
+
+### Fixed — `PredictionLeagueSelector` Base UI #31 crash (Wave 6.25b)
+
+- The selector dropdown was rendering `DropdownMenuLabel` (Base UI's
+  `Menu.GroupLabel`) as a direct child of the menu content. Opening the
+  dropdown threw Base UI error #31 (`MenuGroupRootContext is missing.
+Menu group parts must be used within <Menu.Group>.`) and took down
+  the whole match page. Wrapped the label + option items in
+  `DropdownMenuGroup` so the `Menu.GroupLabel` has the required context.
+- Also fixed a stale `min-w-[--radix-dropdown-menu-trigger-width]` class
+  on the menu content — that CSS variable is Radix-flavoured; Base UI
+  exposes the anchor width as `--anchor-width`. The content now uses
+  the right token consistently.
+
+### Changed — `PredictionLeagueSelector` defers eyebrow to host (Wave 6.25b)
+
+- The internal "SCOPE" eyebrow defaulted on; hosts that already render a
+  `SectionHeading` above the selector ended up with two stacked
+  labels. The default is now off; pass `eyebrow="<text>"` to opt back
+  in. `compact` is now a no-op (kept for prop-shape back-compat).
+
+### Changed — `PredictionsHero` drops redundant `matchLabel` on LIVE/FINISHED (Wave 6.25b)
+
+- The LIVE clock card and the FINISHED recap card painted the short
+  match label ("CF v THF") in the bottom-right. The viewer is already
+  on the match page so the label was visual repetition. Both bodies
+  now omit the label. The `matchLabel` prop survives on
+  `PredictionsHeroProps` for external surfaces (Arena widget, etc.)
+  that consume the same component shape.
+
 ## [0.26.0] — 2026-06-10
 
 ### Added — "From grade" pill on ThoughtCard (Wave 6.8)
