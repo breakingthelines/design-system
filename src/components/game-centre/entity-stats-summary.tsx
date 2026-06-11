@@ -48,8 +48,6 @@ export interface EntityStatsSummaryProps {
 }
 
 export function EntityStatsSummary({ header, metrics, bio, className }: EntityStatsSummaryProps) {
-  const crestInitials = initialsFromName(header.label);
-
   return (
     <section
       data-slot="entity-stats-summary"
@@ -63,22 +61,20 @@ export function EntityStatsSummary({ header, metrics, bio, className }: EntitySt
         className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[2px] border border-white/[0.05] bg-[var(--color-grey-300)] px-2 py-3"
       >
         <div className="flex min-w-0 items-center gap-2">
-          <span
-            data-slot="entity-stats-summary-crest"
-            aria-hidden="true"
-            className="relative inline-flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[var(--color-grey-100)] text-[8px] font-bold tracking-tight text-white"
-          >
-            {header.crestUrl ? (
+          {header.crestUrl ? (
+            <span
+              data-slot="entity-stats-summary-crest"
+              aria-hidden="true"
+              className="relative inline-flex size-4 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[var(--color-grey-100)]"
+            >
               <img
                 src={header.crestUrl}
                 alt=""
                 loading="lazy"
                 className="absolute inset-0 size-full object-cover"
               />
-            ) : (
-              crestInitials
-            )}
-          </span>
+            </span>
+          ) : null}
           <span className="min-w-0 truncate text-[13px] font-semibold tracking-tight text-white">
             {header.label}
             {header.season ? (
@@ -120,13 +116,4 @@ export function EntityStatsSummary({ header, metrics, bio, className }: EntitySt
       ) : null}
     </section>
   );
-}
-
-function initialsFromName(label: string): string {
-  const parts = label
-    .replace(/[-_]+/g, ' ')
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((p) => p[0]?.toUpperCase() ?? '');
-  return parts.slice(0, 2).join('') || '··';
 }
