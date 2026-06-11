@@ -5,6 +5,17 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.1] — 2026-06-11
+
+### Fixed — `PlayerMultiSelectField` row height alignment (Wave 6.25p)
+
+- Both row variants (`multi`/`counter`) now share a uniform `min-h-[44px]` so
+  side-by-side fields keep row N aligned across the divider regardless of
+  which control the row carries. The counter row's `[−] [count] [+]` controls
+  (size-6 buttons) used to render the row a few pixels taller than the
+  checkbox-mode row (size-5 chip), which left the Goalscorers + Bookings
+  columns drifting out of alignment inside the prediction modal.
+
 ## [0.36.3] — 2026-06-11
 
 ### Added — `PlayerMultiSelectField` `searchable` prop (Wave 6.25m)
