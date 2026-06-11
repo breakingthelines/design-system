@@ -405,7 +405,14 @@ function PlayerMultiSelectRow({
         disabled={disabled}
         onClick={handleClick}
         className={cn(
-          'flex w-full items-center gap-3 rounded-[4px] px-2 py-2 text-left transition-colors',
+          // Wave 6.25p — fixed `min-h-[44px]` so multi-mode rows line up
+          // vertically with counter-mode rows when the two field variants
+          // sit side-by-side (Goalscorers + Bookings in the prediction
+          // modal). Counter rows are visually taller because the [−][+]
+          // buttons are size-6 (24px) vs the size-5 (20px) check chip
+          // here; without a uniform min-height, row N drifts a few pixels
+          // between the two columns.
+          'flex min-h-[44px] w-full items-center gap-3 rounded-[4px] px-2 py-2 text-left transition-colors',
           checked
             ? 'bg-[var(--color-red-100)]/[0.10] text-white hover:bg-[var(--color-red-100)]/[0.14]'
             : 'text-white/70 hover:bg-white/[0.04] hover:text-white',
@@ -488,7 +495,12 @@ function PlayerMultiSelectCounterRow({
     >
       <div
         className={cn(
-          'flex w-full items-center gap-3 rounded-[4px] px-2 py-2 transition-colors',
+          // Wave 6.25p — see PlayerMultiSelectRow above for the rationale;
+          // both row variants share `min-h-[44px]` so the two columns of
+          // the prediction modal (Goalscorers + Bookings) keep row N
+          // aligned across the divider regardless of which control the
+          // row carries.
+          'flex min-h-[44px] w-full items-center gap-3 rounded-[4px] px-2 py-2 transition-colors',
           picked ? 'bg-[var(--color-red-100)]/[0.10] text-white' : 'text-white/70'
         )}
       >
