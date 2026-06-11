@@ -98,6 +98,7 @@ export type {
   CompetitionStandingsTableProps,
   CompetitionStandingsRow,
   CompetitionStandingsTeam,
+  CompetitionStandingsZone,
 } from './competition-standings-table';
 
 export {
@@ -105,6 +106,7 @@ export {
   PLAYER_META_ICONS,
   MANAGER_META_ICONS,
   TEAM_META_ICONS,
+  COMPETITION_META_ICONS,
 } from './entity-meta-chips';
 export type {
   EntityMetaChipsProps,
@@ -113,6 +115,7 @@ export type {
   PlayerMetaField,
   ManagerMetaField,
   TeamMetaField,
+  CompetitionMetaField,
 } from './entity-meta-chips';
 
 export { EntityStatsSummary } from './entity-stats-summary';
