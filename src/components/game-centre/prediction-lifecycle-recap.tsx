@@ -123,7 +123,7 @@ function PredictionLifecycleRecap({
                 )}
               >
                 +{row.pointsEarned}
-                <span className="ml-1 text-[10px] font-medium tracking-[0.12em] text-white/40 uppercase">
+                <span className="font-content ml-1 text-[10px] font-medium tracking-[0.12em] text-white/40 uppercase">
                   / {row.pointsAvailable}
                 </span>
               </dd>
