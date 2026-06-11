@@ -1,4 +1,4 @@
-import { CaretLeft, CaretRight, SpeakerHigh, SpeakerSlash } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
 
@@ -12,10 +12,8 @@ interface FlipHoverControlProps {
   atStart: boolean;
   atEnd: boolean;
   isTurning: boolean;
-  muted: boolean;
   onPrev: () => void;
   onNext: () => void;
-  onToggleMute: () => void;
   className?: string;
 }
 
@@ -30,11 +28,11 @@ interface FlipHoverControlProps {
  * framer-motion spring entrance — so the affordance feels native to the BTL
  * reading surface the user already knows.
  *
- * Where the article bar surfaces on scroll, here it surfaces on **hover** (and
- * on keyboard focus), and its actions advance the magazine: a back caret, a
- * progress ring + folio count, a forward caret, and a persistent mute toggle.
- * Drag-to-peel, tap, and arrow keys remain the primary controls; this is the
- * hover affordance on top.
+ * Where the article bar surfaces on scroll, here it surfaces on **hover**, on
+ * keyboard focus, or on a **tap** of the page (mobile — a second tap outside it
+ * dismisses it). Its actions advance the magazine: a back caret, a progress ring
+ * + folio count, and a forward caret. Edge clicks and arrow keys remain the
+ * primary controls; this is the affordance on top.
  */
 export function FlipHoverControl({
   position,
@@ -42,38 +40,49 @@ export function FlipHoverControl({
   atStart,
   atEnd,
   isTurning,
-  muted,
   onPrev,
   onNext,
-  onToggleMute,
   className,
 }: FlipHoverControlProps) {
   const [hovering, setHovering] = useState(false);
   const [focusWithin, setFocusWithin] = useState(false);
+  // Tap-to-toggle: on touch (no hover) a tap on the page surface shows the bar,
+  // and a second tap outside it hides it again. Desktop keeps the hover reveal.
+  const [tapOpen, setTapOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  // Reveal on hover over the lower band of the flip region (the bar's home), or
-  // whenever a control inside has keyboard focus. Pointer tracking lives on the
-  // parent so the hot-zone is the whole surface, not just the pill.
+  // Reveal on hover over the lower band of the flip region (the bar's home), on
+  // keyboard focus, or on a tap of the page surface (mobile). Pointer tracking
+  // lives on the parent so the hot-zone is the whole surface, not just the pill.
   useEffect(() => {
     const host = wrapRef.current?.parentElement;
     if (!host) return;
     const onMove = (e: PointerEvent) => {
+      if (e.pointerType === 'touch') return; // touch uses tap, not hover
       const rect = host.getBoundingClientRect();
       const y = e.clientY - rect.top;
       // Lower ~38% of the surface arms the bar; leaving the surface hides it.
       setHovering(y > rect.height * 0.62);
     };
     const onLeave = () => setHovering(false);
+    // A tap on the page (not on the pill or an edge zone, both marked
+    // data-page-flip-exclude) toggles the bar; a second such tap dismisses it.
+    const onClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('[data-page-flip-exclude]')) return;
+      setTapOpen((v) => !v);
+    };
     host.addEventListener('pointermove', onMove);
     host.addEventListener('pointerleave', onLeave);
+    host.addEventListener('click', onClick);
     return () => {
       host.removeEventListener('pointermove', onMove);
       host.removeEventListener('pointerleave', onLeave);
+      host.removeEventListener('click', onClick);
     };
   }, []);
 
-  const visible = hovering || focusWithin;
+  const visible = hovering || focusWithin || tapOpen;
   const total = Math.max(positionCount, 1);
   const progress = total <= 1 ? 100 : Math.round((position / (total - 1)) * 100);
 
@@ -127,18 +136,6 @@ export function FlipHoverControl({
                 className="flex size-8 cursor-pointer items-center justify-center rounded-full text-white/70 transition-colors hover:text-red-100 disabled:cursor-default disabled:opacity-30 disabled:hover:text-white/70"
               >
                 <CaretRight size={18} weight="bold" />
-              </button>
-
-              <div className="h-4 w-px bg-white/10" />
-
-              <button
-                type="button"
-                onClick={onToggleMute}
-                aria-label={muted ? 'Unmute page-turn sound' : 'Mute page-turn sound'}
-                aria-pressed={muted}
-                className="flex size-7 cursor-pointer items-center justify-center rounded-full text-white/40 transition-colors hover:text-white"
-              >
-                {muted ? <SpeakerSlash size={16} /> : <SpeakerHigh size={16} />}
               </button>
             </div>
           </motion.div>
