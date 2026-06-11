@@ -5,6 +5,23 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.39.5] — 2026-06-12
+
+### Fixed — `ProfileTabs` wrapped to two rows on desktop and looked spread
+
+- The `<nav>` dropped its `sm:overflow-x-visible sm:flex-wrap` classes. At and
+  above the `sm` breakpoint these forced the tab strip to WRAP, so a long set
+  (the profile's nine tabs, e.g. "About" landing on a second line) stacked onto
+  two rows. The strip is now a single row at all breakpoints: it stays on one
+  line and scrolls horizontally on overflow (`overflow-x-auto scrollbar-none`),
+  with no wrapping ever.
+- Each tab `<button>` dropped its `sm:min-w-[120px]`. Tabs are now content-width
+  and pack tightly to the left, so short labels no longer stretch and spread
+  across the row. Everything else (height, padding, radius, weight, active and
+  inactive variants) is unchanged.
+- No prop changes. The shared component is used by both the user profile and the
+  football entity pages; fewer-tab sets now render as a clean left-aligned row.
+
 ## [0.38.7] — 2026-06-11
 
 ### Changed — `MatchHeader` venue label: bolder, tighter to xG row
