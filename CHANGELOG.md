@@ -5,6 +5,23 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.38.6] — 2026-06-11
+
+### Fixed — `Image` `fallbackSrc` not firing for an SSR pre-hydration error
+
+- The `fallbackSrc` swap is driven by the `<img>` `onError` event. On a
+  server-rendered page a primary source that 404s can FINISH loading (as an
+  error) before React attaches its synthetic handlers, so `onError` never
+  fires and the image stayed stuck on the failed source instead of swapping
+  to `fallbackSrc`.
+- `imgRefCallback` already detected the cache-hit LOAD twin of this race
+  (`complete && naturalWidth > 0`); it now also detects the cache-hit ERROR
+  (`complete && currentSrc && naturalWidth === 0`) and runs the same failure
+  path. The YouTube-retry → `fallbackSrc` swap → placeholder logic is shared
+  between the event handler and the ref callback (`failOver`).
+- No API change. Fixes the entity-page hero falling back to the headshot when
+  a player's high-res portrait isn't mirrored (the primary 404s server-side).
+
 ## [0.38.5] — 2026-06-11
 
 ### Added — `Image` `fallbackSrc` prop (layered onError fallback)
