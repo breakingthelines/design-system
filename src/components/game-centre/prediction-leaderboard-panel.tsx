@@ -93,6 +93,16 @@ export interface PredictionLeaderboardPanelProps {
    * "Leaderboard"; pass an empty string to suppress.
    */
   eyebrow?: string;
+  /**
+   * Wave 6.25h-a: when `true`, suppresses the internal LEADERBOARD eyebrow
+   * AND the league title heading. The Predictions sub-tab now lifts a
+   * `<SectionHeading title="Leaderboard" />` OUTSIDE the panel so the
+   * "League → Kickoff in → Leaderboard" rhythm reads consistently above
+   * each card. The selector already shows the active league name; the
+   * panel's duplicate league title is redundant once hoisted. Off-by-
+   * default — back-compat for stories + any other consumer.
+   */
+  hideHeader?: boolean;
   className?: string;
 }
 
@@ -104,6 +114,7 @@ export function PredictionLeaderboardPanel({
   pendingNote,
   emptyMessage,
   eyebrow = 'Leaderboard',
+  hideHeader = false,
   className,
 }: PredictionLeaderboardPanelProps) {
   const hasEntries = entries.length > 0;
@@ -125,26 +136,28 @@ export function PredictionLeaderboardPanel({
         className
       )}
     >
-      <header className="flex flex-col gap-1">
-        {eyebrow ? (
-          <span
-            data-slot="prediction-leaderboard-eyebrow"
-            className="font-content text-[10px] tracking-[0.16em] text-white/40 uppercase"
-          >
-            {eyebrow}
-          </span>
-        ) : null}
-        <div className="flex items-baseline justify-between gap-3">
-          <h3 className="font-display text-base font-semibold tracking-tight text-white">
-            {leagueLabel}
-          </h3>
-          {squadHandle ? (
-            <span className="font-content text-[11px] tracking-tight text-white/45">
-              @{squadHandle}
+      {hideHeader ? null : (
+        <header className="flex flex-col gap-1">
+          {eyebrow ? (
+            <span
+              data-slot="prediction-leaderboard-eyebrow"
+              className="font-content text-[10px] tracking-[0.16em] text-white/40 uppercase"
+            >
+              {eyebrow}
             </span>
           ) : null}
-        </div>
-      </header>
+          <div className="flex items-baseline justify-between gap-3">
+            <h3 className="font-content text-base font-semibold tracking-tight text-white">
+              {leagueLabel}
+            </h3>
+            {squadHandle ? (
+              <span className="font-content text-[11px] tracking-tight text-white/45">
+                @{squadHandle}
+              </span>
+            ) : null}
+          </div>
+        </header>
+      )}
 
       {hasEntries ? (
         <div data-slot="prediction-leaderboard-table" className="flex flex-col">
