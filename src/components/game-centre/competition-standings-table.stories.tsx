@@ -114,6 +114,26 @@ export const Highlighted = meta.story({
   ),
 });
 
+export const WithQualificationZones = meta.story({
+  name: 'Ready (qualification zones)',
+  args: {
+    rows,
+    caption: 'Premier League standings',
+    highlightTeamId: 'ars',
+    zones: [
+      { fromRank: 1, toRank: 2, tone: 'champions', label: 'Champions League' },
+      { fromRank: 3, toRank: 3, tone: 'europa', label: 'Europa League' },
+      { fromRank: 5, toRank: 5, tone: 'relegation', label: 'Relegation' },
+    ],
+    state: 'ready',
+  },
+  render: (args) => (
+    <div className="w-[640px]">
+      <CompetitionStandingsTable {...args} />
+    </div>
+  ),
+});
+
 export const NoForm = meta.story({
   name: 'Ready (no form column)',
   args: {

@@ -71,6 +71,23 @@ export interface CompetitionStandingsRow {
   form?: string;
 }
 
+/**
+ * A qualification / relegation band. Renders a thin coloured rail on the left of
+ * every row in `[fromRank, toRank]` (inclusive, 1-based) plus a legend entry.
+ * Opt-in: the consumer decides the zones for the competition (they differ per
+ * league and season), so the table never invents them.
+ */
+export interface CompetitionStandingsZone {
+  /** First rank in the band (1-based, inclusive). */
+  fromRank: number;
+  /** Last rank in the band (1-based, inclusive). */
+  toRank: number;
+  /** Visual tone of the rail + legend swatch. */
+  tone: 'champions' | 'europa' | 'conference' | 'promotion' | 'relegation';
+  /** Legend label, e.g. "Champions League". */
+  label: string;
+}
+
 export interface CompetitionStandingsTableProps {
   /** Standings rows, in table order (rank ascending). Empty renders the fallback. */
   rows: readonly CompetitionStandingsRow[];
@@ -93,6 +110,13 @@ export interface CompetitionStandingsTableProps {
    * panel instead of squeezing/truncating the team names.
    */
   compact?: boolean;
+  /**
+   * Optional qualification / relegation bands. When provided, each row in a
+   * band's rank range gets a thin coloured left rail and a legend renders below
+   * the table. Omitted entirely when absent (the table never guesses zones).
+   * Suppressed in `compact` mode where horizontal room is tight.
+   */
+  zones?: readonly CompetitionStandingsZone[];
   className?: string;
 }
 
@@ -120,14 +144,18 @@ export function CompetitionStandingsTable({
   state = 'ready',
   fallbackReason,
   compact = false,
+  zones,
   className,
 }: CompetitionStandingsTableProps) {
   const Link = useLinkComponent();
   const wrapper = cn(
-    'overflow-hidden border border-white/10 bg-[var(--color-grey-200)]',
+    'overflow-hidden rounded-[4px] border border-white/10 bg-[var(--color-grey-200)]',
     className
   );
   const showForm = rows.some((row) => Boolean(row.form));
+  // Zones are a wide-table affordance; the compact Office panel has no room for
+  // the rail + legend, so they only apply outside compact mode.
+  const activeZones = !compact && zones && zones.length > 0 ? zones : undefined;
   // Compact drops the goals-for / goals-against columns so the panel only has
   // to fit # · Team · P W D L · GD · Pts.
   const numericColumns = compact
@@ -198,12 +226,12 @@ export function CompetitionStandingsTable({
                   </abbr>
                 </th>
               ))}
-              <th scope="col" className="px-2 py-2 text-right font-medium">
+              <th scope="col" className="px-2 py-2 text-right font-medium text-white/70">
                 <abbr title="Goal difference" className="no-underline">
                   GD
                 </abbr>
               </th>
-              <th scope="col" className="px-2 py-2 text-right font-medium">
+              <th scope="col" className="px-2 py-2 text-right font-semibold text-white/80">
                 <abbr title="Points" className="no-underline">
                   Pts
                 </abbr>
@@ -216,11 +244,13 @@ export function CompetitionStandingsTable({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {rows.map((row, idx) => (
               <StandingsRowItem
                 key={row.team.id ?? `rank-${row.rank}`}
                 row={row}
+                zebra={idx % 2 === 1}
                 highlighted={isHighlighted(row, highlightTeamId)}
+                zone={zoneForRank(activeZones, row.rank)}
                 showForm={showForm}
                 numericColumns={numericColumns}
                 Link={Link}
@@ -229,7 +259,52 @@ export function CompetitionStandingsTable({
           </tbody>
         </table>
       </div>
+      {activeZones ? <StandingsLegend zones={activeZones} /> : null}
     </div>
+  );
+}
+
+const ZONE_RAIL_CLASS: Record<CompetitionStandingsZone['tone'], string> = {
+  champions: 'bg-[var(--color-status-done)]',
+  europa: 'bg-[var(--color-blue-100,#4c8dff)]',
+  conference: 'bg-[var(--color-teal-100,#2dd4bf)]',
+  promotion: 'bg-[var(--color-status-done)]',
+  relegation: 'bg-[var(--color-red-100)]',
+};
+
+function zoneForRank(
+  zones: readonly CompetitionStandingsZone[] | undefined,
+  rank: number
+): CompetitionStandingsZone | undefined {
+  if (!zones) return undefined;
+  return zones.find((zone) => rank >= zone.fromRank && rank <= zone.toRank);
+}
+
+function StandingsLegend({ zones }: { zones: readonly CompetitionStandingsZone[] }) {
+  // De-duplicate by tone+label so two ranges that share a meaning (rare) show
+  // once. Order follows the supplied array (consumer orders by importance).
+  const seen = new Set<string>();
+  const items = zones.filter((zone) => {
+    const key = `${zone.tone}:${zone.label}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return (
+    <ul
+      data-slot="competition-standings-legend"
+      className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-white/[0.06] px-3 py-2.5 text-[11px] text-white/55"
+    >
+      {items.map((zone) => (
+        <li key={`${zone.tone}:${zone.label}`} className="inline-flex items-center gap-1.5">
+          <span
+            aria-hidden="true"
+            className={cn('h-2.5 w-1 shrink-0 rounded-full', ZONE_RAIL_CLASS[zone.tone])}
+          />
+          {zone.label}
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -239,7 +314,9 @@ function isHighlighted(row: CompetitionStandingsRow, highlightTeamId?: string): 
 
 interface StandingsRowItemProps {
   row: CompetitionStandingsRow;
+  zebra: boolean;
   highlighted: boolean;
+  zone?: CompetitionStandingsZone;
   showForm: boolean;
   numericColumns: readonly NumericColumn[];
   Link: ReturnType<typeof useLinkComponent>;
@@ -247,40 +324,63 @@ interface StandingsRowItemProps {
 
 function StandingsRowItem({
   row,
+  zebra,
   highlighted,
+  zone,
   showForm,
   numericColumns,
   Link,
 }: StandingsRowItemProps) {
   const numericCell = 'px-2 py-2 text-right tabular-nums';
+  const gd = Math.round(row.goalDifference);
   return (
     <tr
       data-slot="competition-standings-row"
       data-highlighted={highlighted || undefined}
+      data-zone={zone?.tone}
       aria-current={highlighted ? 'true' : undefined}
-      className={cn('border-t border-white/[0.06]', highlighted && 'bg-[var(--color-red-100)]/10')}
+      className={cn(
+        'border-t border-white/[0.06] transition-colors',
+        // Zebra is the base; hover lifts it; the active team wins over both.
+        zebra ? 'bg-white/[0.015]' : 'bg-transparent',
+        'hover:bg-white/[0.045]',
+        highlighted && 'bg-[var(--color-red-100)]/12 hover:bg-[var(--color-red-100)]/15'
+      )}
     >
-      <td className={cn(numericCell, 'text-white/65')}>{row.rank}</td>
+      <td className="relative py-2 pr-2 pl-3 text-right tabular-nums text-white/65">
+        {/* Qualification-zone rail (left edge) — only when a zone matches. The
+            highlighted team always wins the rail colour so its row stays the
+            clear focus. */}
+        {zone || highlighted ? (
+          <span
+            aria-hidden="true"
+            className={cn(
+              'absolute inset-y-1 left-0 w-[3px] rounded-full',
+              highlighted ? 'bg-[var(--color-red-100)]' : zone ? ZONE_RAIL_CLASS[zone.tone] : ''
+            )}
+          />
+        ) : null}
+        {row.rank}
+      </td>
       <th scope="row" className="px-2 py-2 text-left font-medium">
-        <span className="flex min-w-0 items-center gap-2">
-          {highlighted ? (
-            <span
-              aria-hidden="true"
-              className="h-4 w-0.5 shrink-0 rounded-full bg-[var(--color-red-100)]"
-            />
-          ) : null}
+        <span className="flex min-w-0 items-center gap-2.5">
           {row.team.crestUrl ? (
             <img
               src={row.team.crestUrl}
               alt=""
               loading="lazy"
-              className="size-4 shrink-0 rounded-full border border-white/10 object-cover"
+              className="size-5 shrink-0 object-contain"
             />
-          ) : null}
+          ) : (
+            <span
+              aria-hidden="true"
+              className="size-5 shrink-0 rounded-[3px] border border-white/10 bg-white/[0.04]"
+            />
+          )}
           {row.team.href ? (
             <Link
               href={row.team.href}
-              className="min-w-0 truncate text-white hover:text-[var(--color-red-100)]"
+              className="min-w-0 truncate text-white transition-colors hover:text-[var(--color-red-100)]"
             >
               {row.team.name}
             </Link>
@@ -290,12 +390,19 @@ function StandingsRowItem({
         </span>
       </th>
       {numericColumns.map((col) => (
-        <td key={col.key} className={numericCell}>
+        <td key={col.key} className={cn(numericCell, 'text-white/70')}>
           {row[col.key]}
         </td>
       ))}
-      <td className={numericCell}>{formatGoalDifference(row.goalDifference)}</td>
-      <td className={cn(numericCell, 'font-semibold text-white')}>{row.points}</td>
+      <td
+        className={cn(
+          numericCell,
+          gd > 0 ? 'text-[var(--color-status-done)]' : gd < 0 ? 'text-white/45' : 'text-white/70'
+        )}
+      >
+        {formatGoalDifference(row.goalDifference)}
+      </td>
+      <td className={cn(numericCell, 'text-[15px] font-bold text-white')}>{row.points}</td>
       {showForm ? (
         <td className="px-2 py-2 text-left">{row.form ? <FormPips form={row.form} /> : null}</td>
       ) : null}

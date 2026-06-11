@@ -5,6 +5,7 @@ import {
   Cake,
   Crosshair,
   Flag,
+  GlobeHemisphereWest,
   MapPin,
   Money,
   Ruler,
@@ -17,6 +18,7 @@ import {
 } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import { useLinkComponent } from '#/components/ui/link-context';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * EntityMetaChips (Entity page — identity meta strip)
@@ -35,15 +37,27 @@ import { cn } from '#/lib/utils';
  * Render-only: props in, JSX out. No fetching, no router awareness.
  * ──────────────────────────────────────────────────────────────────────────── */
 
-export type EntityMetaKind = 'player' | 'manager' | 'team';
+export type EntityMetaKind = 'player' | 'manager' | 'team' | 'competition';
 
 export interface EntityMetaChip {
-  /** Phosphor icon component (16px). Omit when `flagSrc` is set. */
+  /** Phosphor icon component (16px). Omit when `flagSrc` / `imageSrc` is set. */
   icon?: Icon;
   /** Circular flag image URL (a country chip) — rendered instead of `icon`. */
   flagSrc?: string;
+  /**
+   * Square crest / logo image URL (a club or competition chip) — rendered with
+   * `object-contain` (un-cropped) instead of `icon`. Takes precedence over
+   * `icon`; `flagSrc` (circular) takes precedence over this.
+   */
+  imageSrc?: string;
   /** Display value, e.g. "England", "27 (b. 1998)", "Right". */
   value: React.ReactNode;
+  /**
+   * Optional route. When set, the chip becomes a link (via the
+   * `useLinkComponent` context) — used for the league / manager chips that
+   * deep-link to another entity page.
+   */
+  href?: string;
   /** Optional stable key. Falls back to the field index. */
   id?: string;
   /** Optional accessible label for the icon (defaults to hidden). */
@@ -88,11 +102,18 @@ export const TEAM_META_ICONS = {
   manager: UsersThree,
 } satisfies Record<string, Icon>;
 
+export const COMPETITION_META_ICONS = {
+  country: Flag,
+  confederation: GlobeHemisphereWest,
+} satisfies Record<string, Icon>;
+
 export type PlayerMetaField = keyof typeof PLAYER_META_ICONS;
 export type ManagerMetaField = keyof typeof MANAGER_META_ICONS;
 export type TeamMetaField = keyof typeof TEAM_META_ICONS;
+export type CompetitionMetaField = keyof typeof COMPETITION_META_ICONS;
 
 export function EntityMetaChips({ kind, chips, className }: EntityMetaChipsProps) {
+  const Link = useLinkComponent();
   if (chips.length === 0) return null;
 
   return (
@@ -103,29 +124,53 @@ export function EntityMetaChips({ kind, chips, className }: EntityMetaChipsProps
     >
       {chips.map((chip, idx) => {
         const ChipIcon = chip.icon;
+        const glyph = chip.flagSrc ? (
+          <img
+            src={chip.flagSrc}
+            alt={chip.label ?? ''}
+            aria-hidden={chip.label ? undefined : true}
+            loading="lazy"
+            className="size-4 shrink-0 rounded-full object-cover"
+          />
+        ) : chip.imageSrc ? (
+          <img
+            src={chip.imageSrc}
+            alt={chip.label ?? ''}
+            aria-hidden={chip.label ? undefined : true}
+            loading="lazy"
+            className="size-4 shrink-0 object-contain"
+          />
+        ) : ChipIcon ? (
+          <ChipIcon
+            aria-hidden={chip.label ? undefined : true}
+            aria-label={chip.label}
+            weight="regular"
+            className="size-4 shrink-0 text-[var(--color-grey-500)]"
+          />
+        ) : null;
+        const value = (
+          <span className="text-[12px] leading-none tracking-tight text-white">{chip.value}</span>
+        );
         return (
           <li
             key={chip.id ?? `entity-meta-chip-${idx}`}
             data-slot="entity-meta-chip"
-            className="inline-flex items-center gap-1.5"
+            className="inline-flex items-center"
           >
-            {chip.flagSrc ? (
-              <img
-                src={chip.flagSrc}
-                alt={chip.label ?? ''}
-                aria-hidden={chip.label ? undefined : true}
-                loading="lazy"
-                className="size-4 shrink-0 rounded-full object-cover"
-              />
-            ) : ChipIcon ? (
-              <ChipIcon
-                aria-hidden={chip.label ? undefined : true}
-                aria-label={chip.label}
-                weight="regular"
-                className="size-4 shrink-0 text-[var(--color-grey-500)]"
-              />
-            ) : null}
-            <span className="text-[12px] leading-none tracking-tight text-white">{chip.value}</span>
+            {chip.href ? (
+              <Link
+                href={chip.href}
+                className="inline-flex items-center gap-1.5 rounded-sm transition-opacity hover:opacity-80 focus-visible:ring-1 focus-visible:ring-[var(--color-red-100)] focus-visible:outline-none"
+              >
+                {glyph}
+                {value}
+              </Link>
+            ) : (
+              <span className="inline-flex items-center gap-1.5">
+                {glyph}
+                {value}
+              </span>
+            )}
           </li>
         );
       })}
