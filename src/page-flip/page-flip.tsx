@@ -287,20 +287,14 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
   const indexRef = useRef(index);
   indexRef.current = index;
 
-  // ── Audio (synthesised paper flip, persistent mute). ──────────────────────
+  // ── Audio. Off by contract for the reveal (sound={false} → silent source).
+  // No in-UI mute toggle anymore; we just dispose the source on unmount.
   const audio = useMemo<FlipAudioSource>(
     () => audioSource ?? (sound ? new SynthFlipAudioSource() : new SilentFlipAudioSource()),
     [audioSource, sound]
   );
-  const [muted, setMutedState] = useState(false);
   useEffect(() => {
-    setMutedState(audio.muted);
     return () => audio.dispose();
-  }, [audio]);
-  const toggleMute = useCallback(() => {
-    const next = !audio.muted;
-    audio.setMuted(next);
-    setMutedState(next);
   }, [audio]);
 
   // ── The engine instance + its mount host. ─────────────────────────────────
@@ -345,16 +339,21 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
   }, []);
 
   // Fire onIndexChange exactly once per settle, deriving direction from the move.
-  const commitIndex = useCallback(
-    (next: number) => {
-      const prev = indexRef.current;
-      if (next === prev) return;
-      const dir: FlipDirection = next > prev ? 'forward' : 'backward';
-      setIndex(next);
-      onIndexChange?.(next, dir);
-    },
-    [onIndexChange]
-  );
+  // The callback is read through a ref so commitIndex stays referentially STABLE
+  // even when the parent passes a fresh onIndexChange each render. Otherwise the
+  // engine effect (which depends on commitIndex) tears down + rebuilds StPageFlip
+  // from leaf DOM the previous engine already moved — on every parent re-render —
+  // which blanks the reader. (Surfaced when IssueReader's reveal ceremony state,
+  // e.g. the nav hint, re-rendered this component mid-flow.)
+  const onIndexChangeRef = useRef(onIndexChange);
+  onIndexChangeRef.current = onIndexChange;
+  const commitIndex = useCallback((next: number) => {
+    const prev = indexRef.current;
+    if (next === prev) return;
+    const dir: FlipDirection = next > prev ? 'forward' : 'backward';
+    setIndex(next);
+    onIndexChangeRef.current?.(next, dir);
+  }, []);
 
   // Build the engine once enhanced + the page DOM is in place. We deliberately
   // depend on the page IDS (a frozen Issue's faces are immutable) so the engine
@@ -699,10 +698,8 @@ export const PageFlip = forwardRef<PageFlipHandle, PageFlipProps>(function PageF
           atStart={atStart}
           atEnd={atEnd}
           isTurning={isTurning}
-          muted={muted}
           onPrev={prev}
           onNext={next}
-          onToggleMute={toggleMute}
         />
       )}
     </div>
