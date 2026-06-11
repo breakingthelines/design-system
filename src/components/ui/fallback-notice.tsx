@@ -230,16 +230,16 @@ interface FallbackReasonCopy {
 const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   // v0.3.0 original 13
   lineups_missing: {
-    title: 'Lineups not announced',
-    body: "Team sheets haven't been published yet. We'll fill this in as soon as they do.",
+    title: 'Lineups coming soon',
+    body: "Confirmed XIs land in the build-up to kickoff. We'll post them here.",
   },
   timeline_missing: {
-    title: 'Live timeline unavailable',
-    body: 'Our provider has not published a play-by-play feed for this fixture.',
+    title: 'Timeline coming soon',
+    body: "We'll post the play-by-play here as soon as it's available.",
   },
   rich_actions_unavailable: {
-    title: 'Shot maps not available',
-    body: "Detailed shot data isn't published for this match yet.",
+    title: 'Match stats coming soon',
+    body: "Detailed stats aren't published for this match yet.",
   },
   live_score_stale: {
     title: 'Live score paused',
@@ -270,12 +270,12 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
     body: 'Be the first to share.',
   },
   no_ratings_yet: {
-    title: 'No ratings yet',
-    body: 'Be the first to rate this game.',
+    title: 'No grades yet',
+    body: 'Be the first to grade this game.',
   },
   no_active_prediction_league: {
-    title: 'No active prediction league',
-    body: 'Join or create a league to start predicting.',
+    title: 'No prediction league yet',
+    body: 'Join or create a league to start predicting this fixture.',
   },
   list_ratings_rpc_pending: {
     title: 'Ratings loading',
@@ -401,7 +401,7 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   // yet, but the time is known.
   match_not_started: {
     title: 'Timeline opens at kickoff',
-    body: "Play-by-play arrives once the whistle blows. We'll fill this in then.",
+    body: 'Play-by-play arrives once the match is underway.',
   },
   live_data_unavailable: {
     title: 'Live data temporarily unavailable',
@@ -426,25 +426,25 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   // post-whistle, not pre-match.
   rating_not_yet_open: {
     title: 'Grades open at full-time',
-    body: "Grade players once the match is done. We'll surface the form here when it opens.",
+    body: "Grade the players once the match is done. We'll open it up here then.",
   },
   rating_period_closed: {
-    title: 'Ratings closed',
-    body: 'The final ratings are in. Aggregate scores below.',
+    title: 'Grades closed',
+    body: 'The grading window has closed. Final grades are below.',
   },
 
   // v0.15.0 Prediction-window lifecycle
   prediction_locked: {
     title: 'Predictions locked',
-    body: 'Kickoff has passed. Picks are no longer accepted for this fixture.',
+    body: 'Kickoff has passed, so picks are closed for this fixture.',
   },
   prediction_not_yet_open: {
     title: 'Predictions open soon',
     body: 'Picks open closer to kickoff.',
   },
   lineup_not_yet_announced: {
-    title: 'Lineup not yet announced',
-    body: 'Confirmed XI lands ahead of kickoff.',
+    title: 'Lineups not announced yet',
+    body: 'Confirmed XIs land in the build-up to kickoff.',
   },
 };
 
@@ -513,7 +513,7 @@ export function FallbackNotice({
           data-slot="fallback-notice-eyebrow"
           className="text-[10px] tracking-[0.16em] uppercase text-white/50"
         >
-          {title ?? 'Some data is missing'}
+          {title ?? 'Coming soon'}
         </header>
       )}
       <ul className="flex flex-col gap-1.5 text-[12px] text-white/60">
