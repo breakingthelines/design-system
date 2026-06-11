@@ -59,6 +59,18 @@ describe('EntityPageShell', () => {
     expect(slotText(markup, 'entity-page-shell-content')).toContain('body');
   });
 
+  it('renders a contain-fit logo crest for team / competition and a cover-fit avatar for player / manager', () => {
+    const logo = render(
+      <EntityPageShell kind="competition" name="Premier League" imageUrl="https://cdn.example/pl.png" />
+    );
+    expect(getSlotAttr(logo, 'entity-page-shell-crest', 'data-variant')).toBe('logo');
+
+    const portrait = render(
+      <EntityPageShell kind="player" name="Mohamed Salah" imageUrl="https://cdn.example/salah.jpg" />
+    );
+    expect(getSlotAttr(portrait, 'entity-page-shell-crest', 'data-variant')).toBe('avatar');
+  });
+
   it('renders the meta block only when at least one entry is supplied', () => {
     const markup = render(<EntityPageShell kind="player" name="x" />);
     expect(hasSlot(markup, 'entity-page-shell-meta')).toBe(false);

@@ -98,6 +98,10 @@ export function EntityPageShell({
   className,
   bodyClassName,
 }: EntityPageShellProps) {
+  // Team crests + competition logos are badges, not portraits: render them
+  // whole (object-contain) on a clean square tile rather than cropping them
+  // into a circle. Player/manager portraits stay a cover-cropped circle.
+  const isLogo = kind === 'team' || kind === 'competition';
   return (
     <section
       data-slot="entity-page-shell"
@@ -111,20 +115,21 @@ export function EntityPageShell({
         <div className="flex items-center gap-4">
           <span
             data-slot="entity-page-shell-crest"
+            data-variant={isLogo ? 'logo' : 'avatar'}
             aria-hidden="true"
-            style={{ backgroundColor: accentColor ?? 'var(--color-grey-300)' }}
+            style={isLogo ? undefined : { backgroundColor: accentColor ?? 'var(--color-grey-300)' }}
             className={cn(
-              'relative inline-flex size-16 shrink-0 items-center justify-center',
-              'rounded-full border border-white/10 overflow-hidden',
-              'text-sm font-bold tracking-tight text-white'
+              'relative inline-flex size-16 shrink-0 items-center justify-center overflow-hidden',
+              'text-sm font-bold tracking-tight text-white',
+              isLogo ? 'rounded-[6px]' : 'rounded-full border border-white/10'
             )}
           >
             {imageUrl ? (
               <img
                 src={imageUrl}
                 alt=""
-                className="absolute inset-0 size-full object-cover"
                 loading="eager"
+                className={cn('size-full', isLogo ? 'object-contain' : 'absolute inset-0 object-cover')}
               />
             ) : (
               <span>{initials ?? name.slice(0, 2).toUpperCase()}</span>
