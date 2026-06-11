@@ -284,7 +284,9 @@ function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'en
     <div
       className={cn(
         'flex min-w-0 flex-col gap-0.5 text-center',
-        align === 'end' ? 'items-center sm:items-end sm:text-right' : 'items-center sm:items-start sm:text-left'
+        align === 'end'
+          ? 'items-center sm:items-end sm:text-right'
+          : 'items-center sm:items-start sm:text-left'
       )}
     >
       {side.href ? (
@@ -434,9 +436,7 @@ function SideScorers({
       data-side={align === 'end' ? 'home' : 'away'}
       className={cn(
         'flex min-w-0 flex-col gap-1 text-center sm:text-left',
-        align === 'end'
-          ? 'items-center sm:items-end sm:text-right'
-          : 'items-center sm:items-start'
+        align === 'end' ? 'items-center sm:items-end sm:text-right' : 'items-center sm:items-start'
       )}
     >
       {scorers.map((scorer, idx) => (
