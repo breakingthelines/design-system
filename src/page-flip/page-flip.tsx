@@ -871,24 +871,25 @@ function EdgeZone({
         transition: `left ${motion.duration.standard}ms ${motion.easing.standard}, width ${motion.duration.standard}ms ${motion.easing.standard}, top ${motion.duration.standard}ms ${motion.easing.standard}, height ${motion.duration.standard}ms ${motion.easing.standard}`,
       }}
     >
-      {/* The page-curl peel hint — a soft folded-corner triangle that lifts from
-          the bottom-outer corner of the VISIBLE page on hover. */}
+      {/* The page-curl peel hint — a soft folded corner that lifts from the
+          TOP-outer corner of the VISIBLE page on hover. Top (not bottom) keeps
+          it clear of the hover band that arms the bottom nav control, so the
+          first hover always reads as a curl. Gray, not white — it reads as a
+          lifted dark page rather than paper. */}
       <span
         aria-hidden
         style={{
           position: 'absolute',
-          bottom: 0,
+          top: 0,
           [isRight ? 'right' : 'left']: 0,
           width: peelSize,
           height: peelSize,
           transition: `width ${motion.duration.standard}ms ${motion.easing.entrance}, height ${motion.duration.standard}ms ${motion.easing.entrance}`,
-          // A diagonal gradient reads as a lifted paper corner; the warm paper
-          // tint + soft shadow make the peel read against dark page content.
           background: isRight
-            ? 'linear-gradient(225deg, rgba(255,253,250,0.55) 0%, rgba(245,242,238,0.20) 42%, transparent 58%)'
-            : 'linear-gradient(135deg, rgba(255,253,250,0.55) 0%, rgba(245,242,238,0.20) 42%, transparent 58%)',
-          boxShadow: peelSize > 0 ? `${isRight ? '-' : ''}7px -7px 16px rgba(0,0,0,0.55)` : 'none',
-          borderRadius: isRight ? '0 0 3px 0' : '0 0 0 3px',
+            ? 'linear-gradient(315deg, rgba(160,160,165,0.5) 0%, rgba(40,40,44,0.28) 46%, transparent 62%)'
+            : 'linear-gradient(45deg, rgba(160,160,165,0.5) 0%, rgba(40,40,44,0.28) 46%, transparent 62%)',
+          boxShadow: peelSize > 0 ? `${isRight ? '-' : ''}6px 6px 16px rgba(0,0,0,0.5)` : 'none',
+          borderRadius: isRight ? '0 3px 0 0' : '3px 0 0 0',
           pointerEvents: 'none',
         }}
       />
