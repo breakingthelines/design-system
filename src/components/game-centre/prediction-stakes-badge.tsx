@@ -5,17 +5,20 @@ import * as React from 'react';
 import { cn } from '#/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * PredictionStakesBadge (Wave 6.5)
+ * PredictionStakesBadge (Wave 6.5; chrome refresh Wave 6.25i)
  *
- * The "stake" affordance for a prediction rubric field. The premise of the
- * Wave 6.5 modal redesign is that predicting is the act of placing a stake
- * across many fields. Each field carries a small, brutalist eyebrow chip
- * that tells the viewer exactly what it scores: `+1 PT`, `+3 PTS`, `+1 EACH`.
+ * The "stake" affordance for a prediction rubric field. Each field carries a
+ * small editorial eyebrow chip that tells the viewer exactly what it scores:
+ * `+1 PT`, `+3 PTS`, `+1 EACH`.
  *
- * Visual language:
- *   - tight tracking, uppercase, monospace digits
- *   - a thin BTL-red rule on the left (a "stake post")
- *   - flat — no rounded pill, no shadow, no gradient
+ * Visual language (Wave 6.25i):
+ *   - Monde Journal (`font-display`) — the display family that already carries
+ *     BTL's editorial accents (SectionHeader, ContextSlot eyebrows).
+ *   - tight tracking, uppercase, tabular digits.
+ *   - a thin BTL-red underline beneath the text — the same red-100 rule the
+ *     SectionHeader pattern uses, which keeps the stake chip rhyming with the
+ *     rest of the editorial chrome.
+ *   - no left border, no rounded pill, no shadow.
  *
  * The badge sits inline with the field legend OR right-aligned next to it.
  * Hosts can opt into the `each` modifier for fields that score per-pick.
@@ -33,9 +36,9 @@ export interface PredictionStakesBadgeProps extends React.HTMLAttributes<HTMLSpa
   modifier?: 'pt' | 'pts' | 'each';
   /**
    * Visual emphasis:
-   *  - `default` → red rule + red label (the canonical stake)
+   *  - `default` → red label + red underline (the canonical stake)
    *  - `muted`   → white/40 — used when the field is hidden / inactive
-   *  - `total`   → red rule + larger label; used in the modal "stakes banner"
+   *  - `total`   → red label + larger size; used in the modal "stakes banner"
    */
   tone?: 'default' | 'muted' | 'total';
   className?: string;
@@ -58,32 +61,42 @@ function PredictionStakesBadge({
       data-tone={tone}
       data-points={points}
       className={cn(
-        'inline-flex items-baseline gap-1.5 border-l-2 pl-2',
-        'font-content tracking-[0.16em] uppercase tabular-nums',
-        isTotal ? 'border-[var(--color-red-100)]' : 'border-[var(--color-red-100)]',
-        isMuted ? 'border-white/20' : '',
-        isTotal ? 'text-sm' : 'text-[10px]',
+        'inline-flex flex-col items-start gap-0.5',
         isMuted ? 'text-white/40' : 'text-[var(--color-red-100)]',
         className
       )}
       {...props}
     >
       <span
-        data-slot="prediction-stakes-badge-amount"
-        className={cn('font-semibold', isTotal ? 'text-base' : '')}
-      >
-        +{points}
-      </span>
-      <span
-        data-slot="prediction-stakes-badge-modifier"
+        data-slot="prediction-stakes-badge-row"
         className={cn(
-          'text-[10px] leading-none',
-          isTotal ? 'text-[11px]' : '',
-          isMuted ? 'text-white/40' : 'text-[var(--color-red-100)]/85'
+          'inline-flex items-baseline gap-1.5',
+          'font-display tracking-[0.16em] uppercase tabular-nums',
+          isTotal ? 'text-sm' : 'text-[10px]'
         )}
       >
-        {effectiveModifier}
+        <span
+          data-slot="prediction-stakes-badge-amount"
+          className={cn('font-semibold', isTotal ? 'text-base' : '')}
+        >
+          +{points}
+        </span>
+        <span
+          data-slot="prediction-stakes-badge-modifier"
+          className={cn(
+            'text-[10px] leading-none',
+            isTotal ? 'text-[11px]' : '',
+            isMuted ? 'text-white/40' : 'text-[var(--color-red-100)]/85'
+          )}
+        >
+          {effectiveModifier}
+        </span>
       </span>
+      <span
+        data-slot="prediction-stakes-badge-underline"
+        aria-hidden="true"
+        className={cn('h-px w-full', isMuted ? 'bg-white/25' : 'bg-[var(--color-red-100)]')}
+      />
     </span>
   );
 }
