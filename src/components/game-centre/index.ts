@@ -168,6 +168,20 @@ export type {
   PredictionRecapFieldStatus,
 } from './prediction-lifecycle-recap';
 
+// Wave 6.25a — league-scoped Predictions sub-tab primitives.
+export { PredictionLeagueSelector } from './prediction-league-selector';
+export type {
+  PredictionLeagueSelectorProps,
+  PredictionLeagueSelectorOption,
+  PredictionLeagueSelectorBrowse,
+} from './prediction-league-selector';
+
+export { PredictionLeaderboardPanel } from './prediction-leaderboard-panel';
+export type {
+  PredictionLeaderboardPanelProps,
+  PredictionLeaderboardPanelEntry,
+} from './prediction-leaderboard-panel';
+
 export { GradeScale } from './grade-scale';
 export type {
   GradeScaleProps,

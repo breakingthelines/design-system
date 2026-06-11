@@ -395,9 +395,13 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   },
 
   // v0.15.0 Match lifecycle
+  // Wave 6.25a: reframed for the SCHEDULED Timeline. The pre-match Timeline
+  // panel emits this reason so the empty state reads as "by design", not as
+  // "our provider missed a feed". Copy refresh kept honest: nothing to show
+  // yet, but the time is known.
   match_not_started: {
-    title: 'Match not started',
-    body: 'Live data will appear here once the fixture kicks off.',
+    title: 'Timeline opens at kickoff',
+    body: "Play-by-play arrives once the whistle blows. We'll fill this in then.",
   },
   live_data_unavailable: {
     title: 'Live data temporarily unavailable',
@@ -417,9 +421,12 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   },
 
   // v0.15.0 Rating-window lifecycle
+  // Wave 6.25a: the Grades sub-tab on a SCHEDULED match also leans on this
+  // reason. Both surfaces want a single honest line: grading happens
+  // post-whistle, not pre-match.
   rating_not_yet_open: {
-    title: 'Ratings not open yet',
-    body: 'Player ratings open at full-time.',
+    title: 'Grades open at full-time',
+    body: "Grade players once the match is done. We'll surface the form here when it opens.",
   },
   rating_period_closed: {
     title: 'Ratings closed',
