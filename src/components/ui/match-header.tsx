@@ -215,7 +215,7 @@ export function MatchHeader({
       {showXg ? (
         <div
           data-slot="match-header-xg"
-          className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2.5 sm:gap-x-6"
+          className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-x-2.5"
         >
           <span
             data-slot="match-header-xg-home"
@@ -223,7 +223,7 @@ export function MatchHeader({
           >
             {formatXg(xgHome)}
           </span>
-          <span className="text-[11px] font-bold tracking-[0.22em] text-white uppercase">xG</span>
+          <span className="text-[11px] font-bold text-white">xG</span>
           <span
             data-slot="match-header-xg-away"
             className="text-left text-sm tabular-nums text-white/55"

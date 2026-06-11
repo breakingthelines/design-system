@@ -5,6 +5,14 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.36.2] — 2026-06-11
+
+### Changed — MatchHeader xG label
+
+- The xG label now reads "xG" (was rendered "XG" by a `uppercase` class) and the
+  row is tighter: dropped the wide `tracking-[0.22em]` on the label and the
+  desktop `sm:gap-x-6` so the values sit closer to the label.
+
 ## [0.36.1] — 2026-06-11
 
 > `0.36.0` was published concurrently by another change; this `MatchHeader`
