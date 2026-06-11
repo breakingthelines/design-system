@@ -12,40 +12,56 @@ const meta = preview.meta({
   },
 });
 
-export const Result = meta.story({
+export const ResultSingular = meta.story({
   name: '+1 pt (Result)',
   args: { points: 1, modifier: 'pt' },
   render: (args) => (
-    <div className="bg-grey-200 inline-flex w-[320px] items-center justify-between rounded-[4px] border border-white/5 p-5">
-      <span className="font-content text-[10px] tracking-[0.16em] text-white/40 uppercase">
-        Outcome
-      </span>
+    <div className="bg-grey-200 inline-flex w-[320px] items-baseline gap-2 rounded-[4px] border border-white/5 p-5">
+      <span className="font-content text-sm font-semibold text-white">Outcome</span>
+      <PredictionStakesBadge {...args} />
+    </div>
+  ),
+});
+
+export const ResultPlural = meta.story({
+  name: '+3 pts (Result)',
+  args: { points: 3, modifier: 'pts' },
+  render: (args) => (
+    <div className="bg-grey-200 inline-flex w-[320px] items-baseline gap-2 rounded-[4px] border border-white/5 p-5">
+      <span className="font-content text-sm font-semibold text-white">Outcome</span>
       <PredictionStakesBadge {...args} />
     </div>
   ),
 });
 
 export const ExactScore = meta.story({
-  name: '+3 pts (Exact score)',
-  args: { points: 3, modifier: 'pts' },
+  name: '+5 pts (Exact score)',
+  args: { points: 5, modifier: 'pts' },
   render: (args) => (
-    <div className="bg-grey-200 inline-flex w-[320px] items-center justify-between rounded-[4px] border border-white/5 p-5">
-      <span className="font-content text-[10px] tracking-[0.16em] text-white/40 uppercase">
-        Exact score
-      </span>
+    <div className="bg-grey-200 inline-flex w-[320px] items-baseline gap-2 rounded-[4px] border border-white/5 p-5">
+      <span className="font-content text-sm font-semibold text-white">Exact score</span>
       <PredictionStakesBadge {...args} />
     </div>
   ),
 });
 
-export const Each = meta.story({
-  name: '+1 each (Goalscorers)',
+export const EachSingular = meta.story({
+  name: '+1 pt each (per-pick)',
   args: { points: 1, modifier: 'each' },
   render: (args) => (
-    <div className="bg-grey-200 inline-flex w-[320px] items-center justify-between rounded-[4px] border border-white/5 p-5">
-      <span className="font-content text-[10px] tracking-[0.16em] text-white/40 uppercase">
-        Goalscorers
-      </span>
+    <div className="bg-grey-200 inline-flex w-[320px] items-baseline gap-2 rounded-[4px] border border-white/5 p-5">
+      <span className="font-content text-sm font-semibold text-white">Bookings</span>
+      <PredictionStakesBadge {...args} />
+    </div>
+  ),
+});
+
+export const EachPlural = meta.story({
+  name: '+2 pts each (Goalscorers)',
+  args: { points: 2, modifier: 'each' },
+  render: (args) => (
+    <div className="bg-grey-200 inline-flex w-[320px] items-baseline gap-2 rounded-[4px] border border-white/5 p-5">
+      <span className="font-content text-sm font-semibold text-white">Goalscorers</span>
       <PredictionStakesBadge {...args} />
     </div>
   ),
@@ -53,11 +69,11 @@ export const Each = meta.story({
 
 export const TotalBanner = meta.story({
   name: 'Total (stakes banner)',
-  args: { points: 8, modifier: 'pts', tone: 'total' },
+  args: { points: 20, modifier: 'pts', tone: 'total' },
   render: (args) => (
     <div className="bg-grey-200 flex w-[480px] items-center gap-3 rounded-[4px] border border-white/5 p-5">
       <PredictionStakesBadge {...args} />
-      <span className="font-content text-xs text-white/55">on offer this match</span>
+      <span className="font-content text-xs text-white/55">on the table this match</span>
     </div>
   ),
 });
@@ -65,10 +81,8 @@ export const TotalBanner = meta.story({
 export const Muted = meta.story({
   args: { points: 1, modifier: 'pt', tone: 'muted' },
   render: (args) => (
-    <div className="bg-grey-200 inline-flex w-[320px] items-center justify-between rounded-[4px] border border-white/5 p-5">
-      <span className="font-content text-[10px] tracking-[0.16em] text-white/40 uppercase">
-        Bookings (hidden)
-      </span>
+    <div className="bg-grey-200 inline-flex w-[320px] items-baseline gap-2 rounded-[4px] border border-white/5 p-5">
+      <span className="font-content text-sm font-semibold text-white/55">Bookings (hidden)</span>
       <PredictionStakesBadge {...args} />
     </div>
   ),
