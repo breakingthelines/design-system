@@ -5,6 +5,20 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.4] — 2026-06-12
+
+### Changed — Issue reader: no auto-close, longer image budget
+
+- Removed the reveal "close the book" ceremony (`ClosingCover`). The reader now
+  rests on the back cover when it reaches the end; leaving is the host's explicit
+  action. No more auto-fold / re-open behaviour.
+- Image load timeout 7s → 10s, so a large uploaded cover photo finishes loading
+  into the 3D canvas texture instead of falling back to a blank cover.
+
+## [0.40.3] — 2026-06-12
+
+### Changed — `PredictionsHero` copy: "on offer this match" → "on offer per match" (#133)
+
 ## [0.40.2] — 2026-06-12
 
 ### Changed — Issue reader audit fixes (cover badges, timing)

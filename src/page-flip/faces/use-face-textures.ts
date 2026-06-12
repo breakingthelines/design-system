@@ -75,7 +75,7 @@ export function useFaceTextures(
   specs: FaceSpec[],
   options: UseFaceTexturesOptions
 ): { pages: BookTexturePage[]; ready: boolean } {
-  const { headingFont, doodleUrl, imageTimeoutMs = 7000 } = options;
+  const { headingFont, doodleUrl, imageTimeoutMs = 10000 } = options;
   const [state, setState] = useState<{ pages: BookTexturePage[]; ready: boolean }>({
     pages: [],
     ready: false,

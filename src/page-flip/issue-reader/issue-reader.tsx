@@ -99,8 +99,6 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
   },
   ref
 ) {
-  const isReveal = mode === 'reveal';
-
   // Capability resolved once on mount. This component is mounted client-only
   // (the platform lazy-imports it), so `window` exists; no hydration flash.
   const [use3D] = useState(
@@ -127,7 +125,6 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
           specs={specs}
           headingFont={headingFont}
           doodleUrl={doodleUrl}
-          isReveal={isReveal}
           onCoverOpened={onCoverOpened}
           onReachedEnd={onReachedEnd}
           forwardedRef={ref}
@@ -151,7 +148,6 @@ function Reader3D({
   specs,
   headingFont,
   doodleUrl,
-  isReveal,
   onCoverOpened,
   onReachedEnd,
   forwardedRef,
@@ -159,7 +155,6 @@ function Reader3D({
   specs: FaceSpec[];
   headingFont: HeadingFont;
   doodleUrl: string;
-  isReveal: boolean;
   onCoverOpened?: () => void;
   onReachedEnd?: () => void;
   forwardedRef: React.ForwardedRef<IssueReaderHandle>;
@@ -169,7 +164,6 @@ function Reader3D({
   const [page, setPageState] = useState(0);
   const coverOpenedFired = useRef(false);
   const reachedEndFired = useRef(false);
-  const [closed, setClosed] = useState(false);
 
   const setPage = useCallback(
     (next: number) => {
@@ -200,19 +194,8 @@ function Reader3D({
     [page, setPage]
   );
 
-  // Reveal close ceremony: let the reader DWELL on the back cover, then fold shut
-  // to the front cover. The book behind silently resets to page 0 so re-opening
-  // lands on the cover. The long dwell keeps the final spread readable instead of
-  // snapping straight to the close.
-  useEffect(() => {
-    if (!isReveal || !reachedEndFired.current || closed) return;
-    const t = setTimeout(() => {
-      setClosed(true);
-      setPageState(0);
-    }, 4200);
-    return () => clearTimeout(t);
-  }, [isReveal, closed, page]);
-
+  // No auto-close: the reader rests on the back cover when it reaches the end.
+  // Leaving is the explicit "Enter the Arena" action, owned by the host.
   const coverSpec = specs[0];
 
   return (
@@ -248,23 +231,6 @@ function Reader3D({
       </AnimatePresence>
 
       {ready ? <PageControl page={page} maxLeaf={maxLeaf} onPage={setPage} /> : null}
-
-      {isReveal && coverSpec ? (
-        <AnimatePresence>
-          {closed ? (
-            <ClosingCover
-              key="closed"
-              spec={coverSpec}
-              headingFont={headingFont}
-              onReopen={() => {
-                setClosed(false);
-                reachedEndFired.current = false;
-                coverOpenedFired.current = false;
-              }}
-            />
-          ) : null}
-        </AnimatePresence>
-      ) : null}
     </>
   );
 }
@@ -355,77 +321,6 @@ function PageControl({
         ›
       </button>
     </div>
-  );
-}
-
-/**
- * The reveal "close the book" ceremony — the book folds shut to its FRONT cover
- * (a real ending, not a flat back page). Clicking re-opens it. Pure CSS 3D.
- */
-function ClosingCover({
-  spec,
-  headingFont,
-  onReopen,
-}: {
-  spec: FaceSpec;
-  headingFont: HeadingFont;
-  onReopen: () => void;
-}) {
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        display: 'grid',
-        placeItems: 'center',
-        background: '#0d0d0d',
-        perspective: 1600,
-        zIndex: 20,
-      }}
-    >
-      <motion.button
-        type="button"
-        onClick={onReopen}
-        aria-label="Open the issue again"
-        initial={{ rotateY: -98, opacity: 0.35 }}
-        animate={{ rotateY: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 120, damping: 18, mass: 0.9 }}
-        style={{
-          position: 'relative',
-          height: '86%',
-          maxWidth: '92%',
-          aspectRatio: '0.748',
-          transformOrigin: 'left center',
-          transformStyle: 'preserve-3d',
-          border: 'none',
-          padding: 0,
-          background: 'transparent',
-          cursor: 'pointer',
-          borderRadius: 3,
-          overflow: 'hidden',
-          boxShadow:
-            '0 30px 80px rgba(0,0,0,0.7), 0 10px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
-        }}
-      >
-        <div style={{ position: 'absolute', inset: 0 }}>
-          <FaceDOM spec={spec} headingFont={headingFont} />
-        </div>
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute',
-            insetBlock: 0,
-            left: 0,
-            width: 12,
-            background: 'linear-gradient(90deg, rgba(0,0,0,0.5), rgba(0,0,0,0))',
-          }}
-        />
-      </motion.button>
-    </motion.div>
   );
 }
 
