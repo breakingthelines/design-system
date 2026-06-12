@@ -210,7 +210,7 @@ function ScheduledBody({
           className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4"
         >
           {stakesTotal !== undefined ? (
-            <div data-slot="predictions-hero-stakes" className="flex items-center gap-3">
+            <div data-slot="predictions-hero-stakes" className="flex items-baseline gap-3">
               <PredictionStakesBadge points={stakesTotal} modifier="pts" tone="total" />
               <span className="font-content text-xs text-white/55">on offer this match</span>
             </div>
