@@ -113,7 +113,7 @@ function PredictionLifecycleRecap({
               <dt className="font-content text-[10px] tracking-[0.12em] text-white/40 uppercase">
                 {row.label}
               </dt>
-              <dd className="font-content min-w-0 truncate text-xs text-white">
+              <dd className="font-content min-w-0 overflow-x-auto overscroll-x-contain text-xs whitespace-nowrap text-white [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 <span data-slot="prediction-lifecycle-recap-pick">{row.pickValue}</span>
                 {row.actualValue !== undefined ? (
                   <span
