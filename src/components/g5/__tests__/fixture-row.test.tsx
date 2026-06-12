@@ -76,6 +76,36 @@ describe('FixtureRow status branches', () => {
     expect(hasSlot(markup, 'fixture-row-trailing')).toBe(true);
     expect(slotText(markup, 'fixture-row-trailing')).toBe('');
   });
+
+  it('lays out the row as a 3-column CSS grid so lead/score/team x-positions are consistent across statuses', () => {
+    // Wave 6.34e: pre-grid, the row used flex + shrink-0 cells, so a narrower
+    // lead label ("6'") let the teams collapse leftward relative to a wider
+    // lead label ("8 PM") on the row above. Lock in the grid template so every
+    // row's team block starts/ends at the same x-position, regardless of which
+    // status branch lit up.
+    const liveMarkup = render(<FixtureRow data={rowLiveRealBarca} />);
+    const upcomingMarkup = render(<FixtureRow data={rowUpcomingFlamengoVasco} />);
+    const resultMarkup = render(<FixtureRow data={rowResultBayernDortmund} />);
+    for (const markup of [liveMarkup, upcomingMarkup, resultMarkup]) {
+      // The grid (not flex) is part of the row's base class — guarantees the
+      // template-columns style below actually takes effect.
+      expect(markup).toContain('grid');
+      // Comfortable density columns: lead = 48px, trailing = 32px. The middle
+      // 1fr soaks up the leftover width so home/away always meet at the score
+      // slot. The team block's x-position is bounded by these fixed columns,
+      // so no status branch shifts neighbouring rows relative to one another.
+      expect(markup).toContain('grid-template-columns:48px minmax(0, 1fr) 32px');
+    }
+  });
+
+  it('uses tighter grid columns at compact density (panel widget rhythm)', () => {
+    // Compact density (the "What's Happening" widget) needs thinner outer
+    // columns to keep the team block legible inside a ~360px panel. Lock the
+    // density-specific column widths so a future refactor can't silently widen
+    // them and squeeze the names.
+    const markup = render(<FixtureRow data={rowLiveRealBarca} density="compact" />);
+    expect(markup).toContain('grid-template-columns:36px minmax(0, 1fr) 24px');
+  });
 });
 
 describe('FixtureRow highlight + linking', () => {
