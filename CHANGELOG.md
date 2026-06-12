@@ -5,6 +5,26 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.0] — 2026-06-12
+
+### Changed — Issue reader is now a genuinely-3D book (BREAKING: `IssueReader` props)
+
+- The onboarding Issue #1 reveal renders on a real react-three-fiber book
+  (SkinnedMesh pages bent by a bone chain) instead of the StPageFlip CSS curl.
+  Page content is a structured `FaceSpec` model drawn two ways from ONE source:
+  canvas textures for the 3D book, DOM for the static (no-WebGL / reduced-motion)
+  fallback. No page-curl chrome — navigation is a calm dot rail; hover darkens
+  the leaf (no red glow). The owner's paper-doodle composites onto inner pages.
+- New `./page-flip` exports: `FaceSpec` (+ variants), `FaceDOM`, `drawFaceCanvas`,
+  `useFaceTextures`, `Book3D`, `collectFaceImageUrls`, `FACE_COLORS`, `headingFamily`.
+- `IssueReader` now takes `specs: FaceSpec[]` (+ optional legacy `faces` for the
+  static path) and `headingFont`; the StPageFlip-era `bookMode` / `sound` /
+  `showHoverControl` / `onTurn` / `initialIndex` props are removed. StPageFlip
+  (`PageFlip`) stays exported for the onboarding questionnaire.
+- Cover redesigned to the matchday-programme treatment: stacked wordmark →
+  `OFFICIAL FIRST TOUCH` → date (top-left), club crests (top-right), league logos
+  (bottom-right), small `@handle` (bottom-left), darker legibility scrim.
+
 ## [0.39.5] — 2026-06-12
 
 ### Fixed — `ProfileTabs` wrapped to two rows on desktop and looked spread

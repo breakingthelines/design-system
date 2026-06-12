@@ -21,8 +21,9 @@ export type {
   OrientationName,
 } from './page-flip';
 
-// Programme Issue reader — standalone "open an issue", composed over PageFlip.
-// Reused for the onboarding Issue #1 reveal. (Explicit file path, not the
+// Programme Issue reader — standalone "open an issue", reused for the onboarding
+// Issue #1 reveal. Renders structured FaceSpecs as a genuinely-3D Book3D (capable
+// clients) or a static DOM fallback. No StPageFlip. (Explicit file path, not the
 // directory index, so bunchee/Rollup resolves it without a directory-main.)
 export { IssueReader } from './issue-reader/issue-reader';
 export type {
@@ -32,6 +33,35 @@ export type {
   IssueMeta,
   IssueFace,
 } from './issue-reader/issue-reader';
+
+// Issue page-content model — one source of truth, two renderers (canvas + DOM).
+export {
+  collectFaceImageUrls,
+  FACE_ASPECT,
+  FACE_COLORS,
+  headingFamily,
+  BODY_FAMILY,
+} from './faces/face-spec';
+export type {
+  FaceSpec,
+  HeadingFont,
+  FaceImage,
+  FaceListItem,
+  CoverTransform,
+  CoverFaceSpec,
+  ContentFaceSpec,
+  PhotoFaceSpec,
+  BackFaceSpec,
+  ContentBody,
+} from './faces/face-spec';
+export { FaceDOM } from './faces/face-dom';
+export { drawFaceCanvas, FACE_W, FACE_H } from './faces/draw-face-canvas';
+export { useFaceTextures } from './faces/use-face-textures';
+export type { BookTexturePage } from './faces/use-face-textures';
+
+// The genuinely-3D book engine (react-three-fiber SkinnedMesh pages).
+export { Book3D } from './book-3d/book-3d';
+export type { Book3DProps } from './book-3d/book-3d';
 
 // Responsive single/spread layout (DearFlip-style pageMode: AUTO).
 export { useBookLayout, SPREAD_MIN_WIDTH } from './use-book-layout';
