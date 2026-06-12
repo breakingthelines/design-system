@@ -139,7 +139,12 @@ export function FixtureRow({
   // relative to scheduled rows. The score column inside the teams block stays
   // a fixed 39px slot (FixtureScore / FixtureScorePlaceholder), so the home and
   // away names also align horizontally across rows.
-  const leadColumn = density === 'compact' ? '36px' : '48px';
+  // The lead column is fixed (so the team block keeps the same x-position across
+  // statuses), which means it must fit the WIDEST lead content: the kickoff
+  // "clock + time" ("8 PM", "8:30 PM"), not just the short minute labels ("85'",
+  // "FT"). Sized so the time stays on one line (it's also `whitespace-nowrap`),
+  // rather than wrapping "8" / "PM" onto two lines.
+  const leadColumn = density === 'compact' ? '52px' : '60px';
   const trailingColumn = density === 'compact' ? '24px' : '32px';
 
   const body = (
@@ -222,7 +227,9 @@ function FixtureLeadCell({ data }: { data: FixtureRowData }) {
         className="flex shrink-0 items-center gap-1 text-[var(--color-grey-500)]"
       >
         <Clock weight="regular" aria-hidden="true" className="size-4 shrink-0" />
-        <span className="text-[12px] tabular-nums tracking-[-0.36px]">{time}</span>
+        <span className="whitespace-nowrap text-[12px] tabular-nums tracking-[-0.36px]">
+          {time}
+        </span>
       </div>
     );
   }

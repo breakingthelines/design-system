@@ -90,21 +90,23 @@ describe('FixtureRow status branches', () => {
       // The grid (not flex) is part of the row's base class — guarantees the
       // template-columns style below actually takes effect.
       expect(markup).toContain('grid');
-      // Comfortable density columns: lead = 48px, trailing = 32px. The middle
-      // 1fr soaks up the leftover width so home/away always meet at the score
-      // slot. The team block's x-position is bounded by these fixed columns,
-      // so no status branch shifts neighbouring rows relative to one another.
-      expect(markup).toContain('grid-template-columns:48px minmax(0, 1fr) 32px');
+      // Comfortable density columns: lead = 60px, trailing = 32px. The lead is
+      // wide enough for the kickoff "clock + time" ("8 PM"/"8:30 PM") to stay on
+      // one line. The middle 1fr soaks up the leftover width so home/away always
+      // meet at the score slot. The team block's x-position is bounded by these
+      // fixed columns, so no status branch shifts neighbouring rows.
+      expect(markup).toContain('grid-template-columns:60px minmax(0, 1fr) 32px');
     }
   });
 
   it('uses tighter grid columns at compact density (panel widget rhythm)', () => {
-    // Compact density (the "What's Happening" widget) needs thinner outer
-    // columns to keep the team block legible inside a ~360px panel. Lock the
-    // density-specific column widths so a future refactor can't silently widen
+    // Compact density (the "What's Happening" widget) uses thinner outer
+    // columns to keep the team block legible inside a ~360px panel, but the
+    // lead still fits the kickoff "clock + time" on one line. Lock the
+    // density-specific column widths so a future refactor can't silently shift
     // them and squeeze the names.
     const markup = render(<FixtureRow data={rowLiveRealBarca} density="compact" />);
-    expect(markup).toContain('grid-template-columns:36px minmax(0, 1fr) 24px');
+    expect(markup).toContain('grid-template-columns:52px minmax(0, 1fr) 24px');
   });
 });
 
