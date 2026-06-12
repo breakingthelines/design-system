@@ -410,18 +410,27 @@ function drawContentFace(
       y += rowH;
     }
   } else {
-    // Big stat, vertically centred in the body area.
+    // Big stat, vertically centred. Auto-fit to the column: a short grade ("4")
+    // stays huge, a long predicted side ("Bosnia & Herzegovina") shrinks to fit
+    // instead of clipping off the page edge.
     const cy = (y + (FACE_H - PAD)) / 2;
-    ctx.fillStyle = C.white;
-    font(ctx, 700, 230, hf);
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     const big = spec.body.big;
+    const unitW = spec.body.unit ? 150 : 0;
+    const maxBig = FACE_W - PAD * 2 - unitW;
+    let bigSize = 230;
+    font(ctx, 700, bigSize, hf);
+    while (bigSize > 60 && ctx.measureText(big).width > maxBig) {
+      bigSize -= 8;
+      font(ctx, 700, bigSize, hf);
+    }
+    ctx.fillStyle = C.white;
     ctx.fillText(big, PAD - 4, cy);
     if (spec.body.unit) {
       const bw = ctx.measureText(big).width;
       ctx.fillStyle = C.grey500;
-      font(ctx, 600, 70, BODY_FAMILY);
+      font(ctx, 600, Math.min(70, Math.round(bigSize * 0.4)), BODY_FAMILY);
       ctx.fillText(spec.body.unit, PAD - 4 + bw + 16, cy);
     }
     if (spec.body.caption) {

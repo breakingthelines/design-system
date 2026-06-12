@@ -5,6 +5,14 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.6] — 2026-06-12
+
+### Fixed — stat face auto-fits long values
+
+- The content `stat` face now shrinks its big value to the column width (canvas)
+  / wraps it (DOM), so a long predicted side like "Bosnia & Herzegovina" fits
+  instead of clipping off the page edge. A short grade still renders huge.
+
 ## [0.40.5] — 2026-06-12
 
 ### Fixed — uploaded cover not rendering in the 3D book

@@ -292,7 +292,7 @@ export function FaceDOM({ spec, headingFont }: { spec: FaceSpec; headingFont: He
         ) : (
           <div className="flex min-h-0 flex-1 flex-col justify-center">
             <p
-              className={`${hc} text-[clamp(64px,15vw,140px)] leading-none font-bold tracking-tighter text-white`}
+              className={`${hc} text-[clamp(40px,12vw,140px)] leading-[0.95] font-bold tracking-tight break-words text-white`}
             >
               {spec.body.big}
               {spec.body.unit ? (
