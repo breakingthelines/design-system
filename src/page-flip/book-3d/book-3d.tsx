@@ -299,7 +299,12 @@ export function Book3D({
   return (
     <div className={className} style={{ width: '100%', height: '100%', ...style }}>
       <Canvas
-        shadows
+        // Explicit PCFShadowMap. `shadows` (boolean) requests PCFSoftShadowMap,
+        // which three r0.184 deprecated: WebGLShadowMap.render() warns AND resets
+        // to PCFShadowMap on every frame, while R3F re-applies the soft type each
+        // frame — an endless per-frame console warning. The render is already
+        // PCFShadowMap (three's fallback), so this is identical output, no warning.
+        shadows="percentage"
         frameloop="always"
         dpr={[1, 2]}
         camera={{ position: [2.28, 0.5, 3.18], fov: 40 }}
