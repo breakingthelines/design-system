@@ -5,6 +5,17 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.5] — 2026-06-12
+
+### Fixed — uploaded cover not rendering in the 3D book
+
+- The canvas image preloader now cache-busts its `crossOrigin` request. A plain
+  `<img>` shown earlier (the closed-cover poster / static fallback) could cache
+  the same URL WITHOUT CORS; the canvas then reused that entry, its crossOrigin
+  fetch failed, and the texture silently dropped — so an uploaded cover showed in
+  the DOM but never in the 3D book, regardless of size. A distinct query key
+  forces a fresh CORS-clean response.
+
 ## [0.40.4] — 2026-06-12
 
 ### Changed — Issue reader: no auto-close, longer image budget

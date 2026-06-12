@@ -47,7 +47,12 @@ function loadImage(url: string, timeoutMs: number): Promise<HTMLImageElement | n
     const timer = setTimeout(() => finish(false), timeoutMs);
     img.addEventListener('load', onLoad);
     img.addEventListener('error', onError);
-    img.src = url;
+    // Cache-bust the crossOrigin request. A plain <img> shown earlier (the
+    // closed-cover poster, the static fallback) may have cached the same URL
+    // WITHOUT CORS; reusing that entry makes this crossOrigin fetch fail and the
+    // texture silently drop (the "cover loads in the DOM but not the 3D book"
+    // bug). A distinct query key forces a fresh, CORS-clean response.
+    img.src = `${url}${url.includes('?') ? '&' : '?'}__cors=1`;
   });
 }
 
