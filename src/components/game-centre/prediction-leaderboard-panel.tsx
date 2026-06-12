@@ -37,6 +37,15 @@ import { cn } from '#/lib/utils';
  *     like `@user_cpmq17gj3c` fit cleanly inside the 640px-max panel without
  *     cramping the PTS column.
  *
+ * Wave 6.34q — RANK column breathing room:
+ *   - Wave 6.34p removed the avatar-slot spacer from the header, which
+ *     collapsed the visible gap between RANK and PLAYER eyebrows (they read
+ *     as one word: "RANKPLAYER"). Widen the RANK column from `w-7` (28px)
+ *     to `w-12` (48px) in BOTH header and row so there's a comfortable gap
+ *     between the RANK eyebrow + number and the PLAYER eyebrow + avatar.
+ *     PLAYER eyebrow stays flush with the avatar's left edge (since both
+ *     header and row widen by the same amount).
+ *
  * Wave 6.34o — bounded panel:
  *   - The row list lives inside an internal scroll container with a
  *     `max-h-[480px]` ceiling (fits ~10-12 rows comfortably). The column
@@ -336,6 +345,11 @@ function LeaderboardColumnHeader({ className }: { className?: string }) {
   // flushes with the avatar's left edge. Rows now pair avatar + @handle as a
   // single gap-2 cluster inside the PLAYER cell, so the eyebrow sits over the
   // cluster's leading edge (the avatar), not over the @handle alone.
+  //
+  // Wave 6.34q: widen the RANK column from `w-7` to `w-12` so the RANK and
+  // PLAYER eyebrows aren't visually touching. The row's rank cell widens by
+  // the same amount, so PLAYER eyebrow stays flush with the avatar's left
+  // edge.
   return (
     <div
       data-slot="prediction-leaderboard-column-header"
@@ -344,7 +358,7 @@ function LeaderboardColumnHeader({ className }: { className?: string }) {
         className
       )}
     >
-      <span className="w-7 shrink-0 text-left">Rank</span>
+      <span className="w-12 shrink-0 text-left">Rank</span>
       <span className="min-w-0 flex-1">Player</span>
       <span className="shrink-0 text-right">Pts</span>
     </div>
@@ -382,7 +396,11 @@ function LeaderboardRow({
       <span
         data-slot="prediction-leaderboard-rank"
         className={cn(
-          'font-display w-7 shrink-0 text-left text-xs font-semibold tabular-nums',
+          // Wave 6.34q: widened from `w-7` to `w-12` so the rank number has
+          // breathing room before the avatar/@handle cluster — matches the
+          // RANK column header so PLAYER eyebrow stays flush-left with the
+          // avatar's left edge.
+          'font-display w-12 shrink-0 text-left text-xs font-semibold tabular-nums',
           entry.isViewer ? 'text-red-100' : isTopThree ? 'text-white/70' : 'text-white/55'
         )}
       >
