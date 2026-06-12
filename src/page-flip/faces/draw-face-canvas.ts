@@ -302,21 +302,9 @@ function drawCoverFace(
   if (img) {
     drawCover(ctx, img, 0, 0, FACE_W, FACE_H, spec.coverImage?.transform);
   } else {
-    // No photo (last resort): a dark textured cover (still on-brand).
-    ctx.fillStyle = C.ink;
-    ctx.fillRect(0, 0, FACE_W, FACE_H);
-    const rg = ctx.createRadialGradient(
-      FACE_W / 2,
-      -120,
-      0,
-      FACE_W / 2,
-      FACE_H * 0.4,
-      FACE_H * 1.15
-    );
-    rg.addColorStop(0, '#232327');
-    rg.addColorStop(0.75, '#0b0b0d');
-    ctx.fillStyle = rg;
-    ctx.fillRect(0, 0, FACE_W, FACE_H);
+    // No photo: fall back to the same page doodle texture the inner spreads use
+    // (on-brand), not a flat dark plate. The scrim below keeps the furniture legible.
+    paintBase(ctx, o.doodle);
   }
 
   // Darker overlay so the white furniture always holds: a whole-page darken

@@ -184,10 +184,18 @@ export function FaceDOM({ spec, headingFont }: { spec: FaceSpec; headingFont: He
             className="absolute inset-0 -z-20 size-full object-cover"
           />
         ) : (
-          <div
-            aria-hidden="true"
-            className="absolute inset-0 -z-20 bg-[radial-gradient(125%_90%_at_50%_30%,#232327,#0b0b0d_72%)]"
-          />
+          <>
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 -z-20 bg-[radial-gradient(120%_80%_at_50%_-10%,rgba(40,40,46,0.5),#0b0b0d_70%)]"
+            />
+            <img
+              src="/textures/mag-doodle.png"
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 -z-20 size-full object-cover opacity-50"
+            />
+          </>
         )}
         {/* Darker overlay: whole-page darken + top/bottom gradients. */}
         <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/35" />

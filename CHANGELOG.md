@@ -5,6 +5,15 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.18] — 2026-06-12
+
+### Changed — cover falls back to the page doodle texture
+
+- A cover with no photo (no upload, no auto-picked hero) now paints the same
+  tactical-doodle page texture the inner spreads use (`paintBase`), instead of a
+  flat dark plate. Canvas + DOM. The profile programme card inherits it — it
+  renders the cover face.
+
 ## [0.40.15] — 2026-06-12
 
 ### Fixed — book occasionally blank until a nudge; + arrow-key paging
