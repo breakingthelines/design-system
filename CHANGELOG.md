@@ -5,6 +5,17 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.7] — 2026-06-12
+
+### Changed — back cover redesign + logos keep their outlines
+
+- Crest/competition logos now render as a LIGHT MONOCHROME (`grayscale + brightness`)
+  instead of a solid white silhouette — they read white-ish but keep their internal
+  outlines/detail (a flat knockout erased it).
+- Back cover redesigned: the cover's top-left cluster (wordmark + kicker + date),
+  the tactical doodle texture, a bold closing line, and a CTA whose accent renders
+  in BTL red (`BackFaceSpec` gains `kicker` / `date` / `ctaLead` / `ctaAccent`).
+
 ## [0.40.6] — 2026-06-12
 
 ### Fixed — stat face auto-fits long values

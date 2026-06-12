@@ -115,8 +115,11 @@ const specs: FaceSpec[] = [
   },
   {
     kind: 'back',
-    line: "That's your first touch.",
-    sub: 'Welcome to Breaking The Lines.',
+    kicker: 'Official First Touch',
+    date: '12 JUN 2026',
+    line: 'This is your First Touch.',
+    ctaLead: 'Time to start',
+    ctaAccent: 'Breaking The Lines',
     colophon: 'First Touch · @tommy',
   },
 ];

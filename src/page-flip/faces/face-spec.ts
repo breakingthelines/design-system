@@ -116,10 +116,16 @@ export interface PhotoFaceSpec {
 
 export interface BackFaceSpec {
   kind: 'back';
-  /** The closing line. */
+  /** Kicker under the wordmark, top-left (matches the cover), e.g. "OFFICIAL FIRST TOUCH". */
+  kicker?: string;
+  /** Date under the kicker, top-left (matches the cover). */
+  date?: string;
+  /** The closing line, e.g. "This is your First Touch". */
   line: string;
-  /** A quiet sub-line under it. */
-  sub?: string;
+  /** CTA lead-in (white), e.g. "Time to start". */
+  ctaLead?: string;
+  /** CTA accent rendered in BTL red, e.g. "Breaking The Lines". */
+  ctaAccent?: string;
   /** Footer colophon (e.g. "First Touch · @handle"). */
   colophon?: string;
 }

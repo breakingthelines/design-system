@@ -42,7 +42,7 @@ function CircleMedia({ media, className }: { media: FaceImage; className?: strin
             loading="eager"
             onError={() => setBroken(true)}
             className="size-full object-contain p-[6%]"
-            style={{ filter: 'brightness(0) invert(1)' }}
+            style={{ filter: 'grayscale(1) brightness(1.7) contrast(1.05)' }}
           />
         </span>
       );
@@ -95,7 +95,7 @@ function BareLogo({ media }: { media: FaceImage }) {
         loading="eager"
         onError={() => setBroken(true)}
         className="size-11 object-contain"
-        style={{ filter: 'brightness(0) invert(1)' }}
+        style={{ filter: 'grayscale(1) brightness(1.7) contrast(1.05)' }}
       />
     );
   }
@@ -233,21 +233,47 @@ export function FaceDOM({ spec, headingFont }: { spec: FaceSpec; headingFont: He
       <div className="relative isolate flex h-full w-full flex-col justify-between overflow-hidden bg-black p-8 text-white sm:p-9">
         <div
           aria-hidden="true"
-          className="absolute inset-0 -z-10 bg-[radial-gradient(120%_80%_at_50%_115%,rgba(38,38,38,0.5),#000_70%)]"
+          className="absolute inset-0 -z-20 bg-[radial-gradient(120%_80%_at_50%_-10%,rgba(38,38,38,0.45),#000_72%)]"
         />
-        <div className="flex items-center gap-2">
-          <Mark className="h-5 w-auto" />
-          <span className="font-sans text-[13px] font-bold tracking-tight text-white">
-            Breaking The Lines
-          </span>
+        <Doodle />
+        {/* Top-left cluster — matches the cover. */}
+        <div>
+          <div className="flex items-start gap-2.5">
+            <Mark className="mt-0.5 h-9 w-auto" />
+            <span className="font-sans text-2xl leading-[0.92] font-extrabold lowercase">
+              breaking
+              <br />
+              the lines
+            </span>
+          </div>
+          {spec.kicker ? (
+            <p className="mt-3 text-left font-sans text-[10px] font-medium tracking-[0.22em] text-white uppercase">
+              {spec.kicker}
+            </p>
+          ) : null}
+          {spec.date ? (
+            <p className="mt-1 text-left font-sans text-[10px] font-medium tracking-[0.16em] text-white/60 uppercase">
+              {spec.date}
+            </p>
+          ) : null}
         </div>
-        <div className="flex min-h-0 flex-1 flex-col justify-center">
+        {/* Closing copy + red CTA. */}
+        <div className="flex flex-col">
           <p
             className={`max-w-sm ${hc} text-3xl leading-tight font-bold tracking-tight text-white`}
           >
             {spec.line}
           </p>
-          {spec.sub ? <p className="text-grey-500 mt-3 font-sans text-base">{spec.sub}</p> : null}
+          {spec.ctaLead ? (
+            <p className="mt-5 font-sans text-lg font-semibold text-white">{spec.ctaLead}</p>
+          ) : null}
+          {spec.ctaAccent ? (
+            <p
+              className={`mt-1 ${hc} text-3xl leading-tight font-extrabold tracking-tight text-red-100`}
+            >
+              {spec.ctaAccent}
+            </p>
+          ) : null}
         </div>
         {spec.colophon ? (
           <p className="text-grey-500 font-sans text-[11px] font-medium">{spec.colophon}</p>

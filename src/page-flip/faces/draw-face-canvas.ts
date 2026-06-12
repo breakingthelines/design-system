@@ -131,7 +131,7 @@ function drawCircleMedia(
       const dw = img.width * s;
       const dh = img.height * s;
       ctx.save();
-      ctx.filter = 'brightness(0) invert(1)'; // knock any logo to flat white
+      ctx.filter = 'grayscale(1) brightness(1.7) contrast(1.05)'; // knock any logo to flat white
       ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
       ctx.restore();
     } else {
@@ -211,7 +211,7 @@ function drawBareLogo(
     const dw = img.width * s;
     const dh = img.height * s;
     ctx.save();
-    ctx.filter = 'brightness(0) invert(1)'; // knock any logo to flat white
+    ctx.filter = 'grayscale(1) brightness(1.7) contrast(1.05)'; // knock any logo to flat white
     ctx.drawImage(img, x + (size - dw) / 2, y + (size - dh) / 2, dw, dh);
     ctx.restore();
     return;
@@ -482,35 +482,44 @@ function drawBackFace(
   spec: Extract<FaceSpec, { kind: 'back' }>,
   o: DrawFaceOptions
 ) {
-  ctx.fillStyle = C.ink;
-  ctx.fillRect(0, 0, FACE_W, FACE_H);
-  const rg = ctx.createRadialGradient(
-    FACE_W / 2,
-    FACE_H * 1.1,
-    0,
-    FACE_W / 2,
-    FACE_H,
-    FACE_H * 1.2
-  );
-  rg.addColorStop(0, 'rgba(40,40,46,0.55)');
-  rg.addColorStop(0.7, 'rgba(0,0,0,0)');
-  ctx.fillStyle = rg;
-  ctx.fillRect(0, 0, FACE_W, FACE_H);
-  drawMark(ctx, PAD, PAD, 26);
-  ctx.fillStyle = C.white;
-  font(ctx, 700, 26, BODY_FAMILY);
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText('Breaking The Lines', PAD + 60, PAD + 22);
+  // Doodle texture behind everything (same as the inner pages).
+  paintBase(ctx, o.doodle);
 
-  let y = FACE_H * 0.42;
+  // Top-left cluster — matches the cover: wordmark → kicker → date.
+  drawWordmark(ctx, PAD, PAD);
+  let ty = PAD + 88;
+  if (spec.kicker) {
+    ctx.fillStyle = C.white;
+    font(ctx, 500, 16, BODY_FAMILY);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    withTracking(ctx, '4px', () => ctx.fillText(spec.kicker!.toUpperCase(), PAD, ty));
+    ty += 23;
+  }
+  if (spec.date) {
+    ctx.fillStyle = 'rgba(255,255,255,0.62)';
+    font(ctx, 500, 16, BODY_FAMILY);
+    ctx.textAlign = 'left';
+    withTracking(ctx, '3px', () => ctx.fillText(spec.date!.toUpperCase(), PAD, ty));
+  }
+
+  // Closing copy, lower half: the line, then the CTA with a red accent.
+  ctx.textAlign = 'left';
+  let y = FACE_H * 0.6;
   ctx.fillStyle = C.white;
-  font(ctx, 700, 60, headingFamily(o.headingFont));
-  y = drawWrapped(ctx, spec.line, PAD, y, FACE_W - PAD * 2, 66);
-  if (spec.sub) {
-    ctx.fillStyle = C.grey500;
-    font(ctx, 500, 32, BODY_FAMILY);
-    drawWrapped(ctx, spec.sub, PAD, y + 24, FACE_W - PAD * 2, 42);
+  font(ctx, 700, 58, headingFamily(o.headingFont));
+  y = drawWrapped(ctx, spec.line, PAD, y, FACE_W - PAD * 2, 64);
+  if (spec.ctaLead) {
+    y += 44;
+    ctx.fillStyle = C.white;
+    font(ctx, 600, 32, BODY_FAMILY);
+    ctx.fillText(spec.ctaLead, PAD, y);
+  }
+  if (spec.ctaAccent) {
+    y += 60;
+    ctx.fillStyle = C.red;
+    font(ctx, 800, 50, headingFamily(o.headingFont));
+    drawWrapped(ctx, spec.ctaAccent, PAD, y - 50, FACE_W - PAD * 2, 56);
   }
   if (spec.colophon) {
     ctx.fillStyle = C.grey500;
