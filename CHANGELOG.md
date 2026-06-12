@@ -5,6 +5,16 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.8] — 2026-06-12
+
+### Changed — back CTA one line, logos brighter, slicker reader entrance
+
+- Back-cover CTA renders on ONE line at one size (lead white, accent BTL red).
+- Crest/logo monochrome brightened (grayscale brightness 2 + contrast) so dark
+  marks like the Premier League lion read light instead of near-black.
+- Static cover → 3D book transition: the book now settles in (scale + eased fade)
+  while the poster lifts away, instead of a flat opacity swap.
+
 ## [0.40.7] — 2026-06-12
 
 ### Changed — back cover redesign + logos keep their outlines

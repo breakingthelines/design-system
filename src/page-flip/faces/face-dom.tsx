@@ -42,7 +42,7 @@ function CircleMedia({ media, className }: { media: FaceImage; className?: strin
             loading="eager"
             onError={() => setBroken(true)}
             className="size-full object-contain p-[6%]"
-            style={{ filter: 'grayscale(1) brightness(1.7) contrast(1.05)' }}
+            style={{ filter: 'grayscale(1) brightness(2) contrast(1.4)' }}
           />
         </span>
       );
@@ -95,7 +95,7 @@ function BareLogo({ media }: { media: FaceImage }) {
         loading="eager"
         onError={() => setBroken(true)}
         className="size-11 object-contain"
-        style={{ filter: 'grayscale(1) brightness(1.7) contrast(1.05)' }}
+        style={{ filter: 'grayscale(1) brightness(2) contrast(1.4)' }}
       />
     );
   }
@@ -264,14 +264,10 @@ export function FaceDOM({ spec, headingFont }: { spec: FaceSpec; headingFont: He
           >
             {spec.line}
           </p>
-          {spec.ctaLead ? (
-            <p className="mt-5 font-sans text-lg font-semibold text-white">{spec.ctaLead}</p>
-          ) : null}
-          {spec.ctaAccent ? (
-            <p
-              className={`mt-1 ${hc} text-3xl leading-tight font-extrabold tracking-tight text-red-100`}
-            >
-              {spec.ctaAccent}
+          {spec.ctaLead || spec.ctaAccent ? (
+            <p className="mt-5 font-sans text-xl font-bold text-white">
+              {spec.ctaLead ? `${spec.ctaLead} ` : ''}
+              {spec.ctaAccent ? <span className="text-red-100">{spec.ctaAccent}</span> : null}
             </p>
           ) : null}
         </div>

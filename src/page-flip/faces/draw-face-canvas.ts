@@ -131,7 +131,7 @@ function drawCircleMedia(
       const dw = img.width * s;
       const dh = img.height * s;
       ctx.save();
-      ctx.filter = 'grayscale(1) brightness(1.7) contrast(1.05)'; // knock any logo to flat white
+      ctx.filter = 'grayscale(1) brightness(2) contrast(1.4)'; // knock any logo to flat white
       ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
       ctx.restore();
     } else {
@@ -211,7 +211,7 @@ function drawBareLogo(
     const dw = img.width * s;
     const dh = img.height * s;
     ctx.save();
-    ctx.filter = 'grayscale(1) brightness(1.7) contrast(1.05)'; // knock any logo to flat white
+    ctx.filter = 'grayscale(1) brightness(2) contrast(1.4)'; // knock any logo to flat white
     ctx.drawImage(img, x + (size - dw) / 2, y + (size - dh) / 2, dw, dh);
     ctx.restore();
     return;
@@ -509,17 +509,23 @@ function drawBackFace(
   ctx.fillStyle = C.white;
   font(ctx, 700, 58, headingFamily(o.headingFont));
   y = drawWrapped(ctx, spec.line, PAD, y, FACE_W - PAD * 2, 64);
-  if (spec.ctaLead) {
-    y += 44;
-    ctx.fillStyle = C.white;
-    font(ctx, 600, 32, BODY_FAMILY);
-    ctx.fillText(spec.ctaLead, PAD, y);
-  }
-  if (spec.ctaAccent) {
-    y += 60;
-    ctx.fillStyle = C.red;
-    font(ctx, 800, 50, headingFamily(o.headingFont));
-    drawWrapped(ctx, spec.ctaAccent, PAD, y - 50, FACE_W - PAD * 2, 56);
+  // CTA on ONE line, same size throughout: lead in white, accent in BTL red.
+  if (spec.ctaLead || spec.ctaAccent) {
+    y += 52;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'alphabetic';
+    font(ctx, 700, 38, BODY_FAMILY);
+    let cx = PAD;
+    if (spec.ctaLead) {
+      const lead = `${spec.ctaLead} `;
+      ctx.fillStyle = C.white;
+      ctx.fillText(lead, cx, y);
+      cx += ctx.measureText(lead).width;
+    }
+    if (spec.ctaAccent) {
+      ctx.fillStyle = C.red;
+      ctx.fillText(spec.ctaAccent, cx, y);
+    }
   }
   if (spec.colophon) {
     ctx.fillStyle = C.grey500;
