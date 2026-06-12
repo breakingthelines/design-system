@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Hourglass } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 
@@ -197,17 +198,25 @@ function ScheduledBody({
             Kickoff in
           </span>
         )}
-        <motion.span
-          data-slot="predictions-hero-countdown"
-          data-phase={countdownPhase}
-          animate={{
-            color: accent ? 'var(--color-red-100)' : '#ffffff',
-          }}
-          transition={{ duration: 0.4, ease: 'easeInOut' }}
-          className="font-display text-[40px] leading-none font-bold tracking-tight tabular-nums sm:text-[48px]"
-        >
-          {countdownLabel}
-        </motion.span>
+        <div className="flex items-center gap-2.5 sm:gap-3">
+          <Hourglass
+            weight="regular"
+            aria-hidden
+            data-slot="predictions-hero-countdown-icon"
+            className="size-7 shrink-0 text-white/40 sm:size-8"
+          />
+          <motion.span
+            data-slot="predictions-hero-countdown"
+            data-phase={countdownPhase}
+            animate={{
+              color: accent ? 'var(--color-red-100)' : '#ffffff',
+            }}
+            transition={{ duration: 0.4, ease: 'easeInOut' }}
+            className="font-content text-[40px] leading-none font-bold tracking-tight tabular-nums sm:text-[48px]"
+          >
+            {countdownLabel}
+          </motion.span>
+        </div>
       </div>
 
       {/* Stakes line + CTA row.
