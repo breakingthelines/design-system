@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar';
 import { cn } from '#/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * PredictionLeaderboardPanel (Wave 6.25a · 6.25f polish)
+ * PredictionLeaderboardPanel (Wave 6.25a · 6.25f polish · 6.34o bounded window)
  *
  * Merged "Your standing" + "Active prediction leagues" panel, scoped to ONE
  * selected league. Replaces the duplicated standing-card grid + leagues
@@ -25,6 +25,21 @@ import { cn } from '#/lib/utils';
  *   - Rank chip drops to `text-white/55` (`text-white/70` for top 3) in a
  *     mono-style display face so the leaderboard reads as a table, not a
  *     row stack.
+ *
+ * Wave 6.34o — bounded panel:
+ *   - The row list lives inside an internal scroll container with a
+ *     `max-h-[480px]` ceiling (fits ~10-12 rows comfortably). The column
+ *     header (RANK / PLAYER / PTS) sticks to the top of the scroll area
+ *     so it stays visible while scrolling. `pendingNote` stays OUTSIDE
+ *     the scroll region — it's a panel-level affordance, not a list one.
+ *   - Optional `viewerWindowSize` slices the entries to a viewer-anchored
+ *     window (25 above + 25 below by default). Off when undefined — the
+ *     panel renders the full list and lets the scroll container clamp it.
+ *     When the viewer isn't in the leaderboard (signed-out, not a member),
+ *     the window falls back to the top `viewerWindowSize` rows.
+ *   - On mount the viewer row scrolls into view (`block: 'center'`) so the
+ *     user lands looking at their own slot in the slice. One-shot
+ *     `useLayoutEffect` — no data-flow useEffect.
  *
  * Honest empty states:
  *   - `entries` empty + no `pendingNote` → "Be the first to pick in this
@@ -103,8 +118,24 @@ export interface PredictionLeaderboardPanelProps {
    * default — back-compat for stories + any other consumer.
    */
   hideHeader?: boolean;
+  /**
+   * Wave 6.34o: when set, slice the entries to a viewer-anchored window of
+   * this many rows total (the viewer sits in the middle when possible).
+   * E.g. `viewerWindowSize={50}` → 25 above + 25 below. Clamped at the
+   * top/bottom of the list. When the viewer isn't enrolled (no row marked
+   * `isViewer`), falls back to the top `viewerWindowSize` rows so signed-
+   * out / non-member viewers still see the leaderboard truncated to the
+   * same shape rather than the full list.
+   *
+   * Off when undefined — the panel renders the full `entries` list and
+   * lets the internal scroll container do the clamping. Story consumers
+   * (a 5-row fixture) keep their existing behaviour.
+   */
+  viewerWindowSize?: number;
   className?: string;
 }
+
+const DEFAULT_MAX_HEIGHT_CLASS = 'max-h-[480px]';
 
 export function PredictionLeaderboardPanel({
   leagueLabel,
@@ -115,18 +146,42 @@ export function PredictionLeaderboardPanel({
   emptyMessage,
   eyebrow = 'Leaderboard',
   hideHeader = false,
+  viewerWindowSize,
   className,
 }: PredictionLeaderboardPanelProps) {
-  const hasEntries = entries.length > 0;
+  // Wave 6.34o: slice the entries to a viewer-anchored window when the host
+  // asks for one. Otherwise pass the full list straight through.
+  const visibleEntries = React.useMemo(
+    () => sliceViewerWindow(entries, viewerWindowSize),
+    [entries, viewerWindowSize]
+  );
+
+  const hasEntries = visibleEntries.length > 0;
   // Hide a separate `viewerEntry` row when the viewer is already in
-  // the listed top-N — the in-list highlight is enough.
+  // the visible slice — the in-list highlight is enough.
   const viewerAlreadyListed =
     viewerEntry !== undefined &&
-    entries.some(
+    visibleEntries.some(
       (entry) =>
         entry.isViewer === true || (entry.userHandle && entry.userHandle === viewerEntry.userHandle)
     );
   const showStickyViewer = viewerEntry !== undefined && !viewerAlreadyListed;
+
+  // Wave 6.34o: scroll the viewer's row into the center of the visible
+  // window on mount. One-shot useLayoutEffect — no data-flow useEffect.
+  // The list ref is the scroll container; the row ref is the viewer-row
+  // <li>. We re-anchor when the visible entries change (e.g. league
+  // switch in match-detail) so the viewer lands centred every time.
+  const listRef = React.useRef<HTMLDivElement | null>(null);
+  const viewerRowRef = React.useRef<HTMLLIElement | null>(null);
+  React.useLayoutEffect(() => {
+    const row = viewerRowRef.current;
+    if (!row) return;
+    // `block: 'center'` centres the row in the scroll container; the
+    // outer page doesn't scroll because the container is the nearest
+    // ancestor with `overflow-y-auto`.
+    row.scrollIntoView({ block: 'center', inline: 'nearest' });
+  }, [visibleEntries]);
 
   return (
     <section
@@ -160,14 +215,29 @@ export function PredictionLeaderboardPanel({
       )}
 
       {hasEntries ? (
-        <div data-slot="prediction-leaderboard-table" className="flex flex-col">
-          <LeaderboardColumnHeader />
+        <div
+          ref={listRef}
+          data-slot="prediction-leaderboard-table"
+          className={cn(
+            'flex flex-col overflow-y-auto overscroll-contain',
+            DEFAULT_MAX_HEIGHT_CLASS
+          )}
+        >
+          {/* Sticky column header lives inside the scroll container so
+              RANK / PLAYER / PTS stays pinned at the top while rows
+              scroll past. `bg-grey-200` matches the panel background so
+              the rows don't peek through the header. */}
+          <LeaderboardColumnHeader className="bg-grey-200 sticky top-0 z-10" />
           <ol
             data-slot="prediction-leaderboard-entries"
             className="flex flex-col divide-y divide-white/[0.04]"
           >
-            {entries.map((entry) => (
-              <LeaderboardRow key={`${entry.rank}-${entry.userHandle}`} entry={entry} />
+            {visibleEntries.map((entry) => (
+              <LeaderboardRow
+                key={`${entry.rank}-${entry.userHandle}`}
+                entry={entry}
+                rowRef={entry.isViewer ? viewerRowRef : undefined}
+              />
             ))}
           </ol>
         </div>
@@ -201,26 +271,80 @@ export function PredictionLeaderboardPanel({
   );
 }
 
-function LeaderboardColumnHeader() {
-  // Wave 6.34m: the PLAYER eyebrow now sits over the row's avatar+handle
-  // cluster (avatar's left edge), not over @handle alone. We drop the
-  // dedicated 24px avatar-slot spacer that previously pushed "Player" past
-  // the avatar — instead, the Player span spans the avatar + name area, so
-  // the eyebrow flushes with where the avatar sits on each row. Pts stays
-  // pinned right.
+/**
+ * Wave 6.34o: produce a viewer-anchored slice of the leaderboard.
+ *
+ * Cases:
+ *   - `viewerWindowSize` undefined / non-positive / list shorter than the
+ *     window → pass the list straight through (no slicing).
+ *   - Viewer in top half of the window → window starts at rank 1.
+ *   - Viewer in bottom half → window ends at the last entry.
+ *   - Viewer mid-pack → centred, `before` rows above + `after` rows below.
+ *   - Viewer not in the list (signed-out / non-member) → top
+ *     `viewerWindowSize` rows.
+ */
+function sliceViewerWindow(
+  entries: readonly PredictionLeaderboardPanelEntry[],
+  viewerWindowSize: number | undefined
+): readonly PredictionLeaderboardPanelEntry[] {
+  if (!viewerWindowSize || viewerWindowSize <= 0) return entries;
+  if (entries.length <= viewerWindowSize) return entries;
+
+  const viewerIndex = entries.findIndex((entry) => entry.isViewer);
+  if (viewerIndex < 0) {
+    // Viewer not on the leaderboard — show the top `viewerWindowSize` rows.
+    return entries.slice(0, viewerWindowSize);
+  }
+
+  // Split the window roughly in half: `before` rows above the viewer +
+  // viewer + `after` rows below.
+  const before = Math.floor((viewerWindowSize - 1) / 2);
+  const after = viewerWindowSize - 1 - before;
+
+  let start = viewerIndex - before;
+  let end = viewerIndex + after + 1; // `slice` end is exclusive.
+
+  // Clamp at the top of the list — push the surplus to the tail so the
+  // window still hits `viewerWindowSize` rows.
+  if (start < 0) {
+    end += -start;
+    start = 0;
+  }
+  // Clamp at the bottom — push the surplus to the head.
+  if (end > entries.length) {
+    start -= end - entries.length;
+    end = entries.length;
+  }
+  if (start < 0) start = 0;
+
+  return entries.slice(start, end);
+}
+
+function LeaderboardColumnHeader({ className }: { className?: string }) {
   return (
     <div
       data-slot="prediction-leaderboard-column-header"
-      className="font-content flex items-center gap-3 border-b border-white/[0.06] px-3 pb-2 text-[10px] tracking-[0.14em] text-white/35 uppercase"
+      className={cn(
+        'font-content flex items-center gap-3 border-b border-white/[0.06] px-3 pb-2 text-[10px] tracking-[0.14em] text-white/35 uppercase',
+        className
+      )}
     >
       <span className="w-7 shrink-0 text-left">Rank</span>
+      {/* 24px avatar slot — keep aligned with the row's avatar column. */}
+      <span aria-hidden className="w-6 shrink-0" />
       <span className="min-w-0 flex-1">Player</span>
       <span className="shrink-0 text-right">Pts</span>
     </div>
   );
 }
 
-function LeaderboardRow({ entry }: { entry: PredictionLeaderboardPanelEntry }) {
+function LeaderboardRow({
+  entry,
+  rowRef,
+}: {
+  entry: PredictionLeaderboardPanelEntry;
+  rowRef?: React.Ref<HTMLLIElement>;
+}) {
   const route = entry.route ?? `/@${entry.userHandle}`;
   const handleLabel = entry.userHandle ? `@${entry.userHandle}` : 'Player';
   // Only render the displayName as a secondary line when it adds information
@@ -234,6 +358,7 @@ function LeaderboardRow({ entry }: { entry: PredictionLeaderboardPanelEntry }) {
   const isTopThree = entry.rank <= 3;
   return (
     <li
+      ref={rowRef}
       data-slot="prediction-leaderboard-row"
       data-viewer={entry.isViewer || undefined}
       className={cn(

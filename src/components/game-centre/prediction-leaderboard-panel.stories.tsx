@@ -148,3 +148,113 @@ export const HideHeader = meta.story({
     </div>
   ),
 });
+
+/* Wave 6.34o: long leaderboard that overflows the panel's max-height.
+ * The list scrolls internally, the column header sticks to the top, and
+ * the pendingNote stays anchored OUTSIDE the scroll region. With no
+ * `viewerWindowSize` the full list is in the DOM. */
+const LONG_ENTRIES = Array.from({ length: 120 }, (_, i) => {
+  const rank = i + 1;
+  return {
+    rank,
+    userHandle: `player${rank}`,
+    userName: `Player ${rank}`,
+    points: Math.max(0, 120 - rank),
+    isViewer: rank === 60,
+  };
+});
+
+export const LongList = meta.story({
+  name: 'Long list · bounded panel scrolls internally',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: LONG_ENTRIES,
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
+/* Wave 6.34o: viewer-anchored window. With 120 entries and the viewer at
+ * rank 60, `viewerWindowSize={50}` slices to ranks 36..85 — 24 above + 25
+ * below the viewer (rounded for an even split). The viewer row scrolls
+ * to centre on mount so they land looking at their own slot. */
+export const ViewerWindowMidPack = meta.story({
+  name: 'viewerWindowSize · viewer mid-pack',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: LONG_ENTRIES,
+    viewerWindowSize: 50,
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
+/* Wave 6.34o: viewer near the top — the window clamps at rank 1. */
+export const ViewerWindowTop = meta.story({
+  name: 'viewerWindowSize · viewer in top 5',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: LONG_ENTRIES.map((entry) => ({
+      ...entry,
+      isViewer: entry.rank === 3,
+    })),
+    viewerWindowSize: 50,
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
+/* Wave 6.34o: viewer near the bottom — the window clamps at the tail so
+ * the viewer still gets context rows above them. */
+export const ViewerWindowBottom = meta.story({
+  name: 'viewerWindowSize · viewer near bottom',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: LONG_ENTRIES.map((entry) => ({
+      ...entry,
+      isViewer: entry.rank === 118,
+    })),
+    viewerWindowSize: 50,
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
+/* Wave 6.34o: viewer not enrolled (signed-out / non-member) — falls back
+ * to the top `viewerWindowSize` rows so the panel still truncates to the
+ * same predictable shape. */
+export const ViewerWindowSignedOut = meta.story({
+  name: 'viewerWindowSize · no viewer (signed-out)',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: LONG_ENTRIES.map((entry) => ({ ...entry, isViewer: false })),
+    viewerWindowSize: 50,
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
