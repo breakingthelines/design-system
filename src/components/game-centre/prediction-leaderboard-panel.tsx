@@ -202,14 +202,18 @@ export function PredictionLeaderboardPanel({
 }
 
 function LeaderboardColumnHeader() {
+  // Wave 6.34m: the PLAYER eyebrow now sits over the row's avatar+handle
+  // cluster (avatar's left edge), not over @handle alone. We drop the
+  // dedicated 24px avatar-slot spacer that previously pushed "Player" past
+  // the avatar — instead, the Player span spans the avatar + name area, so
+  // the eyebrow flushes with where the avatar sits on each row. Pts stays
+  // pinned right.
   return (
     <div
       data-slot="prediction-leaderboard-column-header"
       className="font-content flex items-center gap-3 border-b border-white/[0.06] px-3 pb-2 text-[10px] tracking-[0.14em] text-white/35 uppercase"
     >
       <span className="w-7 shrink-0 text-left">Rank</span>
-      {/* 24px avatar slot — keep aligned with the row's avatar column. */}
-      <span aria-hidden className="w-6 shrink-0" />
       <span className="min-w-0 flex-1">Player</span>
       <span className="shrink-0 text-right">Pts</span>
     </div>
