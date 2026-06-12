@@ -6,7 +6,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar';
 import { cn } from '#/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * PredictionLeaderboardPanel (Wave 6.25a · 6.25f polish · 6.34o bounded window)
+ * PredictionLeaderboardPanel (Wave 6.25a · 6.25f polish · 6.34o bounded window
+ * · 6.34p tight avatar+@handle cluster)
  *
  * Merged "Your standing" + "Active prediction leagues" panel, scoped to ONE
  * selected league. Replaces the duplicated standing-card grid + leagues
@@ -25,6 +26,16 @@ import { cn } from '#/lib/utils';
  *   - Rank chip drops to `text-white/55` (`text-white/70` for top 3) in a
  *     mono-style display face so the leaderboard reads as a table, not a
  *     row stack.
+ *
+ * Wave 6.34p — tight cluster:
+ *   - Avatar + @handle live inside ONE PLAYER cell with `gap-2` so the avatar
+ *     reads as "the avatar of @handle" instead of floating in its own slot.
+ *     The PLAYER column header drops its 24px avatar spacer so the eyebrow
+ *     flushes with the avatar's left edge.
+ *   - Row text shrinks one step: rank/handle/points `text-sm` → `text-xs`,
+ *     secondary display name `text-xs` → `text-[11px]`, so long handles
+ *     like `@user_cpmq17gj3c` fit cleanly inside the 640px-max panel without
+ *     cramping the PTS column.
  *
  * Wave 6.34o — bounded panel:
  *   - The row list lives inside an internal scroll container with a
@@ -321,6 +332,10 @@ function sliceViewerWindow(
 }
 
 function LeaderboardColumnHeader({ className }: { className?: string }) {
+  // Wave 6.34p: drop the dedicated avatar-slot spacer so the PLAYER eyebrow
+  // flushes with the avatar's left edge. Rows now pair avatar + @handle as a
+  // single gap-2 cluster inside the PLAYER cell, so the eyebrow sits over the
+  // cluster's leading edge (the avatar), not over the @handle alone.
   return (
     <div
       data-slot="prediction-leaderboard-column-header"
@@ -330,8 +345,6 @@ function LeaderboardColumnHeader({ className }: { className?: string }) {
       )}
     >
       <span className="w-7 shrink-0 text-left">Rank</span>
-      {/* 24px avatar slot — keep aligned with the row's avatar column. */}
-      <span aria-hidden className="w-6 shrink-0" />
       <span className="min-w-0 flex-1">Player</span>
       <span className="shrink-0 text-right">Pts</span>
     </div>
@@ -369,47 +382,53 @@ function LeaderboardRow({
       <span
         data-slot="prediction-leaderboard-rank"
         className={cn(
-          'font-display w-7 shrink-0 text-left text-sm font-semibold tabular-nums',
+          'font-display w-7 shrink-0 text-left text-xs font-semibold tabular-nums',
           entry.isViewer ? 'text-red-100' : isTopThree ? 'text-white/70' : 'text-white/55'
         )}
       >
         {entry.rank}
       </span>
-      <Avatar
-        data-slot="prediction-leaderboard-avatar"
-        size="sm"
-        className={cn('size-6 ring-0 after:hidden')}
-      >
-        {entry.avatarUrl ? <AvatarImage src={entry.avatarUrl} alt={handleLabel} /> : null}
-        <AvatarFallback branded aria-label={handleLabel} />
-      </Avatar>
+      {/* Wave 6.34p: avatar + name anchor live inside ONE PLAYER cell with a
+          tight gap-2. The avatar reads as "the avatar of @handle" instead of
+          floating in a separate column, and the PLAYER eyebrow above flushes
+          with the avatar's left edge. */}
       <a
         href={route}
         data-slot="prediction-leaderboard-name"
-        className="font-content flex min-w-0 flex-1 flex-col leading-tight transition-colors"
+        className="font-content flex min-w-0 flex-1 items-center gap-2 leading-tight transition-colors"
       >
-        <span
-          data-slot="prediction-leaderboard-handle"
-          className={cn(
-            'truncate text-sm font-semibold',
-            entry.isViewer ? 'text-white' : 'text-white group-hover:text-white'
-          )}
+        <Avatar
+          data-slot="prediction-leaderboard-avatar"
+          size="sm"
+          className={cn('size-6 shrink-0 ring-0 after:hidden')}
         >
-          {handleLabel}
-        </span>
-        {showSecondary ? (
+          {entry.avatarUrl ? <AvatarImage src={entry.avatarUrl} alt={handleLabel} /> : null}
+          <AvatarFallback branded aria-label={handleLabel} />
+        </Avatar>
+        <span className="flex min-w-0 flex-1 flex-col leading-tight">
           <span
-            data-slot="prediction-leaderboard-display-name"
-            className="font-content truncate text-xs text-white/55"
+            data-slot="prediction-leaderboard-handle"
+            className={cn(
+              'truncate text-xs font-semibold',
+              entry.isViewer ? 'text-white' : 'text-white group-hover:text-white'
+            )}
           >
-            {displayName}
+            {handleLabel}
           </span>
-        ) : null}
+          {showSecondary ? (
+            <span
+              data-slot="prediction-leaderboard-display-name"
+              className="font-content truncate text-[11px] text-white/55"
+            >
+              {displayName}
+            </span>
+          ) : null}
+        </span>
       </a>
       <span
         data-slot="prediction-leaderboard-points"
         className={cn(
-          'font-content shrink-0 text-right text-sm font-semibold tabular-nums',
+          'font-content shrink-0 text-right text-xs font-semibold tabular-nums',
           entry.isViewer ? 'text-white' : 'text-white/85'
         )}
       >
