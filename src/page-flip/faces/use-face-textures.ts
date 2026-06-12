@@ -12,11 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { CanvasTexture, SRGBColorSpace, type Texture } from 'three';
 
-import {
-  collectFaceImageUrls,
-  type FaceSpec,
-  type HeadingFont,
-} from './face-spec';
+import { collectFaceImageUrls, type FaceSpec, type HeadingFont } from './face-spec';
 import { drawFaceCanvas } from './draw-face-canvas';
 
 /** A physical leaf of the book: a front face and a back face. */
@@ -84,7 +80,10 @@ export function useFaceTextures(
     pages: [],
     ready: false,
   });
-  const sig = useMemo(() => specsSignature(specs, headingFont, doodleUrl), [specs, headingFont, doodleUrl]);
+  const sig = useMemo(
+    () => specsSignature(specs, headingFont, doodleUrl),
+    [specs, headingFont, doodleUrl]
+  );
   const disposeRef = useRef<Texture[]>([]);
 
   useEffect(() => {

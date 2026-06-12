@@ -266,7 +266,11 @@ function paintBase(ctx: CanvasRenderingContext2D, doodle?: HTMLImageElement | nu
 
 // ── per-kind layouts ──────────────────────────────────────────────────────────
 
-function drawCoverFace(ctx: CanvasRenderingContext2D, spec: Extract<FaceSpec, { kind: 'cover' }>, o: DrawFaceOptions) {
+function drawCoverFace(
+  ctx: CanvasRenderingContext2D,
+  spec: Extract<FaceSpec, { kind: 'cover' }>,
+  o: DrawFaceOptions
+) {
   const hf = headingFamily(o.headingFont);
   const img = spec.coverImage?.url ? o.images.get(spec.coverImage.url) : undefined;
   if (img) {
@@ -275,7 +279,14 @@ function drawCoverFace(ctx: CanvasRenderingContext2D, spec: Extract<FaceSpec, { 
     // No photo (last resort): a dark textured cover (still on-brand).
     ctx.fillStyle = C.ink;
     ctx.fillRect(0, 0, FACE_W, FACE_H);
-    const rg = ctx.createRadialGradient(FACE_W / 2, -120, 0, FACE_W / 2, FACE_H * 0.4, FACE_H * 1.15);
+    const rg = ctx.createRadialGradient(
+      FACE_W / 2,
+      -120,
+      0,
+      FACE_W / 2,
+      FACE_H * 0.4,
+      FACE_H * 1.15
+    );
     rg.addColorStop(0, '#232327');
     rg.addColorStop(0.75, '#0b0b0d');
     ctx.fillStyle = rg;
@@ -343,7 +354,11 @@ function eyebrow(ctx: CanvasRenderingContext2D, text: string, x: number, y: numb
   withTracking(ctx, '3px', () => ctx.fillText(text.toUpperCase(), x, y));
 }
 
-function drawContentFace(ctx: CanvasRenderingContext2D, spec: Extract<FaceSpec, { kind: 'content' }>, o: DrawFaceOptions) {
+function drawContentFace(
+  ctx: CanvasRenderingContext2D,
+  spec: Extract<FaceSpec, { kind: 'content' }>,
+  o: DrawFaceOptions
+) {
   paintBase(ctx, o.doodle);
   const hf = headingFamily(o.headingFont);
   let y = PAD + 30;
@@ -367,11 +382,19 @@ function drawContentFace(ctx: CanvasRenderingContext2D, spec: Extract<FaceSpec, 
       font(ctx, 700, 38, BODY_FAMILY);
       ctx.textAlign = 'left';
       ctx.textBaseline = 'alphabetic';
-      ctx.fillText(truncate(ctx, it.name, FACE_W - PAD - (PAD + r * 2 + 28)), PAD + r * 2 + 28, cy - 2);
+      ctx.fillText(
+        truncate(ctx, it.name, FACE_W - PAD - (PAD + r * 2 + 28)),
+        PAD + r * 2 + 28,
+        cy - 2
+      );
       if (it.secondary) {
         ctx.fillStyle = C.grey500;
         font(ctx, 500, 28, BODY_FAMILY);
-        ctx.fillText(truncate(ctx, it.secondary, FACE_W - PAD - (PAD + r * 2 + 28)), PAD + r * 2 + 28, cy + 34);
+        ctx.fillText(
+          truncate(ctx, it.secondary, FACE_W - PAD - (PAD + r * 2 + 28)),
+          PAD + r * 2 + 28,
+          cy + 34
+        );
       }
       y += rowH;
     }
@@ -405,7 +428,11 @@ function drawContentFace(ctx: CanvasRenderingContext2D, spec: Extract<FaceSpec, 
   }
 }
 
-function drawPhotoFace(ctx: CanvasRenderingContext2D, spec: Extract<FaceSpec, { kind: 'photo' }>, o: DrawFaceOptions) {
+function drawPhotoFace(
+  ctx: CanvasRenderingContext2D,
+  spec: Extract<FaceSpec, { kind: 'photo' }>,
+  o: DrawFaceOptions
+) {
   const img = o.images.get(spec.url);
   if (img) {
     drawCover(ctx, img, 0, 0, FACE_W, FACE_H);
@@ -430,10 +457,21 @@ function drawPhotoFace(ctx: CanvasRenderingContext2D, spec: Extract<FaceSpec, { 
   if (spec.eyebrow) eyebrow(ctx, spec.eyebrow, PAD, y);
 }
 
-function drawBackFace(ctx: CanvasRenderingContext2D, spec: Extract<FaceSpec, { kind: 'back' }>, o: DrawFaceOptions) {
+function drawBackFace(
+  ctx: CanvasRenderingContext2D,
+  spec: Extract<FaceSpec, { kind: 'back' }>,
+  o: DrawFaceOptions
+) {
   ctx.fillStyle = C.ink;
   ctx.fillRect(0, 0, FACE_W, FACE_H);
-  const rg = ctx.createRadialGradient(FACE_W / 2, FACE_H * 1.1, 0, FACE_W / 2, FACE_H, FACE_H * 1.2);
+  const rg = ctx.createRadialGradient(
+    FACE_W / 2,
+    FACE_H * 1.1,
+    0,
+    FACE_W / 2,
+    FACE_H,
+    FACE_H * 1.2
+  );
   rg.addColorStop(0, 'rgba(40,40,46,0.55)');
   rg.addColorStop(0.7, 'rgba(0,0,0,0)');
   ctx.fillStyle = rg;

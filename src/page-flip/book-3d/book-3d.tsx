@@ -191,7 +191,13 @@ function Page({
       easing.dampAngle(target.rotation, 'y', rotationAngle, easingFactor, delta);
       const foldIntensity =
         i > 8 ? Math.sin(i * Math.PI * (1 / bones.length) - 0.5) * turningTime : 0;
-      easing.dampAngle(target.rotation, 'x', foldRotationAngle * foldIntensity, easingFactorFold, delta);
+      easing.dampAngle(
+        target.rotation,
+        'x',
+        foldRotationAngle * foldIntensity,
+        easingFactorFold,
+        delta
+      );
     }
   });
 
@@ -295,7 +301,12 @@ export function Book3D({
       <Canvas shadows dpr={[1, 2]} camera={{ position: [2.28, 0.5, 3.18], fov: 40 }}>
         <color attach="background" args={['#08080a']} />
         <group position-y={0.12}>
-          <Float rotation-x={-MathUtils.degToRad(tiltDeg)} floatIntensity={0.28} speed={1.1} rotationIntensity={0.2}>
+          <Float
+            rotation-x={-MathUtils.degToRad(tiltDeg)}
+            floatIntensity={0.28}
+            speed={1.1}
+            rotationIntensity={0.2}
+          >
             <Book pages={pages} page={page} onPageChange={onPageChange} />
           </Float>
         </group>

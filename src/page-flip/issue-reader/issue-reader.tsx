@@ -104,11 +104,7 @@ export const IssueReader = forwardRef<IssueReaderHandle, IssueReaderProps>(funct
   // Capability resolved once on mount. This component is mounted client-only
   // (the platform lazy-imports it), so `window` exists; no hydration flash.
   const [use3D] = useState(
-    () =>
-      typeof window !== 'undefined' &&
-      !!specs?.length &&
-      hasWebGL() &&
-      !prefersReducedMotion()
+    () => typeof window !== 'undefined' && !!specs?.length && hasWebGL() && !prefersReducedMotion()
   );
 
   const ariaLabel =
@@ -236,7 +232,13 @@ function Reader3D({
             initial={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4 }}
-            style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: '#08080a' }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'grid',
+              placeItems: 'center',
+              background: '#08080a',
+            }}
           >
             <CoverPoster spec={coverSpec} headingFont={headingFont} />
           </motion.div>
@@ -284,7 +286,15 @@ function CoverPoster({ spec, headingFont }: { spec?: FaceSpec; headingFont: Head
 }
 
 /** Slim, calm page control: chevrons + a dot progress rail. */
-function PageControl({ page, maxLeaf, onPage }: { page: number; maxLeaf: number; onPage: (p: number) => void }) {
+function PageControl({
+  page,
+  maxLeaf,
+  onPage,
+}: {
+  page: number;
+  maxLeaf: number;
+  onPage: (p: number) => void;
+}) {
   const btn: React.CSSProperties = {
     display: 'grid',
     placeItems: 'center',
@@ -310,7 +320,13 @@ function PageControl({ page, maxLeaf, onPage }: { page: number; maxLeaf: number;
         zIndex: 10,
       }}
     >
-      <button type="button" aria-label="Previous page" style={{ ...btn, opacity: page <= 0 ? 0.35 : 1 }} disabled={page <= 0} onClick={() => onPage(page - 1)}>
+      <button
+        type="button"
+        aria-label="Previous page"
+        style={{ ...btn, opacity: page <= 0 ? 0.35 : 1 }}
+        disabled={page <= 0}
+        onClick={() => onPage(page - 1)}
+      >
         ‹
       </button>
       <div style={{ display: 'flex', gap: 6 }}>
@@ -327,7 +343,13 @@ function PageControl({ page, maxLeaf, onPage }: { page: number; maxLeaf: number;
           />
         ))}
       </div>
-      <button type="button" aria-label="Next page" style={{ ...btn, opacity: page >= maxLeaf ? 0.35 : 1 }} disabled={page >= maxLeaf} onClick={() => onPage(page + 1)}>
+      <button
+        type="button"
+        aria-label="Next page"
+        style={{ ...btn, opacity: page >= maxLeaf ? 0.35 : 1 }}
+        disabled={page >= maxLeaf}
+        onClick={() => onPage(page + 1)}
+      >
         ›
       </button>
     </div>
@@ -353,7 +375,15 @@ function ClosingCover({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
-      style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', background: '#0d0d0d', perspective: 1600, zIndex: 20 }}
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'grid',
+        placeItems: 'center',
+        background: '#0d0d0d',
+        perspective: 1600,
+        zIndex: 20,
+      }}
     >
       <motion.button
         type="button"
@@ -375,13 +405,23 @@ function ClosingCover({
           cursor: 'pointer',
           borderRadius: 3,
           overflow: 'hidden',
-          boxShadow: '0 30px 80px rgba(0,0,0,0.7), 0 10px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
+          boxShadow:
+            '0 30px 80px rgba(0,0,0,0.7), 0 10px 28px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06)',
         }}
       >
         <div style={{ position: 'absolute', inset: 0 }}>
           <FaceDOM spec={spec} headingFont={headingFont} />
         </div>
-        <div aria-hidden style={{ position: 'absolute', insetBlock: 0, left: 0, width: 12, background: 'linear-gradient(90deg, rgba(0,0,0,0.5), rgba(0,0,0,0))' }} />
+        <div
+          aria-hidden
+          style={{
+            position: 'absolute',
+            insetBlock: 0,
+            left: 0,
+            width: 12,
+            background: 'linear-gradient(90deg, rgba(0,0,0,0.5), rgba(0,0,0,0))',
+          }}
+        />
       </motion.button>
     </motion.div>
   );
@@ -404,7 +444,8 @@ function StaticReader({
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const panels = useMemo(() => {
-    if (specs?.length) return specs.map((spec, i) => <FaceDOM key={i} spec={spec} headingFont={headingFont} />);
+    if (specs?.length)
+      return specs.map((spec, i) => <FaceDOM key={i} spec={spec} headingFont={headingFont} />);
     if (faces?.length) return faces.map((f) => <div key={f.id}>{f.render()}</div>);
     return [];
   }, [specs, faces, headingFont]);

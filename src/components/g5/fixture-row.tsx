@@ -34,6 +34,14 @@ import type { G5FixtureSide } from './types';
  *                              column's place so every row aligns (Figma 713-3848).
  *                          Anatomy mirrors the mock: minute · [home name+crest]
  *                          · score · [away crest+name] · (engagement badges).
+ *                          The row is laid out as a 3-column CSS GRID
+ *                          (`[lead][teams][trailing]`) with fixed-width outer
+ *                          cells, so the team block starts and ends at the same
+ *                          x-position regardless of which lead variant renders
+ *                          ("6'" vs "8 PM" vs "FT"). Pre-grid, a narrower minute
+ *                          label let the row collapse, sliding the team names
+ *                          inward on result/live rows relative to scheduled
+ *                          ones (Wave 6.34e fix).
  *                          When the row carries an `href` it links via the
  *                          `useLinkComponent` context (deep-link into the rich
  *                          Match Centre); otherwise it is a static row.
@@ -123,13 +131,24 @@ export function FixtureRow({
   // rather than truncating inside a fixed cell — compact panels have the room.
   const sideWidth = 'min-w-0 flex-1';
 
+  // Row is a 3-column CSS grid: [lead][teams][trailing]. Reserving fixed widths
+  // on the outer cells (lead/trailing) means the team block always starts and
+  // ends at the same x-position, REGARDLESS of which lead variant renders
+  // ("6'" vs "8 PM" vs "FT" vs "90+2'"). Before this, a flex row let the
+  // narrower minute label collapse, sliding the teams left on result/live rows
+  // relative to scheduled rows. The score column inside the teams block stays
+  // a fixed 39px slot (FixtureScore / FixtureScorePlaceholder), so the home and
+  // away names also align horizontally across rows.
+  const leadColumn = density === 'compact' ? '36px' : '48px';
+  const trailingColumn = density === 'compact' ? '24px' : '32px';
+
   const body = (
     <>
       <FixtureLeadCell data={data} />
       <div
         data-slot="fixture-row-teams"
         className={cn(
-          'flex min-w-0 flex-1 items-center justify-center',
+          'flex min-w-0 items-center justify-center',
           density === 'compact' ? 'gap-3' : 'gap-4'
         )}
       >
@@ -146,7 +165,7 @@ export function FixtureRow({
   );
 
   const baseClass = cn(
-    'group/fixture-row relative flex w-full items-center gap-2.5 rounded-[4px]',
+    'group/fixture-row relative grid w-full items-center gap-2.5 rounded-[4px]',
     padding,
     'text-left text-white',
     isHighlighted
@@ -157,6 +176,12 @@ export function FixtureRow({
     className
   );
 
+  // Inline grid template — Tailwind can't express dynamic per-density column
+  // widths from string concatenation safely (purge), so plumb them as a style.
+  const gridStyle: React.CSSProperties = {
+    gridTemplateColumns: `${leadColumn} minmax(0, 1fr) ${trailingColumn}`,
+  };
+
   if (isInteractive) {
     return (
       <Link
@@ -165,6 +190,7 @@ export function FixtureRow({
         data-status={data.status}
         data-highlighted={isHighlighted || undefined}
         className={baseClass}
+        style={gridStyle}
       >
         {body}
       </Link>
@@ -177,6 +203,7 @@ export function FixtureRow({
       data-status={data.status}
       data-highlighted={isHighlighted || undefined}
       className={baseClass}
+      style={gridStyle}
     >
       {body}
     </div>
@@ -229,18 +256,17 @@ function FixtureTrailingCell({
   if (hasBadges) {
     return <FixtureEngagementBadges engagement={data.engagement as FixtureEngagement} />;
   }
-  // No badges: mirror the lead cell width with an empty spacer so the teams
-  // block stays optically centred. The `min-w-*` classes carry the width, so the
-  // span holds no text — an earlier "00" filler leaked as a visible glyph
-  // wherever the consumer's compiled CSS dropped `opacity-0`.
+  // No badges: render an empty spacer so the row's grid template still has a
+  // child for the trailing column. The grid column reserves the width (see
+  // `FixtureRow`'s gridTemplateColumns), so the span itself just needs to exist
+  // — the earlier `min-w-*` reservation now lives at the grid level instead,
+  // which keeps the team-block end x-position constant across rows.
   return (
     <span
       data-slot="fixture-row-trailing"
       aria-hidden="true"
-      className={cn(
-        'pointer-events-none shrink-0 select-none',
-        density === 'compact' ? 'min-w-[24px]' : 'min-w-[32px]'
-      )}
+      data-density={density}
+      className="pointer-events-none select-none"
     />
   );
 }
