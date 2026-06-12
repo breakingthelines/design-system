@@ -31,28 +31,44 @@ function Mark({ className }: { className?: string }) {
 function CircleMedia({ media, className }: { media: FaceImage; className?: string }) {
   const [broken, setBroken] = useState(false);
 
-  // Crests + competition logos (contain) → a flat WHITE badge: no disc, no ring.
+  // Crests + competition logos (contain) → a LIGHT MONOCHROME that keeps detail:
+  // a white silhouette (mask) with the grayscale logo blended faintly on top.
   if (media.fit === 'contain') {
     if (media.url && !broken) {
+      const mask = {
+        WebkitMaskImage: `url("${media.url}")`,
+        maskImage: `url("${media.url}")`,
+        WebkitMaskRepeat: 'no-repeat',
+        maskRepeat: 'no-repeat',
+        WebkitMaskPosition: 'center',
+        maskPosition: 'center',
+        WebkitMaskSize: 'contain',
+        maskSize: 'contain',
+      } as const;
       return (
-        <span className={`grid shrink-0 place-items-center ${className ?? ''}`}>
+        <span className={`relative grid shrink-0 place-items-center ${className ?? ''}`}>
+          <span
+            aria-hidden="true"
+            className="absolute inset-[6%]"
+            style={{ backgroundColor: '#ffffff', ...mask }}
+          />
           <img
             src={media.url}
             alt=""
             loading="eager"
             onError={() => setBroken(true)}
-            className="size-full object-contain p-[6%]"
-            style={{ filter: 'grayscale(1) brightness(2) contrast(1.4)' }}
+            className="absolute inset-[6%] size-[88%] object-contain opacity-40"
+            style={{ filter: 'grayscale(1)' }}
           />
         </span>
       );
     }
+    // No art → the BTL placeholder: brand bracket mark on a faint tile.
     return (
       <span
-        className={`grid shrink-0 place-items-center font-bold text-white ${className ?? ''}`}
-        style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+        className={`grid shrink-0 place-items-center rounded-lg bg-white/[0.05] ring-1 ring-white/10 ${className ?? ''}`}
       >
-        {media.monogram}
+        <Mark className="h-1/2 w-auto" />
       </span>
     );
   }
@@ -89,14 +105,31 @@ function BareLogo({ media }: { media: FaceImage }) {
   const [broken, setBroken] = useState(false);
   if (media.url && !broken) {
     return (
-      <img
-        src={media.url}
-        alt=""
-        loading="eager"
-        onError={() => setBroken(true)}
-        className="size-11 object-contain"
-        style={{ filter: 'grayscale(1) brightness(2) contrast(1.4)' }}
-      />
+      <span className="relative block size-11">
+        <span
+          aria-hidden="true"
+          className="absolute inset-0"
+          style={{
+            backgroundColor: '#ffffff',
+            WebkitMaskImage: `url("${media.url}")`,
+            maskImage: `url("${media.url}")`,
+            WebkitMaskRepeat: 'no-repeat',
+            maskRepeat: 'no-repeat',
+            WebkitMaskPosition: 'center',
+            maskPosition: 'center',
+            WebkitMaskSize: 'contain',
+            maskSize: 'contain',
+          }}
+        />
+        <img
+          src={media.url}
+          alt=""
+          loading="eager"
+          onError={() => setBroken(true)}
+          className="absolute inset-0 size-full object-contain opacity-40"
+          style={{ filter: 'grayscale(1)' }}
+        />
+      </span>
     );
   }
   return (

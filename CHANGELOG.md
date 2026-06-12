@@ -5,6 +5,19 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.9] — 2026-06-12
+
+### Changed — logos: white silhouette + detail; iconless crests get a BTL placeholder
+
+- Crest/logo whitening rebuilt: a uniformly-dark mark (the PL lion) can't be
+  lifted by `grayscale + brightness`, so the renderer now paints a WHITE
+  silhouette of the shape and blends the grayscale logo back at low opacity —
+  the mark reads light while its internal lines survive as soft outlines.
+  (Canvas: offscreen composite. DOM: a `mask-image` silhouette + faint overlay.)
+- A crest/logo we have no art for now renders the BTL bracket mark on a faint
+  tile (the "BTL placeholder") instead of bare initials. Used inside the mag
+  only — the cover already drops iconless marks.
+
 ## [0.40.8] — 2026-06-12
 
 ### Changed — back CTA one line, logos brighter, slicker reader entrance

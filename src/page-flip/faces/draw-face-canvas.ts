@@ -111,6 +111,33 @@ function drawCover(
   ctx.restore();
 }
 
+/**
+ * Knock a (coloured) logo to a LIGHT MONOCHROME that keeps its internal detail.
+ * `grayscale + brightness` can't lift a uniformly-dark mark (the PL lion stayed
+ * near-black); instead we build a WHITE silhouette of the shape, then blend the
+ * grayscale logo back in at low opacity (clipped to the shape) so darker lines
+ * read as soft outlines without dragging the whole mark dark. Returns an
+ * offscreen canvas sized (w,h), or null if no 2D context.
+ */
+function whitenLogo(img: HTMLImageElement, w: number, h: number): HTMLCanvasElement | null {
+  const cw = Math.max(1, Math.ceil(w));
+  const ch = Math.max(1, Math.ceil(h));
+  const c = document.createElement('canvas');
+  c.width = cw;
+  c.height = ch;
+  const x = c.getContext('2d');
+  if (!x) return null;
+  x.drawImage(img, 0, 0, cw, ch);
+  x.globalCompositeOperation = 'source-in';
+  x.fillStyle = '#ffffff';
+  x.fillRect(0, 0, cw, ch);
+  x.globalCompositeOperation = 'source-atop';
+  x.globalAlpha = 0.4;
+  x.filter = 'grayscale(1)';
+  x.drawImage(img, 0, 0, cw, ch);
+  return c;
+}
+
 /** Circular media tile: photo (cover) / crest (contain) / tinted monogram. */
 function drawCircleMedia(
   ctx: CanvasRenderingContext2D,
@@ -130,16 +157,11 @@ function drawCircleMedia(
       const s = Math.min(box / img.width, box / img.height);
       const dw = img.width * s;
       const dh = img.height * s;
-      ctx.save();
-      ctx.filter = 'grayscale(1) brightness(2) contrast(1.4)'; // knock any logo to flat white
-      ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
-      ctx.restore();
+      const light = whitenLogo(img, dw, dh);
+      if (light) ctx.drawImage(light, cx - dw / 2, cy - dh / 2);
+      else ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
     } else {
-      ctx.fillStyle = C.white;
-      font(ctx, 700, r * 0.9, BODY_FAMILY);
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(media.monogram, cx, cy + r * 0.04);
+      drawBTLPlaceholder(ctx, cx, cy, r);
     }
     return;
   }
@@ -181,6 +203,28 @@ function drawMark(ctx: CanvasRenderingContext2D, x: number, y: number, h: number
   ctx.restore();
 }
 
+/**
+ * BTL placeholder for a crest/logo we have no art for: a faint rounded tile with
+ * the brand bracket mark centred. Used INSIDE the mag only (the cover drops
+ * iconless marks entirely), so an unbadged club reads as a deliberate BTL slot
+ * rather than a bare initial.
+ */
+function drawBTLPlaceholder(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number) {
+  const s = r * 1.55;
+  ctx.save();
+  ctx.beginPath();
+  ctx.roundRect(cx - s / 2, cy - s / 2, s, s, s * 0.24);
+  ctx.fillStyle = 'rgba(255,255,255,0.05)';
+  ctx.fill();
+  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+  ctx.stroke();
+  const markH = r * 0.86;
+  const markW = markH * (40 / 38.53);
+  drawMark(ctx, cx - markW / 2, cy - markH / 2, markH);
+  ctx.restore();
+}
+
 /** The stacked wordmark: red mark + "breaking / the lines" (bold lowercase). */
 function drawWordmark(ctx: CanvasRenderingContext2D, x: number, y: number) {
   const markH = 48;
@@ -210,10 +254,9 @@ function drawBareLogo(
     const s = Math.min(size / img.width, size / img.height);
     const dw = img.width * s;
     const dh = img.height * s;
-    ctx.save();
-    ctx.filter = 'grayscale(1) brightness(2) contrast(1.4)'; // knock any logo to flat white
-    ctx.drawImage(img, x + (size - dw) / 2, y + (size - dh) / 2, dw, dh);
-    ctx.restore();
+    const light = whitenLogo(img, dw, dh);
+    if (light) ctx.drawImage(light, x + (size - dw) / 2, y + (size - dh) / 2);
+    else ctx.drawImage(img, x + (size - dw) / 2, y + (size - dh) / 2, dw, dh);
     return;
   }
   // No art → a bare white monogram (soft shadow keeps it legible over the photo).
