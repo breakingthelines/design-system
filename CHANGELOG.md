@@ -5,6 +5,30 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.2] — 2026-06-12
+
+### Changed — Issue reader audit fixes (cover badges, timing)
+
+- **Flat white badges.** Club crests + competition logos now render as flat
+  white marks (canvas `filter: brightness(0) invert(1)`; DOM the same) with NO
+  background disc or ring, on both the cover grids and the content list. Player
+  photos + user avatars keep their circular portrait treatment. Driven by
+  `FaceImage.fit`: `contain` → flat white badge, `cover` → circle.
+- **Slower image timeout** (2.5s → 7s) so the cover photo + crests actually
+  finish loading into the 3D canvas textures on first paint, instead of falling
+  back to monograms / a blank cover while the static DOM showed them.
+- **Dwell on the back cover.** The reveal close ceremony now waits ~4.2s on the
+  final spread before folding shut (was ~1.1s), so the last page is readable.
+- Cover kicker + date pinned left-aligned in the DOM renderer.
+
+## [0.40.1] — 2026-06-12
+
+### Fixed — `FixtureRow` x-positions across statuses (Wave 6.34e)
+
+- FixtureRow uses a 3-column CSS grid with fixed-width outer cells so team
+  blocks line up between SCHEDULED / LIVE / FINISHED rows. (Also an oxfmt pass
+  over the page-flip subtree.)
+
 ## [0.40.0] — 2026-06-12
 
 ### Changed — Issue reader is now a genuinely-3D book (BREAKING: `IssueReader` props)

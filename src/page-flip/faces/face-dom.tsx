@@ -30,7 +30,34 @@ function Mark({ className }: { className?: string }) {
 
 function CircleMedia({ media, className }: { media: FaceImage; className?: string }) {
   const [broken, setBroken] = useState(false);
-  const fit = media.fit === 'contain' ? 'object-contain p-[15%]' : 'object-cover';
+
+  // Crests + competition logos (contain) → a flat WHITE badge: no disc, no ring.
+  if (media.fit === 'contain') {
+    if (media.url && !broken) {
+      return (
+        <span className={`grid shrink-0 place-items-center ${className ?? ''}`}>
+          <img
+            src={media.url}
+            alt=""
+            loading="eager"
+            onError={() => setBroken(true)}
+            className="size-full object-contain p-[6%]"
+            style={{ filter: 'brightness(0) invert(1)' }}
+          />
+        </span>
+      );
+    }
+    return (
+      <span
+        className={`grid shrink-0 place-items-center font-bold text-white ${className ?? ''}`}
+        style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+      >
+        {media.monogram}
+      </span>
+    );
+  }
+
+  // Photos + avatars (cover) → a circular portrait.
   if (media.url && !broken) {
     return (
       <span
@@ -42,7 +69,7 @@ function CircleMedia({ media, className }: { media: FaceImage; className?: strin
           alt=""
           loading="eager"
           onError={() => setBroken(true)}
-          className={`size-full ${fit}`}
+          className="size-full object-cover"
         />
       </span>
     );
@@ -57,7 +84,7 @@ function CircleMedia({ media, className }: { media: FaceImage; className?: strin
   );
 }
 
-/** A bare crest/logo (contain) or a legible monogram chip — cover grids. */
+/** A flat WHITE crest/logo (no background) or a bare white monogram — cover grids. */
 function BareLogo({ media }: { media: FaceImage }) {
   const [broken, setBroken] = useState(false);
   if (media.url && !broken) {
@@ -67,12 +94,16 @@ function BareLogo({ media }: { media: FaceImage }) {
         alt=""
         loading="eager"
         onError={() => setBroken(true)}
-        className="size-12 object-contain"
+        className="size-11 object-contain"
+        style={{ filter: 'brightness(0) invert(1)' }}
       />
     );
   }
   return (
-    <span className="grid size-12 place-items-center rounded-full bg-black/40 text-xs font-bold text-white ring-1 ring-white/20">
+    <span
+      className="grid size-11 place-items-center text-sm font-bold text-white"
+      style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
+    >
       {media.monogram}
     </span>
   );
@@ -152,12 +183,12 @@ export function FaceDOM({ spec, headingFont }: { spec: FaceSpec; headingFont: He
               </span>
             </div>
             {spec.kicker ? (
-              <p className="mt-3 font-sans text-[10px] font-medium tracking-[0.22em] text-white uppercase">
+              <p className="mt-3 text-left font-sans text-[10px] font-medium tracking-[0.22em] text-white uppercase">
                 {spec.kicker}
               </p>
             ) : null}
             {spec.date ? (
-              <p className="mt-1 font-sans text-[10px] font-medium tracking-[0.16em] text-white/60 uppercase">
+              <p className="mt-1 text-left font-sans text-[10px] font-medium tracking-[0.16em] text-white/60 uppercase">
                 {spec.date}
               </p>
             ) : null}

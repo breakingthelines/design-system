@@ -122,25 +122,38 @@ function drawCircleMedia(
 ) {
   const img = media.url ? images.get(media.url) : undefined;
   const fit = media.fit ?? 'cover';
+
+  // Crests + competition logos (contain) → a flat WHITE badge, no disc, no ring.
+  if (fit === 'contain') {
+    if (img) {
+      const box = r * 1.85;
+      const s = Math.min(box / img.width, box / img.height);
+      const dw = img.width * s;
+      const dh = img.height * s;
+      ctx.save();
+      ctx.filter = 'brightness(0) invert(1)'; // knock any logo to flat white
+      ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = C.white;
+      font(ctx, 700, r * 0.9, BODY_FAMILY);
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(media.monogram, cx, cy + r * 0.04);
+    }
+    return;
+  }
+
+  // Photos + avatars (cover) → a circular portrait with a hairline ring.
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.closePath();
-  // Tinted disc behind everything (shows for contain + monogram + while empty).
   ctx.fillStyle = media.tint ?? C.grey200;
   ctx.fill();
   ctx.clip();
   if (img) {
-    if (fit === 'cover') {
-      drawCover(ctx, img, cx - r, cy - r, r * 2, r * 2);
-    } else {
-      const pad = r * 0.42;
-      const box = r * 2 - pad * 2;
-      const s = Math.min(box / img.width, box / img.height);
-      const dw = img.width * s;
-      const dh = img.height * s;
-      ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
-    }
+    drawCover(ctx, img, cx - r, cy - r, r * 2, r * 2);
   } else {
     ctx.fillStyle = C.white;
     font(ctx, 700, r * 0.78, BODY_FAMILY);
@@ -149,7 +162,6 @@ function drawCircleMedia(
     ctx.fillText(media.monogram, cx, cy + r * 0.04);
   }
   ctx.restore();
-  // Hairline ring.
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.lineWidth = 2;
@@ -192,29 +204,28 @@ function drawBareLogo(
   size: number
 ) {
   const img = media.url ? images.get(media.url) : undefined;
+  const cx = x + size / 2;
+  const cy = y + size / 2;
   if (img) {
     const s = Math.min(size / img.width, size / img.height);
     const dw = img.width * s;
     const dh = img.height * s;
+    ctx.save();
+    ctx.filter = 'brightness(0) invert(1)'; // knock any logo to flat white
     ctx.drawImage(img, x + (size - dw) / 2, y + (size - dh) / 2, dw, dh);
+    ctx.restore();
     return;
   }
-  // Monogram: a faint dark disc keeps white initials legible over any photo.
-  const cx = x + size / 2;
-  const cy = y + size / 2;
-  const r = size * 0.46;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.fillStyle = 'rgba(0,0,0,0.42)';
-  ctx.fill();
-  ctx.lineWidth = 1.5;
-  ctx.strokeStyle = 'rgba(255,255,255,0.22)';
-  ctx.stroke();
+  // No art → a bare white monogram (soft shadow keeps it legible over the photo).
+  ctx.save();
+  ctx.shadowColor = 'rgba(0,0,0,0.55)';
+  ctx.shadowBlur = 6;
   ctx.fillStyle = C.white;
-  font(ctx, 700, size * 0.34, BODY_FAMILY);
+  font(ctx, 700, size * 0.42, BODY_FAMILY);
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(media.monogram, cx, cy + 1);
+  ctx.restore();
 }
 
 /** A right-aligned 2-column logo grid (rows of two, max 4). */

@@ -200,14 +200,16 @@ function Reader3D({
     [page, setPage]
   );
 
-  // Reveal close ceremony: a beat after the final leaf, fold shut to the cover.
-  // The book behind silently resets to page 0 so re-opening lands on the cover.
+  // Reveal close ceremony: let the reader DWELL on the back cover, then fold shut
+  // to the front cover. The book behind silently resets to page 0 so re-opening
+  // lands on the cover. The long dwell keeps the final spread readable instead of
+  // snapping straight to the close.
   useEffect(() => {
     if (!isReveal || !reachedEndFired.current || closed) return;
     const t = setTimeout(() => {
       setClosed(true);
       setPageState(0);
-    }, 1100);
+    }, 4200);
     return () => clearTimeout(t);
   }, [isReveal, closed, page]);
 
