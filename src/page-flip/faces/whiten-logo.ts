@@ -40,17 +40,22 @@ function boxBlur(srcPlane: Float32Array, w: number, h: number, r: number): Float
 }
 
 /**
- * Returns an offscreen canvas sized (w,h) with the mark whitened, or null if
- * there is no 2D context or the source tainted the canvas (cross-origin without
- * CORS) — in which case the caller should draw the raw image instead.
+ * Returns an offscreen canvas with the mark whitened at the SOURCE'S OWN
+ * resolution (capped at `maxDim`), or null if there is no 2D context or the
+ * source tainted the canvas (cross-origin without CORS). Processing at source
+ * res (not the small on-page layout size) keeps the engraving crisp — the caller
+ * draws the returned canvas scaled to its display box, so a 150px crest stays
+ * sharp instead of being pre-shrunk to ~78px and then re-enlarged (pixelated).
  */
 export function whitenLogo(
-  img: CanvasImageSource & { naturalWidth?: number; naturalHeight?: number },
-  w: number,
-  h: number
+  img: HTMLImageElement | HTMLCanvasElement,
+  maxDim = 512
 ): HTMLCanvasElement | null {
-  const cw = Math.max(1, Math.round(w));
-  const ch = Math.max(1, Math.round(h));
+  const srcW = ('naturalWidth' in img ? img.naturalWidth : img.width) || maxDim;
+  const srcH = ('naturalHeight' in img ? img.naturalHeight : img.height) || maxDim;
+  const scale = Math.min(1, maxDim / Math.max(srcW, srcH));
+  const cw = Math.max(1, Math.round(srcW * scale));
+  const ch = Math.max(1, Math.round(srcH * scale));
   const canvas = document.createElement('canvas');
   canvas.width = cw;
   canvas.height = ch;

@@ -31,10 +31,10 @@ function Mark({ className }: { className?: string }) {
 
 /**
  * A crest/logo whitened by the SAME `whitenLogo` the 3D book uses, drawn into a
- * small canvas so the static poster matches the 3D pages exactly. The source is
- * loaded crossOrigin (cache-busted to share the canvas-texture loader's key) and
- * contain-fitted with a hairline inset before whitening. On any failure (no CORS,
- * 404, no context) it renders `fallback` — the monogram / BTL placeholder.
+ * canvas at the source's own resolution so the static poster matches the 3D pages
+ * and stays crisp (CSS `object-contain` scales it into the display box). The
+ * source is loaded crossOrigin (cache-busted to share the canvas-texture loader's
+ * key). On any failure (no CORS, 404, no context) it renders `fallback`.
  */
 function WhitenedLogo({
   url,
@@ -54,29 +54,14 @@ function WhitenedLogo({
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.addEventListener('load', () => {
-      const BOX = 160;
-      const iw = img.naturalWidth || BOX;
-      const ih = img.naturalHeight || BOX;
-      const s = Math.min(BOX / iw, BOX / ih) * 0.88; // contain + hairline inset
-      const dw = iw * s;
-      const dh = ih * s;
-      const fitted = document.createElement('canvas');
-      fitted.width = BOX;
-      fitted.height = BOX;
-      const fctx = fitted.getContext('2d');
-      if (!fctx) {
-        setFailed(true);
-        return;
-      }
-      fctx.drawImage(img, (BOX - dw) / 2, (BOX - dh) / 2, dw, dh);
-      const light = whitenLogo(fitted, BOX, BOX);
+      const light = whitenLogo(img);
       const ctx = canvas.getContext('2d');
       if (!light || !ctx) {
         setFailed(true);
         return;
       }
-      canvas.width = BOX;
-      canvas.height = BOX;
+      canvas.width = light.width;
+      canvas.height = light.height;
       ctx.drawImage(light, 0, 0);
     });
     img.addEventListener('error', () => setFailed(true));
@@ -356,7 +341,15 @@ export function FaceDOM({ spec, headingFont }: { spec: FaceSpec; headingFont: He
             ))}
           </div>
         ) : (
-          <div className="flex min-h-0 flex-1 flex-col justify-center">
+          <div
+            className={`flex min-h-0 flex-1 flex-col ${
+              spec.body.align === 'top'
+                ? 'justify-start'
+                : spec.body.align === 'bottom'
+                  ? 'justify-end'
+                  : 'justify-center'
+            }`}
+          >
             <p
               className={`${hc} text-[clamp(40px,12vw,140px)] leading-[0.95] font-bold tracking-tight break-words text-white`}
             >

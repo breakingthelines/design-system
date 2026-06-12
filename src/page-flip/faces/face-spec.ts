@@ -92,7 +92,15 @@ export interface CoverFaceSpec {
 
 export type ContentBody =
   | { type: 'list'; items: FaceListItem[] }
-  | { type: 'stat'; big: string; unit?: string; caption?: string };
+  | {
+      type: 'stat';
+      big: string;
+      unit?: string;
+      caption?: string;
+      /** Vertical anchor of the stat block. Default 'center'. Use 'top'/'bottom'
+       *  to stagger two stat faces across a spread so they don't collide. */
+      align?: 'top' | 'center' | 'bottom';
+    };
 
 export interface ContentFaceSpec {
   kind: 'content';

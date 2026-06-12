@@ -131,9 +131,8 @@ function drawCircleMedia(
       const s = Math.min(box / img.width, box / img.height);
       const dw = img.width * s;
       const dh = img.height * s;
-      const light = whitenLogo(img, dw, dh);
-      if (light) ctx.drawImage(light, cx - dw / 2, cy - dh / 2);
-      else ctx.drawImage(img, cx - dw / 2, cy - dh / 2, dw, dh);
+      const light = whitenLogo(img);
+      ctx.drawImage(light ?? img, cx - dw / 2, cy - dh / 2, dw, dh);
     } else {
       drawBTLPlaceholder(ctx, cx, cy, r);
     }
@@ -228,9 +227,8 @@ function drawBareLogo(
     const s = Math.min(size / img.width, size / img.height);
     const dw = img.width * s;
     const dh = img.height * s;
-    const light = whitenLogo(img, dw, dh);
-    if (light) ctx.drawImage(light, x + (size - dw) / 2, y + (size - dh) / 2);
-    else ctx.drawImage(img, x + (size - dw) / 2, y + (size - dh) / 2, dw, dh);
+    const light = whitenLogo(img);
+    ctx.drawImage(light ?? img, x + (size - dw) / 2, y + (size - dh) / 2, dw, dh);
     return;
   }
   // No art → a bare white monogram (soft shadow keeps it legible over the photo).
@@ -427,10 +425,8 @@ function drawContentFace(
       y += rowH;
     }
   } else {
-    // Big stat, vertically centred. Auto-fit to the column: a short grade ("4")
-    // stays huge, a long predicted side ("Bosnia & Herzegovina") shrinks to fit
-    // instead of clipping off the page edge.
-    const cy = (y + (FACE_H - PAD)) / 2;
+    // Big stat. Auto-fit to the column: a short grade ("2") stays huge, a long
+    // predicted side ("Bosnia & Herzegovina") shrinks to fit instead of clipping.
     ctx.textAlign = 'left';
     ctx.textBaseline = 'alphabetic';
     const big = spec.body.big;
@@ -442,6 +438,16 @@ function drawContentFace(
       bigSize -= 8;
       font(ctx, 700, bigSize, hf);
     }
+    // Vertical anchor — 'top'/'bottom' stagger two stat faces across a spread
+    // (the first-call and first-grade pages) so the big values don't bunch at
+    // the gutter; default centres.
+    const align = spec.body.align ?? 'center';
+    const cy =
+      align === 'top'
+        ? y + bigSize * 0.82
+        : align === 'bottom'
+          ? FACE_H - PAD - 96
+          : (y + (FACE_H - PAD)) / 2;
     ctx.fillStyle = C.white;
     ctx.fillText(big, PAD - 4, cy);
     if (spec.body.unit) {
@@ -571,6 +577,7 @@ export function drawFaceCanvas(spec: FaceSpec, o: DrawFaceOptions): HTMLCanvasEl
   canvas.height = FACE_H;
   const ctx = canvas.getContext('2d');
   if (!ctx) return canvas;
+  ctx.imageSmoothingQuality = 'high'; // crisp downscale of source-res crests/photos
   switch (spec.kind) {
     case 'cover':
       drawCoverFace(ctx, spec, o);

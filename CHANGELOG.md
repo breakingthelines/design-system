@@ -5,6 +5,19 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.13] — 2026-06-12
+
+### Changed — crisp logos (source-res whitening) + staggerable stat faces
+
+- `whitenLogo` now processes at the source crest's OWN resolution (capped) and
+  the caller scales the result into the layout box, instead of pre-shrinking the
+  crest to the small on-page size and re-enlarging it (which pixelated the
+  engraving). High-quality downscale on the face canvas. Note: provider crests
+  are only 150px, so very large on-page sizes are still source-limited.
+- Content `stat` faces gain `align: top | center | bottom`. Two stat faces shown
+  as a spread (the first-call + first-grade pages) can now stagger vertically so
+  their big values don't bunch at the gutter.
+
 ## [0.40.12] — 2026-06-12
 
 ### Changed — crest whitening rebuilt (consistent engraved monochrome)
