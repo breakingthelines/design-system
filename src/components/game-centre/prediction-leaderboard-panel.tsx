@@ -207,7 +207,7 @@ function LeaderboardColumnHeader() {
       data-slot="prediction-leaderboard-column-header"
       className="font-content flex items-center gap-3 border-b border-white/[0.06] px-3 pb-2 text-[10px] tracking-[0.14em] text-white/35 uppercase"
     >
-      <span className="w-7 shrink-0 text-right">Rank</span>
+      <span className="w-7 shrink-0 text-left">Rank</span>
       {/* 24px avatar slot — keep aligned with the row's avatar column. */}
       <span aria-hidden className="w-6 shrink-0" />
       <span className="min-w-0 flex-1">Player</span>
@@ -240,7 +240,7 @@ function LeaderboardRow({ entry }: { entry: PredictionLeaderboardPanelEntry }) {
       <span
         data-slot="prediction-leaderboard-rank"
         className={cn(
-          'font-display w-7 shrink-0 text-right text-sm font-semibold tabular-nums',
+          'font-display w-7 shrink-0 text-left text-sm font-semibold tabular-nums',
           entry.isViewer ? 'text-red-100' : isTopThree ? 'text-white/70' : 'text-white/55'
         )}
       >
