@@ -5,6 +5,23 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.14] — 2026-06-12
+
+### Added — `PredictionLeaderboardPanel` bounded height + viewer-anchored window (Wave 6.34o)
+
+- The row list now lives inside an internal scroll container (`max-h-[480px]`,
+  ~10-12 rows comfortably). The column header (RANK / PLAYER / PTS) sticks
+  to the top of the scroll area; the `pendingNote` footer stays OUTSIDE the
+  scroll region as a panel-level affordance. Short leaderboards still
+  collapse to content height — only longer lists hit the ceiling.
+- New optional `viewerWindowSize?: number` prop. When set, the panel slices
+  the entries to a viewer-anchored window of that many rows total: ~half
+  above + half below the viewer, clamped at the top/bottom of the list.
+  When the viewer isn't on the leaderboard (signed-out / non-member), the
+  panel falls back to the top `viewerWindowSize` rows. The viewer row is
+  scrolled into view (`block: 'center'`) on mount so the user lands looking
+  at their own slot. Off when undefined — back-compat for story consumers.
+
 ## [0.40.13] — 2026-06-12
 
 ### Changed — crisp logos (source-res whitening) + staggerable stat faces
