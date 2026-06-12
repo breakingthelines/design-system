@@ -212,7 +212,7 @@ function ScheduledBody({
           {stakesTotal !== undefined ? (
             <div data-slot="predictions-hero-stakes" className="flex items-baseline gap-3">
               <PredictionStakesBadge points={stakesTotal} modifier="pts" tone="total" />
-              <span className="font-content text-xs text-white/55">on offer this match</span>
+              <span className="font-content text-xs text-white/55">on offer per match</span>
             </div>
           ) : null}
           {cta !== undefined ? (
