@@ -194,6 +194,22 @@ function Reader3D({
     [page, setPage]
   );
 
+  // Desktop: left / right arrow keys flip pages, once the book is up.
+  useEffect(() => {
+    if (!ready) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setPage(page + 1);
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setPage(page - 1);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [ready, page, setPage]);
+
   // No auto-close: the reader rests on the back cover when it reaches the end.
   // Leaving is the explicit "Enter the Arena" action, owned by the host.
   const coverSpec = specs[0];

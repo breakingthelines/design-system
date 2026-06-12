@@ -5,6 +5,17 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.15] — 2026-06-12
+
+### Fixed — book occasionally blank until a nudge; + arrow-key paging
+
+- The 3D book could render blank after the static poster until an interaction.
+  Cause: drei `Environment` (studio HDR) suspends, and with no Suspense boundary
+  it blanked the whole Canvas until a re-render (an arrow press). The Environment
+  is now isolated in its own `Suspense`, so the book paints immediately and the
+  HDR lighting pops in when ready. Frameloop pinned to `always`.
+- Left/right arrow keys now flip pages on desktop (once the book is up).
+
 ## [0.40.14] — 2026-06-12
 
 ### Added — `PredictionLeaderboardPanel` bounded height + viewer-anchored window (Wave 6.34o)

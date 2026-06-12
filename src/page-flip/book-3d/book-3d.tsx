@@ -16,7 +16,7 @@
 import { Environment, Float, OrbitControls, useCursor } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { easing } from 'maath';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Bone,
   BoxGeometry,
@@ -298,7 +298,12 @@ export function Book3D({
 }: Book3DProps) {
   return (
     <div className={className} style={{ width: '100%', height: '100%', ...style }}>
-      <Canvas shadows dpr={[1, 2]} camera={{ position: [2.28, 0.5, 3.18], fov: 40 }}>
+      <Canvas
+        shadows
+        frameloop="always"
+        dpr={[1, 2]}
+        camera={{ position: [2.28, 0.5, 3.18], fov: 40 }}
+      >
         <color attach="background" args={['#08080a']} />
         <group position-y={0.12}>
           <Float
@@ -319,7 +324,11 @@ export function Book3D({
           shadow-bias={-0.0001}
         />
         <ambientLight intensity={0.3} />
-        <Environment preset="studio" environmentIntensity={0.4} />
+        {/* IBL lighting only — isolated in its own Suspense so a slow HDR load
+            never blanks the whole book (the "needs a nudge to appear" bug). */}
+        <Suspense fallback={null}>
+          <Environment preset="studio" environmentIntensity={0.4} />
+        </Suspense>
         <mesh position-y={-1.7} rotation-x={-Math.PI / 2} receiveShadow>
           <planeGeometry args={[60, 60]} />
           <shadowMaterial transparent opacity={0.32} />
