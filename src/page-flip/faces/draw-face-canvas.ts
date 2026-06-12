@@ -15,6 +15,7 @@ import {
   type FaceSpec,
   type HeadingFont,
 } from './face-spec';
+import { whitenLogo } from './whiten-logo';
 
 /** Texture resolution. 1024×1368 (page aspect) reads crisp with anisotropy. */
 export const FACE_W = 1024;
@@ -109,33 +110,6 @@ function drawCover(
   ctx.clip();
   ctx.drawImage(img, x + (w - dw) / 2 + ox, y + (h - dh) / 2 + oy, dw, dh);
   ctx.restore();
-}
-
-/**
- * Knock a (coloured) logo to a LIGHT MONOCHROME that keeps its internal detail.
- * `grayscale + brightness` can't lift a uniformly-dark mark (the PL lion stayed
- * near-black); instead we build a WHITE silhouette of the shape, then blend the
- * grayscale logo back in at low opacity (clipped to the shape) so darker lines
- * read as soft outlines without dragging the whole mark dark. Returns an
- * offscreen canvas sized (w,h), or null if no 2D context.
- */
-function whitenLogo(img: HTMLImageElement, w: number, h: number): HTMLCanvasElement | null {
-  const cw = Math.max(1, Math.ceil(w));
-  const ch = Math.max(1, Math.ceil(h));
-  const c = document.createElement('canvas');
-  c.width = cw;
-  c.height = ch;
-  const x = c.getContext('2d');
-  if (!x) return null;
-  x.drawImage(img, 0, 0, cw, ch);
-  x.globalCompositeOperation = 'source-in';
-  x.fillStyle = '#ffffff';
-  x.fillRect(0, 0, cw, ch);
-  x.globalCompositeOperation = 'source-atop';
-  x.globalAlpha = 0.4;
-  x.filter = 'grayscale(1)';
-  x.drawImage(img, 0, 0, cw, ch);
-  return c;
 }
 
 /** Circular media tile: photo (cover) / crest (contain) / tinted monogram. */

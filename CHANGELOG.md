@@ -5,6 +5,22 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.40.10] — 2026-06-12
+
+### Changed — crest whitening rebuilt (consistent engraved monochrome)
+
+- Logos are now whitened by a polarity-free pipeline (shared `whiten-logo.ts`):
+  per-image auto-levels → multi-scale absolute high-pass → white fill capped to a
+  light register + an alpha-gradient rim. A near-black mark (the Premier League
+  lion) and a near-white one land in the SAME light register with their internal
+  detail preserved as engraving — the washed-out silhouette+overlay is gone.
+- The static DOM poster now renders crests through the SAME `whitenLogo` (drawn
+  to a small canvas) so the poster matches the 3D book exactly, instead of a CSS
+  mask approximation.
+- No new dependency (a 2MB WASM image lib was evaluated and rejected on footprint
+  / maintenance / poor fit). Limit: solid flag-band crests keep only their
+  silhouette; the long-term fix for those is a mirrored mono asset.
+
 ## [0.40.9] — 2026-06-12
 
 ### Changed — logos: white silhouette + detail; iconless crests get a BTL placeholder

@@ -4,9 +4,10 @@
 // not a pixel-twin of the canvas: the dark token system, Inter/Le Monde
 // headings, real crests/photos with a monogram fallback.
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 import { type CoverTransform, type FaceImage, type FaceSpec, type HeadingFont } from './face-spec';
+import { whitenLogo } from './whiten-logo';
 
 function headingClass(font: HeadingFont): string {
   return font === 'le-monde' ? 'font-display' : 'font-sans';
@@ -28,49 +29,87 @@ function Mark({ className }: { className?: string }) {
   );
 }
 
+/**
+ * A crest/logo whitened by the SAME `whitenLogo` the 3D book uses, drawn into a
+ * small canvas so the static poster matches the 3D pages exactly. The source is
+ * loaded crossOrigin (cache-busted to share the canvas-texture loader's key) and
+ * contain-fitted with a hairline inset before whitening. On any failure (no CORS,
+ * 404, no context) it renders `fallback` — the monogram / BTL placeholder.
+ */
+function WhitenedLogo({
+  url,
+  className,
+  fallback,
+}: {
+  url: string;
+  className?: string;
+  fallback: React.ReactNode;
+}) {
+  const [failed, setFailed] = useState(false);
+  const doneFor = useRef<string | null>(null);
+
+  const drawTo = (canvas: HTMLCanvasElement | null) => {
+    if (!canvas || doneFor.current === url) return;
+    doneFor.current = url;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.addEventListener('load', () => {
+      const BOX = 160;
+      const iw = img.naturalWidth || BOX;
+      const ih = img.naturalHeight || BOX;
+      const s = Math.min(BOX / iw, BOX / ih) * 0.88; // contain + hairline inset
+      const dw = iw * s;
+      const dh = ih * s;
+      const fitted = document.createElement('canvas');
+      fitted.width = BOX;
+      fitted.height = BOX;
+      const fctx = fitted.getContext('2d');
+      if (!fctx) {
+        setFailed(true);
+        return;
+      }
+      fctx.drawImage(img, (BOX - dw) / 2, (BOX - dh) / 2, dw, dh);
+      const light = whitenLogo(fitted, BOX, BOX);
+      const ctx = canvas.getContext('2d');
+      if (!light || !ctx) {
+        setFailed(true);
+        return;
+      }
+      canvas.width = BOX;
+      canvas.height = BOX;
+      ctx.drawImage(light, 0, 0);
+    });
+    img.addEventListener('error', () => setFailed(true));
+    img.src = `${url}${url.includes('?') ? '&' : '?'}__cors=1`;
+  };
+
+  if (failed) return <>{fallback}</>;
+  return <canvas ref={drawTo} className={className} aria-hidden="true" />;
+}
+
 function CircleMedia({ media, className }: { media: FaceImage; className?: string }) {
   const [broken, setBroken] = useState(false);
 
-  // Crests + competition logos (contain) → a LIGHT MONOCHROME that keeps detail:
-  // a white silhouette (mask) with the grayscale logo blended faintly on top.
+  // Crests + competition logos (contain) → the SAME engraved whitening the 3D
+  // book uses (canvas), so the static poster matches. No art → BTL placeholder.
   if (media.fit === 'contain') {
-    if (media.url && !broken) {
-      const mask = {
-        WebkitMaskImage: `url("${media.url}")`,
-        maskImage: `url("${media.url}")`,
-        WebkitMaskRepeat: 'no-repeat',
-        maskRepeat: 'no-repeat',
-        WebkitMaskPosition: 'center',
-        maskPosition: 'center',
-        WebkitMaskSize: 'contain',
-        maskSize: 'contain',
-      } as const;
-      return (
-        <span className={`relative grid shrink-0 place-items-center ${className ?? ''}`}>
-          <span
-            aria-hidden="true"
-            className="absolute inset-[6%]"
-            style={{ backgroundColor: '#ffffff', ...mask }}
-          />
-          <img
-            src={media.url}
-            alt=""
-            loading="eager"
-            onError={() => setBroken(true)}
-            className="absolute inset-[6%] size-[88%] object-contain opacity-40"
-            style={{ filter: 'grayscale(1)' }}
-          />
-        </span>
-      );
-    }
-    // No art → the BTL placeholder: brand bracket mark on a faint tile.
-    return (
+    const placeholder = (
       <span
         className={`grid shrink-0 place-items-center rounded-lg bg-white/[0.05] ring-1 ring-white/10 ${className ?? ''}`}
       >
         <Mark className="h-1/2 w-auto" />
       </span>
     );
+    if (media.url) {
+      return (
+        <WhitenedLogo
+          url={media.url}
+          className={`shrink-0 object-contain ${className ?? ''}`}
+          fallback={placeholder}
+        />
+      );
+    }
+    return placeholder;
   }
 
   // Photos + avatars (cover) → a circular portrait.
@@ -100,39 +139,9 @@ function CircleMedia({ media, className }: { media: FaceImage; className?: strin
   );
 }
 
-/** A flat WHITE crest/logo (no background) or a bare white monogram — cover grids. */
+/** An engraved-white crest/logo (no background) or a bare white monogram — cover grids. */
 function BareLogo({ media }: { media: FaceImage }) {
-  const [broken, setBroken] = useState(false);
-  if (media.url && !broken) {
-    return (
-      <span className="relative block size-11">
-        <span
-          aria-hidden="true"
-          className="absolute inset-0"
-          style={{
-            backgroundColor: '#ffffff',
-            WebkitMaskImage: `url("${media.url}")`,
-            maskImage: `url("${media.url}")`,
-            WebkitMaskRepeat: 'no-repeat',
-            maskRepeat: 'no-repeat',
-            WebkitMaskPosition: 'center',
-            maskPosition: 'center',
-            WebkitMaskSize: 'contain',
-            maskSize: 'contain',
-          }}
-        />
-        <img
-          src={media.url}
-          alt=""
-          loading="eager"
-          onError={() => setBroken(true)}
-          className="absolute inset-0 size-full object-contain opacity-40"
-          style={{ filter: 'grayscale(1)' }}
-        />
-      </span>
-    );
-  }
-  return (
+  const monogram = (
     <span
       className="grid size-11 place-items-center text-sm font-bold text-white"
       style={{ textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}
@@ -140,6 +149,8 @@ function BareLogo({ media }: { media: FaceImage }) {
       {media.monogram}
     </span>
   );
+  if (!media.url) return monogram;
+  return <WhitenedLogo url={media.url} className="size-11 object-contain" fallback={monogram} />;
 }
 
 /** Up to four logos in a right-aligned 2-column grid. */
