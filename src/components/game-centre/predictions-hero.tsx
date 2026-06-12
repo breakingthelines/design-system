@@ -43,10 +43,16 @@ export interface PredictionsHeroProps extends React.ComponentProps<'div'> {
   countdownLabel?: string;
   countdownPhase?: CountdownPhase;
   /**
-   * SCHEDULED — total points on offer for this match. Drives the stakes
-   * line ("Up to N points on offer"). Hidden when undefined.
+   * SCHEDULED — total points available for this match. Drives the stakes
+   * line ("over +N pts available"). Hidden when undefined.
    */
   stakesTotal?: number;
+  /**
+   * SCHEDULED / FINISHED — when true, an uncapped market (goalscorers) is in
+   * play, so the total is a floor not a ceiling. Renders the stakes line as
+   * "over +N pts available" rather than a fixed "+N pts available".
+   */
+  stakesOpenEnded?: boolean;
   /** SCHEDULED — primary CTA (rendered as-is). */
   cta?: React.ReactNode;
   /**
@@ -82,6 +88,7 @@ function PredictionsHero({
   countdownLabel,
   countdownPhase,
   stakesTotal,
+  stakesOpenEnded,
   cta,
   liveClock,
   scoreLine,
@@ -124,6 +131,7 @@ function PredictionsHero({
             countdownLabel={countdownLabel ?? 'TBC'}
             countdownPhase={countdownPhase ?? 'far'}
             stakesTotal={stakesTotal}
+            stakesOpenEnded={stakesOpenEnded}
             cta={cta}
             hideHeader={hideHeader}
           />
@@ -140,6 +148,7 @@ function PredictionsHero({
             scoreLine={scoreLine}
             pointsEarned={pointsEarned}
             pointsAvailable={pointsAvailable}
+            pointsOpenEnded={stakesOpenEnded}
             hideHeader={hideHeader}
           />
         )}
@@ -156,12 +165,14 @@ function ScheduledBody({
   countdownLabel,
   countdownPhase,
   stakesTotal,
+  stakesOpenEnded,
   cta,
   hideHeader,
 }: {
   countdownLabel: string;
   countdownPhase: CountdownPhase;
   stakesTotal?: number;
+  stakesOpenEnded?: boolean;
   cta?: React.ReactNode;
   hideHeader?: boolean;
 }) {
@@ -210,9 +221,12 @@ function ScheduledBody({
           className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4"
         >
           {stakesTotal !== undefined ? (
-            <div data-slot="predictions-hero-stakes" className="flex items-baseline gap-3">
+            <div data-slot="predictions-hero-stakes" className="flex items-baseline gap-1.5">
+              {stakesOpenEnded ? (
+                <span className="font-content text-xs text-white/55">over</span>
+              ) : null}
               <PredictionStakesBadge points={stakesTotal} modifier="pts" tone="total" />
-              <span className="font-content text-xs text-white/55">on offer per match</span>
+              <span className="font-content text-xs text-white/55">available</span>
             </div>
           ) : null}
           {cta !== undefined ? (
@@ -307,6 +321,7 @@ function FinishedBody({
   scoreLine,
   pointsEarned,
   pointsAvailable,
+  pointsOpenEnded,
   hideHeader,
 }: {
   // `matchLabel` is intentionally NOT rendered here (Wave 6.25b): the viewer
@@ -316,6 +331,7 @@ function FinishedBody({
   scoreLine?: string;
   pointsEarned?: number;
   pointsAvailable?: number;
+  pointsOpenEnded?: boolean;
   hideHeader?: boolean;
 }) {
   const cast = pointsEarned !== undefined;
@@ -365,7 +381,8 @@ function FinishedBody({
             </span>
             {pointsAvailable !== undefined ? (
               <span className="font-content text-xs text-white/55 tabular-nums">
-                of {pointsAvailable} on offer
+                of {pointsOpenEnded ? 'over ' : ''}
+                {pointsAvailable} available
               </span>
             ) : null}
           </motion.div>
