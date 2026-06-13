@@ -129,6 +129,26 @@ describe('MatchTimeline', () => {
     const markup = render(<MatchTimeline events={events} limit={2} />);
     expect(countSlot(markup, 'match-timeline-row')).toBe(2);
   });
+
+  it('keeps stoppage time within its half via the order key (no split dividers)', () => {
+    // Real-match shape: a first-half 45+5' (minute 50) sits alongside second-half
+    // 46' subs. A raw-minute sort hoists 45+5' above 46' and splits the First
+    // Half divider into two; the chronological `order` key keeps each half
+    // contiguous, so there are exactly two dividers (Second Half then First Half).
+    const matchEvents: MatchTimelineEvent[] = [
+      { id: 'g7', kind: 'goal', player: 'Bobadilla', phase: 'First Half', minute: "7'", minuteNumber: 7, order: 1 },
+      { id: 'g31', kind: 'goal', player: 'Balogun', phase: 'First Half', minute: "31'", minuteNumber: 31, order: 4 },
+      { id: 'g45', kind: 'goal', player: 'Balogun', phase: 'First Half', minute: "45+5'", minuteNumber: 50, order: 5 },
+      { id: 's46a', kind: 'goal', player: 'Bobadilla', phase: 'Second Half', minute: "46'", minuteNumber: 46, order: 6 },
+      { id: 's46b', kind: 'goal', player: 'Pulisic', phase: 'Second Half', minute: "46'", minuteNumber: 46, order: 7 },
+    ];
+    const markup = render(<MatchTimeline events={matchEvents} />);
+    expect(countSlot(markup, 'match-timeline-phase')).toBe(2);
+    expect(markup.indexOf('data-phase="Second Half"')).toBeLessThan(
+      markup.indexOf('data-phase="First Half"'),
+    );
+    expect((markup.match(/data-phase="First Half"/g) || []).length).toBe(1);
+  });
 });
 
 describe('groupByPhase', () => {

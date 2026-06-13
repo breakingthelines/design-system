@@ -87,6 +87,17 @@ export interface MatchTimelineEvent {
   minute?: string;
   /** Numeric minute (when known), used for ordering when the label is fuzzy. */
   minuteNumber?: number;
+  /**
+   * Monotonic chronological sort key (e.g. the provider's event sequence
+   * number). PREFERRED over `minuteNumber` for ordering: stoppage-time minutes
+   * inflate the displayed minute past the next period's start (a first-half
+   * `45+5'` is minute 50, higher than a second-half `46'`), so a raw-minute
+   * sort leaks first-half events below the second half and splits the phase
+   * dividers. `order` increases strictly with real match time across periods,
+   * so it keeps each half's events contiguous. Falls back to `minuteNumber`
+   * when omitted.
+   */
+  order?: number;
   kind: MatchTimelineEventKind;
   /** Primary line, usually the player name ("Saka", "E. Fernández"). */
   player: string;
@@ -132,7 +143,7 @@ export function MatchTimeline({ events, fallbackReason, limit, className }: Matc
     return <FallbackState reason={fallbackReason ?? 'TIMELINE_MISSING'} className={className} />;
   }
 
-  const ordered = events.toSorted(orderByMinuteDescending);
+  const ordered = events.toSorted(orderByChronologyDescending);
   const sliced = limit && limit > 0 ? ordered.slice(0, limit) : ordered;
   const groups = groupByPhase(sliced);
 
@@ -414,8 +425,16 @@ function DoubleCardChip() {
   );
 }
 
-/** Order newest-first (highest minute at the top), matching the Figma layout. */
-function orderByMinuteDescending(a: MatchTimelineEvent, b: MatchTimelineEvent): number {
+/**
+ * Order newest-first (latest match moment at the top), matching the Figma
+ * layout. Prefers the monotonic `order` key (provider sequence) so stoppage
+ * time stays within its own half; falls back to `minuteNumber` when `order`
+ * is absent on both events (e.g. older callers / stories). `minuteNumber` on
+ * its own breaks at the period boundary — a first-half `45+5'` is minute 50,
+ * which outranks a second-half `46'` and splits the phase dividers.
+ */
+function orderByChronologyDescending(a: MatchTimelineEvent, b: MatchTimelineEvent): number {
+  if (a.order != null && b.order != null) return b.order - a.order;
   const am = a.minuteNumber ?? Number.MIN_SAFE_INTEGER;
   const bm = b.minuteNumber ?? Number.MIN_SAFE_INTEGER;
   return bm - am;
