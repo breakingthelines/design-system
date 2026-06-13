@@ -236,7 +236,7 @@ export function MatchHeader({
       {venueLabel ? (
         <div
           data-slot="match-header-venue"
-          className="-mt-2 text-center text-xs font-semibold text-white/55"
+          className="-mt-4 text-center text-xs font-semibold text-white/55"
         >
           {venueLabel}
         </div>

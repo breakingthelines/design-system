@@ -234,8 +234,8 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
     body: "Confirmed XIs land in the build-up to kickoff. We'll post them here.",
   },
   timeline_missing: {
-    title: 'Timeline coming soon',
-    body: "We'll post the play-by-play here as soon as it's available.",
+    title: 'No timeline yet',
+    body: 'Key moments will appear here as the match unfolds.',
   },
   rich_actions_unavailable: {
     title: 'Match stats coming soon',
