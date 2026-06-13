@@ -46,6 +46,8 @@ interface ProfileHeroProps extends React.ComponentProps<'div'> {
   following?: number;
   /** Subscriber count */
   subscribers?: number;
+  /** Member count — the squad analogue of the follower / subscriber counts */
+  memberCount?: number;
   /** Follow button handler */
   onFollow?: () => void;
   /** Subscribe button handler */
@@ -58,6 +60,8 @@ interface ProfileHeroProps extends React.ComponentProps<'div'> {
   onFollowersClick?: () => void;
   /** Click handler for following count */
   onFollowingClick?: () => void;
+  /** Click handler for the member count (squads) */
+  onMemberCountClick?: () => void;
 }
 
 function ProfileHero({
@@ -74,12 +78,14 @@ function ProfileHero({
   followers,
   following,
   subscribers,
+  memberCount,
   onFollow,
   onSubscribe,
   isSubscribed,
   isFollowing,
   onFollowersClick,
   onFollowingClick,
+  onMemberCountClick,
   ...props
 }: ProfileHeroProps) {
   const { rotateX, rotateY, onMouseMove, onMouseLeave } = useTilt(4);
@@ -174,11 +180,36 @@ function ProfileHero({
                 </p>
               )}
 
-              {/* Follower / Following / Subscriber counts */}
-              {(followers !== undefined ||
+              {/* Member / Follower / Following / Subscriber counts */}
+              {(memberCount !== undefined ||
+                followers !== undefined ||
                 following !== undefined ||
                 subscribers !== undefined) && (
                 <div className="flex items-baseline gap-8 leading-6 text-foreground">
+                  {memberCount !== undefined &&
+                    (onMemberCountClick ? (
+                      <button
+                        type="button"
+                        onClick={onMemberCountClick}
+                        className="flex cursor-pointer items-baseline gap-2 transition-opacity hover:opacity-70"
+                      >
+                        <span className="text-sm font-medium tracking-tight">
+                          {formatCount(memberCount)}
+                        </span>
+                        <span className="text-xs opacity-50">
+                          {memberCount === 1 ? 'Member' : 'Members'}
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-sm font-medium tracking-tight">
+                          {formatCount(memberCount)}
+                        </span>
+                        <span className="text-xs opacity-50">
+                          {memberCount === 1 ? 'Member' : 'Members'}
+                        </span>
+                      </div>
+                    ))}
                   {followers !== undefined &&
                     (onFollowersClick ? (
                       <button
