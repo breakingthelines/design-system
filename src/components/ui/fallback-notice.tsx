@@ -250,8 +250,8 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
     body: 'Our data provider is currently degraded. We will refresh as soon as the feed recovers.',
   },
   unresolved_identity: {
-    title: 'Identity not yet resolved',
-    body: 'We are still matching player or team identities for this fixture.',
+    title: 'Still being set up',
+    body: "We're still putting this one together. Check back soon.",
   },
   settlement_pending: {
     title: 'Settlement pending',

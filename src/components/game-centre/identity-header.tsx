@@ -20,8 +20,8 @@ import { ScoreboardChip, type ScoreboardChipStatus } from '#/components/ui/score
  * thoughts, those summary blocks render alongside it, not inside it.
  *
  * Unresolved-identity state: dims the crest/initials to a neutral
- * placeholder and replaces the title-line subtitle with the canonical
- * "We could not resolve this {kind}" copy.
+ * placeholder and replaces the title-line subtitle with a graceful
+ * "coming soon" line (no internal jargon).
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export type IdentityHeaderKind = 'match' | 'player' | 'team' | 'manager' | 'competition';
@@ -124,11 +124,6 @@ export function IdentityHeader({
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-white/55">
           <ScoreboardChip status={status} clockLabel={meta?.clockLabel} />
           <span>{matchStateLabel(state)}</span>
-          {unresolved ? (
-            <span className="rounded bg-white/[0.06] px-2 py-0.5 text-[11px] tracking-wide text-white/55">
-              Identity unresolved
-            </span>
-          ) : null}
         </div>
       </header>
     );
@@ -235,16 +230,14 @@ function entityEyebrow(kind: IdentityHeaderKind): string {
 function unresolvedSubtitle(kind: IdentityHeaderKind): string {
   switch (kind) {
     case 'player':
-      return 'We could not resolve this player. Rich modules are disabled until the identity backbone resolves it.';
     case 'team':
-      return 'We could not resolve this team. Rich modules are disabled until the identity backbone resolves it.';
     case 'manager':
-      return 'We could not resolve this manager. Rich modules are disabled until the identity backbone resolves it.';
+      return 'Full profile coming soon.';
     case 'competition':
-      return 'We could not resolve this competition. Rich modules are disabled until the identity backbone resolves it.';
+      return 'Full details coming soon.';
     case 'match':
     default:
-      return 'We could not resolve this match.';
+      return 'Match details coming soon.';
   }
 }
 
