@@ -94,40 +94,57 @@ function PredictionLifecycleRecap({
     >
       {hideHeader ? null : (
         <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
-          Your pick breakdown
+          Your prediction breakdown
         </span>
       )}
 
       {hasRows ? (
-        <dl data-slot="prediction-lifecycle-recap-rows" className="flex flex-col gap-3">
+        <dl data-slot="prediction-lifecycle-recap-rows" className="flex flex-col gap-2.5">
+          {/* Column legend — the matrix splits the viewer's call from the actual
+              outcome into their own aligned columns (Yours · Actual · Pts). */}
+          <div
+            data-slot="prediction-lifecycle-recap-head"
+            aria-hidden="true"
+            className="grid grid-cols-[104px_minmax(0,1fr)_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-white/[0.08] pb-2 font-content text-[10px] tracking-[0.12em] text-white/40 uppercase"
+          >
+            <span />
+            <span>Yours</span>
+            <span>Actual</span>
+            <span className="text-right">Pts</span>
+          </div>
           {rows.map((row, index) => (
             <motion.div
               key={row.id}
               initial={{ opacity: 0, x: -6 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.24, delay: 0.04 * index }}
-              className="grid grid-cols-[120px_1fr_auto] items-baseline gap-3 border-b border-white/[0.04] pb-2 last:border-b-0 last:pb-0"
+              className="grid grid-cols-[104px_minmax(0,1fr)_minmax(0,1fr)_auto] items-baseline gap-3 border-b border-white/[0.04] pb-2 last:border-b-0 last:pb-0"
               data-slot="prediction-lifecycle-recap-row"
               data-status={row.status}
             >
               <dt className="font-content text-[10px] tracking-[0.12em] text-white/40 uppercase">
                 {row.label}
               </dt>
-              <dd className="font-content min-w-0 overflow-x-auto overscroll-x-contain text-xs whitespace-nowrap text-white [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                <span data-slot="prediction-lifecycle-recap-pick">{row.pickValue}</span>
+              <dd
+                data-slot="prediction-lifecycle-recap-pick"
+                className="font-content min-w-0 truncate text-xs text-white"
+              >
+                {row.pickValue}
+              </dd>
+              <dd
+                data-slot="prediction-lifecycle-recap-actual"
+                className="font-content min-w-0 truncate text-xs text-white/55"
+              >
                 {row.actualValue !== undefined ? (
-                  <span
-                    data-slot="prediction-lifecycle-recap-actual"
-                    className="font-content ml-2 text-[10px] tracking-[0.12em] text-white/40 uppercase"
-                  >
-                    actual {row.actualValue}
-                  </span>
-                ) : null}
+                  row.actualValue
+                ) : (
+                  <span className="text-white/25">&ndash;</span>
+                )}
               </dd>
               <dd
                 data-slot="prediction-lifecycle-recap-points"
                 className={cn(
-                  'font-display text-sm font-bold tracking-tight tabular-nums',
+                  'font-content text-right text-sm font-bold tracking-tight tabular-nums',
                   STATUS_TINT[row.status]
                 )}
               >
@@ -141,7 +158,7 @@ function PredictionLifecycleRecap({
         </dl>
       ) : (
         <span className="font-content text-xs text-white/55">
-          You didn&apos;t place a pick on this match.
+          You didn&apos;t place a prediction on this match.
         </span>
       )}
 
