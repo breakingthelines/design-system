@@ -381,8 +381,8 @@ function SiteNav({
         {tabs.map((tab, index) => {
           const lit = litIndex === index;
           const tabClassName = cn(
-            // px-3 py-2 + leading-none → compact pill (design-tuned).
-            'relative block cursor-pointer px-3 py-2 text-[12px] leading-none tracking-[-0.36px] transition-colors',
+            // px-3.5 py-2.5 + leading-none → compact pill (design-tuned).
+            'relative block cursor-pointer px-3.5 py-2.5 text-[12px] leading-none tracking-[-0.36px] transition-colors',
             lit ? 'text-white' : 'text-grey-500 hover:text-white/80'
           );
           return (
