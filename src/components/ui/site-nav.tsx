@@ -221,8 +221,10 @@ function SiteNav({
         </LinkComponent>
       </div>
 
-      {/* Center: Pill tab bar (tablet+) */}
-      <nav className="hidden items-center rounded-full p-1 sm:flex">
+      {/* Center: Pill tab bar (tablet+). The capsule fill lifts the tab group
+          off the page so the active item reads as a lighter pill nested inside
+          a darker bar (page → capsule → active pill), per Figma. */}
+      <nav className="hidden items-center rounded-full bg-white/[0.05] p-1 ring-1 ring-inset ring-white/[0.06] sm:flex">
         {tabs.map((tab) =>
           tab.children ? (
             <div key={tab.label} className="group/sub relative">
