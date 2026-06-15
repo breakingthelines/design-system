@@ -1,8 +1,15 @@
 'use client';
 
 import * as React from 'react';
-import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useRef, useCallback, useLayoutEffect, useEffect } from 'react';
+import {
+  motion,
+  AnimatePresence,
+  useSpring,
+  useVelocity,
+  useTransform,
+  useReducedMotion,
+} from 'framer-motion';
 
 import { BtlWordmark } from '#/components/ui/btl-logo';
 import { cn } from '#/lib/utils';
@@ -134,6 +141,127 @@ function NotificationIcon({ className }: { className?: string }) {
   );
 }
 
+/** Spring carrying the highlight pill's position + width — a fluid, slightly
+ *  bouncy glide that the velocity-driven stretch below rides on. */
+const PILL_SPRING = { stiffness: 320, damping: 26, mass: 1 };
+const OPACITY_SPRING = { stiffness: 320, damping: 32 };
+
+/**
+ * Displacement map for the liquid-glass refraction: R encodes horizontal
+ * offset (black→red left→right), G encodes vertical (black→green top→bottom),
+ * screened together. feDisplacementMap reads R/G to bend the backdrop like a
+ * lens. Built with encodeURIComponent so the data URI is always valid.
+ */
+const DISPLACEMENT_SVG =
+  "<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'>" +
+  "<defs><linearGradient id='gx' x1='0' x2='1'><stop offset='0' stop-color='#000'/><stop offset='1' stop-color='#f00'/></linearGradient>" +
+  "<linearGradient id='gy' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#000'/><stop offset='1' stop-color='#0f0'/></linearGradient></defs>" +
+  "<rect width='100' height='100' fill='url(#gx)'/>" +
+  "<rect width='100' height='100' fill='url(#gy)' style='mix-blend-mode:screen'/></svg>";
+const DISPLACEMENT_MAP = `data:image/svg+xml,${encodeURIComponent(DISPLACEMENT_SVG)}`;
+
+/**
+ * Apple "liquid glass" material for the active pill: a translucent tint, a
+ * blurred + refracted + saturated backdrop, and a stack of inset shadows that
+ * fake the glass bevel (bright rim-light top-left, dark inner shadow bottom).
+ * The url(#…) refraction is Chrome/Edge-only; -webkit falls back to blur-only.
+ */
+const GLASS_PILL: React.CSSProperties = {
+  background: 'rgba(255, 255, 255, 0.10)',
+  backdropFilter: 'blur(8px) url(#nav-liquid-glass) saturate(150%)',
+  WebkitBackdropFilter: 'blur(8px) saturate(150%)',
+  boxShadow: [
+    'inset 0 0 0 1px rgba(255,255,255,0.08)',
+    'inset 1.8px 1px 0 -1px rgba(255,255,255,0.55)',
+    'inset -1.5px -1px 0 -1px rgba(255,255,255,0.45)',
+    'inset -2px -6px 1px -5px rgba(255,255,255,0.35)',
+    'inset -1px 2px 3px -1px rgba(0,0,0,0.45)',
+    'inset 0 -4px 2px -2px rgba(0,0,0,0.25)',
+    '0 3px 8px 0 rgba(0,0,0,0.40)',
+  ].join(', '),
+};
+
+const useIsoLayoutEffect = typeof document !== 'undefined' ? useLayoutEffect : useEffect;
+
+/**
+ * Drives a single highlight pill that glides between nav tabs. The pill sits on
+ * whichever tab is `litIndex` (hovered, falling back to the active route). While
+ * travelling it stretches with the spring's velocity and squashes vertically —
+ * the gooey "liquid glass" morph — then settles to rest on the target tab. When
+ * `litIndex` is null (e.g. Home, no tab active and nothing hovered) it fades out.
+ */
+function useNavHighlight(litIndex: number | null, revision: string) {
+  const reduceMotion = useReducedMotion();
+  const navRef = useRef<HTMLElement | null>(null);
+  const tabRefs = useRef<Array<HTMLElement | null>>([]);
+  const mounted = useRef(false);
+
+  const x = useSpring(0, PILL_SPRING);
+  const width = useSpring(0, PILL_SPRING);
+  const opacity = useSpring(0, OPACITY_SPRING);
+  const velocity = useVelocity(x);
+  // |horizontal velocity| → stretch; vertical squash keeps the volume honest.
+  // Sensitive curve (saturates ~600px/s) so even an adjacent-tab hop reads gooey.
+  const scaleX = useTransform(velocity, [-600, 0, 600], [1.22, 1, 1.22], { clamp: true });
+  const scaleY = useTransform(scaleX, (s) => 1 - (s - 1) * 0.7);
+  // Anchor the stretch to the trailing edge so the pill is "pulled" toward the
+  // target (moving right → grow from the left), matching the reference.
+  const transformOrigin = useTransform(velocity, (v) => (v >= 0 ? 'left center' : 'right center'));
+
+  const measure = useCallback(
+    (animate: boolean) => {
+      const nav = navRef.current;
+      const el = litIndex == null ? null : tabRefs.current[litIndex];
+      if (!nav || !el) {
+        if (animate && mounted.current) opacity.set(0);
+        else opacity.jump(0);
+        return;
+      }
+      const navBox = nav.getBoundingClientRect();
+      const tabBox = el.getBoundingClientRect();
+      const left = tabBox.left - navBox.left;
+      // Jump (no tween) on first paint / fade-in / reduced-motion; otherwise glide.
+      const instant = !animate || !mounted.current || opacity.get() === 0 || reduceMotion;
+      if (instant) {
+        x.jump(left);
+        width.jump(tabBox.width);
+      } else {
+        x.set(left);
+        width.set(tabBox.width);
+      }
+      if (mounted.current) opacity.set(1);
+      else opacity.jump(1);
+    },
+    [litIndex, reduceMotion, x, width, opacity]
+  );
+
+  useIsoLayoutEffect(() => {
+    measure(true);
+    mounted.current = true;
+  }, [measure, revision]);
+
+  useIsoLayoutEffect(() => {
+    const onResize = () => measure(false);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, [measure]);
+
+  const setTabRef = (index: number) => (el: HTMLElement | null) => {
+    tabRefs.current[index] = el;
+  };
+
+  const pillStyle = {
+    x,
+    width,
+    opacity,
+    scaleX: reduceMotion ? 1 : scaleX,
+    scaleY: reduceMotion ? 1 : scaleY,
+    transformOrigin: reduceMotion ? 'center center' : transformOrigin,
+  };
+
+  return { navRef, setTabRef, pillStyle };
+}
+
 function SiteNav({
   className,
   tabs = defaultTabs,
@@ -154,6 +282,14 @@ function SiteNav({
 }: SiteNavProps) {
   const LinkComponent = useLinkComponent();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Liquid highlight: the pill follows the hovered tab, falling back to the
+  // active route; null (e.g. Home) leaves the bar bare until you hover.
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const activeIndex = tabs.findIndex((tab) => tab.active);
+  const litIndex = hoverIndex ?? (activeIndex >= 0 ? activeIndex : null);
+  const tabsRevision = tabs.map((tab) => `${tab.label}:${tab.active ? 1 : 0}`).join('|');
+  const { navRef, setTabRef, pillStyle } = useNavHighlight(litIndex, tabsRevision);
 
   return (
     <header
@@ -221,70 +357,88 @@ function SiteNav({
         </LinkComponent>
       </div>
 
-      {/* Center: Pill tab bar (tablet+). The capsule fill lifts the tab group
-          off the page so the active item reads as a lighter pill nested inside
-          a darker bar (page → capsule → active pill), per Figma. */}
-      <nav className="hidden items-center rounded-full bg-white/[0.05] p-1 ring-1 ring-inset ring-white/[0.06] sm:flex">
-        {tabs.map((tab) =>
-          tab.children ? (
-            <div key={tab.label} className="group/sub relative">
-              <button
-                type="button"
-                className={cn(
-                  'cursor-pointer rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
-                  tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
-                )}
-                aria-haspopup="true"
-              >
-                {tab.label}
-              </button>
-              {/* Dropdown — pt-2 creates an invisible hover bridge between trigger and panel */}
-              <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
-                <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
-                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
-                  <nav className="flex flex-col gap-0.5">
-                    {tab.children.map((child) => {
-                      const isExternal = child.external;
-                      if (isExternal) {
+      {/* Center: liquid pill tab bar (tablet+). A solid grey-200 capsule holds a
+          single grey-300 pill that glides between tabs on hover — velocity-driven
+          stretch/squash for the gooey morph — and rests on the active route.
+          Resting colours per Figma 2204:9786. */}
+      <nav
+        ref={navRef}
+        onMouseLeave={() => setHoverIndex(null)}
+        className="relative hidden items-center rounded-full bg-grey-200 p-1 sm:flex"
+      >
+        {/* Refraction filter for the liquid-glass pill (Chrome/Edge). */}
+        <svg aria-hidden width="0" height="0" className="pointer-events-none absolute">
+          <filter id="nav-liquid-glass" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+            <feImage result="map" href={DISPLACEMENT_MAP} preserveAspectRatio="none" />
+            <feDisplacementMap in="SourceGraphic" in2="map" scale="10" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </svg>
+        <motion.div
+          aria-hidden
+          style={{ ...pillStyle, ...GLASS_PILL }}
+          className="pointer-events-none absolute left-0 top-1 bottom-1 rounded-full"
+        />
+        {tabs.map((tab, index) => {
+          const lit = litIndex === index;
+          const tabClassName = cn(
+            // px-3 py-2 + leading-none → compact pill (design-tuned).
+            'relative block cursor-pointer px-3 py-2 text-[12px] leading-none tracking-[-0.36px] transition-colors',
+            lit ? 'text-white' : 'text-grey-500 hover:text-white/80'
+          );
+          return (
+            <div
+              key={getNavTabKey(tab)}
+              ref={setTabRef(index)}
+              onMouseEnter={() => setHoverIndex(index)}
+              className={cn('relative z-10', tab.children && 'group/sub')}
+            >
+              {tab.children ? (
+                <button type="button" className={tabClassName} aria-haspopup="true">
+                  {tab.label}
+                </button>
+              ) : (
+                <LinkComponent href={tab.href ?? '#'} className={tabClassName}>
+                  {tab.label}
+                </LinkComponent>
+              )}
+              {tab.children ? (
+                // Dropdown — pt-2 creates an invisible hover bridge between trigger and panel
+                <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
+                  <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
+                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                    <nav className="flex flex-col gap-0.5">
+                      {tab.children.map((child) => {
+                        const isExternal = child.external;
+                        if (isExternal) {
+                          return (
+                            <a
+                              key={getNavChildKey(child)}
+                              href={child.href}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            >
+                              {child.label}
+                            </a>
+                          );
+                        }
                         return (
-                          <a
+                          <LinkComponent
                             key={getNavChildKey(child)}
                             href={child.href}
-                            target="_blank"
-                            rel="noopener noreferrer"
                             className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                           >
                             {child.label}
-                          </a>
+                          </LinkComponent>
                         );
-                      }
-                      return (
-                        <LinkComponent
-                          key={getNavChildKey(child)}
-                          href={child.href}
-                          className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                        >
-                          {child.label}
-                        </LinkComponent>
-                      );
-                    })}
-                  </nav>
+                      })}
+                    </nav>
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
-          ) : (
-            <LinkComponent
-              key={getNavTabKey(tab)}
-              href={tab.href ?? '#'}
-              className={cn(
-                'rounded-full px-4 py-3 text-[12px] tracking-[-0.36px] transition-colors',
-                tab.active ? 'bg-white/[0.12] text-white' : 'text-white/50 hover:text-white/80'
-              )}
-            >
-              {tab.label}
-            </LinkComponent>
-          )
-        )}
+          );
+        })}
       </nav>
 
       {/* Right: Actions cluster */}

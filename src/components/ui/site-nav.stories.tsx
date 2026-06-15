@@ -53,6 +53,21 @@ export const LoggedOut = meta.story({
   },
 });
 
+/** Home / any route with no matching tab — the highlight pill rests hidden and
+ *  only appears (fading in) while a tab is hovered. */
+export const HomeNoActiveTab = meta.story({
+  args: {
+    tabs: [
+      { label: 'Arena', href: '#' },
+      { label: 'Thoughts', href: '#' },
+      { label: 'Media', href: '#' },
+      { label: 'Contact', href: '#' },
+    ],
+    onSearchClick: () => {},
+    onLoginClick: () => {},
+  },
+});
+
 export const WithGoBack = meta.story({
   args: {
     tabs,
