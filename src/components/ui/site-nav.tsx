@@ -364,7 +364,7 @@ function SiteNav({
       <nav
         ref={navRef}
         onMouseLeave={() => setHoverIndex(null)}
-        className="relative hidden items-center rounded-full bg-grey-200 p-1 sm:flex"
+        className="relative hidden items-center rounded-full bg-white/[0.06] p-1 backdrop-blur-md sm:flex"
       >
         {/* Refraction filter for the liquid-glass pill (Chrome/Edge). */}
         <svg aria-hidden width="0" height="0" className="pointer-events-none absolute">
