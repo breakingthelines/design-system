@@ -48,7 +48,15 @@ interface ContentCardProps extends MotionSafeArticleProps {
   href?: string;
   /** Link href for the author profile */
   authorHref?: string;
-  /** CSS view-transition-name for the image container (shared element transitions) */
+  /**
+   * CSS `view-transition-name` applied to the image container for shared-element
+   * transitions. Use this for a STATIC name when the card is guaranteed unique on
+   * the page. For listings where the same content can appear in two rails (which
+   * would collide and abort the transition), prefer leaving this unset: the image
+   * container always carries `data-vt-content-id={item.id}`, so the host can stamp
+   * a `view-transition-name` onto only the clicked card at navigation time (see the
+   * platform's hero-morph click handler).
+   */
   viewTransitionName?: string;
 }
 
@@ -139,6 +147,7 @@ function ContentCard({
               href={href}
               className="h-[86px] w-[108px] shrink-0 overflow-hidden"
               style={vtStyle}
+              data-vt-content-id={item.id}
               tabIndex={-1}
             >
               <Image
@@ -150,7 +159,11 @@ function ContentCard({
               />
             </LinkComponent>
           ) : (
-            <div className="h-[86px] w-[108px] shrink-0 overflow-hidden" style={vtStyle}>
+            <div
+              className="h-[86px] w-[108px] shrink-0 overflow-hidden"
+              style={vtStyle}
+              data-vt-content-id={item.id}
+            >
               <Image
                 src={item.imageUrl}
                 alt={item.title}
@@ -212,6 +225,7 @@ function ContentCard({
               href={href}
               className="aspect-[2/3] w-full overflow-hidden"
               style={vtStyle}
+              data-vt-content-id={item.id}
               tabIndex={-1}
             >
               <Image
@@ -223,7 +237,11 @@ function ContentCard({
               />
             </LinkComponent>
           ) : (
-            <div className="aspect-[2/3] w-full overflow-hidden" style={vtStyle}>
+            <div
+              className="aspect-[2/3] w-full overflow-hidden"
+              style={vtStyle}
+              data-vt-content-id={item.id}
+            >
               <Image
                 src={item.imageUrl}
                 alt={item.title}
@@ -283,6 +301,7 @@ function ContentCard({
             href={href}
             className="aspect-[328/364] w-full shrink-0 overflow-hidden"
             style={vtStyle}
+            data-vt-content-id={item.id}
             tabIndex={-1}
           >
             <Image
@@ -294,7 +313,11 @@ function ContentCard({
             />
           </LinkComponent>
         ) : (
-          <div className="aspect-[328/364] w-full shrink-0 overflow-hidden" style={vtStyle}>
+          <div
+            className="aspect-[328/364] w-full shrink-0 overflow-hidden"
+            style={vtStyle}
+            data-vt-content-id={item.id}
+          >
             <Image
               src={item.imageUrl}
               alt={item.title}
