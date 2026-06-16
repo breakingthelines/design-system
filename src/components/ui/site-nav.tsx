@@ -368,9 +368,22 @@ function SiteNav({
       >
         {/* Refraction filter for the liquid-glass pill (Chrome/Edge). */}
         <svg aria-hidden width="0" height="0" className="pointer-events-none absolute">
-          <filter id="nav-liquid-glass" x="0" y="0" width="100%" height="100%" colorInterpolationFilters="sRGB">
+          <filter
+            id="nav-liquid-glass"
+            x="0"
+            y="0"
+            width="100%"
+            height="100%"
+            colorInterpolationFilters="sRGB"
+          >
             <feImage result="map" href={DISPLACEMENT_MAP} preserveAspectRatio="none" />
-            <feDisplacementMap in="SourceGraphic" in2="map" scale="10" xChannelSelector="R" yChannelSelector="G" />
+            <feDisplacementMap
+              in="SourceGraphic"
+              in2="map"
+              scale="10"
+              xChannelSelector="R"
+              yChannelSelector="G"
+            />
           </filter>
         </svg>
         <motion.div
