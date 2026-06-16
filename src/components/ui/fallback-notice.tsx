@@ -135,7 +135,9 @@ export type FallbackReasonKey =
   | 'prediction_locked'
   | 'prediction_not_yet_open'
   // v0.20.0 Wave 6 Lineups
-  | 'lineup_not_yet_announced';
+  | 'lineup_not_yet_announced'
+  // Client-only (no proto tag): a surface decides this empty state locally.
+  | 'ratings_unavailable';
 
 /** Proto-string accepted as input. We normalise to FallbackReasonKey. */
 export type FallbackReasonInput = FallbackReasonKey | string | number;
@@ -190,7 +192,15 @@ const NUMERIC_TAG_TO_KEY: Record<number, FallbackReasonKey> = {
   47: 'lineup_not_yet_announced',
 };
 
-const ALL_KEYS: ReadonlyArray<FallbackReasonKey> = Object.values(NUMERIC_TAG_TO_KEY);
+// Client-only reasons have no proto numeric tag — a surface decides the empty
+// state locally and passes the key directly (e.g. the match Grades sub-tab
+// showing "Grading unavailable" when there's no lineup to grade). They still
+// resolve through normaliseFallbackReason and render canonical copy.
+const CLIENT_ONLY_KEYS: ReadonlyArray<FallbackReasonKey> = ['ratings_unavailable'];
+const ALL_KEYS: ReadonlyArray<FallbackReasonKey> = [
+  ...Object.values(NUMERIC_TAG_TO_KEY),
+  ...CLIENT_ONLY_KEYS,
+];
 const KEY_SET: ReadonlySet<string> = new Set(ALL_KEYS);
 
 /**
@@ -272,6 +282,10 @@ const FALLBACK_REASON_COPY: Record<FallbackReasonKey, FallbackReasonCopy> = {
   no_ratings_yet: {
     title: 'No grades yet',
     body: 'Be the first to grade this game.',
+  },
+  ratings_unavailable: {
+    title: 'Grading unavailable',
+    body: 'Player grades open once the lineup is confirmed.',
   },
   no_active_prediction_league: {
     title: 'No prediction league yet',
