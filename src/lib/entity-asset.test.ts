@@ -10,32 +10,30 @@ const COMP = 'btl_football_competition_lb3d230cb';
 
 describe('entityAssetUrl — the address contract', () => {
   it('builds a team crest at provider/crest/<id>.png', () => {
-    expect(entityAssetUrl('team', 'crest', TEAM, BASE)).toBe(
-      `${BASE}/provider/crest/${TEAM}.png`,
-    );
+    expect(entityAssetUrl('team', 'crest', TEAM, BASE)).toBe(`${BASE}/provider/crest/${TEAM}.png`);
   });
 
   it('builds a competition badge at provider/competition/<id>.png', () => {
     expect(entityAssetUrl('competition', 'crest', COMP, BASE)).toBe(
-      `${BASE}/provider/competition/${COMP}.png`,
+      `${BASE}/provider/competition/${COMP}.png`
     );
   });
 
   it('builds a player avatar at apifootball/player/<id>.png', () => {
     expect(entityAssetUrl('player', 'avatar', PLAYER, BASE)).toBe(
-      `${BASE}/apifootball/player/${PLAYER}.png`,
+      `${BASE}/apifootball/player/${PLAYER}.png`
     );
   });
 
   it('builds a player hero at wikimedia/player/<id>.jpg', () => {
     expect(entityAssetUrl('player', 'hero', PLAYER, BASE)).toBe(
-      `${BASE}/wikimedia/player/${PLAYER}.jpg`,
+      `${BASE}/wikimedia/player/${PLAYER}.jpg`
     );
   });
 
   it('builds a manager hero at wikimedia/manager/<id>.jpg', () => {
     expect(entityAssetUrl('manager', 'hero', COACH, BASE)).toBe(
-      `${BASE}/wikimedia/manager/${COACH}.jpg`,
+      `${BASE}/wikimedia/manager/${COACH}.jpg`
     );
   });
 
@@ -58,7 +56,7 @@ describe('entityAssetUrl — the hotlink choke-point', () => {
     expect(
       entityAssetUrl('team', 'crest', TEAM, BASE, {
         imageUrl: 'https://media.api-sports.io/football/teams/42.png',
-      }),
+      })
     ).toBe(`${BASE}/provider/crest/${TEAM}.png`);
   });
 
@@ -66,7 +64,7 @@ describe('entityAssetUrl — the hotlink choke-point', () => {
     expect(
       entityAssetUrl('player', 'avatar', PLAYER, BASE, {
         imageUrl: 'https://media.api-sports.io/football/players/99.png',
-      }),
+      })
     ).toBe(`${BASE}/apifootball/player/${PLAYER}.png`);
   });
 
@@ -74,7 +72,7 @@ describe('entityAssetUrl — the hotlink choke-point', () => {
     expect(
       entityAssetUrl('player', 'avatar', PLAYER, BASE, {
         imageUrl: 'media/wikimedia/player/penzo.jpg',
-      }),
+      })
     ).toBe(`${BASE}/wikimedia/player/penzo.jpg`);
   });
 
@@ -88,7 +86,7 @@ describe('entityAssetUrl — the hotlink choke-point', () => {
     expect(
       entityAssetUrl('player', 'hero', PLAYER, BASE, {
         imageUrl: 'media/apifootball/player/penzo.png',
-      }),
+      })
     ).toBe(`${BASE}/wikimedia/player/${PLAYER}.jpg`);
   });
 });

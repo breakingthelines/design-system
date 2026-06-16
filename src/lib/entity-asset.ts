@@ -134,7 +134,7 @@ export function entityAssetUrl(
   role: EntityAssetRole,
   id: string,
   cdnBase: string,
-  opts: EntityAssetOptions = {},
+  opts: EntityAssetOptions = {}
 ): string | null {
   if (!id || !cdnBase) return null;
   const base = cdnBase.replace(TRAILING_SLASH, '');
