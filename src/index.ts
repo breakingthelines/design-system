@@ -268,6 +268,8 @@ export * from './lib/format';
 export * from './lib/image-presentation';
 export * from './lib/render-mentions';
 export * from './lib/entity-image';
+export * from './lib/entity-asset';
+export * from './components/ui/entity-asset-image';
 export * from './lib/country-flags';
 export {
   ENTITY_IMAGERY_CDN_BASE,
