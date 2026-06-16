@@ -9,7 +9,7 @@ import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
 
 const goBackVariants = cva(
-  'group/go-back inline-flex cursor-pointer select-none items-center gap-1.5 rounded-full py-1 pl-1 pr-3.5 font-display font-bold tracking-[-0.28px] transition-colors outline-none backdrop-blur-sm disabled:pointer-events-none disabled:opacity-50',
+  'group/go-back inline-flex cursor-pointer select-none items-center gap-1.5 rounded-full py-1 pl-1 pr-3.5 font-sans font-bold tracking-[-0.28px] transition-colors outline-none backdrop-blur-sm disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {

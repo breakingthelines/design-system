@@ -5,6 +5,16 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.41.16] — 2026-06-16
+
+### Fixed — `GoBack` renders in Inter, not the serif display face
+
+- `goBackVariants` carried `font-display`, which resolves to
+  `'le-monde-journal-std', Georgia, serif`. Every `GoBack` (platform `SiteNav`
+  back button, studio back bar, membership backs) was rendering in a serif.
+  Swapped to `font-sans` (`'Inter'`); `font-bold` and all other classes
+  unchanged.
+
 ## [0.40.18] — 2026-06-12
 
 ### Changed — cover falls back to the page doodle texture
