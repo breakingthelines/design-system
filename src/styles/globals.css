@@ -205,6 +205,12 @@
   html {
     @apply font-sans;
   }
+  /* Site-wide rule: URLs are not underlined. Links are distinguished by colour
+     and hover, not decoration. Opt back in with an explicit `underline` utility
+     on the rare element that needs it. */
+  a {
+    text-decoration: none;
+  }
   /* Interactive controls show the pointer cursor. Tailwind v4's Preflight no
      longer sets this on <button>, so without it every button shows the default
      arrow. Scoped to enabled controls; utilities (cursor-not-allowed on
