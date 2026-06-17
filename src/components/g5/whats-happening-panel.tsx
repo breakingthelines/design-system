@@ -58,6 +58,13 @@ export interface WhatsHappeningPanelProps {
   viewAllHref?: string;
   /** CTA label. Defaults to "View all matches". */
   viewAllLabel?: string;
+  /**
+   * When set, caps the fixtures list to this CSS height and scrolls within it,
+   * keeping the title, filter bar, and "View all matches" CTA pinned. Omit
+   * (default) to let the list grow to its full height. Use on dense sidebar
+   * mounts (e.g. the Thoughts Gameweek panel) where a full slate runs tall.
+   */
+  maxBodyHeight?: string;
   className?: string;
 }
 
@@ -73,6 +80,7 @@ export function WhatsHappeningPanel({
   showFilters = true,
   viewAllHref,
   viewAllLabel = 'View all matches',
+  maxBodyHeight,
   className,
 }: WhatsHappeningPanelProps) {
   const Link = useLinkComponent();
@@ -107,19 +115,25 @@ export function WhatsHappeningPanel({
 
       <div data-slot="whats-happening-body" className="flex w-full flex-col gap-4">
         {hasFixtures ? (
-          groups
-            .filter((group) => group.fixtures.length > 0)
-            .map((group, idx) => (
-              <FixtureGroup
-                key={group.id ?? `${group.dateLabel}-${idx}`}
-                dateLabel={group.dateLabel}
-                density="compact"
-              >
-                {group.fixtures.map((fixture) => (
-                  <FixtureRow key={fixture.id} data={fixture} density="compact" />
-                ))}
-              </FixtureGroup>
-            ))
+          <div
+            data-slot="whats-happening-scroll"
+            className={cn('flex w-full flex-col gap-4', maxBodyHeight && 'overflow-y-auto pr-1')}
+            style={maxBodyHeight ? { maxHeight: maxBodyHeight } : undefined}
+          >
+            {groups
+              .filter((group) => group.fixtures.length > 0)
+              .map((group, idx) => (
+                <FixtureGroup
+                  key={group.id ?? `${group.dateLabel}-${idx}`}
+                  dateLabel={group.dateLabel}
+                  density="compact"
+                >
+                  {group.fixtures.map((fixture) => (
+                    <FixtureRow key={fixture.id} data={fixture} density="compact" />
+                  ))}
+                </FixtureGroup>
+              ))}
+          </div>
         ) : (
           <div
             data-slot="whats-happening-empty"
