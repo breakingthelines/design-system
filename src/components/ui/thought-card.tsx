@@ -113,9 +113,9 @@ function ThoughtCard({
           {thought.author.avatarUrl && (
             <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
           )}
-          <AvatarFallback>
-            {thought.author.initials ?? thought.author.name.charAt(0)}
-          </AvatarFallback>
+          {/* No avatar image → the branded BTL placeholder (BtlPlaceholder),
+              not text initials or a bare “?”. */}
+          <AvatarFallback branded />
         </Avatar>
 
         {/* Right: Content */}
