@@ -187,20 +187,30 @@ export function PredictionLeaderboardPanel({
     );
   const showStickyViewer = viewerEntry !== undefined && !viewerAlreadyListed;
 
-  // Wave 6.34o: scroll the viewer's row into the center of the visible
-  // window on mount. One-shot useLayoutEffect — no data-flow useEffect.
-  // The list ref is the scroll container; the row ref is the viewer-row
-  // <li>. We re-anchor when the visible entries change (e.g. league
-  // switch in match-detail) so the viewer lands centred every time.
+  // Wave 6.34o: centre the viewer's row in the visible window on mount.
+  // One-shot useLayoutEffect — no data-flow useEffect. We re-anchor when the
+  // visible entries change (e.g. league switch in match-detail) so the viewer
+  // lands centred every time.
+  //
+  // We set the CONTAINER's scrollTop directly rather than calling
+  // `row.scrollIntoView({block:'center'})`. scrollIntoView bubbles to EVERY
+  // scrollable ancestor including the document — so when this list isn't
+  // overflowing yet (short leaderboard, or rows still settling during the
+  // initial data load) the inner container has nothing to scroll and the
+  // browser instead scrolls the whole PAGE to centre the row, yanking a reader
+  // who has started scrolling back toward the top. Driving `list.scrollTop`
+  // keeps the adjustment strictly inside this container and can never move the
+  // window. Only scroll when the content actually overflows.
   const listRef = React.useRef<HTMLDivElement | null>(null);
   const viewerRowRef = React.useRef<HTMLLIElement | null>(null);
   React.useLayoutEffect(() => {
+    const list = listRef.current;
     const row = viewerRowRef.current;
-    if (!row) return;
-    // `block: 'center'` centres the row in the scroll container; the
-    // outer page doesn't scroll because the container is the nearest
-    // ancestor with `overflow-y-auto`.
-    row.scrollIntoView({ block: 'center', inline: 'nearest' });
+    if (!list || !row) return;
+    if (list.scrollHeight <= list.clientHeight) return; // not scrollable → nothing to centre, never touch the page
+    const target = row.offsetTop - (list.clientHeight - row.offsetHeight) / 2;
+    const max = list.scrollHeight - list.clientHeight;
+    list.scrollTop = Math.max(0, Math.min(target, max));
   }, [visibleEntries]);
 
   return (
