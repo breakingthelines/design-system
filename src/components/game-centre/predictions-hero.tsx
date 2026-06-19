@@ -357,6 +357,39 @@ function FinishedBody({
   hideHeader?: boolean;
 }) {
   const cast = pointsEarned !== undefined;
+
+  // "You earned N" recap. The points number is Inter (font-content), not the
+  // display face. `size="focal"` makes it the card's headline stat (used when
+  // there's no score line — e.g. the round-level hub card, where the points ARE
+  // the headline); `size="ribbon"` is the compact form beneath a match score.
+  const earned = (size: 'focal' | 'ribbon') =>
+    cast ? (
+      <div className="flex items-baseline gap-2">
+        <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
+          You earned
+        </span>
+        <span
+          data-slot="predictions-hero-points-earned"
+          className={cn(
+            'font-content leading-none font-bold tracking-tight text-[var(--color-red-100)] tabular-nums',
+            size === 'focal' ? 'text-[40px] sm:text-[48px]' : 'text-2xl'
+          )}
+        >
+          {pointsEarned}
+        </span>
+        {pointsAvailable !== undefined ? (
+          <span className="font-content text-xs text-white/55 tabular-nums">
+            of {pointsOpenEnded ? 'over ' : ''}
+            {pointsAvailable} available
+          </span>
+        ) : null}
+      </div>
+    ) : (
+      <span className="font-content text-sm text-white/55">
+        You didn&apos;t place a pick on this {scoreLine ? 'one' : 'round'}.
+      </span>
+    );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -365,6 +398,8 @@ function FinishedBody({
       transition={{ duration: 0.18 }}
       className="flex flex-col gap-4"
     >
+      {/* Focal row — the score on a match page; otherwise the points earned, so
+          the round-level card leads with a real stat instead of an empty slot. */}
       <div className="flex items-baseline gap-3">
         {hideHeader ? null : (
           <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
@@ -378,42 +413,30 @@ function FinishedBody({
           >
             {scoreLine}
           </span>
-        ) : null}
-      </div>
-
-      <div
-        data-slot="predictions-hero-recap-ribbon"
-        className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4"
-      >
-        {cast ? (
+        ) : (
           <motion.div
             initial={{ opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.32, delay: 0.08 }}
-            className="flex items-baseline gap-2"
           >
-            <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
-              You earned
-            </span>
-            <span
-              data-slot="predictions-hero-points-earned"
-              className="font-display text-2xl leading-none font-bold tracking-tight text-[var(--color-red-100)] tabular-nums"
-            >
-              {pointsEarned}
-            </span>
-            {pointsAvailable !== undefined ? (
-              <span className="font-content text-xs text-white/55 tabular-nums">
-                of {pointsOpenEnded ? 'over ' : ''}
-                {pointsAvailable} available
-              </span>
-            ) : null}
+            {earned('focal')}
           </motion.div>
-        ) : (
-          <span className="font-content text-xs text-white/55">
-            You didn&apos;t place a pick on this one.
-          </span>
         )}
       </div>
+
+      {/* Recap ribbon — only when a score leads the card; the points ride
+          beneath it. With no score the points ARE the focal row above. */}
+      {scoreLine ? (
+        <motion.div
+          data-slot="predictions-hero-recap-ribbon"
+          initial={{ opacity: 0, x: -8 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.32, delay: 0.08 }}
+          className="flex flex-wrap items-center justify-between gap-3 border-t border-white/[0.06] pt-4"
+        >
+          {earned('ribbon')}
+        </motion.div>
+      ) : null}
     </motion.div>
   );
 }
