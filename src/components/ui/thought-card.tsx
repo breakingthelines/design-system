@@ -6,6 +6,8 @@ import { ArrowsClockwise, Clock, UploadSimple } from '@phosphor-icons/react';
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
+import { Badge } from '#/components/ui/badge';
+import { tierVariantMap } from '#/components/ui/author-line';
 import { EngagementBar, type EngagementAction } from '#/components/ui/engagement-bar';
 import { FromGradePill } from '#/components/ui/from-grade-pill';
 import { useLinkComponent } from '#/components/ui/link-context';
@@ -137,6 +139,12 @@ function ThoughtCard({
                 </span>
               )}
               {thought.author.verified && <VerifiedBadge size="sm" />}
+              {/* Tier badge — reuses AuthorLine's Badge treatment (Free → no badge) */}
+              {thought.author.tier && thought.author.tier !== 'Free' && (
+                <Badge variant={tierVariantMap[thought.author.tier]} className="ml-1">
+                  {thought.author.tier}
+                </Badge>
+              )}
             </div>
             {thought.author.handle && (
               <Link

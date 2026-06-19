@@ -5,6 +5,20 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.42.7] — 2026-06-19
+
+### Added — Pro / Line-Breaker tier badge on thought authors
+
+- `ThoughtCard` and `ThoughtComment` now render the author's tier as a `Badge`
+  beside the name, reusing `AuthorLine`'s `tierVariantMap` (now exported). `Pro`
+  → solid, `Line Breaker` → outline; `Free`/absent → no badge. The comment badge
+  carries `dark` so the outline stays legible on the black Thoughts panel.
+
+### Fixed — panel timestamps link to the thought permalink
+
+- `ThoughtComment` renders `createdAt` as a `Link` to `thought.permalinkHref`
+  (with a plain-text fallback), matching `ThoughtCard`.
+
 ## [0.41.16] — 2026-06-16
 
 ### Fixed — `GoBack` renders in Inter, not the serif display face

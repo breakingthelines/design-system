@@ -32,7 +32,7 @@ interface AuthorLineProps
   showAvatar?: boolean;
 }
 
-const tierVariantMap = {
+export const tierVariantMap = {
   Free: 'secondary',
   Pro: 'default',
   'Line Breaker': 'outline',
