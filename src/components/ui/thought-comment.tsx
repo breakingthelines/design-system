@@ -19,6 +19,8 @@ import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
+import { Badge } from '#/components/ui/badge';
+import { tierVariantMap } from '#/components/ui/author-line';
 import { FromGradePill } from '#/components/ui/from-grade-pill';
 import { ThoughtOverflowMenu } from '#/components/ui/thought-overflow-menu';
 import { useLinkComponent } from '#/components/ui/link-context';
@@ -328,11 +330,27 @@ export function ThoughtComment({
                   {thought.author.verified && <VerifiedBadge size="sm" />}
                 </span>
               )}
-              {thought.createdAt && (
-                <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-                  {thought.createdAt}
-                </span>
+              {/* Tier badge — AuthorLine treatment; `dark` flips tokens so the
+                  outline (Line Breaker) reads on the panel's black surface. */}
+              {thought.author.tier && thought.author.tier !== 'Free' && (
+                <Badge variant={tierVariantMap[thought.author.tier]} className="dark">
+                  {thought.author.tier}
+                </Badge>
               )}
+              {thought.createdAt &&
+                (thought.permalinkHref ? (
+                  <Link
+                    href={thought.permalinkHref}
+                    className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c] transition-colors hover:text-white"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  >
+                    {thought.createdAt}
+                  </Link>
+                ) : (
+                  <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
+                    {thought.createdAt}
+                  </span>
+                ))}
               {/* Overflow `…` — pinned right. Dark tone so it reads on
                   the near-black match Thoughts panel. */}
               <ThoughtOverflowMenu
