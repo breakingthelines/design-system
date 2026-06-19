@@ -88,6 +88,13 @@ export interface PredictionsHeroProps extends React.ComponentProps<'div'> {
    * pre-styled glyph (`size-7 shrink-0 text-white/40 sm:size-8`).
    */
   icon?: React.ReactNode;
+  /**
+   * SCHEDULED — a static status line (e.g. "Predictions closed") shown in place
+   * of the giant countdown, at a readable size. Use for states where a ticking
+   * timer is meaningless (e.g. a locked round, predictions already closed).
+   * Takes precedence over `countdownLabel` when set.
+   */
+  statusLabel?: string;
 }
 
 function PredictionsHero({
@@ -109,6 +116,7 @@ function PredictionsHero({
   pointsAvailable,
   hideHeader = false,
   icon,
+  statusLabel,
   className,
   ...props
 }: PredictionsHeroProps) {
@@ -144,6 +152,7 @@ function PredictionsHero({
             cta={cta}
             hideHeader={hideHeader}
             icon={icon}
+            statusLabel={statusLabel}
           />
         ) : state === 'live' ? (
           <LiveBody
@@ -179,6 +188,7 @@ function ScheduledBody({
   cta,
   hideHeader,
   icon,
+  statusLabel,
 }: {
   countdownLabel: string;
   countdownPhase: CountdownPhase;
@@ -187,6 +197,7 @@ function ScheduledBody({
   cta?: React.ReactNode;
   hideHeader?: boolean;
   icon?: React.ReactNode;
+  statusLabel?: string;
 }) {
   const isImminent = countdownPhase === 'imminent';
   const isLive = countdownPhase === 'live';
@@ -218,17 +229,28 @@ function ScheduledBody({
               className="size-7 shrink-0 text-white/40 sm:size-8"
             />
           )}
-          <motion.span
-            data-slot="predictions-hero-countdown"
-            data-phase={countdownPhase}
-            animate={{
-              color: accent ? 'var(--color-red-100)' : '#ffffff',
-            }}
-            transition={{ duration: 0.4, ease: 'easeInOut' }}
-            className="font-content text-[40px] leading-none font-bold tracking-tight tabular-nums sm:text-[48px]"
-          >
-            {countdownLabel}
-          </motion.span>
+          {statusLabel ? (
+            // A timer is meaningless here (e.g. a locked round) — render a
+            // readable static status line instead of the giant countdown.
+            <span
+              data-slot="predictions-hero-status"
+              className="font-content text-xl leading-tight font-semibold tracking-tight text-white/80 sm:text-2xl"
+            >
+              {statusLabel}
+            </span>
+          ) : (
+            <motion.span
+              data-slot="predictions-hero-countdown"
+              data-phase={countdownPhase}
+              animate={{
+                color: accent ? 'var(--color-red-100)' : '#ffffff',
+              }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
+              className="font-content text-[40px] leading-none font-bold tracking-tight tabular-nums sm:text-[48px]"
+            >
+              {countdownLabel}
+            </motion.span>
+          )}
         </div>
       </div>
 
@@ -358,16 +380,14 @@ function FinishedBody({
 }) {
   const cast = pointsEarned !== undefined;
 
-  // "You earned N" recap. The points number is Inter (font-content), not the
-  // display face. `size="focal"` makes it the card's headline stat (used when
-  // there's no score line — e.g. the round-level hub card, where the points ARE
-  // the headline); `size="ribbon"` is the compact form beneath a match score.
+  // Points recap rendered as "{N} points" — the number is Inter (font-content),
+  // not the display face. `size="focal"` makes it the card's headline stat
+  // (used when there's no score line — e.g. the round-level hub card, where the
+  // points ARE the headline); `size="ribbon"` is the compact form beneath a
+  // match score.
   const earned = (size: 'focal' | 'ribbon') =>
     cast ? (
-      <div className="flex items-baseline gap-2">
-        <span className="font-content text-[10px] tracking-[0.16em] text-white/55 uppercase">
-          You earned
-        </span>
+      <div className="flex items-baseline gap-1.5">
         <span
           data-slot="predictions-hero-points-earned"
           className={cn(
@@ -377,16 +397,16 @@ function FinishedBody({
         >
           {pointsEarned}
         </span>
-        {pointsAvailable !== undefined ? (
-          <span className="font-content text-xs text-white/55 tabular-nums">
-            of {pointsOpenEnded ? 'over ' : ''}
-            {pointsAvailable} available
-          </span>
-        ) : null}
+        <span className="font-content text-xs text-white/55">
+          point{pointsEarned === 1 ? '' : 's'}
+          {pointsAvailable !== undefined
+            ? ` of ${pointsOpenEnded ? 'over ' : ''}${pointsAvailable} available`
+            : ''}
+        </span>
       </div>
     ) : (
       <span className="font-content text-sm text-white/55">
-        You didn&apos;t place a pick on this {scoreLine ? 'one' : 'round'}.
+        You didn&apos;t place a prediction on this {scoreLine ? 'one' : 'round'}.
       </span>
     );
 
