@@ -330,8 +330,9 @@ export function ThoughtComment({
                   {thought.author.verified && <VerifiedBadge size="sm" />}
                 </span>
               )}
-              {/* Tier badge — AuthorLine treatment; `dark` flips tokens so the
-                  outline (Line Breaker) reads on the panel's black surface. */}
+              {/* Tier badge — shared AuthorLine treatment (Pro = secondary, Line
+                  Breaker = tinted brand red); `dark` flips the secondary tokens so
+                  the Pro badge reads on the panel's black surface. */}
               {thought.author.tier && thought.author.tier !== 'Free' && (
                 <Badge variant={tierVariantMap[thought.author.tier]} className="dark">
                   {thought.author.tier}
