@@ -160,10 +160,7 @@ function ProfileHero({
                     </Badge>
                   )}
                   {tier === 'LINE_BREAKERS' && (
-                    <Badge
-                      variant="default"
-                      className="bg-red-100/15 text-[10px] text-red-100 hover:bg-red-100/15"
-                    >
+                    <Badge variant="tintedBrand" className="text-[10px]">
                       Line Breaker
                     </Badge>
                   )}

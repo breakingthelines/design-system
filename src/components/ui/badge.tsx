@@ -23,6 +23,7 @@ const badgeVariants = cva(
         tintedDestructive:
           'bg-[color-mix(in_oklab,var(--color-status-todo)_20%,transparent)] text-[var(--color-status-todo)]',
         tintedNeutral: 'bg-white/10 text-white/70',
+        tintedBrand: 'bg-red-100/15 text-red-100',
       },
     },
     defaultVariants: {

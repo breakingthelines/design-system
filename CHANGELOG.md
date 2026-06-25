@@ -5,6 +5,18 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.43.1] — 2026-06-25
+
+### Fixed — inverted Pro / Line-Breaker tier badge colors
+
+- The tier badge on thought surfaces (`ThoughtCard`, `ThoughtComment`, and
+  `AuthorLine` via `tierVariantMap`) had its colors backwards: Pro showed the
+  loud brand red and Line Breaker (the top tier) showed a muted gray outline.
+  Now Line Breaker gets the tinted brand red and Pro is muted, matching
+  `ProfileHero`. Added a `tintedBrand` `Badge` variant as the single source of
+  the Line-Breaker treatment (`ProfileHero` now uses it too, dropping its inline
+  classes).
+
 ## [0.42.7] — 2026-06-19
 
 ### Added — Pro / Line-Breaker tier badge on thought authors

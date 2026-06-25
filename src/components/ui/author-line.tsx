@@ -32,10 +32,13 @@ interface AuthorLineProps
   showAvatar?: boolean;
 }
 
+// Tier badge treatment. Pro = muted (secondary); Line Breaker (the top tier) gets
+// the tinted brand-red, mirroring profile-hero. Keep this hierarchy — the top tier
+// must read louder than Pro, never the other way around.
 export const tierVariantMap = {
   Free: 'secondary',
-  Pro: 'default',
-  'Line Breaker': 'outline',
+  Pro: 'secondary',
+  'Line Breaker': 'tintedBrand',
 } as const;
 
 function AuthorLine({
