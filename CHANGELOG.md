@@ -5,6 +5,14 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.47.0] — 2026-06-30
+
+### Added — Discord link in `SiteFooter`
+
+- `FooterSocialLink['platform']` now accepts `'discord'`, mapped to a `DiscordLogo`
+  icon. The default socials include the BTL community server
+  (`discord.gg/RKsPDwjfJa`) alongside X, LinkedIn, and YouTube.
+
 ## [0.46.0] — 2026-06-30
 
 ### Added — penalty-shootout winner marker on `MatchHeader` + `FixtureRow`

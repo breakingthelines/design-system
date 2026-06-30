@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { CaretUp, XLogo, YoutubeLogo, LinkedinLogo } from '@phosphor-icons/react';
+import { CaretUp, XLogo, YoutubeLogo, LinkedinLogo, DiscordLogo } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { BtlLogo } from '#/components/ui/btl-logo';
@@ -15,7 +15,7 @@ interface FooterLink {
 }
 
 interface FooterSocialLink {
-  platform: 'x' | 'youtube' | 'linkedin';
+  platform: 'x' | 'youtube' | 'linkedin' | 'discord';
   href: string;
 }
 
@@ -157,12 +157,14 @@ const socialIcons = {
   x: XLogo,
   youtube: YoutubeLogo,
   linkedin: LinkedinLogo,
+  discord: DiscordLogo,
 } as const;
 
 const defaultSocials: FooterSocialLink[] = [
   { platform: 'x', href: 'https://x.com/breakthelines' },
   { platform: 'linkedin', href: 'https://www.linkedin.com/company/breaking-the-lines' },
   { platform: 'youtube', href: 'https://www.youtube.com/BreakingTheLinesFootball' },
+  { platform: 'discord', href: 'https://discord.gg/RKsPDwjfJa' },
 ];
 
 function SiteFooter({
