@@ -29,11 +29,13 @@ import type { G5FixtureSide } from './types';
  *                              A live row can be `highlighted` for the gradient
  *                              treatment the design gives the lead fixture.
  *                            • result   — finished minute / "FT" + visible score.
- *                            • upcoming — clock icon + kickoff time (grey) and NO
- *                              score; an empty same-width cell holds the centre
- *                              column's place so every row aligns (Figma 713-3848).
+ *                            • upcoming — NO score; the kickoff time (grey clock
+ *                              icon + time) sits in the CENTRE slot where the
+ *                              score would be, so the matchup reads symmetrically
+ *                              (flag · time · flag). The lead cell is reserved but
+ *                              empty, so mixed FT + upcoming lists stay aligned.
  *                          Anatomy mirrors the mock: minute · [home name+crest]
- *                          · score · [away crest+name] · (engagement badges).
+ *                          · score/kickoff · [away crest+name] · (engagement badges).
  *                          The row is laid out as a 3-column CSS GRID
  *                          (`[lead][teams][trailing]`) with fixed-width outer
  *                          cells, so the team block starts and ends at the same
@@ -134,16 +136,14 @@ export function FixtureRow({
   // Row is a 3-column CSS grid: [lead][teams][trailing]. Reserving fixed widths
   // on the outer cells (lead/trailing) means the team block always starts and
   // ends at the same x-position, REGARDLESS of which lead variant renders
-  // ("6'" vs "8 PM" vs "FT" vs "90+2'"). Before this, a flex row let the
-  // narrower minute label collapse, sliding the teams left on result/live rows
-  // relative to scheduled rows. The score column inside the teams block stays
-  // a fixed 39px slot (FixtureScore / FixtureScorePlaceholder), so the home and
-  // away names also align horizontally across rows.
+  // ("6'" vs "FT" vs "90+2'" vs empty on upcoming). Before this, a flex row let
+  // the narrower minute label collapse, sliding the teams left on result/live
+  // rows relative to scheduled rows. The centre slot inside the teams block
+  // holds either the fixed-width FixtureScore (played rows) or the kickoff time
+  // (upcoming rows), so the home and away names align horizontally across rows.
   // The lead column is fixed (so the team block keeps the same x-position across
-  // statuses), which means it must fit the WIDEST lead content: the kickoff
-  // "clock + time" ("8 PM", "8:30 PM"), not just the short minute labels ("85'",
-  // "FT"). Sized so the time stays on one line (it's also `whitespace-nowrap`),
-  // rather than wrapping "8" / "PM" onto two lines.
+  // statuses) and sized for the widest minute label ("90+2'"); it renders empty
+  // on upcoming rows, where the kickoff time lives in the centre slot instead.
   const leadColumn = density === 'compact' ? '52px' : '60px';
   const trailingColumn = density === 'compact' ? '24px' : '32px';
 
@@ -159,7 +159,7 @@ export function FixtureRow({
       >
         <FixtureTeam side={data.home} align="end" widthClass={sideWidth} />
         {isUpcoming ? (
-          <FixtureScorePlaceholder />
+          <FixtureKickoffTime data={data} />
         ) : (
           <FixtureScore scoreHome={data.scoreHome} scoreAway={data.scoreAway} />
         )}
@@ -219,19 +219,13 @@ export function FixtureRow({
 
 function FixtureLeadCell({ data }: { data: FixtureRowData }) {
   if (data.status === 'upcoming') {
-    const time = data.kickoffLabel ?? formatFixtureTime(data.kickoffIso);
-    return (
-      <div
-        data-slot="fixture-row-lead"
-        data-kind="kickoff"
-        className="flex shrink-0 items-center gap-1 text-[var(--color-grey-500)]"
-      >
-        <Clock weight="regular" aria-hidden="true" className="size-4 shrink-0" />
-        <span className="whitespace-nowrap text-[12px] tabular-nums tracking-[-0.36px]">
-          {time}
-        </span>
-      </div>
-    );
+    // Upcoming rows carry the kickoff time in the CENTRE column (where the score
+    // sits for played rows), so the matchup reads symmetrically — flag · time ·
+    // flag — instead of the time being parked far-left with a void between the
+    // teams. The lead column stays an empty, width-reserved cell so a mixed
+    // list of FT and upcoming rows keeps every team block at the same
+    // x-position (the grid template reserves the column regardless).
+    return <span data-slot="fixture-row-lead" data-kind="kickoff" aria-hidden="true" />;
   }
 
   const isLate = isLateLive(data);
@@ -425,20 +419,27 @@ function FixtureScore({ scoreHome, scoreAway }: { scoreHome?: number; scoreAway?
 }
 
 /**
- * Upcoming rows show the kickoff time, NOT a score (Figma 713-3848). This is the
- * same-width empty cell that holds the centre column's place so the two team
- * blocks stay optically centred — it renders no digits and no dash (an earlier
- * "transparent score" approach leaked a literal "0 - 0" wherever the consumer's
- * compiled CSS dropped `text-transparent`).
+ * Upcoming rows show the kickoff time in the CENTRE column — the slot the score
+ * occupies for played rows — so the matchup reads symmetrically (flag · time ·
+ * flag). Earlier this was an empty placeholder with the time parked far-left in
+ * the lead cell, which left a visual void between the two teams on scheduled
+ * rows. The clock icon + time stay on one line (`whitespace-nowrap`) and the
+ * cell hugs its content; the grid's `minmax(0, 1fr)` centre track keeps the
+ * teams balanced around it. `data-kind="kickoff"` lets consumers/tests target
+ * the scheduled centre; no score digits or dash are ever emitted here, so a
+ * not-yet-played game cannot leak a fabricated "0 - 0".
  */
-function FixtureScorePlaceholder() {
+function FixtureKickoffTime({ data }: { data: FixtureRowData }) {
+  const time = data.kickoffLabel ?? formatFixtureTime(data.kickoffIso);
   return (
     <span
       data-slot="fixture-row-score"
-      data-empty="true"
-      aria-hidden="true"
-      className="w-[39px] shrink-0"
-    />
+      data-kind="kickoff"
+      className="flex shrink-0 items-center justify-center gap-1 whitespace-nowrap text-[12px] tabular-nums tracking-[-0.36px] text-[var(--color-grey-500)]"
+    >
+      <Clock weight="regular" aria-hidden="true" className="size-3.5 shrink-0" />
+      {time}
+    </span>
   );
 }
 
