@@ -94,6 +94,12 @@ export interface MatchHeaderProps {
   /** Score (renders when status ≠ scheduled). */
   scoreHome?: number;
   scoreAway?: number;
+  /**
+   * Set on a tie decided by a penalty shootout: which side won. The scoreline
+   * stays the draw; a small red "p" renders next to the winning side's score
+   * (e.g. `1–1ᵖ`), with the full "won on penalties" wording in the aria-label.
+   */
+  penaltyWinner?: 'home' | 'away';
   /** Kickoff ISO. Drives both pre-match clock display and "Tue 19 May 2026" caption. */
   kickoffIso?: string;
   /** Optional clock label for in-play games ("78'", "HT"). */
@@ -127,6 +133,7 @@ export function MatchHeader({
   backgroundImageUrl,
   scoreHome,
   scoreAway,
+  penaltyWinner,
   kickoffIso,
   clockLabel,
   competitionLabel,
@@ -205,6 +212,14 @@ export function MatchHeader({
           kickoffTime={kickoff.timeLabel}
           scoreHome={scoreHome}
           scoreAway={scoreAway}
+          penaltyWinner={penaltyWinner}
+          penaltyWinnerName={
+            penaltyWinner === 'home'
+              ? home.label
+              : penaltyWinner === 'away'
+                ? away.label
+                : undefined
+          }
           statusLabel={statusLabel}
           status={status}
           variant={isPhoto ? 'photo' : 'flat'}
@@ -361,11 +376,30 @@ function SideCrest({ side }: { side: MatchHeaderSide }) {
  * "FT"/clock beneath — rather than a panel plus a detached pill. Both children
  * are `w-full`, so the shared `min-w` on the column governs their common width.
  */
+/**
+ * The shootout-winner marker on the header score: a small red superscript "p"
+ * next to the winning side's number (`1–1ᵖ`). Visual only — `ScoreStack` puts
+ * the full "won on penalties" wording in the score's aria-label.
+ */
+function HeaderPenaltyMarker() {
+  return (
+    <sup
+      data-slot="match-header-penalty-marker"
+      aria-hidden="true"
+      className="ml-0.5 text-[0.4em] font-bold leading-none text-[var(--color-red-100)]"
+    >
+      p
+    </sup>
+  );
+}
+
 function ScoreStack({
   isScheduled,
   kickoffTime,
   scoreHome,
   scoreAway,
+  penaltyWinner,
+  penaltyWinnerName,
   statusLabel,
   status,
   variant,
@@ -374,10 +408,18 @@ function ScoreStack({
   kickoffTime: string;
   scoreHome?: number;
   scoreAway?: number;
+  penaltyWinner?: 'home' | 'away';
+  penaltyWinnerName?: string;
   statusLabel: string;
   status: MatchHeaderStatus;
   variant: 'photo' | 'flat';
 }) {
+  // Spell out the shootout result for assistive tech — the visual is a bare red
+  // "p", which a screen reader would otherwise read as a stray letter.
+  const scoreAria =
+    !isScheduled && penaltyWinner
+      ? `${scoreHome ?? 0}–${scoreAway ?? 0}, ${penaltyWinnerName ?? (penaltyWinner === 'home' ? 'home' : 'away')} won on penalties`
+      : undefined;
   return (
     <div className="flex w-[88px] flex-col items-stretch gap-1.5 sm:w-[120px]">
       <div
@@ -394,10 +436,19 @@ function ScoreStack({
             {kickoffTime}
           </span>
         ) : (
-          <div className="flex items-baseline gap-2 text-3xl font-bold tabular-nums sm:gap-2.5 sm:text-4xl">
-            <span>{scoreHome ?? 0}</span>
+          <div
+            className="flex items-baseline gap-2 text-3xl font-bold tabular-nums sm:gap-2.5 sm:text-4xl"
+            aria-label={scoreAria}
+          >
+            <span className="inline-flex items-start">
+              {scoreHome ?? 0}
+              {penaltyWinner === 'home' ? <HeaderPenaltyMarker /> : null}
+            </span>
             <span className="text-white/45">–</span>
-            <span>{scoreAway ?? 0}</span>
+            <span className="inline-flex items-start">
+              {scoreAway ?? 0}
+              {penaltyWinner === 'away' ? <HeaderPenaltyMarker /> : null}
+            </span>
           </div>
         )}
       </div>

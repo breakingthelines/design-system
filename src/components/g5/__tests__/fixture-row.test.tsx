@@ -47,6 +47,31 @@ describe('FixtureRow status branches', () => {
     expect(slotText(markup, 'fixture-row-score')).toContain('1');
   });
 
+  it('marks the penalty-shootout winner with a "p" next to their score', () => {
+    const markup = render(
+      <FixtureRow
+        data={{
+          id: 'ger-par',
+          status: 'result',
+          minuteLabel: 'FT',
+          home: { label: 'Germany' },
+          away: { label: 'Paraguay' },
+          scoreHome: 1,
+          scoreAway: 1,
+          penaltyWinner: 'away',
+        }}
+      />
+    );
+    // Score stays 1-1; the marker adds a "p" by the away (winning) side.
+    expect(slotText(markup, 'fixture-row-score')).toMatch(/1.*1.*p/);
+    expect(hasSlot(markup, 'fixture-row-penalty-marker')).toBe(true);
+  });
+
+  it('omits the penalty marker on a normal result row', () => {
+    const markup = render(<FixtureRow data={rowResultBayernDortmund} />);
+    expect(hasSlot(markup, 'fixture-row-penalty-marker')).toBe(false);
+  });
+
   it('renders an upcoming row with the kickoff time in the CENTRE slot and an empty lead', () => {
     const markup = render(<FixtureRow data={rowUpcomingFlamengoVasco} />);
     expect(getSlotAttr(markup, 'fixture-row', 'data-status')).toBe('upcoming');

@@ -5,6 +5,20 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.46.0] — 2026-06-30
+
+### Added — penalty-shootout winner marker on `MatchHeader` + `FixtureRow`
+
+- A tie decided on penalties can now mark the winner with an optional
+  `penaltyWinner?: 'home' | 'away'` prop on both `MatchHeaderProps` and
+  `FixtureRowData`. The scoreline stays the drawn result (e.g. 1–1); a small red
+  superscript "p" renders next to the winning side's score (`1–1ᵖ`).
+- The marker is a visual glyph only (`data-slot="*-penalty-marker"`,
+  `aria-hidden`). On the header, the score's `aria-label` spells out
+  "{winner} won on penalties" so assistive tech doesn't read a bare "p". On the
+  fixture row, callers should carry the equivalent wording on the row's own
+  label. Omitting the prop leaves both surfaces unchanged.
+
 ## [0.45.0] — 2026-06-30
 
 ### Changed — `FixtureRow` centres the kickoff time on upcoming rows
