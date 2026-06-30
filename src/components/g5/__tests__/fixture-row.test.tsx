@@ -47,28 +47,32 @@ describe('FixtureRow status branches', () => {
     expect(slotText(markup, 'fixture-row-score')).toContain('1');
   });
 
-  it('renders an upcoming row with a clock + kickoff time and NO score', () => {
+  it('renders an upcoming row with the kickoff time in the CENTRE slot and an empty lead', () => {
     const markup = render(<FixtureRow data={rowUpcomingFlamengoVasco} />);
     expect(getSlotAttr(markup, 'fixture-row', 'data-status')).toBe('upcoming');
+    // The time now sits in the centre column (the score slot for played rows),
+    // tagged kickoff, so the matchup reads symmetrically: flag · time · flag.
+    expect(getSlotAttr(markup, 'fixture-row-score', 'data-kind')).toBe('kickoff');
+    expect(slotText(markup, 'fixture-row-score')).toContain('9 PM');
+    // The lead cell is an empty, width-reserved spacer (no minute/time text) so
+    // mixed FT + upcoming lists keep their team blocks aligned.
     expect(getSlotAttr(markup, 'fixture-row-lead', 'data-kind')).toBe('kickoff');
-    expect(slotText(markup, 'fixture-row-lead')).toContain('9 PM');
-    // The centre column is an empty placeholder (holds alignment), never a score:
-    // no "0 - 0" glyph leaks even where the compiled CSS drops text-transparent.
-    expect(getSlotAttr(markup, 'fixture-row-score', 'data-empty')).toBe('true');
-    expect(slotText(markup, 'fixture-row-score')).toBe('');
+    expect(slotText(markup, 'fixture-row-lead')).toBe('');
   });
 
-  it('suppresses the score for an upcoming row even when score values are present', () => {
+  it('shows only the kickoff time (never a score) for an upcoming row carrying a zeroed score', () => {
     // A scheduled fixture whose summary still carries a zeroed score (the staging
-    // bug): the row must show the kickoff time only, with no "0 - 0".
+    // bug): the centre shows the kickoff time, never a fabricated "0 - 0".
     const upcomingWithScore: FixtureRowData = {
       ...rowUpcomingFlamengoVasco,
       scoreHome: 0,
       scoreAway: 0,
     };
     const markup = render(<FixtureRow data={upcomingWithScore} />);
-    expect(getSlotAttr(markup, 'fixture-row-score', 'data-empty')).toBe('true');
-    expect(slotText(markup, 'fixture-row-score')).toBe('');
+    expect(getSlotAttr(markup, 'fixture-row-score', 'data-kind')).toBe('kickoff');
+    expect(slotText(markup, 'fixture-row-score')).toContain('9 PM');
+    // No score dash leaks — the centre is the time, not "0 - 0".
+    expect(slotText(markup, 'fixture-row-score')).not.toContain('-');
   });
 
   it('does not leak a "00" trailing-spacer glyph on a row without engagement', () => {
@@ -90,11 +94,12 @@ describe('FixtureRow status branches', () => {
       // The grid (not flex) is part of the row's base class — guarantees the
       // template-columns style below actually takes effect.
       expect(markup).toContain('grid');
-      // Comfortable density columns: lead = 60px, trailing = 32px. The lead is
-      // wide enough for the kickoff "clock + time" ("8 PM"/"8:30 PM") to stay on
-      // one line. The middle 1fr soaks up the leftover width so home/away always
-      // meet at the score slot. The team block's x-position is bounded by these
-      // fixed columns, so no status branch shifts neighbouring rows.
+      // Comfortable density columns: lead = 60px, trailing = 32px. The lead
+      // fits the live/result minute ("90+2'"/"FT") and is reserved (empty) on
+      // upcoming rows. The middle 1fr soaks up the leftover width so home/away
+      // always meet at the centre slot — which holds the score on played rows
+      // and the kickoff time on upcoming ones. The team block's x-position is
+      // bounded by these fixed columns, so no status branch shifts neighbours.
       expect(markup).toContain('grid-template-columns:60px minmax(0, 1fr) 32px');
     }
   });
@@ -102,7 +107,7 @@ describe('FixtureRow status branches', () => {
   it('uses tighter grid columns at compact density (panel widget rhythm)', () => {
     // Compact density (the "What's Happening" widget) uses thinner outer
     // columns to keep the team block legible inside a ~360px panel, but the
-    // lead still fits the kickoff "clock + time" on one line. Lock the
+    // lead still fits the live/result minute on one line. Lock the
     // density-specific column widths so a future refactor can't silently shift
     // them and squeeze the names.
     const markup = render(<FixtureRow data={rowLiveRealBarca} density="compact" />);

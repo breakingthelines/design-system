@@ -5,6 +5,24 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.45.0] — 2026-06-30
+
+### Changed — `FixtureRow` centres the kickoff time on upcoming rows
+
+- Upcoming (not-yet-played) fixture rows now render the kickoff time in the
+  **centre** slot — the same column the score occupies on played rows — so the
+  matchup reads symmetrically: `home · time · away`. Previously the time sat in
+  the far-left lead cell with an empty placeholder in the centre, which left a
+  visual void between the two teams and pulled the names off-axis from the
+  score rows above/below them in a mixed list.
+- The lead cell is now an empty, width-reserved spacer on upcoming rows (the
+  grid still reserves its column), so mixed FT/live/upcoming lists keep every
+  team block at the same x-position. Played rows (live/result) are unchanged.
+- The upcoming centre cell carries `data-kind="kickoff"` on the
+  `fixture-row-score` slot; no score digits or dash are ever emitted there, so a
+  scheduled fixture cannot leak a fabricated "0 - 0". Replaces the former
+  `FixtureScorePlaceholder`.
+
 ## [0.43.1] — 2026-06-25
 
 ### Fixed — inverted Pro / Line-Breaker tier badge colors
