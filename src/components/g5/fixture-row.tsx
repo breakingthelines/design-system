@@ -99,6 +99,13 @@ export interface FixtureRowData {
   /** Score — shown for live/result; not rendered for upcoming (kickoff time only). */
   scoreHome?: number;
   scoreAway?: number;
+  /**
+   * Set on a tie decided by a penalty shootout: which side won the shootout. The
+   * score stays the drawn scoreline (1-1); a small red "p" renders next to the
+   * winning side's score (e.g. `1–1ᵖ`) to mark it. The full "won on penalties"
+   * wording lives in the accessible label, not the visual glyph.
+   */
+  penaltyWinner?: 'home' | 'away';
   /** Optional engagement counters rendered in the trailing badge slot. */
   engagement?: FixtureEngagement;
   /** Deep-link target (Match Centre). When set, the row links via LinkProvider. */
@@ -161,7 +168,11 @@ export function FixtureRow({
         {isUpcoming ? (
           <FixtureKickoffTime data={data} />
         ) : (
-          <FixtureScore scoreHome={data.scoreHome} scoreAway={data.scoreAway} />
+          <FixtureScore
+            scoreHome={data.scoreHome}
+            scoreAway={data.scoreAway}
+            penaltyWinner={data.penaltyWinner}
+          />
         )}
         <FixtureTeam side={data.away} align="start" widthClass={sideWidth} />
       </div>
@@ -405,16 +416,48 @@ function FixtureRowCrest({
   );
 }
 
-function FixtureScore({ scoreHome, scoreAway }: { scoreHome?: number; scoreAway?: number }) {
+function FixtureScore({
+  scoreHome,
+  scoreAway,
+  penaltyWinner,
+}: {
+  scoreHome?: number;
+  scoreAway?: number;
+  penaltyWinner?: 'home' | 'away';
+}) {
   return (
     <span
       data-slot="fixture-row-score"
       className="flex w-[39px] shrink-0 items-center justify-between text-[14px] font-semibold tabular-nums tracking-[-0.42px] text-white"
     >
-      <span>{scoreHome ?? 0}</span>
+      <span className="inline-flex items-start">
+        {scoreHome ?? 0}
+        {penaltyWinner === 'home' ? <PenaltyMarker /> : null}
+      </span>
       <span>-</span>
-      <span>{scoreAway ?? 0}</span>
+      <span className="inline-flex items-start">
+        {scoreAway ?? 0}
+        {penaltyWinner === 'away' ? <PenaltyMarker /> : null}
+      </span>
     </span>
+  );
+}
+
+/**
+ * The shootout-winner marker: a small red superscript "p" next to the winning
+ * side's score on a tie decided on penalties (e.g. `1–1ᵖ`). Visual glyph only;
+ * callers should carry the full "won on penalties" wording in an aria-label on
+ * the surrounding row/header for screen readers.
+ */
+function PenaltyMarker() {
+  return (
+    <sup
+      data-slot="fixture-row-penalty-marker"
+      aria-hidden="true"
+      className="ml-px text-[9px] font-bold leading-none text-[var(--color-red-100)]"
+    >
+      p
+    </sup>
   );
 }
 

@@ -87,6 +87,31 @@ describe('MatchHeader', () => {
     const markup = render(<MatchHeader home={baseHome} away={baseAway} status="scheduled" />);
     expect(slotText(markup, 'match-header')).toMatch(/Arsenal.*Manchester United/);
   });
+
+  it('marks the penalty-shootout winner with a "p" and an accessible label, keeping the draw', () => {
+    const markup = render(
+      <MatchHeader
+        home={baseHome}
+        away={baseAway}
+        status="finished"
+        scoreHome={1}
+        scoreAway={1}
+        penaltyWinner="away"
+      />
+    );
+    // Score stays the 1-1 draw; the marker adds a "p" (so the score reads 1-1p).
+    expect(slotText(markup, 'match-header-score')).toMatch(/1.*1.*p/);
+    expect(hasSlot(markup, 'match-header-penalty-marker')).toBe(true);
+    // The full result is spelled out for assistive tech (away = Manchester United).
+    expect(markup).toContain('Manchester United won on penalties');
+  });
+
+  it('omits the penalty marker for a normal finished result', () => {
+    const markup = render(
+      <MatchHeader home={baseHome} away={baseAway} status="finished" scoreHome={2} scoreAway={1} />
+    );
+    expect(hasSlot(markup, 'match-header-penalty-marker')).toBe(false);
+  });
 });
 
 describe('MatchHeader photo-hero variant', () => {
