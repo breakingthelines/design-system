@@ -98,10 +98,12 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
    * and pass them into the host's submit handler. The legacy {@link onSubmit}
    * still fires when the user presses Cmd+Enter (or the internal button in
    * non-compact mode). Independent of the existing `onChange` MiniEditor wire
-   * — this one bundles mentions so the host doesn't need to plumb an
-   * editorRef in.
+   * — this one bundles the mentions AND the serialized `bodyJson` so the host
+   * can persist inline mentions (e.g. a tagged player in a grade note) without
+   * plumbing an editorRef in. `bodyJson` is the same lossless Lexical state
+   * {@link onSubmit} delivers via {@link ThoughtComposerMedia.bodyJson}.
    */
-  onChange?: (text: string, mentions: MentionItem[]) => void;
+  onChange?: (text: string, mentions: MentionItem[], bodyJson?: string) => void;
 }
 
 function ThoughtComposer({
@@ -321,7 +323,7 @@ function ThoughtComposer({
               setHasText(text.length > 0);
               if (onChange) {
                 const mentions = editorRef.current?.getMentions() ?? [];
-                onChange(text, mentions);
+                onChange(text, mentions, editorRef.current?.getBodyJson());
               }
             }}
             onRemainingChange={setRemaining}

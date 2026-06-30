@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import { cn } from '#/lib/utils';
 import { ratingDescriptor, type RatingScaleValue } from '#/components/ui/rating-scale';
+import { ThoughtBody } from '#/components/ui/thought-body';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * RatingLogRow
@@ -40,6 +41,13 @@ export interface RatingLogRowProps {
   value: RatingScaleValue;
   /** Optional one-line rationale. */
   rationale?: string;
+  /**
+   * Optional serialized Lexical state for the rationale, carrying inline
+   * MentionNodes. When present, the rationale renders through {@link ThoughtBody}
+   * so an @-tagged player/club links to its page; `rationale` stays the
+   * plain-text fallback. Pass both — `rationale` for empty/legacy notes.
+   */
+  rationaleBodyJson?: string;
   className?: string;
 }
 
@@ -53,6 +61,7 @@ export function RatingLogRow({
   timeZone,
   value,
   rationale,
+  rationaleBodyJson,
   className,
 }: RatingLogRowProps) {
   const descriptor = ratingDescriptor(value);
@@ -122,13 +131,13 @@ export function RatingLogRow({
             </>
           ) : null}
         </p>
-        {rationale ? (
-          <p
+        {rationale || rationaleBodyJson ? (
+          <ThoughtBody
             data-slot="rating-log-row-rationale"
             className="line-clamp-2 text-[12px] text-white/70"
-          >
-            {rationale}
-          </p>
+            body={rationale ?? ''}
+            bodyJson={rationaleBodyJson}
+          />
         ) : null}
       </div>
 
