@@ -91,7 +91,7 @@ function HeroCard({
         {href ? (
           <LinkComponent
             href={href}
-            className="relative block aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
+            className="relative block aspect-[328/364] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
             style={viewTransitionName ? { viewTransitionName } : undefined}
             tabIndex={-1}
           >
@@ -119,7 +119,7 @@ function HeroCard({
           </LinkComponent>
         ) : (
           <div
-            className="relative aspect-[3/2] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
+            className="relative aspect-[328/364] w-full overflow-hidden bg-grey-300 sm:aspect-[16/7] lg:aspect-[1144/480]"
             style={viewTransitionName ? { viewTransitionName } : undefined}
           >
             <Image
