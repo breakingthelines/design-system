@@ -10,6 +10,7 @@ import {
   useTransform,
   useReducedMotion,
 } from 'framer-motion';
+import { Plus } from '@phosphor-icons/react';
 
 import { BtlWordmark } from '#/components/ui/btl-logo';
 import { cn } from '#/lib/utils';
@@ -50,6 +51,15 @@ export interface AvatarMenuItem {
   external?: boolean;
 }
 
+export interface ComposeItem {
+  /** Human label for the content type (e.g. "Article"). */
+  label: string;
+  /** Link target for creating this content type (e.g. a Studio compose URL). */
+  href: string;
+  /** Rendered greyed-out and non-interactive — e.g. a content type not yet available. */
+  disabled?: boolean;
+}
+
 interface SiteNavProps extends React.ComponentProps<'header'> {
   /** Navigation tabs */
   tabs?: NavTab[];
@@ -59,6 +69,13 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   initials?: string;
   /** Search click handler */
   onSearchClick?: () => void;
+  /** When non-empty, renders a Compose (＋) control in the actions cluster
+   *  (right of Notifications, left of the avatar): a circular button that opens
+   *  an About-style dropdown of the content types you can create, each linking
+   *  to its `href`. `disabled` items render greyed-out and non-interactive.
+   *  Omit / empty to hide it; the consumer gates visibility (typically only when
+   *  signed in). */
+  composeItems?: ComposeItem[];
   /** Notifications click handler (used as fallback when notificationPopover is not set) */
   onNotificationsClick?: () => void;
   /** @deprecated Use avatarMenu instead */
@@ -268,6 +285,7 @@ function SiteNav({
   avatarUrl,
   initials,
   onSearchClick,
+  composeItems,
   onNotificationsClick,
   onAvatarClick,
   avatarMenu,
@@ -537,6 +555,86 @@ function SiteNav({
                   )}
                 </button>
               )}
+            </div>
+          </>
+        )}
+
+        {/* Compose (＋): a circular trigger opening an About-style menu of the
+            content types you can create. Sits right of Notifications, left of
+            the avatar. Rendered only when composeItems is supplied (the consumer
+            gates visibility on sign-in). */}
+        {composeItems && composeItems.length > 0 && (
+          <>
+            {/* Desktop: hover dropdown (mirrors the avatar / About menus) */}
+            <div className="group/compose relative hidden sm:block">
+              <button
+                type="button"
+                aria-label="Compose"
+                aria-haspopup="true"
+                className="flex size-[34px] cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/[0.16]"
+              >
+                <Plus className="size-[18px]" weight="bold" />
+              </button>
+              <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/compose:opacity-100 group-hover/compose:visible group-hover/compose:translate-y-0 transition-all duration-150 ease-out">
+                <div className="relative min-w-[180px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
+                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                  <nav className="flex flex-col gap-0.5">
+                    {composeItems.map((item) =>
+                      item.disabled ? (
+                        <span
+                          key={item.label}
+                          aria-disabled="true"
+                          className="block cursor-not-allowed rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-white/25"
+                        >
+                          {item.label}
+                        </span>
+                      ) : (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                        >
+                          {item.label}
+                        </a>
+                      )
+                    )}
+                  </nav>
+                </div>
+              </div>
+            </div>
+            {/* Mobile: click dropdown */}
+            <div className="sm:hidden">
+              <DropdownMenu>
+                <DropdownMenuTrigger
+                  render={
+                    <button
+                      type="button"
+                      aria-label="Compose"
+                      className="flex size-[34px] items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/[0.16]"
+                    />
+                  }
+                >
+                  <Plus className="size-[18px]" weight="bold" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  sideOffset={8}
+                  className="relative min-w-[180px] overflow-hidden"
+                >
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                  {composeItems.map((item) =>
+                    item.disabled ? (
+                      <DropdownMenuItem key={item.label} disabled>
+                        {item.label}
+                      </DropdownMenuItem>
+                    ) : (
+                      <DropdownMenuItem key={item.label} render={<a href={item.href} />}>
+                        {item.label}
+                      </DropdownMenuItem>
+                    )
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </>
         )}
