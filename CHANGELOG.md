@@ -5,6 +5,11 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.51.0]
+
+- ThoughtCard + ThoughtComment forward the `blockRenderers` prop to their inner
+  ThoughtBody, so host-injected block nodes render read-only in the feed/panels.
+
 ## [0.50.0]
 
 ### Added — host-injected custom Lexical blocks in the thought composer
