@@ -47,7 +47,7 @@ interface ThoughtComposerMedia {
   mentions?: MentionItem[];
 }
 
-interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubmit'> {
+interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubmit' | 'onChange'> {
   avatarUrl?: string;
   initials?: string;
   placeholder?: string;
