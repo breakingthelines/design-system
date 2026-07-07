@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { Image, Smiley, X, SpinnerGap } from '@phosphor-icons/react';
 import { AnimatePresence, motion } from 'framer-motion';
+import type { LexicalEditor } from 'lexical';
 
 import { cn } from '#/lib/utils';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
@@ -122,8 +123,14 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
    * Slot rendered in the composer's action/toolbar row, alongside the built-in
    * media controls. Lets a host add its own action buttons (e.g. a tier-gated
    * "Lineup" insert button) without design-system knowing about them.
+   *
+   * Accepts either a plain node or a render function that receives the inner
+   * {@link LexicalEditor} (or `null` before it mounts). Use the function form to
+   * dispatch commands / insert nodes into the composer's editor from a
+   * host-provided toolbar button (e.g. a game-blocks menu next to the emoji
+   * button).
    */
-  composerActions?: React.ReactNode;
+  composerActions?: React.ReactNode | ((editor: LexicalEditor | null) => React.ReactNode);
 }
 
 function ThoughtComposer({
@@ -154,6 +161,11 @@ function ThoughtComposer({
 }: ThoughtComposerProps) {
   const editorRef = React.useRef<MiniEditorHandle>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  // The underlying Lexical editor, captured once it mounts. Handed to a
+  // render-function `composerActions` so a host toolbar button can dispatch
+  // insert commands into the composer's editor. Only one MiniEditor mounts at
+  // a time (compact vs. non-compact), and both feed this shared state.
+  const [editor, setEditor] = React.useState<LexicalEditor | null>(null);
   // In compact mode the composer is always expanded — there's no avatar/prompt
   // intermediary because the host (e.g. the grade-submit sheet) already has
   // its own context header. The internal Post button is also suppressed; the
@@ -353,6 +365,7 @@ function ThoughtComposer({
             onMentionSearch={onMentionSearch}
             extraNodes={extraNodes}
             plugins={plugins}
+            onEditorReady={setEditor}
             className="min-h-[60px] text-sm font-medium leading-6 text-foreground"
             placeholderClassName="text-sm font-medium leading-6 text-white/45"
           />
@@ -385,6 +398,7 @@ function ThoughtComposer({
                 onMentionSearch={onMentionSearch}
                 extraNodes={extraNodes}
                 plugins={plugins}
+                onEditorReady={setEditor}
                 className="min-h-[34px] text-sm font-medium leading-6 text-foreground"
                 placeholderClassName="text-sm font-medium leading-6 text-white/45"
               />
@@ -483,8 +497,10 @@ function ThoughtComposer({
               <Smiley weight="regular" className="size-4" />
             </button>
           )}
-          {/* Host-provided action slot (e.g. a tier-gated block-insert button) */}
-          {composerActions}
+          {/* Host-provided action slot (e.g. a tier-gated block-insert button).
+              Render-function form receives the inner editor so the host can
+              dispatch insert commands into the composer. */}
+          {typeof composerActions === 'function' ? composerActions(editor) : composerActions}
         </div>
 
         {expanded && !compact && (

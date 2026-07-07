@@ -15,6 +15,7 @@ import {
   $isElementNode,
   type EditorState,
   type Klass,
+  type LexicalEditor,
   type LexicalNode,
 } from 'lexical';
 
@@ -75,6 +76,12 @@ interface MiniEditorProps {
   editorRef?: React.Ref<MiniEditorHandle>;
   /** Slot for additional Lexical plugins */
   plugins?: React.ReactNode;
+  /**
+   * Called once with the underlying {@link LexicalEditor} instance when the
+   * composer mounts. Lets a host dispatch commands / insert nodes into the
+   * editor from outside the Lexical context (e.g. an action-row toolbar button).
+   */
+  onEditorReady?: (editor: LexicalEditor) => void;
   /** Extra Lexical node classes to register beyond MentionNode — e.g. host-provided block/decorator nodes. */
   extraNodes?: Array<Klass<LexicalNode>>;
   /**
@@ -191,6 +198,20 @@ function DisabledPlugin({ disabled }: { disabled: boolean }) {
 }
 
 /* ────────────────────────────────────────────────────────────
+ * Editor-ready plugin — hands the editor instance to the host
+ * ──────────────────────────────────────────────────────────── */
+
+function EditorReadyPlugin({ onReady }: { onReady: (editor: LexicalEditor) => void }) {
+  const [editor] = useLexicalComposerContext();
+
+  React.useEffect(() => {
+    onReady(editor);
+  }, [editor, onReady]);
+
+  return null;
+}
+
+/* ────────────────────────────────────────────────────────────
  * MiniEditor
  * ──────────────────────────────────────────────────────────── */
 
@@ -205,6 +226,7 @@ function MiniEditor({
   plugins,
   extraNodes,
   onMentionSearch,
+  onEditorReady,
   disabled = false,
   multiline = false,
   className,
@@ -275,6 +297,9 @@ function MiniEditor({
 
         {/* Disabled state sync */}
         <DisabledPlugin disabled={disabled} />
+
+        {/* Hand the editor instance to the host (e.g. for action-row commands) */}
+        {onEditorReady && <EditorReadyPlugin onReady={onEditorReady} />}
 
         {/* Polymorphic @mention autocomplete (users, squads, football entities) */}
         {onMentionSearch && <MentionPlugin onSearch={onMentionSearch} />}
