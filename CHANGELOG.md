@@ -5,6 +5,25 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.52.0]
+
+### Added — editor-aware `composerActions` + `MiniEditor` `onEditorReady`
+
+- `MiniEditor` gains an optional `onEditorReady?: (editor: LexicalEditor) => void`
+  prop. It fires once with the underlying Lexical editor when the composer
+  mounts (via a tiny internal plugin inside the `LexicalComposer`), letting a
+  host dispatch commands / insert nodes into the editor from outside the
+  Lexical context.
+- `ThoughtComposer`'s `composerActions` slot now also accepts a render function:
+  `React.ReactNode | ((editor: LexicalEditor | null) => React.ReactNode)`. The
+  composer captures its inner editor (via `onEditorReady` on the mounted
+  `MiniEditor`) and passes it to the function, so a host-provided action-row
+  button (e.g. a game-blocks menu next to the emoji button) can insert nodes
+  into the composer's editor.
+
+Additive and backward-compatible: the plain-`ReactNode` `composerActions` usage
+and existing `MiniEditor` callers are unaffected.
+
 ## [0.51.0]
 
 - ThoughtCard + ThoughtComment forward the `blockRenderers` prop to their inner
