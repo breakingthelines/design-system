@@ -33,6 +33,11 @@ interface ThoughtCardProps extends Omit<React.ComponentProps<'article'>, 'childr
   onReport?: (thought: ThoughtItem) => void;
   /** Fired when the author picks "Delete". */
   onDelete?: (thought: ThoughtItem) => void;
+  /**
+   * Forwarded to the inner ThoughtBody so a host can render custom block types
+   * (e.g. a lineup) read-only.
+   */
+  blockRenderers?: React.ComponentProps<typeof ThoughtBody>['blockRenderers'];
 }
 
 function ThoughtCard({
@@ -44,6 +49,7 @@ function ThoughtCard({
   onExpandToArticle,
   onReport,
   onDelete,
+  blockRenderers,
   ...props
 }: ThoughtCardProps) {
   const Link = useLinkComponent();
@@ -260,6 +266,7 @@ function ThoughtCard({
             <ThoughtBody
               body={thought.body}
               bodyJson={thought.bodyJson}
+              blockRenderers={blockRenderers}
               className="font-content text-sm leading-[18px] text-foreground"
             />
           )}

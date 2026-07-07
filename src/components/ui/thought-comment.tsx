@@ -146,6 +146,11 @@ export interface ThoughtCommentProps {
   onReport?: (thought: ThoughtCommentThought) => void;
   /** Fired when the author picks "Delete". */
   onDelete?: (thought: ThoughtCommentThought) => void;
+  /**
+   * Forwarded to the inner ThoughtBody so a host can render custom block types
+   * (e.g. a lineup) read-only.
+   */
+  blockRenderers?: React.ComponentProps<typeof ThoughtBody>['blockRenderers'];
 }
 
 export function ThoughtComment({
@@ -178,6 +183,7 @@ export function ThoughtComment({
   onExpandToArticle,
   onReport,
   onDelete,
+  blockRenderers,
 }: ThoughtCommentProps) {
   const Link = useLinkComponent();
   const isOP = thought.isOriginalAuthor;
@@ -413,6 +419,7 @@ export function ThoughtComment({
               <ThoughtBody
                 body={thought.body}
                 bodyJson={thought.bodyJson}
+                blockRenderers={blockRenderers}
                 className={cn(
                   'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
                   isReply ? 'text-xs' : 'text-sm'
@@ -789,6 +796,7 @@ export function ThoughtComment({
               onExpandToArticle={onExpandToArticle}
               onReport={onReport}
               onDelete={onDelete}
+              blockRenderers={blockRenderers}
             />
           ))}
         </div>
