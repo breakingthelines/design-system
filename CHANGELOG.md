@@ -5,6 +5,29 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.50.0]
+
+### Added — host-injected custom Lexical blocks in the thought composer
+
+- `MiniEditor` gains an optional `extraNodes?: Array<Klass<LexicalNode>>` prop.
+  The classes are registered on the Lexical editor alongside the built-in
+  `MentionNode`, so a host can define its own block/decorator node types and
+  have them round-trip through the composer.
+- `ThoughtComposer` forwards `extraNodes` and `plugins` through to its inner
+  `MiniEditor` (both the compact and non-compact editors), and adds a
+  `composerActions?: React.ReactNode` slot rendered in the action/toolbar row
+  next to the built-in media controls — the slot a host uses to add its own
+  insert button (e.g. a tier-gated "Lineup" button).
+- `ThoughtBody` gains an optional
+  `blockRenderers?: Record<string, (node) => React.ReactNode>` prop. When a
+  top-level serialized block's `type` matches a key, that renderer draws the
+  block read-only instead of the default paragraph; paragraph/text/mention
+  rendering is unchanged.
+
+Together these let a host inject custom Lexical block nodes into the thought
+composer and render them read-only, without design-system taking a dependency
+on them. Additive and backward-compatible: existing callers are unaffected.
+
 ## [0.47.0] — 2026-06-30
 
 ### Added — Discord link in `SiteFooter`

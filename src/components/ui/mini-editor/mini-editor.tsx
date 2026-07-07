@@ -14,6 +14,8 @@ import {
   $createTextNode,
   $isElementNode,
   type EditorState,
+  type Klass,
+  type LexicalNode,
 } from 'lexical';
 
 import { cn } from '#/lib/utils';
@@ -73,6 +75,8 @@ interface MiniEditorProps {
   editorRef?: React.Ref<MiniEditorHandle>;
   /** Slot for additional Lexical plugins */
   plugins?: React.ReactNode;
+  /** Extra Lexical node classes to register beyond MentionNode — e.g. host-provided block/decorator nodes. */
+  extraNodes?: Array<Klass<LexicalNode>>;
   /**
    * Polymorphic @mention search callback. When provided, enables the single `@`
    * mention typeahead. The host wires this to its federated search lane and
@@ -199,6 +203,7 @@ function MiniEditor({
   onRemainingChange,
   editorRef,
   plugins,
+  extraNodes,
   onMentionSearch,
   disabled = false,
   multiline = false,
@@ -210,7 +215,7 @@ function MiniEditor({
       namespace: 'MiniEditor',
       onError: (error: Error) => console.error('[MiniEditor]', error),
       editable: !disabled,
-      nodes: [MentionNode],
+      nodes: [MentionNode, ...(extraNodes ?? [])],
     }),
     // Only used for initial render — intentionally excluding disabled
     // eslint-disable-next-line react-hooks/exhaustive-deps
