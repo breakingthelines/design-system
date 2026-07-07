@@ -52,6 +52,11 @@ export interface ThoughtBodyProps extends Omit<React.ComponentProps<'div'>, 'chi
   body: string;
   /** Serialized Lexical state (`body_json`). When present + parseable, drives the structured render. */
   bodyJson?: string;
+  /**
+   * Host-provided renderers for non-standard top-level block types, e.g. a
+   * decorator/game block. Keyed by the serialized node `type`.
+   */
+  blockRenderers?: Record<string, (node: SerializedNode) => React.ReactNode>;
 }
 
 /**
@@ -115,7 +120,13 @@ function renderInline(nodes: SerializedNode[], keyPrefix: string): React.ReactNo
   return out;
 }
 
-export function ThoughtBody({ body, bodyJson, className, ...props }: ThoughtBodyProps) {
+export function ThoughtBody({
+  body,
+  bodyJson,
+  blockRenderers,
+  className,
+  ...props
+}: ThoughtBodyProps) {
   const renderMentions = useRenderMentions();
   const blocks = parseBodyJson(bodyJson);
 
@@ -134,6 +145,14 @@ export function ThoughtBody({ body, bodyJson, className, ...props }: ThoughtBody
   return (
     <div data-slot="thought-body" data-structured="true" className={className} {...props}>
       {blocks.map((block, i) => {
+        // Host-provided block: a non-standard top-level type (e.g. a decorator
+        // game block) the host knows how to render read-only. Design-system
+        // stays agnostic — it just hands the serialized node back.
+        if (block.type && blockRenderers?.[block.type]) {
+          return (
+            <React.Fragment key={`b-${i}`}>{blockRenderers[block.type](block)}</React.Fragment>
+          );
+        }
         const children = Array.isArray(block.children) ? block.children : [];
         // An empty paragraph is a blank line between blocks — keep the gap.
         return (

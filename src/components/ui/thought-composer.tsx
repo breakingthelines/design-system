@@ -10,6 +10,7 @@ import { Button } from '#/components/ui/button';
 import {
   MiniEditor,
   type MiniEditorHandle,
+  type MiniEditorProps,
   type MentionItem,
 } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
@@ -46,7 +47,7 @@ interface ThoughtComposerMedia {
   mentions?: MentionItem[];
 }
 
-interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubmit'> {
+interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubmit' | 'onChange'> {
   avatarUrl?: string;
   initials?: string;
   placeholder?: string;
@@ -104,6 +105,25 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
    * {@link onSubmit} delivers via {@link ThoughtComposerMedia.bodyJson}.
    */
   onChange?: (text: string, mentions: MentionItem[], bodyJson?: string) => void;
+  /**
+   * Extra Lexical node classes to register on the inner editor beyond
+   * MentionNode — forwarded to {@link MiniEditor}. A host passes its own
+   * block/decorator node classes so their inserted blocks round-trip through
+   * the composer without design-system depending on them.
+   */
+  extraNodes?: MiniEditorProps['extraNodes'];
+  /**
+   * Slot for additional Lexical plugins on the inner editor — forwarded to
+   * {@link MiniEditor}. A host wires its insert-command plugin here to drive
+   * the block nodes it registers via {@link extraNodes}.
+   */
+  plugins?: React.ReactNode;
+  /**
+   * Slot rendered in the composer's action/toolbar row, alongside the built-in
+   * media controls. Lets a host add its own action buttons (e.g. a tier-gated
+   * "Lineup" insert button) without design-system knowing about them.
+   */
+  composerActions?: React.ReactNode;
 }
 
 function ThoughtComposer({
@@ -127,6 +147,9 @@ function ThoughtComposer({
   disabled = false,
   compact = false,
   onChange,
+  extraNodes,
+  plugins,
+  composerActions,
   ...props
 }: ThoughtComposerProps) {
   const editorRef = React.useRef<MiniEditorHandle>(null);
@@ -328,6 +351,8 @@ function ThoughtComposer({
             }}
             onRemainingChange={setRemaining}
             onMentionSearch={onMentionSearch}
+            extraNodes={extraNodes}
+            plugins={plugins}
             className="min-h-[60px] text-sm font-medium leading-6 text-foreground"
             placeholderClassName="text-sm font-medium leading-6 text-white/45"
           />
@@ -358,6 +383,8 @@ function ThoughtComposer({
                 }}
                 onRemainingChange={setRemaining}
                 onMentionSearch={onMentionSearch}
+                extraNodes={extraNodes}
+                plugins={plugins}
                 className="min-h-[34px] text-sm font-medium leading-6 text-foreground"
                 placeholderClassName="text-sm font-medium leading-6 text-white/45"
               />
@@ -456,6 +483,8 @@ function ThoughtComposer({
               <Smiley weight="regular" className="size-4" />
             </button>
           )}
+          {/* Host-provided action slot (e.g. a tier-gated block-insert button) */}
+          {composerActions}
         </div>
 
         {expanded && !compact && (
