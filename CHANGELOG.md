@@ -5,6 +5,22 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.53.0]
+
+### Changed — `SiteNav` compose (＋) dropdown restyle
+
+- The compose menu's dark panel now has its own dedicated visual language
+  instead of the shared uppercase About/avatar menu chrome: a near-black
+  (`#0d0d0d`) rounded-14px panel, a "Create Content" header, ~44px icon +
+  label rows with a top-lit glass gradient highlight on hover, and disabled
+  rows (Newsletter, Visuals) greyed out with a red "Soon" badge pinned to
+  the right instead of just dimmed text.
+- `ComposeItem` gains an optional `icon?: React.ReactNode` so hosts can pass
+  a leading glyph (e.g. a Phosphor icon) per content type; `SiteNav` stays
+  icon-set-agnostic and just renders whatever the host supplies. Additive
+  and backward-compatible — existing `composeItems` without `icon` still
+  render (icon slot is simply omitted).
+
 ## [0.52.0]
 
 ### Added — editor-aware `composerActions` + `MiniEditor` `onEditorReady`
