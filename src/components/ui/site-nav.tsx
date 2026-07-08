@@ -38,6 +38,9 @@ export interface NavTab {
     href: string;
     /** Opens in new tab (for external links like Zine) */
     external?: boolean;
+    /** Leading glyph for the row (e.g. a Phosphor icon element). The host owns
+     *  icon choice/weight/size — SiteNav renders it as-is at a fixed 14px slot. */
+    icon?: React.ReactNode;
   }[];
 }
 
@@ -282,52 +285,118 @@ function useNavHighlight(litIndex: number | null, revision: string) {
   return { navRef, setTabRef, pillStyle };
 }
 
+/** A single row rendered by {@link NavDropdownPanel} — the shape both the
+ *  compose menu (`ComposeItem`) and nav-tab children (`NavTab['children']`)
+ *  get normalised to. */
+interface NavDropdownRow {
+  key: string;
+  label: string;
+  href?: string;
+  external?: boolean;
+  icon?: React.ReactNode;
+  disabled?: boolean;
+}
+
 /**
- * Compose (＋) dropdown panel — a dedicated dark surface (not the shared
- * uppercase About/avatar menu chrome) with a "Create Content" header, one
- * icon + label row per content type, a top-lit glass highlight on hover for
- * enabled rows, and greyed rows with a red "Soon" badge for `disabled`
- * items. Shared between the desktop hover panel and the mobile
- * `DropdownMenuContent` popup (the latter renders it inside a transparent,
- * chrome-less content wrapper so this panel supplies all the visuals).
+ * Shared nav dropdown panel — one visual language for every SiteNav
+ * dropdown (the compose "+" menu and the Media/About tab submenus), per
+ * Figma 2941-11302 / 3010-11985: a flat grey-200 surface, a small
+ * grey-500 section header naming the menu, and 14px-icon + 12px-label rows.
+ * Disabled rows grey out (grey-300) and pin a red "Soon" badge to the right
+ * instead of linking anywhere. Flat at rest — no glass/gradient highlight —
+ * with only the DS's existing subtle `hover:bg-white/5` row convention for
+ * affordance.
  */
-function ComposeMenuPanel({ items }: { items: ComposeItem[] }) {
+function NavDropdownPanel({
+  header,
+  items,
+  className,
+}: {
+  header: string;
+  items: NavDropdownRow[];
+  className?: string;
+}) {
+  const LinkComponent = useLinkComponent();
+  const rowClassName =
+    'flex items-center gap-[8px] rounded-[4px] py-[7px] pl-[8px] pr-[16px] text-grey-500 transition-colors hover:bg-white/5';
+  const labelClassName = 'text-[12px] leading-[18px] tracking-[-0.36px]';
+
   return (
-    <div className="relative z-10 w-[240px] overflow-hidden rounded-[14px] border border-white/[0.08] bg-[#0d0d0d] p-3 shadow-2xl">
-      <div className="mb-1.5 px-3 pt-1 text-[11px] font-semibold tracking-[0.02em] text-white/45">
-        Create Content
+    <div
+      className={cn('flex w-max flex-col gap-[8px] rounded-[4px] bg-grey-200 p-[8px]', className)}
+    >
+      <div className={cn('py-[8px] pl-[8px] pr-[16px] font-medium text-grey-500', labelClassName)}>
+        {header}
       </div>
-      <nav className="flex flex-col gap-0.5">
+      <nav className="flex flex-col">
         {items.map((item) =>
           item.disabled ? (
             <span
-              key={item.label}
+              key={item.key}
               aria-disabled="true"
-              className="flex h-11 cursor-default items-center gap-3 rounded-[10px] px-3 text-white/30"
+              className="flex cursor-default items-center justify-between gap-[8px] rounded-[4px] py-[7px] pl-[8px] pr-[16px] select-none"
             >
-              {item.icon && <span className="flex size-5 shrink-0 items-center">{item.icon}</span>}
-              <span className="text-base font-medium">{item.label}</span>
-              <span className="ml-auto text-[13px] font-medium text-red-100">Soon</span>
+              <span className="flex items-center gap-[8px]">
+                {item.icon && (
+                  <span className="flex size-[14px] shrink-0 items-center justify-center text-grey-300">
+                    {item.icon}
+                  </span>
+                )}
+                <span className={cn(labelClassName, 'text-grey-300')}>{item.label}</span>
+              </span>
+              <span className="text-[10px] tracking-[-0.3px] text-red-100">Soon</span>
             </span>
-          ) : (
+          ) : item.external ? (
             <a
-              key={item.label}
+              key={item.key}
               href={item.href}
-              className="group/compose-row relative flex h-11 items-center gap-3 rounded-[10px] px-3 text-white transition-colors"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={rowClassName}
             >
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-0 rounded-[10px] bg-gradient-to-b from-white/10 to-white/[0.03] opacity-0 transition-opacity duration-150 ease-out group-hover/compose-row:opacity-100 group-focus-visible/compose-row:opacity-100"
-              />
               {item.icon && (
-                <span className="relative flex size-5 shrink-0 items-center">{item.icon}</span>
+                <span className="flex size-[14px] shrink-0 items-center justify-center">
+                  {item.icon}
+                </span>
               )}
-              <span className="relative text-base font-medium">{item.label}</span>
+              <span className={labelClassName}>{item.label}</span>
             </a>
+          ) : (
+            <LinkComponent key={item.key} href={item.href ?? '#'} className={rowClassName}>
+              {item.icon && (
+                <span className="flex size-[14px] shrink-0 items-center justify-center">
+                  {item.icon}
+                </span>
+              )}
+              <span className={labelClassName}>{item.label}</span>
+            </LinkComponent>
           )
         )}
       </nav>
     </div>
+  );
+}
+
+/**
+ * Compose (＋) dropdown panel — thin adapter from `ComposeItem` to the
+ * shared {@link NavDropdownPanel}. Header reads "Create Content"; shared
+ * between the desktop hover panel and the mobile `DropdownMenuContent`
+ * popup (the latter renders it inside a transparent, chrome-less content
+ * wrapper so this panel supplies all the visuals).
+ */
+function ComposeMenuPanel({ items }: { items: ComposeItem[] }) {
+  return (
+    <NavDropdownPanel
+      header="Create Content"
+      className="w-[240px]"
+      items={items.map((item) => ({
+        key: item.label,
+        label: item.label,
+        href: item.href,
+        icon: item.icon,
+        disabled: item.disabled,
+      }))}
+    />
   );
 }
 
@@ -487,36 +556,16 @@ function SiteNav({
               {tab.children ? (
                 // Dropdown — pt-2 creates an invisible hover bridge between trigger and panel
                 <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
-                  <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
-                    <nav className="flex flex-col gap-0.5">
-                      {tab.children.map((child) => {
-                        const isExternal = child.external;
-                        if (isExternal) {
-                          return (
-                            <a
-                              key={getNavChildKey(child)}
-                              href={child.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                            >
-                              {child.label}
-                            </a>
-                          );
-                        }
-                        return (
-                          <LinkComponent
-                            key={getNavChildKey(child)}
-                            href={child.href}
-                            className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                          >
-                            {child.label}
-                          </LinkComponent>
-                        );
-                      })}
-                    </nav>
-                  </div>
+                  <NavDropdownPanel
+                    header={tab.label}
+                    items={tab.children.map((child) => ({
+                      key: getNavChildKey(child),
+                      label: child.label,
+                      href: child.href,
+                      external: child.external,
+                      icon: child.icon,
+                    }))}
+                  />
                 </div>
               ) : null}
             </div>
@@ -611,13 +660,11 @@ function SiteNav({
           </>
         )}
 
-        {/* Compose (＋): a circular trigger opening a dedicated dark panel of
-            the content types you can create. Sits right of Notifications,
-            left of the avatar. Rendered only when composeItems is supplied
-            (the consumer gates visibility on sign-in). Its own visual
-            language — near-black glass panel, "Create Content" header,
-            icon rows, top-lit hover — distinct from the uppercase About/
-            avatar menus elsewhere in the nav. */}
+        {/* Compose (＋): a circular trigger opening the shared NavDropdownPanel
+            (see above) with a "Create Content" header and icon rows. Sits
+            right of Notifications, left of the avatar. Rendered only when
+            composeItems is supplied (the consumer gates visibility on
+            sign-in). */}
         {composeItems && composeItems.length > 0 && (
           <>
             {/* Desktop: hover dropdown */}

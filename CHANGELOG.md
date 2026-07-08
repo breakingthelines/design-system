@@ -5,6 +5,29 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.54.0]
+
+### Changed — `SiteNav` dropdown restyle (compose + nav tab submenus)
+
+- All SiteNav dropdown menus — the compose (＋) panel and the Media/About
+  nav-tab hover submenus — now share one visual language, per Figma
+  2941-11302 ("Create Content") / 3010-11985 ("Media"): a flat `grey-200`
+  panel (`#151515`, 4px radius, 8px padding, 8px gap between the header and
+  the row list), a 12px `grey-500` section header naming the menu, and rows
+  with a 14px leading icon + 12px `grey-500` label. Disabled rows grey out
+  to `grey-300` and pin a 10px red-100 "Soon" badge to the right instead of
+  linking anywhere.
+- The compose panel's previous near-black glass/gradient look (0.53.0) is
+  removed — it's flat at rest now, with only the DS's existing subtle
+  `hover:bg-white/5` row convention for affordance. The nav-tab submenus
+  (previously plain uppercase link lists with no header or icons) gain a
+  header and per-row icon slot to match.
+- `NavTab`'s `children` items gain an optional `icon?: React.ReactNode`,
+  mirroring `ComposeItem.icon` — the host owns icon choice/weight/size;
+  `SiteNav` renders it as-is in a fixed 14px slot. Additive and
+  backward-compatible: existing `children` without `icon` still render (the
+  icon slot is simply omitted).
+
 ## [0.53.0]
 
 ### Changed — `SiteNav` compose (＋) dropdown restyle
