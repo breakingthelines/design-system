@@ -17,7 +17,6 @@ import { cn } from '#/lib/utils';
 import { BrokenLinesIcon } from '#/components/ui/broken-lines-icon';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
-import { Button } from '#/components/ui/button';
 import { GoBack } from '#/components/ui/go-back';
 import { motion as motionTokens } from '#/tokens/motion';
 import {
@@ -88,8 +87,15 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   onAvatarClick?: () => void;
   /** Dropdown menu items shown on avatar hover */
   avatarMenu?: AvatarMenuItem[];
-  /** Login click handler (shown when no avatarUrl) */
+  /** Login click handler (shown when no avatarUrl) — renders the "Log in"
+   *  text control in the logged-out (public) actions cluster. */
   onLoginClick?: () => void;
+  /** When set (and logged out), renders a "Learn" text link in the public
+   *  actions cluster pointing here. Omit to hide it. */
+  learnHref?: string;
+  /** When set (and logged out), renders the solid-red "Sign Up" button in the
+   *  public actions cluster pointing here (e.g. `/register`). Omit to hide it. */
+  signUpHref?: string;
   /** Notification count badge */
   notificationCount?: number;
   /** Popover content shown on bell hover (desktop) / click (mobile).
@@ -411,6 +417,8 @@ function SiteNav({
   onAvatarClick,
   avatarMenu,
   onLoginClick,
+  learnHref,
+  signUpHref,
   notificationCount,
   notificationPopover,
   logoHref = '/',
@@ -421,6 +429,10 @@ function SiteNav({
 }: SiteNavProps) {
   const LinkComponent = useLinkComponent();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Logged out (public) header: no avatar/initials. Drives the text-based
+  // public actions cluster (Search / Learn / Log in / Sign Up) instead of the
+  // signed-in icon cluster.
+  const isLoggedOut = !(avatarUrl || initials);
 
   // Liquid highlight: the pill follows the hovered tab, falling back to the
   // active route; null (e.g. Home) leaves the bar bare until you hover.
@@ -580,7 +592,9 @@ function SiteNav({
           avatarUrl || initials ? 'gap-4' : 'gap-8'
         )}
       >
-        {onSearchClick && (
+        {/* Signed-in: search renders as an icon. Signed-out: search renders as
+            the "Search" TEXT control inside the public actions cluster below. */}
+        {!isLoggedOut && onSearchClick && (
           <button
             type="button"
             aria-label="Search"
@@ -818,11 +832,45 @@ function SiteNav({
             </button>
           )
         ) : (
-          onLoginClick && (
-            <Button onClick={onLoginClick} className="h-auto px-4 py-2.5">
-              Login
-            </Button>
-          )
+          /* Logged-out (public) actions cluster: text controls + a solid-red
+             Sign Up button. Search + Learn + Log in are text (not icons) and
+             hide below sm so the mobile bar keeps just Sign Up + hamburger. */
+          <div className="flex items-center gap-6">
+            {onSearchClick && (
+              <button
+                type="button"
+                onClick={onSearchClick}
+                className="hidden text-[12px] leading-none tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block cursor-pointer"
+              >
+                Search
+              </button>
+            )}
+            {learnHref && (
+              <LinkComponent
+                href={learnHref}
+                className="hidden text-[12px] leading-none tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block"
+              >
+                Learn
+              </LinkComponent>
+            )}
+            {onLoginClick && (
+              <button
+                type="button"
+                onClick={onLoginClick}
+                className="hidden text-[12px] leading-none tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block cursor-pointer"
+              >
+                Log in
+              </button>
+            )}
+            {signUpHref && (
+              <LinkComponent
+                href={signUpHref}
+                className="flex items-center justify-center rounded-[8px] bg-red-100 px-4 py-2 text-[12px] leading-none tracking-[-0.36px] font-medium text-white transition-colors hover:bg-red-300"
+              >
+                Sign Up
+              </LinkComponent>
+            )}
+          </div>
         )}
 
         {/* Mobile: Hamburger menu */}

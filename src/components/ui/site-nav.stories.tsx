@@ -217,6 +217,27 @@ export const LoggedOut = meta.story({
   },
 });
 
+/** Logged-out / public header (unauthenticated). No compose (＋), bell, or
+ *  avatar. The tabs sit left with the active one lit in the pill; the right
+ *  side is TEXT controls — Search, Learn, Log in — followed by a solid-red
+ *  "Sign Up" button (→ /register). Search is text here, not the icon used in
+ *  the signed-in header. Story hrefs are inline placeholders; the app wires
+ *  the real routes at ship time. */
+export const LoggedOutPublic = meta.story({
+  args: {
+    tabs: [
+      { label: 'Arena', href: '#', active: true },
+      { label: 'Thoughts', href: '#' },
+      { label: 'Media', href: '#' },
+      { label: 'Contact', href: '#' },
+    ],
+    onSearchClick: () => {},
+    onLoginClick: () => {},
+    learnHref: '/learn',
+    signUpHref: '/register',
+  },
+});
+
 /** Home / any route with no matching tab — the highlight pill rests hidden and
  *  only appears (fading in) while a tab is hovered. */
 export const HomeNoActiveTab = meta.story({

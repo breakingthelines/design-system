@@ -28,6 +28,19 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   backward-compatible: existing `children` without `icon` still render (the
   icon slot is simply omitted).
 
+### Changed — `SiteNav` logged-out (public) header restyle
+
+- The logged-out header (no compose/bell/avatar) now renders a text-based
+  public actions cluster instead of a lone red "Login" button: **Search**
+  (text, not the signed-in search icon), **Learn**, **Log in**, and a
+  solid-red **Sign Up** button (`bg-red-100`, white text, 8px radius). The
+  tabs keep their existing active pill highlight.
+- New props: `learnHref?: string` (renders the "Learn" link) and
+  `signUpHref?: string` (renders the "Sign Up" button, e.g. `/register`).
+  `onLoginClick` now drives the "Log in" text control, and `onSearchClick`
+  renders as the "Search" text control when logged out (still the icon when
+  signed in). All additive; omitting a prop hides that control.
+
 ## [0.53.0]
 
 ### Changed — `SiteNav` compose (＋) dropdown restyle
