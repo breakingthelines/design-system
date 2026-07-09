@@ -367,15 +367,18 @@ function NavDropdownPanel({
   const LinkComponent = useLinkComponent();
   const reduceMotion = useReducedMotion();
   const labelClassName = 'text-[12px] leading-[18px] tracking-[-0.36px]';
-  // One consistent, tight vertical rhythm across every dropdown: all icon
-  // rows are py-6 (compose / Media / Account read equally tight).
+  // Row layout lives on the interactive element itself (the link/button), so
+  // the whole padded row is a real, clickable box (`w-full` to fill the
+  // measured wrapper). One consistent, tight vertical rhythm across every
+  // dropdown: all icon rows are py-6 (compose / Media / Account read equally
+  // tight).
   const iconRowClassName =
-    'group/navrow relative z-10 flex items-center gap-[8px] rounded-[4px] py-[6px] pl-[8px] pr-[16px]';
+    'group/navrow flex w-full cursor-pointer items-center gap-[8px] rounded-[4px] py-[6px] pl-[8px] pr-[16px]';
   // About title+description rows: py-8 for a tight between-item rhythm that
   // matches the icon rows, and gap-0 so the description sits flush under its
   // title (their line-heights give the pair its separation) — one tight pair.
   const descRowClassName =
-    'group/navrow relative z-10 flex flex-col gap-[0px] rounded-[4px] py-[8px] pl-[8px] pr-[16px]';
+    'group/navrow flex w-full cursor-pointer flex-col gap-[0px] rounded-[4px] py-[8px] pl-[8px] pr-[16px]';
 
   // Single shared glass highlight — mirrors the tab pill's mechanism
   // (useNavHighlight), oriented vertically: springs y + height to the hovered
@@ -505,21 +508,20 @@ function NavDropdownPanel({
             </>
           );
 
-          // The styled row is a measured wrapper <div> (ref + hover tracking);
-          // the actual link/button sits inside as `display:contents` so it
-          // provides the navigation/action without adding its own box. This
-          // keeps the ref off the polymorphic LinkComponent (which otherwise
-          // blows up TS's prop union).
+          // The link/button IS the full-size clickable row (rowClassName +
+          // w-full). The outer <div> is only a measured/positioned wrapper for
+          // the ref + hover tracking + z-order above the highlight; keeping the
+          // ref off the polymorphic LinkComponent avoids the TS union blow-up.
           const control = item.onSelect ? (
-            <button type="button" onClick={item.onSelect} className="contents">
+            <button type="button" onClick={item.onSelect} className={rowClassName}>
               {inner}
             </button>
           ) : item.external ? (
-            <a href={item.href} target="_blank" rel="noopener noreferrer" className="contents">
+            <a href={item.href} target="_blank" rel="noopener noreferrer" className={rowClassName}>
               {inner}
             </a>
           ) : (
-            <LinkComponent href={item.href ?? '#'} className="contents">
+            <LinkComponent href={item.href ?? '#'} className={rowClassName}>
               {inner}
             </LinkComponent>
           );
@@ -529,7 +531,7 @@ function NavDropdownPanel({
               key={item.key}
               ref={setRowRef(item.key)}
               onMouseEnter={() => setHoveredKey(item.key)}
-              className={cn(rowClassName, 'cursor-pointer')}
+              className="relative z-10 flex"
             >
               {control}
             </div>
