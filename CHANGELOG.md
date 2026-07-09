@@ -5,6 +5,65 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.54.0]
+
+### Changed — `SiteNav` dropdown restyle (compose, nav tab submenus, Account)
+
+- Every SiteNav dropdown — the compose (＋) panel, the Media/About nav-tab
+  hover submenus, and the Account avatar-hover menu — now shares one panel
+  (`NavDropdownPanel`), per Figma 2941-11302 ("Create Content") / 3010-11985
+  ("Media") / 3010-12052 ("About") / 3009-11910 ("Account") and the "On"
+  states 3010-12001 / 3010-12102: a flat `grey-200` panel (`#151515`, 4px
+  radius, 8px padding, 8px gap). Each panel grows to fit its content (`w-max`)
+  over a modest per-panel min-width for breathing room — About widest
+  (`min-w-320px`), Media/Account a touch narrower (`min-w-248px`), compose
+  hugs its content. Rows come in two shapes:
+  - **icon + label** (compose, Media, Account): a 14px leading icon + 12px
+    `grey-500` label, `py-7`, `gap-8`, `pl-8 pr-16`.
+  - **title + description** (About): a 12px `grey-400` (`#ccc4c4`) title over
+    a 14px `grey-500` description, `py-16`, `gap-8`, `pl-8 pr-16`, no icon.
+    Resting titles stay `grey-400`; only the hovered title goes white.
+    Descriptions stay `grey-500` always.
+- Headers: only the compose ("Create Content") and Account ("Account") panels
+  keep a 12px `grey-500` section header — the Media/About panels omit it (the
+  tab already names them). Header row is `pl-8 pr-16 py-8`.
+- Row hover reuses the middle-nav tab MOTION: a SINGLE highlight that springs
+  (`PILL_SPRING`) vertically to the hovered row — the tabs' flowy slide/morph
+  — rather than an independent per-row `:hover` background. Its appearance is
+  a subtle 5% white fill + 5% white 1px border (`rounded-[4px]`), not a bright
+  glass. The hovered row's icon + label brighten to white; resting rows stay
+  muted. Replaces the compose panel's 0.53.0 glass/gradient.
+- Disabled rows (compose "Soon") grey to `grey-300`, pin a 10px red-100
+  "Soon" badge right, and aren't hoverable (the highlight skips them).
+- `NavTab`'s `children` items gain optional `icon?: React.ReactNode` (mirrors
+  `ComposeItem.icon`; fixed 14px slot) and `description?: string` (renders the
+  title + description row; takes precedence over `icon`). Additive.
+
+### Added — `SiteNav` Account dropdown (logged-in avatar hover)
+
+- When logged in, hovering the avatar opens an "Account" dropdown (Figma
+  3009-11910) built from the shared panel: Profile (Phosphor `UserCircle`),
+  Studio (`Hammer`, opens in a new tab), Log out (`SignOut`, an action row).
+- New props: `profileHref?: string`, `studioHref?: string`, `onLogout?: () =>
+void`. Supplying any enables the Account dropdown (it takes precedence over
+  the legacy `avatarMenu`). `NavDropdownPanel` rows gain an optional
+  `onSelect?: () => void` for button/action rows (e.g. Log out).
+
+### Changed — `SiteNav` logged-out (public) header restyle
+
+- The logged-out header (no compose/bell/avatar) now renders a text-based
+  public actions cluster instead of a lone red "Login" button: **Search**
+  (text, not the signed-in search icon), **Learn**, **Log in**, and a
+  solid-red **Sign Up** button (`bg-red-100`, white text). The button keeps
+  the old Login button's dimensions (`px-4 py-2.5 text-xs`) but with
+  `rounded-[4px]` corners rather than a pill. The tabs keep their existing
+  active pill highlight.
+- New props: `learnHref?: string` (renders the "Learn" link) and
+  `signUpHref?: string` (renders the "Sign Up" button, e.g. `/register`).
+  `onLoginClick` now drives the "Log in" text control, and `onSearchClick`
+  renders as the "Search" text control when logged out (still the icon when
+  signed in). All additive; omitting a prop hides that control.
+
 ## [0.53.0]
 
 ### Changed — `SiteNav` compose (＋) dropdown restyle
