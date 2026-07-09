@@ -41,6 +41,7 @@ const tabsWithDropdowns: NavTab[] = [
   { label: 'Thoughts', href: '#', active: true },
   {
     label: 'Media',
+    menuHeader: 'Watch & Listen',
     children: [
       { label: 'BTL TV', href: '/tv', icon: <Television {...rowIconProps} /> },
       { label: 'BTL Podcasts', href: '/podcasts', icon: <Microphone {...rowIconProps} /> },
