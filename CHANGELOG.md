@@ -5,6 +5,41 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.55.0]
+
+### Changed — `SiteNav` logged-out Sign Up button corners
+
+- The logged-out header's solid-red "Sign Up" button now has square corners
+  (`rounded-none`) instead of `rounded-[4px]`. Everything else is unchanged:
+  same size (`px-4 py-2.5 text-xs`), `bg-red-100`, white text, links to
+  `signUpHref` (e.g. `/register`).
+
+### Changed — compact compose + Account dropdowns
+
+- The compose ("Create Content") and Account dropdowns adopt a `compact`
+  treatment (the reference for a tight nav dropdown): tighter row padding
+  (`py-6` vs `py-7`) and a tighter header→list gap (`gap-4` vs `gap-8`), so
+  they read short/crisp vertically. Media rows stay `py-7`, no header.
+- Fixed panel widths per spec: compose / Media / Account = `w-[210px]`;
+  About = `w-[317px]` (wider so its 14px descriptions stay on one line).
+- Every interactive dropdown row now has `cursor-pointer`; disabled rows
+  (compose "Soon") use `cursor-not-allowed`.
+- The section header ("Create Content" / "Account") is nudged slightly dimmer
+  (`text-grey-500/70`) so it reads as a quiet caption, not an item.
+- Unchanged: the flowy subtle sliding hover, 12px `grey-500` labels, 14px
+  icons, and the 12px Inter Medium header.
+
+### Changed — solid dropdown/popover backgrounds + mobile logged-out menu
+
+- All SiteNav dropdown/popover panels are now a solid `grey-200` (`#151515`)
+  to match the new nav dropdowns: removed the glassy `bg-grey-200/90` +
+  `backdrop-blur-xl` from the legacy avatar menu (desktop + mobile), the
+  mobile hamburger panel, and the mobile notification popover container.
+  (The always-visible tab-bar capsule keeps its own translucency.)
+- Fix (regression from 0.54.0): the logged-out mobile hamburger menu now
+  includes Search / Learn / Log in / Sign Up (→ `signUpHref`). They were only
+  in the desktop `hidden sm:flex` cluster, so mobile users couldn't reach them.
+
 ## [0.54.0]
 
 ### Changed — `SiteNav` dropdown restyle (compose, nav tab submenus, Account)

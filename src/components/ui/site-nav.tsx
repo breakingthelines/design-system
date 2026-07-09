@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
 } from '#/components/ui/dropdown-menu';
 
 export interface NavTab {
@@ -353,16 +354,23 @@ function NavDropdownPanel({
   header,
   items,
   className,
+  compact = false,
 }: {
   header?: string;
   items: NavDropdownRow[];
   className?: string;
+  /** Compact treatment (compose + Account): tighter row padding (`py-6` vs
+   *  `py-7`) and a tighter header→list gap (`gap-4` vs `gap-8`), so the menu
+   *  reads crisp and snug rather than tall/airy. Media/About stay non-compact. */
+  compact?: boolean;
 }) {
   const LinkComponent = useLinkComponent();
   const reduceMotion = useReducedMotion();
   const labelClassName = 'text-[12px] leading-[18px] tracking-[-0.36px]';
-  const iconRowClassName =
-    'group/navrow relative z-10 flex items-center gap-[8px] rounded-[4px] py-[7px] pl-[8px] pr-[16px]';
+  const iconRowClassName = cn(
+    'group/navrow relative z-10 flex items-center gap-[8px] rounded-[4px] pl-[8px] pr-[16px]',
+    compact ? 'py-[6px]' : 'py-[7px]'
+  );
   const descRowClassName =
     'group/navrow relative z-10 flex flex-col gap-[8px] rounded-[4px] py-[16px] pl-[8px] pr-[16px]';
 
@@ -407,15 +415,19 @@ function NavDropdownPanel({
     <div
       className={cn(
         // Each panel sizes to its OWN content (`w-max`): About reads wide (long
-        // descriptions on one line), Media/compose/Account stay compact. No
-        // shared min-width. Per Figma "On" states 3010-12001 / 3010-12102.
-        'flex w-max flex-col gap-[8px] rounded-[4px] bg-grey-200 p-[8px]',
+        // descriptions on one line), compose/Account hug their short labels.
+        // Compact panels tighten the header→list gap; Per Figma "On" states
+        // 3010-12001 / 3010-12102.
+        'flex w-max flex-col rounded-[4px] bg-grey-200 p-[8px]',
+        compact ? 'gap-[4px]' : 'gap-[8px]',
         className
       )}
     >
       {header && (
+        // Slightly dimmer than the row labels so the section header reads as
+        // a quiet caption, not an item.
         <div
-          className={cn('py-[8px] pl-[8px] pr-[16px] font-medium text-grey-500', labelClassName)}
+          className={cn('py-[8px] pl-[8px] pr-[16px] font-medium text-grey-500/70', labelClassName)}
         >
           {header}
         </div>
@@ -442,7 +454,10 @@ function NavDropdownPanel({
                 key={item.key}
                 aria-disabled="true"
                 onMouseEnter={() => setHoveredKey(null)}
-                className="relative z-10 flex cursor-default items-center justify-between gap-[8px] rounded-[4px] py-[7px] pl-[8px] pr-[16px] select-none"
+                className={cn(
+                  'relative z-10 flex cursor-not-allowed items-center justify-between gap-[8px] rounded-[4px] pl-[8px] pr-[16px] select-none',
+                  compact ? 'py-[6px]' : 'py-[7px]'
+                )}
               >
                 <span className="flex items-center gap-[8px]">
                   {item.icon && (
@@ -514,7 +529,7 @@ function NavDropdownPanel({
               key={item.key}
               ref={setRowRef(item.key)}
               onMouseEnter={() => setHoveredKey(item.key)}
-              className={cn(rowClassName, item.onSelect && 'cursor-pointer')}
+              className={cn(rowClassName, 'cursor-pointer')}
             >
               {control}
             </div>
@@ -536,6 +551,8 @@ function ComposeMenuPanel({ items }: { items: ComposeItem[] }) {
   return (
     <NavDropdownPanel
       header="Create Content"
+      compact
+      className="w-[210px]"
       items={items.map((item) => ({
         key: item.label,
         label: item.label,
@@ -743,14 +760,12 @@ function SiteNav({
                 // Dropdown — pt-2 creates an invisible hover bridge between trigger and panel
                 <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
                   {/* No header — the tab already names the menu (revision A).
-                      Modest min-width for breathing room (matches the Figma
-                      refs): title+description panels (About) read widest,
-                      icon+label panels (Media) a touch narrower. */}
+                      Fixed widths per spec: title+description panels (About)
+                      317px so descriptions stay on one line; icon+label panels
+                      (Media) 210px. */}
                   <NavDropdownPanel
                     className={
-                      tab.children.some((child) => child.description)
-                        ? 'min-w-[320px]'
-                        : 'min-w-[248px]'
+                      tab.children.some((child) => child.description) ? 'w-[317px]' : 'w-[210px]'
                     }
                     items={tab.children.map((child) => ({
                       key: getNavChildKey(child),
@@ -833,7 +848,7 @@ function SiteNav({
                   <DropdownMenuContent
                     align="end"
                     sideOffset={8}
-                    className="w-[min(92vw,380px)] p-0"
+                    className="w-[min(92vw,380px)] p-0 !bg-grey-200 backdrop-blur-none"
                   >
                     {notificationPopover}
                   </DropdownMenuContent>
@@ -920,7 +935,8 @@ function SiteNav({
                 <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
                   <NavDropdownPanel
                     header="Account"
-                    className="min-w-[248px]"
+                    compact
+                    className="w-[210px]"
                     items={accountItems}
                   />
                 </div>
@@ -949,7 +965,8 @@ function SiteNav({
                   >
                     <NavDropdownPanel
                       header="Account"
-                      className="min-w-[248px]"
+                      compact
+                      className="w-[210px]"
                       items={accountItems}
                     />
                   </DropdownMenuContent>
@@ -967,7 +984,7 @@ function SiteNav({
                 </div>
                 {/* Dropdown — same pattern as Media dropdown */}
                 <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
-                  <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
+                  <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200 p-1 shadow-xl">
                     <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                     <nav className="flex flex-col gap-0.5">
                       {avatarMenu.map((item) =>
@@ -1025,7 +1042,7 @@ function SiteNav({
                   <DropdownMenuContent
                     align="end"
                     sideOffset={8}
-                    className="relative min-w-[160px] overflow-hidden"
+                    className="relative min-w-[160px] overflow-hidden !bg-grey-200 backdrop-blur-none"
                   >
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                     {avatarMenu.map((item) =>
@@ -1073,7 +1090,7 @@ function SiteNav({
               <button
                 type="button"
                 onClick={onSearchClick}
-                className="hidden text-[12px] leading-none tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block cursor-pointer"
+                className="hidden text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block cursor-pointer"
               >
                 Search
               </button>
@@ -1081,7 +1098,7 @@ function SiteNav({
             {learnHref && (
               <LinkComponent
                 href={learnHref}
-                className="hidden text-[12px] leading-none tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block"
+                className="hidden text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block"
               >
                 Learn
               </LinkComponent>
@@ -1090,7 +1107,7 @@ function SiteNav({
               <button
                 type="button"
                 onClick={onLoginClick}
-                className="hidden text-[12px] leading-none tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block cursor-pointer"
+                className="hidden text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block cursor-pointer"
               >
                 Log in
               </button>
@@ -1098,7 +1115,7 @@ function SiteNav({
             {signUpHref && (
               <LinkComponent
                 href={signUpHref}
-                className="flex items-center justify-center rounded-[4px] bg-red-100 px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-red-300"
+                className="flex items-center justify-center rounded-none bg-red-100 px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-red-300"
               >
                 Sign Up
               </LinkComponent>
@@ -1123,7 +1140,7 @@ function SiteNav({
             <DropdownMenuContent
               align="end"
               sideOffset={8}
-              className="relative min-w-[180px] overflow-hidden rounded-[2px] border-white/10 !bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl"
+              className="relative min-w-[180px] overflow-hidden rounded-[2px] border-white/10 !bg-grey-200 p-1 shadow-xl"
             >
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
               {tabs.map((tab) =>
@@ -1157,6 +1174,46 @@ function SiteNav({
                     {tab.label}
                   </DropdownMenuItem>
                 )
+              )}
+              {/* Logged-out: the desktop public actions (Search / Learn / Log in
+                  / Sign Up) live in the `hidden sm:flex` cluster above, so they
+                  vanish on mobile — surface them here in the hamburger too. */}
+              {isLoggedOut && (onSearchClick || learnHref || onLoginClick || signUpHref) && (
+                <>
+                  <DropdownMenuSeparator />
+                  {onSearchClick && (
+                    <DropdownMenuItem
+                      onClick={onSearchClick}
+                      className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      Search
+                    </DropdownMenuItem>
+                  )}
+                  {learnHref && (
+                    <DropdownMenuItem
+                      render={<LinkComponent href={learnHref} />}
+                      className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      Learn
+                    </DropdownMenuItem>
+                  )}
+                  {onLoginClick && (
+                    <DropdownMenuItem
+                      onClick={onLoginClick}
+                      className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                    >
+                      Log in
+                    </DropdownMenuItem>
+                  )}
+                  {signUpHref && (
+                    <DropdownMenuItem
+                      render={<LinkComponent href={signUpHref} />}
+                      className="mt-1 rounded-none bg-red-100 px-4 py-2.5 text-xs font-medium uppercase tracking-[0.08em] text-white transition-colors hover:bg-red-300 hover:text-white focus:bg-red-300 focus:text-white"
+                    >
+                      Sign Up
+                    </DropdownMenuItem>
+                  )}
+                </>
               )}
             </DropdownMenuContent>
           </DropdownMenu>
