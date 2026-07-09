@@ -24,7 +24,6 @@ import {
   DropdownMenuTrigger,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
 } from '#/components/ui/dropdown-menu';
 
 export interface NavTab {
@@ -1187,20 +1186,10 @@ function SiteNav({
                   </DropdownMenuItem>
                 )
               )}
-              {/* Logged-out: only "Learn" belongs in the hamburger — it has no
-                  top-bar equivalent. Search (top-bar icon), Log in, and Sign Up
-                  all live in the top bar, so they are NOT duplicated here. */}
-              {isLoggedOut && learnHref && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    render={<LinkComponent href={learnHref} />}
-                    className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                  >
-                    Learn
-                  </DropdownMenuItem>
-                </>
-              )}
+              {/* No standalone logged-out "Learn" here: "Learn" already surfaces
+                  as the About tab's child (rendered inline above), so a separate
+                  item would duplicate it. Desktop keeps its cluster "Learn" text
+                  link (driven by `learnHref`); that is unaffected. */}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
