@@ -10,7 +10,7 @@ import {
   useTransform,
   useReducedMotion,
 } from 'framer-motion';
-import { Plus } from '@phosphor-icons/react';
+import { Plus, UserCircle, Hammer, SignOut } from '@phosphor-icons/react';
 
 import { BtlWordmark } from '#/components/ui/btl-logo';
 import { cn } from '#/lib/utils';
@@ -38,8 +38,13 @@ export interface NavTab {
     /** Opens in new tab (for external links like Zine) */
     external?: boolean;
     /** Leading glyph for the row (e.g. a Phosphor icon element). The host owns
-     *  icon choice/weight/size — SiteNav renders it as-is at a fixed 14px slot. */
+     *  icon choice/weight/size — SiteNav renders it as-is at a fixed 14px slot.
+     *  Ignored when `description` is set (title+description rows have no icon). */
     icon?: React.ReactNode;
+    /** When set, the row renders as a taller title (the `label`) + description
+     *  block instead of an icon + label row — the About-menu layout (Figma
+     *  3010-12052). Takes precedence over `icon`. */
+    description?: string;
   }[];
 }
 
@@ -85,8 +90,19 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   onNotificationsClick?: () => void;
   /** @deprecated Use avatarMenu instead */
   onAvatarClick?: () => void;
-  /** Dropdown menu items shown on avatar hover */
+  /** Dropdown menu items shown on avatar hover (legacy uppercase menu).
+   *  Superseded by the Account dropdown when `profileHref`/`studioHref`/
+   *  `onLogout` are supplied. */
   avatarMenu?: AvatarMenuItem[];
+  /** Account dropdown (Figma 3009-11910) — when logged in, hovering the avatar
+   *  opens an "Account" menu (shared NavDropdownPanel icon+label style) with
+   *  Profile / Studio / Log out rows. Supply any of these to enable it (it
+   *  takes precedence over `avatarMenu`). */
+  profileHref?: string;
+  /** Account dropdown: Studio row target (opens in a new tab). */
+  studioHref?: string;
+  /** Account dropdown: Log out action (renders the "Log out" button row). */
+  onLogout?: () => void;
   /** Login click handler (shown when no avatarUrl) — renders the "Log in"
    *  text control in the logged-out (public) actions cluster. */
   onLoginClick?: () => void;
@@ -300,84 +316,210 @@ interface NavDropdownRow {
   href?: string;
   external?: boolean;
   icon?: React.ReactNode;
+  /** Action row (e.g. Account "Log out") — renders a button instead of a
+   *  link. Takes precedence over `href`. */
+  onSelect?: () => void;
+  /** When set, the row is a title (label) + description block (About layout,
+   *  Figma 3010-12052) — taller, no icon. Takes precedence over `icon`. */
+  description?: string;
   disabled?: boolean;
 }
 
+/** Resting text tone for a row's title. Icon rows + About descriptions use
+ *  grey-500; the About title uses grey-400 (#ccc4c4, not a DS token yet). */
+const NAV_ROW_TITLE_GREY_400 = '#ccc4c4';
+
 /**
- * Shared nav dropdown panel — one visual language for every SiteNav
- * dropdown (the compose "+" menu and the Media/About tab submenus), per
- * Figma 2941-11302 / 3010-11985: a flat grey-200 surface, a small
- * grey-500 section header naming the menu, and 14px-icon + 12px-label rows.
- * Disabled rows grey out (grey-300) and pin a red "Soon" badge to the right
- * instead of linking anywhere. Flat at rest — no glass/gradient highlight —
- * with only the DS's existing subtle `hover:bg-white/5` row convention for
- * affordance.
+ * Shared nav dropdown panel — one visual language for every SiteNav dropdown
+ * (the compose "+" menu and the Media/About tab submenus). Flat grey-200
+ * surface (Figma 2941-11302 / 3010-11985) and two row shapes:
+ *  - icon + label rows (compose, Media): 14px icon + 12px grey-500 label,
+ *    `py-7`.
+ *  - title + description rows (About, Figma 3010-12052): 12px grey-400 title
+ *    over a 14px grey-500 description, `py-16`, no icon.
+ * `header` is optional — the compose "+" panel names itself ("Create
+ * Content") because its trigger doesn't; the Media/About tab panels omit it
+ * (the tab already names them).
+ *
+ * Rows are flat + muted at rest. A SINGLE liquid-glass highlight (the same
+ * `GLASS_PILL` material the middle-nav tab pill uses) glides vertically to
+ * whichever row is hovered — driven by the same `PILL_SPRING` so it has the
+ * tabs' flowy slide/morph, not an independent per-row `:hover` background.
+ * The hovered row's icon + label (or title + description) brighten to white;
+ * resting rows stay muted. Disabled rows (compose "Soon") aren't hoverable —
+ * the highlight skips them (hovering one hides it).
  */
 function NavDropdownPanel({
   header,
   items,
   className,
 }: {
-  header: string;
+  header?: string;
   items: NavDropdownRow[];
   className?: string;
 }) {
   const LinkComponent = useLinkComponent();
-  const rowClassName =
-    'flex items-center gap-[8px] rounded-[4px] py-[7px] pl-[8px] pr-[16px] text-grey-500 transition-colors hover:bg-white/5';
+  const reduceMotion = useReducedMotion();
   const labelClassName = 'text-[12px] leading-[18px] tracking-[-0.36px]';
+  const iconRowClassName =
+    'group/navrow relative z-10 flex items-center gap-[8px] rounded-[4px] py-[7px] pl-[8px] pr-[16px]';
+  const descRowClassName =
+    'group/navrow relative z-10 flex flex-col gap-[8px] rounded-[4px] py-[16px] pl-[8px] pr-[16px]';
+
+  // Single shared glass highlight — mirrors the tab pill's mechanism
+  // (useNavHighlight), oriented vertically: springs y + height to the hovered
+  // row and fades out when nothing is hovered.
+  const [hoveredKey, setHoveredKey] = useState<string | null>(null);
+  const rowRefs = useRef<Map<string, HTMLElement>>(new Map());
+  const mounted = useRef(false);
+  const y = useSpring(0, PILL_SPRING);
+  const height = useSpring(0, PILL_SPRING);
+  const opacity = useSpring(0, OPACITY_SPRING);
+
+  useIsoLayoutEffect(() => {
+    const el = hoveredKey ? (rowRefs.current.get(hoveredKey) ?? null) : null;
+    if (!el) {
+      if (mounted.current) opacity.set(0);
+      else opacity.jump(0);
+      return;
+    }
+    const top = el.offsetTop;
+    const h = el.offsetHeight;
+    // Jump on first appearance / after a fade-out / reduced-motion; glide otherwise.
+    const instant = !mounted.current || opacity.get() === 0 || reduceMotion;
+    if (instant) {
+      y.jump(top);
+      height.jump(h);
+    } else {
+      y.set(top);
+      height.set(h);
+    }
+    opacity.set(1);
+    mounted.current = true;
+  }, [hoveredKey, reduceMotion, y, height, opacity]);
+
+  const setRowRef = (key: string) => (el: HTMLElement | null) => {
+    if (el) rowRefs.current.set(key, el);
+    else rowRefs.current.delete(key);
+  };
 
   return (
     <div
-      className={cn('flex w-max flex-col gap-[8px] rounded-[4px] bg-grey-200 p-[8px]', className)}
+      className={cn(
+        // Each panel sizes to its OWN content (`w-max`): About reads wide (long
+        // descriptions on one line), Media/compose/Account stay compact. No
+        // shared min-width. Per Figma "On" states 3010-12001 / 3010-12102.
+        'flex w-max flex-col gap-[8px] rounded-[4px] bg-grey-200 p-[8px]',
+        className
+      )}
     >
-      <div className={cn('py-[8px] pl-[8px] pr-[16px] font-medium text-grey-500', labelClassName)}>
-        {header}
-      </div>
-      <nav className="flex flex-col">
-        {items.map((item) =>
-          item.disabled ? (
-            <span
-              key={item.key}
-              aria-disabled="true"
-              className="flex cursor-default items-center justify-between gap-[8px] rounded-[4px] py-[7px] pl-[8px] pr-[16px] select-none"
-            >
-              <span className="flex items-center gap-[8px]">
-                {item.icon && (
-                  <span className="flex size-[14px] shrink-0 items-center justify-center text-grey-300">
-                    {item.icon}
-                  </span>
-                )}
-                <span className={cn(labelClassName, 'text-grey-300')}>{item.label}</span>
+      {header && (
+        <div
+          className={cn('py-[8px] pl-[8px] pr-[16px] font-medium text-grey-500', labelClassName)}
+        >
+          {header}
+        </div>
+      )}
+      <nav className="relative flex flex-col" onMouseLeave={() => setHoveredKey(null)}>
+        {/* The gliding highlight (behind the rows, z-0). It keeps the tab
+            pill's flowy spring MOTION but a subtle appearance per Figma
+            3010-12001 / 3010-12102: a 5% white fill + 5% white 1px border. */}
+        <motion.div
+          aria-hidden
+          style={{
+            y,
+            height,
+            opacity,
+            backgroundColor: 'rgba(255,255,255,0.05)',
+            border: '1px solid rgba(255,255,255,0.05)',
+          }}
+          className="pointer-events-none absolute inset-x-0 top-0 z-0 rounded-[4px]"
+        />
+        {items.map((item) => {
+          if (item.disabled) {
+            return (
+              <span
+                key={item.key}
+                aria-disabled="true"
+                onMouseEnter={() => setHoveredKey(null)}
+                className="relative z-10 flex cursor-default items-center justify-between gap-[8px] rounded-[4px] py-[7px] pl-[8px] pr-[16px] select-none"
+              >
+                <span className="flex items-center gap-[8px]">
+                  {item.icon && (
+                    <span className="flex size-[14px] shrink-0 items-center justify-center text-grey-300">
+                      {item.icon}
+                    </span>
+                  )}
+                  <span className={cn(labelClassName, 'text-grey-300')}>{item.label}</span>
+                </span>
+                <span className="text-[10px] tracking-[-0.3px] text-red-100">Soon</span>
               </span>
-              <span className="text-[10px] tracking-[-0.3px] text-red-100">Soon</span>
-            </span>
-          ) : item.external ? (
-            <a
-              key={item.key}
-              href={item.href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={rowClassName}
-            >
+            );
+          }
+
+          const rowClassName = item.description ? descRowClassName : iconRowClassName;
+          const inner = item.description ? (
+            <>
+              {/* Resting title grey-400; only the hovered title goes white. */}
+              <span
+                style={{ color: NAV_ROW_TITLE_GREY_400 }}
+                className="text-[12px] leading-[18px] tracking-[-0.36px] transition-colors group-hover/navrow:text-white"
+              >
+                {item.label}
+              </span>
+              {/* Description always grey-500 (does not brighten on hover). */}
+              <span className="text-[14px] leading-[24px] font-medium tracking-[-0.42px] text-grey-500">
+                {item.description}
+              </span>
+            </>
+          ) : (
+            <>
               {item.icon && (
-                <span className="flex size-[14px] shrink-0 items-center justify-center">
+                <span className="flex size-[14px] shrink-0 items-center justify-center text-grey-500 transition-colors group-hover/navrow:text-white">
                   {item.icon}
                 </span>
               )}
-              <span className={labelClassName}>{item.label}</span>
+              <span
+                className={cn(
+                  labelClassName,
+                  'text-grey-500 transition-colors group-hover/navrow:text-white'
+                )}
+              >
+                {item.label}
+              </span>
+            </>
+          );
+
+          // The styled row is a measured wrapper <div> (ref + hover tracking);
+          // the actual link/button sits inside as `display:contents` so it
+          // provides the navigation/action without adding its own box. This
+          // keeps the ref off the polymorphic LinkComponent (which otherwise
+          // blows up TS's prop union).
+          const control = item.onSelect ? (
+            <button type="button" onClick={item.onSelect} className="contents">
+              {inner}
+            </button>
+          ) : item.external ? (
+            <a href={item.href} target="_blank" rel="noopener noreferrer" className="contents">
+              {inner}
             </a>
           ) : (
-            <LinkComponent key={item.key} href={item.href ?? '#'} className={rowClassName}>
-              {item.icon && (
-                <span className="flex size-[14px] shrink-0 items-center justify-center">
-                  {item.icon}
-                </span>
-              )}
-              <span className={labelClassName}>{item.label}</span>
+            <LinkComponent href={item.href ?? '#'} className="contents">
+              {inner}
             </LinkComponent>
-          )
-        )}
+          );
+
+          return (
+            <div
+              key={item.key}
+              ref={setRowRef(item.key)}
+              onMouseEnter={() => setHoveredKey(item.key)}
+              className={cn(rowClassName, item.onSelect && 'cursor-pointer')}
+            >
+              {control}
+            </div>
+          );
+        })}
       </nav>
     </div>
   );
@@ -394,7 +536,6 @@ function ComposeMenuPanel({ items }: { items: ComposeItem[] }) {
   return (
     <NavDropdownPanel
       header="Create Content"
-      className="w-[240px]"
       items={items.map((item) => ({
         key: item.label,
         label: item.label,
@@ -416,6 +557,9 @@ function SiteNav({
   onNotificationsClick,
   onAvatarClick,
   avatarMenu,
+  profileHref,
+  studioHref,
+  onLogout,
   onLoginClick,
   learnHref,
   signUpHref,
@@ -433,6 +577,36 @@ function SiteNav({
   // public actions cluster (Search / Learn / Log in / Sign Up) instead of the
   // signed-in icon cluster.
   const isLoggedOut = !(avatarUrl || initials);
+
+  // Account dropdown rows (Figma 3009-11910) — built from the profile/studio/
+  // logout props. When non-empty, the avatar becomes an Account-menu trigger
+  // (taking precedence over the legacy `avatarMenu`).
+  const accountItems: NavDropdownRow[] = [];
+  if (profileHref) {
+    accountItems.push({
+      key: 'profile',
+      label: 'Profile',
+      href: profileHref,
+      icon: <UserCircle size={14} weight="regular" />,
+    });
+  }
+  if (studioHref) {
+    accountItems.push({
+      key: 'studio',
+      label: 'Studio',
+      href: studioHref,
+      external: true,
+      icon: <Hammer size={14} weight="regular" />,
+    });
+  }
+  if (onLogout) {
+    accountItems.push({
+      key: 'logout',
+      label: 'Log out',
+      onSelect: onLogout,
+      icon: <SignOut size={14} weight="regular" />,
+    });
+  }
 
   // Liquid highlight: the pill follows the hovered tab, falling back to the
   // active route; null (e.g. Home) leaves the bar bare until you hover.
@@ -568,14 +742,15 @@ function SiteNav({
               {tab.children ? (
                 // Dropdown — pt-2 creates an invisible hover bridge between trigger and panel
                 <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
+                  {/* No header — the tab already names the menu (revision A). */}
                   <NavDropdownPanel
-                    header={tab.label}
                     items={tab.children.map((child) => ({
                       key: getNavChildKey(child),
                       label: child.label,
                       href: child.href,
                       external: child.external,
                       icon: child.icon,
+                      description: child.description,
                     }))}
                   />
                 </div>
@@ -723,7 +898,49 @@ function SiteNav({
 
         {/* Avatar (logged in) or Login button (logged out) */}
         {avatarUrl || initials ? (
-          avatarMenu?.length ? (
+          accountItems.length > 0 ? (
+            <>
+              {/* Desktop: hover-opens the shared "Account" NavDropdownPanel
+                  (Figma 3009-11910). */}
+              <div className="group/avatar relative hidden sm:block">
+                <div className="flex cursor-pointer items-center justify-center">
+                  <Avatar size="default" className="size-[34px]">
+                    {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                    <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
+                  </Avatar>
+                </div>
+                <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
+                  <NavDropdownPanel header="Account" items={accountItems} />
+                </div>
+              </div>
+              {/* Mobile: click-opens the same panel inside a chrome-less menu. */}
+              <div className="sm:hidden">
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    render={
+                      <button
+                        type="button"
+                        aria-label="Account"
+                        className="flex items-center justify-center"
+                      />
+                    }
+                  >
+                    <Avatar size="default" className="size-[34px]">
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                      <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
+                    </Avatar>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    sideOffset={8}
+                    className="min-w-0 border-none bg-transparent p-0 shadow-none backdrop-blur-none"
+                  >
+                    <NavDropdownPanel header="Account" items={accountItems} />
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </>
+          ) : avatarMenu?.length ? (
             <>
               <div className="group/avatar relative hidden sm:block">
                 <div className="flex items-center justify-center cursor-pointer">
@@ -865,7 +1082,7 @@ function SiteNav({
             {signUpHref && (
               <LinkComponent
                 href={signUpHref}
-                className="flex items-center justify-center rounded-[8px] bg-red-100 px-4 py-2 text-[12px] leading-none tracking-[-0.36px] font-medium text-white transition-colors hover:bg-red-300"
+                className="flex items-center justify-center rounded-[4px] bg-red-100 px-4 py-2.5 text-xs font-medium text-white transition-colors hover:bg-red-300"
               >
                 Sign Up
               </LinkComponent>

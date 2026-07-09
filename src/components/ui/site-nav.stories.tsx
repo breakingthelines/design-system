@@ -6,10 +6,6 @@ import {
   Image,
   Television,
   BookOpenUser,
-  Scroll,
-  FileText,
-  Tag,
-  Briefcase,
 } from '@phosphor-icons/react';
 import { userEvent, within } from 'storybook/test';
 
@@ -37,12 +33,9 @@ const tabs: NavTab[] = [
 const rowIconProps = { size: 14, weight: 'regular' as const };
 
 /** Media + About tabs with real children — used by the dropdown-open stories
- *  below. Icon choices: Media = Television / Microphone / BookOpenUser
- *  (spec'd directly by the Figma ref). About = Scroll (Credo, i.e. a
- *  manifesto/scroll), FileText (Docs), Tag (Pricing), Envelope (Contact),
- *  Briefcase (Careers) — "Docs" is added here (5 items to match the 5
- *  suggested icons) even though it isn't in SiteNav's built-in `defaultTabs`;
- *  confirm with the user before wiring a real Docs link into the app tabs. */
+ *  below. Media rows are icon + label (Television / Microphone / BookOpenUser,
+ *  spec'd by the Figma ref). About rows are the title + description layout
+ *  (Figma 3010-12052, no icons) — "Learn" replaces the earlier "Docs" label. */
 const tabsWithDropdowns: NavTab[] = [
   { label: 'Home', href: '#' },
   { label: 'Thoughts', href: '#', active: true },
@@ -62,16 +55,16 @@ const tabsWithDropdowns: NavTab[] = [
   {
     label: 'About',
     children: [
-      { label: 'Credo', href: '/credo', icon: <Scroll {...rowIconProps} /> },
+      { label: 'Credo', href: '/credo', description: 'What is Breaking The Lines about?' },
       {
-        label: 'Docs',
+        label: 'Learn',
         href: 'https://docs.breakingthelines.com',
         external: true,
-        icon: <FileText {...rowIconProps} />,
+        description: 'Browse guides and references',
       },
-      { label: 'Pricing', href: '/pricing', icon: <Tag {...rowIconProps} /> },
-      { label: 'Contact', href: '/contact', icon: <Envelope {...rowIconProps} /> },
-      { label: 'Careers', href: '/careers', icon: <Briefcase {...rowIconProps} /> },
+      { label: 'Pricing', href: '/pricing', description: 'View our plans and pricing' },
+      { label: 'Contact', href: '/contact', description: 'Get in touch with our team' },
+      { label: 'Careers', href: '/careers', description: 'Join our growing team' },
     ],
   },
 ];
@@ -186,9 +179,10 @@ export const MediaDropdownOpen = meta.story({
   },
 });
 
-/** About tab dropdown pinned open — new shared panel with an "About" section
- *  header and five rows (Credo, Docs, Pricing, Contact, Careers), each with
- *  a 14px icon. */
+/** About tab dropdown pinned open — the title + description variant of the
+ *  shared panel (Figma 3010-12052): an "About" header over five taller rows
+ *  (Credo, Learn, Pricing, Contact, Careers), each a grey-400 title above a
+ *  grey-500 description, no icons. */
 export const AboutDropdownOpen = meta.story({
   args: {
     tabs: tabsWithDropdowns,
@@ -201,6 +195,27 @@ export const AboutDropdownOpen = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.hover(canvas.getByRole('button', { name: 'About' }));
+  },
+});
+
+/** Account dropdown pinned open (Figma 3009-11910) — hovering the avatar
+ *  (logged in) opens the shared icon+label panel with an "Account" header and
+ *  Profile / Studio / Log out rows. Enabled by the `profileHref` / `studioHref`
+ *  / `onLogout` props; story values are inline placeholders. */
+export const AccountDropdownOpen = meta.story({
+  args: {
+    tabs,
+    avatarUrl: 'https://i.pravatar.cc/150?u=zach',
+    initials: 'ZL',
+    onSearchClick: () => {},
+    onNotificationsClick: () => {},
+    profileHref: '/@zach',
+    studioHref: 'https://studio.breakingthelines.com',
+    onLogout: () => {},
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.hover(canvas.getAllByAltText('Profile')[0]);
   },
 });
 
