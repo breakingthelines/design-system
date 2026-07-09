@@ -25,7 +25,7 @@ const tabs: NavTab[] = [
   { label: 'Home', href: '#', active: false },
   { label: 'Thoughts', href: '#', active: true },
   { label: 'Media', href: '#', active: false },
-  { label: 'Contact', href: '#', active: false },
+  { label: 'About', href: '#', active: false },
 ];
 
 /** 14px outline icons at the fixed slot size the new NavDropdownPanel row
@@ -63,8 +63,8 @@ const tabsWithDropdowns: NavTab[] = [
         description: 'Browse guides and references',
       },
       { label: 'Pricing', href: '/pricing', description: 'View our plans and pricing' },
-      { label: 'Contact', href: '/contact', description: 'Get in touch with our team' },
-      { label: 'Careers', href: '/careers', description: 'Join our growing team' },
+      { label: 'Contact', href: '/contact', description: 'Get in touch' },
+      { label: 'Careers', href: '/careers', description: 'Join Breaking The Lines' },
     ],
   },
 ];
@@ -225,7 +225,7 @@ export const LoggedOut = meta.story({
       { label: 'Home', href: '#', active: true },
       { label: 'Thoughts', href: '#' },
       { label: 'Media', href: '#' },
-      { label: 'Contact', href: '#' },
+      { label: 'About', href: '#' },
     ],
     onSearchClick: () => {},
     onLoginClick: () => {},
@@ -244,7 +244,7 @@ export const LoggedOutPublic = meta.story({
       { label: 'Arena', href: '#', active: true },
       { label: 'Thoughts', href: '#' },
       { label: 'Media', href: '#' },
-      { label: 'Contact', href: '#' },
+      { label: 'About', href: '#' },
     ],
     onSearchClick: () => {},
     onLoginClick: () => {},
@@ -261,7 +261,7 @@ export const HomeNoActiveTab = meta.story({
       { label: 'Arena', href: '#' },
       { label: 'Thoughts', href: '#' },
       { label: 'Media', href: '#' },
-      { label: 'Contact', href: '#' },
+      { label: 'About', href: '#' },
     ],
     onSearchClick: () => {},
     onLoginClick: () => {},

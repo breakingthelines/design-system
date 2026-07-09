@@ -14,9 +14,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   (`NavDropdownPanel`), per Figma 2941-11302 ("Create Content") / 3010-11985
   ("Media") / 3010-12052 ("About") / 3009-11910 ("Account") and the "On"
   states 3010-12001 / 3010-12102: a flat `grey-200` panel (`#151515`, 4px
-  radius, 8px padding, 8px gap). Each panel sizes to its own content (`w-max`)
-  — About reads wide (descriptions on one line), Media/compose/Account stay
-  compact. Rows come in two shapes:
+  radius, 8px padding, 8px gap). Each panel grows to fit its content (`w-max`)
+  over a modest per-panel min-width for breathing room — About widest
+  (`min-w-320px`), Media/Account a touch narrower (`min-w-248px`), compose
+  hugs its content. Rows come in two shapes:
   - **icon + label** (compose, Media, Account): a 14px leading icon + 12px
     `grey-500` label, `py-7`, `gap-8`, `pl-8 pr-16`.
   - **title + description** (About): a 12px `grey-400` (`#ccc4c4`) title over

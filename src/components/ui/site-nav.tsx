@@ -742,8 +742,16 @@ function SiteNav({
               {tab.children ? (
                 // Dropdown — pt-2 creates an invisible hover bridge between trigger and panel
                 <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
-                  {/* No header — the tab already names the menu (revision A). */}
+                  {/* No header — the tab already names the menu (revision A).
+                      Modest min-width for breathing room (matches the Figma
+                      refs): title+description panels (About) read widest,
+                      icon+label panels (Media) a touch narrower. */}
                   <NavDropdownPanel
+                    className={
+                      tab.children.some((child) => child.description)
+                        ? 'min-w-[320px]'
+                        : 'min-w-[248px]'
+                    }
                     items={tab.children.map((child) => ({
                       key: getNavChildKey(child),
                       label: child.label,
@@ -910,7 +918,11 @@ function SiteNav({
                   </Avatar>
                 </div>
                 <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
-                  <NavDropdownPanel header="Account" items={accountItems} />
+                  <NavDropdownPanel
+                    header="Account"
+                    className="min-w-[248px]"
+                    items={accountItems}
+                  />
                 </div>
               </div>
               {/* Mobile: click-opens the same panel inside a chrome-less menu. */}
@@ -935,7 +947,11 @@ function SiteNav({
                     sideOffset={8}
                     className="min-w-0 border-none bg-transparent p-0 shadow-none backdrop-blur-none"
                   >
-                    <NavDropdownPanel header="Account" items={accountItems} />
+                    <NavDropdownPanel
+                      header="Account"
+                      className="min-w-[248px]"
+                      items={accountItems}
+                    />
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
