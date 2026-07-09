@@ -5,6 +5,22 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.58.0]
+
+### Fixed — mobile logged-out header: de-duplicated controls, Log in moved to top bar
+
+- On mobile, the logged-out hamburger menu duplicated **Search** and **Sign Up**
+  (both already in the top bar). Removed **Search**, **Sign Up**, and **Log in**
+  from the collapsed menu — it now shows only the nav tabs + **Learn** (which has
+  no top-bar equivalent).
+- **Log in** now renders as a text link in the mobile top bar, immediately left
+  of the Sign Up button (same `onLoginClick` handler and text styling as the
+  desktop header). Mobile logged-out top bar now reads: `[Search icon] [Log in]
+[Sign Up] [hamburger]`.
+- The **Search icon** now shows in the mobile top bar when logged out (it was
+  previously signed-in only); desktop logged-out still uses the "Search" text
+  control. No desktop changes.
+
 ## [0.57.0]
 
 ### Fixed — compose + Account dropdown rows were not clickable

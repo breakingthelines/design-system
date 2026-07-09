@@ -792,14 +792,18 @@ function SiteNav({
           avatarUrl || initials ? 'gap-4' : 'gap-8'
         )}
       >
-        {/* Signed-in: search renders as an icon. Signed-out: search renders as
-            the "Search" TEXT control inside the public actions cluster below. */}
-        {!isLoggedOut && onSearchClick && (
+        {/* Search icon. Signed-in: shown at all sizes. Signed-out: mobile only
+            (`sm:hidden`) — desktop signed-out uses the "Search" TEXT control in
+            the public actions cluster below. */}
+        {onSearchClick && (
           <button
             type="button"
             aria-label="Search"
             onClick={onSearchClick}
-            className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
+            className={cn(
+              'flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer',
+              isLoggedOut && 'sm:hidden'
+            )}
           >
             <SearchIcon className="size-6" />
           </button>
@@ -1085,8 +1089,9 @@ function SiteNav({
           )
         ) : (
           /* Logged-out (public) actions cluster: text controls + a solid-red
-             Sign Up button. Search + Learn + Log in are text (not icons) and
-             hide below sm so the mobile bar keeps just Sign Up + hamburger. */
+             Sign Up button. Search + Learn are desktop-only text (mobile has
+             the search icon in the top bar + Learn in the hamburger). "Log in"
+             shows at ALL sizes, sitting just left of the Sign Up button. */
           <div className="flex items-center gap-6">
             {onSearchClick && (
               <button
@@ -1109,7 +1114,7 @@ function SiteNav({
               <button
                 type="button"
                 onClick={onLoginClick}
-                className="hidden text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block cursor-pointer"
+                className="text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 cursor-pointer"
               >
                 Log in
               </button>
@@ -1177,44 +1182,18 @@ function SiteNav({
                   </DropdownMenuItem>
                 )
               )}
-              {/* Logged-out: the desktop public actions (Search / Learn / Log in
-                  / Sign Up) live in the `hidden sm:flex` cluster above, so they
-                  vanish on mobile — surface them here in the hamburger too. */}
-              {isLoggedOut && (onSearchClick || learnHref || onLoginClick || signUpHref) && (
+              {/* Logged-out: only "Learn" belongs in the hamburger — it has no
+                  top-bar equivalent. Search (top-bar icon), Log in, and Sign Up
+                  all live in the top bar, so they are NOT duplicated here. */}
+              {isLoggedOut && learnHref && (
                 <>
                   <DropdownMenuSeparator />
-                  {onSearchClick && (
-                    <DropdownMenuItem
-                      onClick={onSearchClick}
-                      className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                    >
-                      Search
-                    </DropdownMenuItem>
-                  )}
-                  {learnHref && (
-                    <DropdownMenuItem
-                      render={<LinkComponent href={learnHref} />}
-                      className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                    >
-                      Learn
-                    </DropdownMenuItem>
-                  )}
-                  {onLoginClick && (
-                    <DropdownMenuItem
-                      onClick={onLoginClick}
-                      className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                    >
-                      Log in
-                    </DropdownMenuItem>
-                  )}
-                  {signUpHref && (
-                    <DropdownMenuItem
-                      render={<LinkComponent href={signUpHref} />}
-                      className="mt-1 rounded-none bg-red-100 px-4 py-2.5 text-xs font-medium uppercase tracking-[0.08em] text-white transition-colors hover:bg-red-300 hover:text-white focus:bg-red-300 focus:text-white"
-                    >
-                      Sign Up
-                    </DropdownMenuItem>
-                  )}
+                  <DropdownMenuItem
+                    render={<LinkComponent href={learnHref} />}
+                    className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                  >
+                    Learn
+                  </DropdownMenuItem>
                 </>
               )}
             </DropdownMenuContent>
