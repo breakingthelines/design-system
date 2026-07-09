@@ -5,6 +5,23 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.57.0]
+
+### Fixed — compose + Account dropdown rows were not clickable
+
+- Rows in the compose ("Create Content") and Account dropdowns did nothing on
+  click. Root cause: each row's link/button was rendered with
+  `display:contents` (`className="contents"`), so the anchor/button generated
+  no box and was effectively non-interactive — the visible padded area was the
+  wrapper `<div>`, which isn't a link.
+- Fix: the link/button is now the full-size clickable row — the row layout
+  classes (`flex`, gap, `rounded`, padding, `w-full`, `cursor-pointer`) live on
+  the `LinkComponent`/`<a>`/`<button>` itself. The outer `<div>` is kept only
+  as a measured wrapper (ref + hover tracking + z-order), so the sliding hover
+  highlight still works and the visuals are unchanged (210px widths, py-6
+  rhythm). No `display:contents` on interactive elements anymore.
+- The Account "Studio" row keeps `target="_blank"` (opens in a new tab).
+
 ## [0.56.0]
 
 ### Changed — one consistent, tighter dropdown vertical rhythm
