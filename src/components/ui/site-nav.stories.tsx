@@ -241,11 +241,41 @@ export const LoggedOut = meta.story({
  *  the real routes at ship time. */
 export const LoggedOutPublic = meta.story({
   args: {
+    // Media + About carry children (mirroring platform), so the mobile
+    // hamburger surfaces About's "Learn" child. `learnHref` still drives the
+    // desktop cluster "Learn" text link — the two must not duplicate on mobile.
     tabs: [
       { label: 'Arena', href: '#', active: true },
       { label: 'Thoughts', href: '#' },
-      { label: 'Media', href: '#' },
-      { label: 'About', href: '#' },
+      {
+        label: 'Media',
+        menuHeader: 'Watch & Listen',
+        children: [
+          { label: 'BTL TV', href: '/tv', icon: <Television {...rowIconProps} /> },
+          { label: 'BTL Podcasts', href: '/podcasts', icon: <Microphone {...rowIconProps} /> },
+          {
+            label: 'Zine',
+            href: 'https://zine.breakingthelines.com',
+            external: true,
+            icon: <BookOpenUser {...rowIconProps} />,
+          },
+        ],
+      },
+      {
+        label: 'About',
+        children: [
+          { label: 'Credo', href: '/credo', description: 'What is Breaking The Lines about?' },
+          {
+            label: 'Learn',
+            href: 'https://docs.breakingthelines.com',
+            external: true,
+            description: 'Browse guides and references',
+          },
+          { label: 'Pricing', href: '/pricing', description: 'View our plans and pricing' },
+          { label: 'Contact', href: '/contact', description: 'Get in touch' },
+          { label: 'Careers', href: '/careers', description: 'Join Breaking The Lines' },
+        ],
+      },
     ],
     onSearchClick: () => {},
     onLoginClick: () => {},

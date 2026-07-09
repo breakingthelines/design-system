@@ -5,6 +5,17 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.60.0]
+
+### Fixed — duplicate "Learn" in the logged-out mobile hamburger
+
+- On mobile, the logged-out hamburger showed "Learn" twice: once as the About
+  tab's child (rendered inline with the tab's other children) and again as a
+  separate standalone logged-out item (added in 0.58.0). Removed the standalone
+  item so "Learn" appears exactly once — under About.
+- Desktop is unaffected: the logged-out top-bar cluster still shows its "Learn"
+  text link (driven by `learnHref`), and About's "Learn" child is unchanged.
+
 ## [0.59.0]
 
 ### Changed — mobile logged-out Search is now text; per-tab dropdown header
