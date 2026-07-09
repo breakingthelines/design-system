@@ -359,20 +359,23 @@ function NavDropdownPanel({
   header?: string;
   items: NavDropdownRow[];
   className?: string;
-  /** Compact treatment (compose + Account): tighter row padding (`py-6` vs
-   *  `py-7`) and a tighter header→list gap (`gap-4` vs `gap-8`), so the menu
-   *  reads crisp and snug rather than tall/airy. Media/About stay non-compact. */
+  /** Headered panels (compose + Account) set this to tighten the header→list
+   *  gap (`gap-4` vs `gap-8`). Row padding is uniform across all panels, so
+   *  every dropdown shares one vertical rhythm regardless of this flag. */
   compact?: boolean;
 }) {
   const LinkComponent = useLinkComponent();
   const reduceMotion = useReducedMotion();
   const labelClassName = 'text-[12px] leading-[18px] tracking-[-0.36px]';
-  const iconRowClassName = cn(
-    'group/navrow relative z-10 flex items-center gap-[8px] rounded-[4px] pl-[8px] pr-[16px]',
-    compact ? 'py-[6px]' : 'py-[7px]'
-  );
+  // One consistent, tight vertical rhythm across every dropdown: all icon
+  // rows are py-6 (compose / Media / Account read equally tight).
+  const iconRowClassName =
+    'group/navrow relative z-10 flex items-center gap-[8px] rounded-[4px] py-[6px] pl-[8px] pr-[16px]';
+  // About title+description rows: py-8 for a tight between-item rhythm that
+  // matches the icon rows, and gap-0 so the description sits flush under its
+  // title (their line-heights give the pair its separation) — one tight pair.
   const descRowClassName =
-    'group/navrow relative z-10 flex flex-col gap-[8px] rounded-[4px] py-[16px] pl-[8px] pr-[16px]';
+    'group/navrow relative z-10 flex flex-col gap-[0px] rounded-[4px] py-[8px] pl-[8px] pr-[16px]';
 
   // Single shared glass highlight — mirrors the tab pill's mechanism
   // (useNavHighlight), oriented vertically: springs y + height to the hovered
@@ -454,10 +457,7 @@ function NavDropdownPanel({
                 key={item.key}
                 aria-disabled="true"
                 onMouseEnter={() => setHoveredKey(null)}
-                className={cn(
-                  'relative z-10 flex cursor-not-allowed items-center justify-between gap-[8px] rounded-[4px] pl-[8px] pr-[16px] select-none',
-                  compact ? 'py-[6px]' : 'py-[7px]'
-                )}
+                className="relative z-10 flex cursor-not-allowed items-center justify-between gap-[8px] rounded-[4px] py-[6px] pl-[8px] pr-[16px] select-none"
               >
                 <span className="flex items-center gap-[8px]">
                   {item.icon && (

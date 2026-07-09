@@ -5,6 +5,22 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.56.0]
+
+### Changed — one consistent, tighter dropdown vertical rhythm
+
+- All SiteNav dropdowns now share one tight vertical rhythm so they read as a
+  family. Only verticality changed — widths (compose/Media/Account `w-[210px]`,
+  About `w-[317px]`), colors, icons, and copy are all unchanged.
+- Icon rows (compose, Media, Account) are uniformly `py-[6px]` (Media was
+  `py-[7px]`), so the three read equally tight.
+- About title + description rows drop from `py-[16px]` to `py-[8px]` (tighter
+  between-item spacing) and the title↔description gap goes to `gap-[0px]`, so
+  the description sits flush under its title (their line-heights supply the
+  separation) and each pair reads as one tight block.
+- Header→list gap stays tight + consistent (`gap-[4px]`) on the headered
+  panels (compose "Create Content", Account).
+
 ## [0.55.0]
 
 ### Changed — `SiteNav` logged-out Sign Up button corners
