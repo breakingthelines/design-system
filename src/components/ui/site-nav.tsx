@@ -32,6 +32,10 @@ export interface NavTab {
   /** Link target. Optional when the tab has children (acts as dropdown trigger only). */
   href?: string;
   active?: boolean;
+  /** Optional section header shown at the top of this tab's dropdown (12px
+   *  Inter Medium, dimmed grey-500/70 — same style as the compose/Account
+   *  headers). Omit for a headerless dropdown. */
+  menuHeader?: string;
   /** Sub-items rendered as a hover dropdown on desktop, inline on mobile */
   children?: {
     label: string;
@@ -133,6 +137,7 @@ const defaultTabs: NavTab[] = [
   { label: 'Thoughts', href: '/thoughts' },
   {
     label: 'Media',
+    menuHeader: 'Watch & Listen',
     children: [
       { label: 'BTL TV', href: '/tv' },
       { label: 'BTL Podcasts', href: '/podcasts' },
@@ -761,11 +766,14 @@ function SiteNav({
               {tab.children ? (
                 // Dropdown — pt-2 creates an invisible hover bridge between trigger and panel
                 <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
-                  {/* No header — the tab already names the menu (revision A).
+                  {/* Optional section header per tab (`menuHeader`, e.g. Media
+                      "Watch & Listen"); omit for a headerless dropdown (About).
                       Fixed widths per spec: title+description panels (About)
                       317px so descriptions stay on one line; icon+label panels
                       (Media) 210px. */}
                   <NavDropdownPanel
+                    header={tab.menuHeader}
+                    compact={Boolean(tab.menuHeader)}
                     className={
                       tab.children.some((child) => child.description) ? 'w-[317px]' : 'w-[210px]'
                     }
@@ -792,18 +800,15 @@ function SiteNav({
           avatarUrl || initials ? 'gap-4' : 'gap-8'
         )}
       >
-        {/* Search icon. Signed-in: shown at all sizes. Signed-out: mobile only
-            (`sm:hidden`) — desktop signed-out uses the "Search" TEXT control in
-            the public actions cluster below. */}
-        {onSearchClick && (
+        {/* Search icon — signed-in only (all sizes). Signed-out uses the
+            "Search" TEXT control in the public actions cluster below, at every
+            viewport (mobile + desktop). */}
+        {!isLoggedOut && onSearchClick && (
           <button
             type="button"
             aria-label="Search"
             onClick={onSearchClick}
-            className={cn(
-              'flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer',
-              isLoggedOut && 'sm:hidden'
-            )}
+            className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
           >
             <SearchIcon className="size-6" />
           </button>
@@ -1089,15 +1094,15 @@ function SiteNav({
           )
         ) : (
           /* Logged-out (public) actions cluster: text controls + a solid-red
-             Sign Up button. Search + Learn are desktop-only text (mobile has
-             the search icon in the top bar + Learn in the hamburger). "Log in"
-             shows at ALL sizes, sitting just left of the Sign Up button. */
+             Sign Up button. "Search" and "Log in" show at ALL sizes (Search,
+             Log in, then Sign Up); "Learn" is desktop-only text (mobile reaches
+             it via the hamburger). No search icon when signed out. */
           <div className="flex items-center gap-6">
             {onSearchClick && (
               <button
                 type="button"
                 onClick={onSearchClick}
-                className="hidden text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 sm:block cursor-pointer"
+                className="text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 cursor-pointer"
               >
                 Search
               </button>

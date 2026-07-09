@@ -5,6 +5,21 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.59.0]
+
+### Changed — mobile logged-out Search is now text; per-tab dropdown header
+
+- The logged-out header's Search control is now the **"Search" text** control
+  at every viewport (mobile + desktop), sitting left of Log in — the mobile
+  magnifying-glass icon is gone. Mobile logged-out top bar now reads:
+  `[Search] [Log in] [Sign Up] [hamburger]`, all text/button. (The search icon
+  is still used for the signed-in header.)
+- `NavTab` gains an optional `menuHeader?: string`. When set, that tab's
+  dropdown renders a section header (12px Inter Medium, dimmed `grey-500/70` —
+  the same style as the compose/Account headers) with a tight header→list gap.
+  Omit it for a headerless dropdown. The DS default/story fixtures set the
+  Media tab's `menuHeader` to **"Watch & Listen"**; About stays headerless.
+
 ## [0.58.0]
 
 ### Fixed — mobile logged-out header: de-duplicated controls, Log in moved to top bar
