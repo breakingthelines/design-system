@@ -10,7 +10,7 @@ import {
   useTransform,
   useReducedMotion,
 } from 'framer-motion';
-import { Plus, UserCircle, Hammer, SignOut } from '@phosphor-icons/react';
+import { Plus, UserCircle, Hammer, SignOut, Lightbulb, CaretDown } from '@phosphor-icons/react';
 
 import { BtlWordmark } from '#/components/ui/btl-logo';
 import { cn } from '#/lib/utils';
@@ -83,12 +83,13 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   initials?: string;
   /** Search click handler */
   onSearchClick?: () => void;
-  /** When non-empty, renders a Compose (＋) control in the actions cluster
-   *  (right of Notifications, left of the avatar): a circular button that opens
-   *  an About-style dropdown of the content types you can create, each linking
-   *  to its `href`. `disabled` items render greyed-out and non-interactive.
-   *  Omit / empty to hide it; the consumer gates visibility (typically only when
-   *  signed in). */
+  /** When non-empty, renders a Compose control in the actions cluster (right
+   *  of Notifications, left of the avatar) that opens an About-style dropdown
+   *  of the content types you can create, each linking to its `href`.
+   *  `disabled` items render greyed-out and non-interactive. Desktop shows a
+   *  "Create" text pill (Figma 719-5697); mobile keeps the compact circular
+   *  ＋ trigger. Omit / empty to hide it; the consumer gates visibility
+   *  (typically only when signed in). */
   composeItems?: ComposeItem[];
   /** Notifications click handler (used as fallback when notificationPopover is not set) */
   onNotificationsClick?: () => void;
@@ -110,8 +111,11 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   /** Login click handler (shown when no avatarUrl) — renders the "Log in"
    *  text control in the logged-out (public) actions cluster. */
   onLoginClick?: () => void;
-  /** When set (and logged out), renders a "Learn" text link in the public
-   *  actions cluster pointing here. Omit to hide it. */
+  /** Docs/guides destination, shared by both auth states (Figma 719-5697):
+   *  logged-out renders a "Learn" text link in the public actions cluster;
+   *  logged-in renders a lightbulb icon in the signed-in actions cluster
+   *  (desktop only — mobile already reaches it via the hamburger's About >
+   *  Learn row). Omit to hide both. */
   learnHref?: string;
   /** When set (and logged out), renders the solid-red "Sign Up" button in the
    *  public actions cluster pointing here (e.g. `/register`). Omit to hide it. */
@@ -796,36 +800,59 @@ function SiteNav({
       <div
         className={cn(
           'relative z-10 flex items-center justify-end',
-          avatarUrl || initials ? 'gap-4' : 'gap-8'
+          // Figma 719-5697: signed-in actions (Search / Docs / Notifications /
+          // Create / Account) sit in one tight 4px-gap cluster, not the older
+          // 16px rhythm — the new bg-white/5 icon boxes supply their own
+          // visual separation, so the gap between them can be much tighter.
+          avatarUrl || initials ? 'gap-[4px]' : 'gap-8'
         )}
       >
         {/* Search icon — signed-in only (all sizes). Signed-out uses the
             "Search" TEXT control in the public actions cluster below, at every
-            viewport (mobile + desktop). */}
+            viewport (mobile + desktop). Figma 719-5697: a 32px frosted icon
+            slot (bg-white/5, rounded-4px) rather than the old bare icon. */}
         {!isLoggedOut && onSearchClick && (
           <button
             type="button"
             aria-label="Search"
             onClick={onSearchClick}
-            className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
+            className="flex size-8 cursor-pointer items-center justify-center rounded-[4px] bg-white/5 text-grey-500 transition-colors hover:bg-white/10 hover:text-white"
           >
-            <SearchIcon className="size-6" />
+            <SearchIcon className="size-[14px]" />
           </button>
+        )}
+        {/* Docs (lightbulb) — signed-in, desktop only. Reuses `learnHref`, the
+            same docs destination the logged-out cluster shows as "Learn" text,
+            so both auth states share one source of truth. Desktop-only: a
+            signed-in mobile user already reaches docs via the hamburger's
+            About > Learn row, so a 6th icon on the already-busy mobile action
+            row would just duplicate that path (Figma 719-5697 is a
+            desktop-width mock; no mobile equivalent was specified). */}
+        {!isLoggedOut && learnHref && (
+          <a
+            href={learnHref}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Docs"
+            className="hidden size-8 items-center justify-center rounded-[4px] border border-white/5 bg-white/5 text-grey-500 backdrop-blur-[15px] transition-colors hover:bg-white/10 hover:text-white sm:flex"
+          >
+            <Lightbulb size={14} weight="regular" />
+          </a>
         )}
         {(onNotificationsClick || notificationPopover) && (
           <>
             <div className={cn('relative hidden sm:block', notificationPopover && 'group/notif')}>
-              <div className="flex items-center justify-center">
+              <div className="relative flex size-8 items-center justify-center rounded-[4px] bg-white/5">
                 <button
                   type="button"
                   aria-label="Notifications"
                   onClick={notificationPopover ? undefined : onNotificationsClick}
-                  className="flex items-center justify-center text-white/80 hover:text-red-100 transition-colors cursor-pointer"
+                  className="flex size-full items-center justify-center rounded-[4px] text-grey-500 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
                 >
-                  <NotificationIcon className="size-[22px]" />
+                  <NotificationIcon className="size-[14px]" />
                 </button>
                 {notificationCount !== undefined && notificationCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                  <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
                     {notificationCount > 9 ? '9+' : notificationCount}
                   </span>
                 )}
@@ -844,13 +871,13 @@ function SiteNav({
                       <button
                         type="button"
                         aria-label="Notifications"
-                        className="relative flex items-center justify-center text-white/80 transition-colors hover:text-red-100"
+                        className="relative flex size-8 items-center justify-center rounded-[4px] bg-white/5 text-grey-500 transition-colors hover:bg-white/10 hover:text-white"
                       />
                     }
                   >
-                    <NotificationIcon className="size-[22px]" />
+                    <NotificationIcon className="size-[14px]" />
                     {notificationCount !== undefined && notificationCount > 0 && (
-                      <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                      <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
                         {notificationCount > 9 ? '9+' : notificationCount}
                       </span>
                     )}
@@ -868,11 +895,11 @@ function SiteNav({
                   type="button"
                   aria-label="Notifications"
                   onClick={onNotificationsClick}
-                  className="relative flex items-center justify-center text-white/80 transition-colors hover:text-red-100"
+                  className="relative flex size-8 items-center justify-center rounded-[4px] bg-white/5 text-grey-500 transition-colors hover:bg-white/10 hover:text-white"
                 >
-                  <NotificationIcon className="size-[22px]" />
+                  <NotificationIcon className="size-[14px]" />
                   {notificationCount !== undefined && notificationCount > 0 && (
-                    <span className="absolute -top-0.5 -right-0.5 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                    <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
                       {notificationCount > 9 ? '9+' : notificationCount}
                     </span>
                   )}
@@ -882,22 +909,24 @@ function SiteNav({
           </>
         )}
 
-        {/* Compose (＋): a circular trigger opening the shared NavDropdownPanel
-            (see above) with a "Create Content" header and icon rows. Sits
-            right of Notifications, left of the avatar. Rendered only when
+        {/* Compose: opens the shared NavDropdownPanel (see above) with a
+            "Create Content" header and icon rows. Sits right of
+            Notifications, left of the avatar. Rendered only when
             composeItems is supplied (the consumer gates visibility on
             sign-in). */}
         {composeItems && composeItems.length > 0 && (
           <>
-            {/* Desktop: hover dropdown */}
+            {/* Desktop: hover dropdown. Figma 719-5697 replaces the old
+                circular ＋ trigger with a labelled "Create" pill; the
+                dropdown panel it opens is unchanged. */}
             <div className="group/compose relative hidden sm:block">
               <button
                 type="button"
                 aria-label="Compose"
                 aria-haspopup="true"
-                className="flex size-[34px] cursor-pointer items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/[0.16]"
+                className="flex h-8 cursor-pointer items-center justify-center rounded-[4px] border border-white/5 bg-white/10 px-[8px] text-[12px] font-semibold leading-[16px] tracking-[-0.36px] text-white backdrop-blur-[15px] transition-colors hover:bg-white/[0.16]"
               >
-                <Plus className="size-[18px]" weight="bold" />
+                Create
               </button>
               <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/compose:opacity-100 group-hover/compose:visible group-hover/compose:translate-y-0 transition-all duration-150 ease-out">
                 <ComposeMenuPanel items={composeItems} />
@@ -934,13 +963,16 @@ function SiteNav({
           accountItems.length > 0 ? (
             <>
               {/* Desktop: hover-opens the shared "Account" NavDropdownPanel
-                  (Figma 3009-11910). */}
+                  (Figma 3009-11910). Figma 719-5697 wraps the trigger in the
+                  same frosted pill as "Create" and appends a CaretDown so it
+                  reads as a dropdown trigger, not a plain avatar. */}
               <div className="group/avatar relative hidden sm:block">
-                <div className="flex cursor-pointer items-center justify-center">
-                  <Avatar size="default" className="size-[34px]">
+                <div className="flex h-8 cursor-pointer items-center gap-[8px] rounded-[4px] border border-white/5 bg-white/10 px-[8px] backdrop-blur-[15px]">
+                  <Avatar size="default" className="size-6">
                     {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
                     <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
                   </Avatar>
+                  <CaretDown size={14} weight="regular" className="text-white" />
                 </div>
                 <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
                   <NavDropdownPanel
@@ -1093,15 +1125,15 @@ function SiteNav({
           )
         ) : (
           /* Logged-out (public) actions cluster: text controls + a solid-red
-             Sign Up button. "Search" and "Log in" show at ALL sizes (Search,
-             Log in, then Sign Up); "Learn" is desktop-only text (mobile reaches
-             it via the hamburger). No search icon when signed out. */
+             Sign Up button. "Search" is desktop-only text now (mobile reaches
+             it via the hamburger, alongside "Learn" — see the hamburger panel
+             below); "Log in" then Sign Up show at ALL sizes. */
           <div className="flex items-center gap-6">
             {onSearchClick && (
               <button
                 type="button"
                 onClick={onSearchClick}
-                className="text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 cursor-pointer"
+                className="hidden text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 cursor-pointer sm:block"
               >
                 Search
               </button>
@@ -1118,7 +1150,12 @@ function SiteNav({
               <button
                 type="button"
                 onClick={onLoginClick}
-                className="text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 cursor-pointer"
+                // Mobile-only vertical padding (matches Sign Up's py-2.5) now
+                // that Search has vacated the row — gives "Log in" a proper
+                // touch target instead of a bare text sliver next to the
+                // boxed Sign Up button. Reverts to the original zero-padding
+                // text link on desktop (sm:py-0) — desktop is unchanged.
+                className="py-2.5 sm:py-0 text-[12px] leading-[18px] tracking-[-0.36px] text-grey-500 transition-colors hover:text-white/80 cursor-pointer"
               >
                 Log in
               </button>
@@ -1154,6 +1191,21 @@ function SiteNav({
               className="relative min-w-[180px] overflow-hidden rounded-[2px] border-white/10 !bg-grey-200 p-1 shadow-xl"
             >
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+              {/* Search moved in from the mobile top bar (was crammed in
+                  alongside Log in / Sign Up / this hamburger — see
+                  `onSearchClick` above, now `hidden sm:block`). Logged-out
+                  only: signed-in mobile keeps its own persistent Search icon
+                  in the actions cluster, so adding it here too would
+                  duplicate it. First item, un-headered like the flat tab
+                  rows below. */}
+              {isLoggedOut && onSearchClick && (
+                <DropdownMenuItem
+                  onClick={onSearchClick}
+                  className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                >
+                  Search
+                </DropdownMenuItem>
+              )}
               {tabs.map((tab) =>
                 tab.children ? (
                   <React.Fragment key={tab.label}>

@@ -108,6 +108,9 @@ export const LoggedIn = meta.story({
     onSearchClick: () => {},
     onNotificationsClick: () => {},
     onAvatarClick: () => {},
+    // Signed-in lightbulb "Docs" icon (Figma 719-5697) — reuses the same
+    // `learnHref` the logged-out cluster shows as "Learn" text.
+    learnHref: 'https://docs.breakingthelines.com',
   },
 });
 
@@ -120,15 +123,16 @@ export const WithNotifications = meta.story({
     onNotificationsClick: () => {},
     onAvatarClick: () => {},
     notificationCount: 3,
+    learnHref: 'https://docs.breakingthelines.com',
   },
 });
 
-/** Signed-in creator: a circular ＋ Compose control sits right of Notifications
- *  (left of the avatar) and opens the shared NavDropdownPanel with a
- *  "Create Content" header, each row a 14px outline icon + 12px grey-500
- *  label. Newsletter and Visuals render disabled ("Soon"). Rendered only when
- *  `composeItems` is non-empty — the app supplies it once the user is
- *  authenticated. */
+/** Signed-in creator: a "Create" pill (Figma 719-5697) sits right of
+ *  Notifications (left of the avatar) and opens the shared NavDropdownPanel
+ *  with a "Create Content" header, each row a 14px outline icon + 12px
+ *  grey-500 label. Newsletter and Visuals render disabled ("Soon"). Rendered
+ *  only when `composeItems` is non-empty — the app supplies it once the user
+ *  is authenticated. */
 export const WithCompose = meta.story({
   args: {
     tabs,
@@ -137,6 +141,7 @@ export const WithCompose = meta.story({
     composeItems: composeItemsWithIcons,
     onSearchClick: () => {},
     onNotificationsClick: () => {},
+    learnHref: 'https://docs.breakingthelines.com',
     onAvatarClick: () => {},
     notificationCount: 3,
   },
@@ -213,6 +218,7 @@ export const AccountDropdownOpen = meta.story({
     profileHref: '/@zach',
     studioHref: 'https://studio.breakingthelines.com',
     onLogout: () => {},
+    learnHref: 'https://docs.breakingthelines.com',
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
