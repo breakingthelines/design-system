@@ -5,6 +5,57 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.61.0]
+
+### Changed — mobile logged-out header: Search moved into the hamburger
+
+- On mobile, the logged-out top bar packed **Search / Log in / Sign Up /
+  hamburger** into one row — too tight, and `Log in` in particular had almost
+  no touch target next to the boxed `Sign Up` button. `Search` (text control)
+  is now `hidden` on mobile and shown only at `sm:` and up; a `Search` item
+  was added to the top of the mobile hamburger (logged-out only — signed-in
+  mobile already has its own persistent Search icon, so it isn't duplicated
+  there).
+- `Log in` gains mobile-only vertical padding (`py-2.5`, matching `Sign Up`'s)
+  so it has a proper tap target using the space Search vacated;
+  `sm:py-0` reverts it to the original bare-text link on desktop, which is
+  otherwise unchanged.
+
+### Changed — `SiteNav` signed-in header restyle (Figma 719-5697)
+
+- The signed-in actions cluster (desktop) is restyled to match Figma
+  719-5697: `Search` and `Notifications` become 32px frosted icon slots
+  (`bg-white/5`, `rounded-[4px]`, 14px glyph) instead of bare 22–24px icons;
+  the actions cluster gap tightens from `gap-4` (16px) to the spec's `4px`
+  (the boxed icons supply their own visual separation, so the wider gap is no
+  longer needed).
+- Compose's desktop trigger changes from a circular ＋ icon button to a
+  labelled **"Create"** text pill (`rounded-[4px]`, `bg-white/10`,
+  `border-white/5`, `backdrop-blur`); the dropdown it opens is unchanged.
+  Mobile keeps the compact circular ＋ trigger (unchanged) — a wider text
+  pill would fight the mobile-conscious goal of not growing the already-busy
+  mobile action row.
+- The Account-dropdown avatar trigger (desktop) is wrapped in the same
+  frosted pill as Create and gains a `CaretDown` glyph next to a smaller
+  (24px, was 34px) avatar, so it reads as a dropdown trigger rather than a
+  plain avatar. Mobile avatar trigger is unchanged (bare 34px avatar). The
+  legacy `avatarMenu` fallback path (superseded by the Account dropdown,
+  documented as legacy, not used by platform) is untouched.
+- New: a lightbulb "Docs" icon (`Lightbulb` from `@phosphor-icons/react`,
+  external link) in the signed-in actions cluster, between Search and
+  Notifications — desktop only. It reuses the existing `learnHref` prop (the
+  same destination the logged-out cluster already shows as "Learn" text) so
+  both auth states share one source of truth; the consumer no longer needs to
+  gate `learnHref` to logged-out only. Not shown on signed-in mobile: the
+  mobile hamburger's tabs already include an About > Learn row pointing at
+  the same destination, so a 6th icon on the mobile action row would
+  duplicate it rather than add anything.
+- `Search`/`Notification` icon glyphs are unchanged (reused the existing
+  `SearchIcon`/`NotificationIcon` — Figma's exported assets are the same
+  glyphs redrawn at a different scale). `CaretDown` and `Lightbulb` are
+  Phosphor icons (exact name + glyph match to the Figma export), consistent
+  with how the Account dropdown already sources its row icons.
+
 ## [0.60.0]
 
 ### Fixed — duplicate "Learn" in the logged-out mobile hamburger
