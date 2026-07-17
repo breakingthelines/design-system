@@ -176,11 +176,12 @@ export const SignedInFullCluster = meta.story({
 /** Same real signed-in cluster as {@link SignedInFullCluster}, but with
  *  `onGoBack` set — the CONTENT/reader page configuration (platform's single
  *  `ChromeShell` passes `onGoBack` whenever the route has a logical parent,
- *  see `useGoBack`/`go-back-parents`). The Go-back pill eats ~50-80px of the
- *  left side that `SignedInFullCluster` doesn't spend, so the actions cluster
- *  has measurably less room at narrow widths — use THIS story (not the
- *  no-go-back one) to verify the priority-collapse thresholds for content
- *  pages at 320/360/375px. */
+ *  see `useGoBack`/`go-back-parents`). The Go-back pill eats ~100px of the
+ *  left side that `SignedInFullCluster` doesn't spend (measured — more than
+ *  the ~50-80px originally estimated), so the actions cluster has measurably
+ *  less room at narrow widths — use THIS story (not the no-go-back one) to
+ *  verify the priority-collapse thresholds for content pages at
+ *  320/360/375px. */
 export const SignedInFullClusterWithGoBack = meta.story({
   args: {
     tabs,
