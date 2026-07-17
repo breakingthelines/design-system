@@ -5,6 +5,38 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.64.0]
+
+### Fixed — `SiteNav`: signed-in header overflowed at 320px, worse on content pages with "Go back"
+
+- DS 0.61.0/0.62.0 made the mobile signed-in actions cluster byte-identical
+  to desktop (Search / Docs / Notifications / Create / Account, all always
+  shown) — this fit down to ~375px but not 320px, and a content page (which
+  also renders a "Go back" pill in the same row via `onGoBack`) overflowed
+  even at 375px: measured 40.43px past the viewport with the full cluster.
+  Added a priority-based responsive collapse, context-aware on whether
+  `onGoBack` is set (`isCompact = onGoBack != null` — derived internally
+  from the existing prop rather than a new one, so it can't drift out of
+  sync with what's actually on screen): Search / Notifications / Avatar
+  never drop; Docs (lightbulb) is the first to hide (`min-[320px]` default /
+  `min-[440px]` compact); the "Create" pill swaps its text for a "+" glyph
+  below 375px (same frosted pill container at every width — the owner
+  explicitly wanted the pill's visual treatment preserved, not a shrink to a
+  bare icon square); `GoBack` gained an `iconOnly` prop (chevron only, no
+  label, `aria-label` still carries the accessible name) that `SiteNav`
+  toggles below `min-[400px]`.
+- Every threshold was measured (Storybook + Playwright, not guessed) against
+  the real rendered natural widths of every cluster item at 320/360/375px —
+  see the `site-nav.tsx` `GO_BACK_ICON_ONLY_CLASSNAME` doc comment for the
+  full derivation. Two measured deltas worth flagging: (1) a content page's
+  "Go back" costs ~100px of left-side width vs. the bare logo, not the
+  ~50-80px originally estimated; (2) because of that, Go-back only returns
+  to its labeled form at 400px, not the ~360px originally estimated — at
+  375px, re-labeling it (with Docs already hidden and Create already "+")
+  would overflow by 16.43px. Confirmed clean (zero overflow, positive
+  margin) at all 6 required combinations (320/360/375 × with/without
+  "Go back").
+
 ## [0.63.0]
 
 ### Fixed — `PredictionLeaderboardPanel`: rank-1 viewer opened hidden above the fold; scroll snapped back on re-render

@@ -10,7 +10,7 @@ import {
   useTransform,
   useReducedMotion,
 } from 'framer-motion';
-import { UserCircle, Hammer, SignOut, Lightbulb, CaretDown } from '@phosphor-icons/react';
+import { UserCircle, Hammer, SignOut, Lightbulb, CaretDown, Plus } from '@phosphor-icons/react';
 
 import { BtlWordmark } from '#/components/ui/btl-logo';
 import { cn } from '#/lib/utils';
@@ -607,16 +607,71 @@ function ComposeMenuPanel({ items }: { items: ComposeItem[] }) {
 }
 
 /** Shared "Create" pill trigger (Figma 719-5697) — the frosted button that
- *  opens the compose dropdown. Byte-identical on desktop (hover-opens) and
- *  mobile (click-opens) so the two breakpoints can't drift apart again;
- *  mobile previously swapped this for a bare circular "+" icon, which read
- *  as an unrelated control next to the boxed search/notif/avatar buttons.
- *  Both usages also carry `data-slot="button" data-shimmer="brand"` — the
- *  existing global hover-shimmer sweep (globals.css) already used on the
- *  BtlWordmark, opted into here rather than reinvented, so Create reads as
- *  the header's primary CTA catching brand-red light on hover. */
+ *  opens the compose dropdown. Byte-identical container on desktop
+ *  (hover-opens) and mobile (click-opens) so the two breakpoints can't drift
+ *  apart again — same frosted pill shape at every width; only the INNER
+ *  content swaps (below CREATE_PILL_ICON_CLASSNAME's breakpoint the "Create"
+ *  text is replaced by a "+" glyph, same pill padding/border/bg throughout —
+ *  owner call: keep the pill's visual treatment consistent with desktop
+ *  rather than shrinking to a bare icon square). Both usages also carry
+ *  `data-slot="button" data-shimmer="brand"` — the existing global
+ *  hover-shimmer sweep (globals.css) already used on the BtlWordmark, opted
+ *  into here rather than reinvented, so Create reads as the header's primary
+ *  CTA catching brand-red light on hover. */
 const CREATE_PILL_CLASSNAME =
   'flex h-8 cursor-pointer items-center justify-center rounded-[4px] border border-white/5 bg-white/10 px-[8px] text-[12px] font-semibold leading-[16px] tracking-[-0.36px] text-white backdrop-blur-[15px] transition-colors hover:bg-white/[0.16]';
+
+/**
+ * Priority-based responsive collapse for the signed-in mobile actions
+ * cluster (Search > Notifications > Avatar always shown — never drop; Docs
+ * then Create collapse first, per the owner-specified priority). A content
+ * page (`onGoBack` set, `isCompact`) renders a Go-back pill in the same row
+ * that costs ~100px more left-side width than the bare logo (measured,
+ * SignedInFullClusterWithGoBack vs SignedInFullCluster stories, DS 0.63.0 —
+ * see CHANGELOG), so Go-back/Docs collapse EARLIER (larger px thresholds) on
+ * a content page than on a plain one.
+ *
+ * Create's own threshold is a single fixed 375px, the SAME regardless of
+ * `isCompact` (explicit owner call) — below it the pill shows a "+" glyph
+ * instead of "Create" text, but stays the identical frosted pill container
+ * at every width (same padding/border/bg/shimmer as desktop, see
+ * CREATE_PILL_CLASSNAME) rather than shrinking to a bare icon square.
+ * sm+ tablet/desktop is always ≥640px, so this is effectively mobile-only.
+ *
+ * Every threshold below is DERIVED from the real rendered natural widths of
+ * every cluster item (measured via Storybook + Playwright at 320/360/375px,
+ * not guessed): logo 29 / go-back label 87.92 / go-back icon 28 / go-back↔
+ * logo margin 12 / Search, Docs, Notifications 32 each / Create "Create"-text
+ * pill 54.51 / Create "+"-icon pill 32 / Account 60 / Hamburger 20 / 8px gap
+ * between each of the 5-6 action-cluster items. Each raw crossover (natural
+ * content width == viewport − 32px container padding) gets a flat +8px
+ * safety margin (font rendering / sub-pixel variance across browsers) then
+ * rounds up to the nearest 4px, matching this file's spacing grid. See the
+ * DS 0.63.0 CHANGELOG for the full pixel-budget table this was derived from.
+ *
+ * With Create's threshold fixed at 375, Go-back and Docs (compact) both stay
+ * collapsed through the ENTIRE 320-375px required range: re-labeling Go-back
+ * right at 375 (Docs already hidden, Create already "+") would overflow by
+ * 16.43px, so Go-back only returns to its label at 400 (raw 391.43+buffer),
+ * and Docs (compact) only returns at 440 (raw 431.43+buffer, once Go-back is
+ * already labeled) — i.e. on a content page, within 320-375, Go-back is
+ * ALWAYS icon-only and Docs is ALWAYS hidden. That 400 is ~40px past the
+ * original "~360" go-back estimate — the one surprising-measurement delta
+ * worth flagging. The default (no-go-back) case has so much more room that
+ * Docs never needs to hide within 320-375 either (its own floor is 309, well
+ * under 320) — its 320 threshold exists only for graceful degradation below
+ * the tested range, not because 320-375 needs it.
+ *
+ * Tailwind needs each `min-[…]` token as a static string literal to
+ * generate its CSS, so these are whole class strings, not composed
+ * fragments.
+ */
+const GO_BACK_ICON_ONLY_CLASSNAME = 'flex min-[400px]:hidden';
+const GO_BACK_LABELED_CLASSNAME = 'hidden min-[400px]:flex';
+const DOCS_VISIBLE_CLASSNAME_DEFAULT = 'hidden min-[320px]:flex';
+const DOCS_VISIBLE_CLASSNAME_COMPACT = 'hidden min-[440px]:flex';
+const CREATE_PILL_ICON_CLASSNAME = 'min-[375px]:hidden';
+const CREATE_PILL_TEXT_CLASSNAME = 'hidden min-[375px]:inline';
 
 /** Shared "Account" trigger pill (Figma 719-5697) — the avatar + caret
  *  frosted button. Byte-identical on desktop (CSS hover-reveal) and mobile
@@ -672,6 +727,19 @@ function SiteNav({
   // public actions cluster (Search / Learn / Log in / Sign Up) instead of the
   // signed-in icon cluster.
   const isLoggedOut = !(avatarUrl || initials);
+
+  // Content-page signal for the priority-collapse below: whenever `onGoBack`
+  // is set, SiteNav renders the Go-back pill in row 1 col 1 (see the left
+  // group below), which eats real width from the same line the actions
+  // cluster has to fit on. Derived from `onGoBack` itself — not a separate
+  // prop — so it can never drift out of sync with whether Go-back is
+  // actually on screen (the only thing that determines how much room is
+  // left). Measured budget (SignedInFullCluster[WithGoBack] stories @
+  // 320/360/375, DS 0.63.0): the labeled Go-back pill costs ~129px of left
+  // width vs ~29px for the bare logo — ~100px more than a plain content page
+  // spends, so the compact thresholds below sit ~100-110px wider than the
+  // non-compact ones.
+  const isCompact = onGoBack != null;
 
   // Account dropdown rows (Figma 3009-11910) — built from the profile/studio/
   // logout props. When non-empty, the avatar becomes an Account-menu trigger
@@ -760,7 +828,26 @@ function SiteNav({
               className="shrink-0"
             >
               <div className="flex items-center" style={{ width: 'max-content' }}>
-                <GoBack size="sm" onClick={onGoBack} label={goBackLabel} />
+                {/* Icon-only below 400px (GO_BACK_ICON_ONLY_CLASSNAME /
+                    GO_BACK_LABELED_CLASSNAME), full "Go back" label at/above
+                    it — reclaims width for the actions cluster on the
+                    narrowest content-page viewports (see `isCompact`). Same
+                    dual-render-toggled-by-Tailwind-visibility pattern as
+                    Search/Notifications/Create below, not a JS resize
+                    listener. */}
+                <GoBack
+                  size="sm"
+                  onClick={onGoBack}
+                  label={goBackLabel}
+                  iconOnly
+                  className={GO_BACK_ICON_ONLY_CLASSNAME}
+                />
+                <GoBack
+                  size="sm"
+                  onClick={onGoBack}
+                  label={goBackLabel}
+                  className={GO_BACK_LABELED_CLASSNAME}
+                />
               </div>
             </motion.div>
           ) : null}
@@ -916,7 +1003,14 @@ function SiteNav({
             initial="rest"
             whileHover={reduceMotion ? undefined : 'hover'}
             whileTap={reduceMotion ? undefined : { scale: 0.92 }}
-            className="relative flex size-8 items-center justify-center rounded-[4px] border border-white/5 bg-white/5 text-grey-500 backdrop-blur-[15px] transition-colors hover:bg-white/10"
+            className={cn(
+              'relative size-8 items-center justify-center rounded-[4px] border border-white/5 bg-white/5 text-grey-500 backdrop-blur-[15px] transition-colors hover:bg-white/10',
+              // Lowest-priority item in the collapse ladder — first to go
+              // below the (context-aware) width budget. Always shown at sm+
+              // (both thresholds are well under the 640px tablet
+              // breakpoint), so desktop/tablet is unaffected.
+              isCompact ? DOCS_VISIBLE_CLASSNAME_COMPACT : DOCS_VISIBLE_CLASSNAME_DEFAULT
+            )}
           >
             {/* Outline (rest) — fades/spins out as the filled glyph swaps in. */}
             <motion.span
@@ -1045,10 +1139,17 @@ function SiteNav({
                 <ComposeMenuPanel items={composeItems} />
               </div>
             </div>
-            {/* Mobile: click dropdown. Same "Create" pill as desktop — used to
-                be a bare circular "+" here, which read as an unrelated
-                control next to the boxed search/notif icons (owner
-                feedback); parity fixes that. */}
+            {/* Mobile: click dropdown. Byte-identical pill container to
+                desktop at every width (CREATE_PILL_CLASSNAME, unconditional)
+                — used to be a bare circular "+" here, which read as an
+                unrelated control next to the boxed search/notif icons
+                (owner feedback); parity fixes that. Below
+                CREATE_PILL_ICON_CLASSNAME's breakpoint (375px — the
+                priority-collapse's third-lowest priority slot, after Docs),
+                only the INNER content swaps to a "+" glyph — the pill itself
+                (frosted bg, border, padding, shimmer) stays exactly as
+                styled on desktop, per owner call, rather than shrinking to a
+                bare icon square. */}
             <div className="sm:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger
@@ -1062,7 +1163,13 @@ function SiteNav({
                     />
                   }
                 >
-                  Create
+                  <Plus
+                    size={14}
+                    weight="bold"
+                    aria-hidden="true"
+                    className={CREATE_PILL_ICON_CLASSNAME}
+                  />
+                  <span className={CREATE_PILL_TEXT_CLASSNAME}>Create</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
