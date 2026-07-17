@@ -828,12 +828,13 @@ function SiteNav({
               className="shrink-0"
             >
               <div className="flex items-center" style={{ width: 'max-content' }}>
-                {/* Icon-only below the GO_BACK_LABEL_AT breakpoint, full "Go
-                    back" label at/above it — reclaims width for the actions
-                    cluster on the narrowest content-page viewports (see
-                    `isCompact`). Same dual-render-toggled-by-Tailwind-
-                    visibility pattern as Search/Notifications/Create below,
-                    not a JS resize listener. */}
+                {/* Icon-only below 400px (GO_BACK_ICON_ONLY_CLASSNAME /
+                    GO_BACK_LABELED_CLASSNAME), full "Go back" label at/above
+                    it — reclaims width for the actions cluster on the
+                    narrowest content-page viewports (see `isCompact`). Same
+                    dual-render-toggled-by-Tailwind-visibility pattern as
+                    Search/Notifications/Create below, not a JS resize
+                    listener. */}
                 <GoBack
                   size="sm"
                   onClick={onGoBack}
