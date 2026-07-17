@@ -5,6 +5,54 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.62.0]
+
+### Changed — `SiteNav` avatar: drop ring/border, shrink 24px → 20px
+
+- The Account-trigger avatar (`ACCOUNT_AVATAR_CLASSNAME`) no longer inherits
+  the shared `Avatar` primitive's `ring-background` + mix-blend-darken
+  after-border. Both exist in `avatar.tsx` to cut an avatar out from a
+  busy/bright backdrop (avatar stacks, profile hero, thought cards) — set
+  against the 0.61.0 header's frosted `bg-white/10` pill, the ring read as a
+  hard black ring hugging the pill's edges (owner feedback). Neutralised
+  locally (`ring-0 after:border-transparent`) on this one consumer only; the
+  shared primitive and every other consumer are untouched.
+- Avatar size drops `size-6` (24px) → `size-5` (20px), giving it visible
+  clearance from the pill edges now that the ring isn't filling that space.
+
+### Changed — `SiteNav` mobile actions cluster: parity with desktop
+
+- Mobile compose trigger swaps the bare circular "+" icon button for the same
+  "Create" text pill desktop uses (`CREATE_PILL_CLASSNAME`, shared constant)
+  — the "+" read as an unrelated control next to the boxed
+  search/notif/avatar buttons.
+- Mobile Account trigger is wrapped in the same frosted pill as desktop
+  (`ACCOUNT_TRIGGER_CLASSNAME`, shared constant) and gains the `CaretDown`
+  glyph — previously a bare, unboxed 34px avatar, taller than the cluster's
+  other 32px buttons.
+- The lightbulb "Docs" icon (0.61.0 was desktop-only) now shows on both
+  breakpoints — owner call for exact parity between the two clusters; the
+  mobile hamburger's About > Learn row is a harmless duplicate path, same as
+  Search already was.
+- Actions-cluster gap opens to `8px` on mobile (`gap-[8px] sm:gap-[4px]`, was
+  a flat `4px`) — the same five items at 4px read as squished on a narrow
+  screen.
+
+### Added — hover polish on the actions cluster (reduced-motion aware)
+
+- Search and Notifications get a spring "pop" on hover (`IconPop`: tilt +
+  scale for Search, lift + scale for Notifications) instead of a static color
+  swap.
+- The Docs lightbulb crossfades from an outline glyph to a BTL-red filled
+  glyph with a soft glow on hover ("switching the bulb on"), via
+  framer-motion variant propagation.
+- The "Create" pill opts into the existing global `data-shimmer="brand"`
+  hover sweep (already used on the `BtlWordmark`) instead of a bespoke
+  effect.
+- All of the above route through `useReducedMotion()` — under reduced
+  motion, elements fall back to the plain background/text hover transitions
+  only, with no scale/tilt/crossfade.
+
 ## [0.61.0]
 
 ### Changed — mobile logged-out header: Search moved into the hamburger

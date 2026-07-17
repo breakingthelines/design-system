@@ -147,6 +147,32 @@ export const WithCompose = meta.story({
   },
 });
 
+/** The real signed-in header configuration (Figma 719-5697): Search +
+ *  Lightbulb (Docs) + Notifications ("9+" cap) + "Create" pill + Account
+ *  avatar-with-caret, all together — the exact cluster the owner reviewed
+ *  screenshots of when calling for the avatar border/sizing and mobile
+ *  parity fixes. No other story combines `composeItems` with the
+ *  `profileHref`/`studioHref`/`onLogout` trio that lights up the Account
+ *  dropdown (`accountItems`) — avatar-only stories above exercise a
+ *  different, legacy avatar branch (`avatarMenu` / bare `onAvatarClick`)
+ *  than production actually renders. Use this one for anything touching the
+ *  actions-cluster spacing, sizing, or avatar styling. */
+export const SignedInFullCluster = meta.story({
+  args: {
+    tabs,
+    avatarUrl: 'https://i.pravatar.cc/150?u=zach',
+    initials: 'ZL',
+    composeItems: composeItemsWithIcons,
+    onSearchClick: () => {},
+    onNotificationsClick: () => {},
+    notificationCount: 12,
+    learnHref: 'https://docs.breakingthelines.com',
+    profileHref: '/@zach',
+    studioHref: 'https://studio.breakingthelines.com',
+    onLogout: () => {},
+  },
+});
+
 /** Compose dropdown pinned open (via a hover play step) so the new flat
  *  grey-200 panel — "Create Content" header, 14px icon rows, red "Soon"
  *  badges on the disabled rows — can be reviewed without having to hover

@@ -10,7 +10,7 @@ import {
   useTransform,
   useReducedMotion,
 } from 'framer-motion';
-import { Plus, UserCircle, Hammer, SignOut, Lightbulb, CaretDown } from '@phosphor-icons/react';
+import { UserCircle, Hammer, SignOut, Lightbulb, CaretDown } from '@phosphor-icons/react';
 
 import { BtlWordmark } from '#/components/ui/btl-logo';
 import { cn } from '#/lib/utils';
@@ -192,6 +192,38 @@ function NotificationIcon({ className }: { className?: string }) {
         fill="currentColor"
       />
     </svg>
+  );
+}
+
+/**
+ * Small spring "pop" wrapper for the action-cluster glyphs (Search /
+ * Notifications) — a quick scale + tilt/lift on hover so the cluster feels
+ * alive on interaction, not just a color swap (owner ask, alongside the
+ * lightbulb's red/fill hover further down). Deliberately a single-target
+ * spring (not a multi-step keyframe wiggle) so the held-hover frame is a
+ * clean, deliberate pose rather than a mid-wiggle blur. Respects
+ * `reduceMotion` — the whole pop is skipped, not just softened.
+ */
+function IconPop({
+  children,
+  hover,
+  reduceMotion,
+}: {
+  children: React.ReactNode;
+  hover: { scale: number; rotate?: number; y?: number };
+  // useReducedMotion() is `boolean | null` (null before the media query
+  // resolves) — accept both rather than coercing at every call site.
+  reduceMotion: boolean | null;
+}) {
+  return (
+    <motion.span
+      className="flex"
+      whileHover={reduceMotion ? undefined : hover}
+      whileTap={reduceMotion ? undefined : { scale: 0.9 }}
+      transition={motionTokens.spring.pop}
+    >
+      {children}
+    </motion.span>
   );
 }
 
@@ -574,6 +606,38 @@ function ComposeMenuPanel({ items }: { items: ComposeItem[] }) {
   );
 }
 
+/** Shared "Create" pill trigger (Figma 719-5697) — the frosted button that
+ *  opens the compose dropdown. Byte-identical on desktop (hover-opens) and
+ *  mobile (click-opens) so the two breakpoints can't drift apart again;
+ *  mobile previously swapped this for a bare circular "+" icon, which read
+ *  as an unrelated control next to the boxed search/notif/avatar buttons.
+ *  Both usages also carry `data-slot="button" data-shimmer="brand"` — the
+ *  existing global hover-shimmer sweep (globals.css) already used on the
+ *  BtlWordmark, opted into here rather than reinvented, so Create reads as
+ *  the header's primary CTA catching brand-red light on hover. */
+const CREATE_PILL_CLASSNAME =
+  'flex h-8 cursor-pointer items-center justify-center rounded-[4px] border border-white/5 bg-white/10 px-[8px] text-[12px] font-semibold leading-[16px] tracking-[-0.36px] text-white backdrop-blur-[15px] transition-colors hover:bg-white/[0.16]';
+
+/** Shared "Account" trigger pill (Figma 719-5697) — the avatar + caret
+ *  frosted button. Byte-identical on desktop (CSS hover-reveal) and mobile
+ *  (click-open DropdownMenu) so the two can't drift apart again; mobile
+ *  previously rendered a bare, unboxed 34px avatar here — taller than the
+ *  cluster's other 32px buttons and one of the mismatched-looking controls
+ *  the owner flagged. */
+const ACCOUNT_TRIGGER_CLASSNAME =
+  'flex h-8 cursor-pointer items-center gap-[8px] rounded-[4px] border border-white/5 bg-white/10 px-[8px] backdrop-blur-[15px]';
+
+/** The shared `Avatar` primitive (avatar.tsx) bakes in a 2px `ring-background`
+ *  (near-black in dark mode) plus a mix-blend-darken after-border — both
+ *  meant to cut an avatar out from a busy/bright backdrop (avatar stacks,
+ *  profile hero, thought cards, etc.), which every OTHER Avatar consumer in
+ *  the DS still relies on. Set against THIS frosted bg-white/10 pill it read
+ *  as a hard black ring hugging the pill's edges (owner feedback on the
+ *  0.61.0 header), so it's neutralised here only — not in the shared
+ *  primitive. size-5 (down from size-6) also gives it visible clearance from
+ *  the pill edges now that the ring isn't filling that space. */
+const ACCOUNT_AVATAR_CLASSNAME = 'size-5 ring-0 after:border-transparent';
+
 function SiteNav({
   className,
   tabs = defaultTabs,
@@ -600,6 +664,10 @@ function SiteNav({
 }: SiteNavProps) {
   const LinkComponent = useLinkComponent();
   const [menuOpen, setMenuOpen] = useState(false);
+  // Gates the action-cluster hover flourishes below (Search tilt,
+  // Notifications lift, Docs red/fill crossfade) — reduced-motion users get
+  // the plain background/text hover transitions only.
+  const reduceMotion = useReducedMotion();
   // Logged out (public) header: no avatar/initials. Drives the text-based
   // public actions cluster (Search / Learn / Log in / Sign Up) instead of the
   // signed-in icon cluster.
@@ -801,10 +869,12 @@ function SiteNav({
         className={cn(
           'relative z-10 flex items-center justify-end',
           // Figma 719-5697: signed-in actions (Search / Docs / Notifications /
-          // Create / Account) sit in one tight 4px-gap cluster, not the older
+          // Create / Account) sit in one tight gap cluster, not the older
           // 16px rhythm — the new bg-white/5 icon boxes supply their own
-          // visual separation, so the gap between them can be much tighter.
-          avatarUrl || initials ? 'gap-[4px]' : 'gap-8'
+          // visual separation. Desktop keeps the spec's 4px; mobile opens it
+          // to 8px — the same five items at 4px read as squished on a
+          // narrow screen (owner feedback on the 0.61.0 header).
+          avatarUrl || initials ? 'gap-[8px] sm:gap-[4px]' : 'gap-8'
         )}
       >
         {/* Search icon — signed-in only (all sizes). Signed-out uses the
@@ -818,26 +888,59 @@ function SiteNav({
             onClick={onSearchClick}
             className="flex size-8 cursor-pointer items-center justify-center rounded-[4px] bg-white/5 text-grey-500 transition-colors hover:bg-white/10 hover:text-white"
           >
-            <SearchIcon className="size-[14px]" />
+            {/* A little tilt-and-grow on hover — reads as the glass glancing
+                to search, not just a static swap to white. */}
+            <IconPop hover={{ scale: 1.15, rotate: -10 }} reduceMotion={reduceMotion}>
+              <SearchIcon className="size-[14px]" />
+            </IconPop>
           </button>
         )}
-        {/* Docs (lightbulb) — signed-in, desktop only. Reuses `learnHref`, the
-            same docs destination the logged-out cluster shows as "Learn" text,
-            so both auth states share one source of truth. Desktop-only: a
-            signed-in mobile user already reaches docs via the hamburger's
-            About > Learn row, so a 6th icon on the already-busy mobile action
-            row would just duplicate that path (Figma 719-5697 is a
-            desktop-width mock; no mobile equivalent was specified). */}
+        {/* Docs (lightbulb) — signed-in, both breakpoints. Reuses `learnHref`,
+            the same docs destination the logged-out cluster shows as "Learn"
+            text, so both auth states share one source of truth. Used to be
+            desktop-only (mobile reached docs only via the hamburger's About >
+            Learn row) — the owner's since called for exact parity between
+            the two action clusters, so it's shown here too; the hamburger
+            row is a harmless duplicate path, same as Search already was.
+            Hover "switches the bulb on": the outline glyph crossfades to a
+            BTL-red filled one with a soft glow, each on its own spring, via
+            framer-motion variant propagation (parent declares the named
+            "rest"/"hover" state; each glyph layer supplies its own targets
+            for that state). Skipped under reduceMotion — see IconPop. */}
         {!isLoggedOut && learnHref && (
-          <a
+          <motion.a
             href={learnHref}
             target="_blank"
             rel="noopener noreferrer"
             aria-label="Docs"
-            className="hidden size-8 items-center justify-center rounded-[4px] border border-white/5 bg-white/5 text-grey-500 backdrop-blur-[15px] transition-colors hover:bg-white/10 hover:text-white sm:flex"
+            initial="rest"
+            whileHover={reduceMotion ? undefined : 'hover'}
+            whileTap={reduceMotion ? undefined : { scale: 0.92 }}
+            className="relative flex size-8 items-center justify-center rounded-[4px] border border-white/5 bg-white/5 text-grey-500 backdrop-blur-[15px] transition-colors hover:bg-white/10"
           >
-            <Lightbulb size={14} weight="regular" />
-          </a>
+            {/* Outline (rest) — fades/spins out as the filled glyph swaps in. */}
+            <motion.span
+              variants={{
+                rest: { opacity: 1, scale: 1, rotate: 0 },
+                hover: { opacity: 0, scale: 0.5, rotate: -25 },
+              }}
+              transition={motionTokens.spring.pop}
+              className="absolute inset-0 flex items-center justify-center"
+            >
+              <Lightbulb size={14} weight="regular" />
+            </motion.span>
+            {/* Filled + BTL red + soft glow (hover) — the "switched on" state. */}
+            <motion.span
+              variants={{
+                rest: { opacity: 0, scale: 0.5, rotate: 25 },
+                hover: { opacity: 1, scale: 1, rotate: 0 },
+              }}
+              transition={motionTokens.spring.pop}
+              className="absolute inset-0 flex items-center justify-center text-red-100 drop-shadow-[0_0_6px_rgba(235,0,0,0.65)]"
+            >
+              <Lightbulb size={14} weight="fill" />
+            </motion.span>
+          </motion.a>
         )}
         {(onNotificationsClick || notificationPopover) && (
           <>
@@ -849,7 +952,11 @@ function SiteNav({
                   onClick={notificationPopover ? undefined : onNotificationsClick}
                   className="flex size-full items-center justify-center rounded-[4px] text-grey-500 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
                 >
-                  <NotificationIcon className="size-[14px]" />
+                  {/* A little lift-and-grow on hover — same "cool" treatment
+                      family as Search, tuned to feel like the tray perking up. */}
+                  <IconPop hover={{ scale: 1.15, y: -2 }} reduceMotion={reduceMotion}>
+                    <NotificationIcon className="size-[14px]" />
+                  </IconPop>
                 </button>
                 {notificationCount !== undefined && notificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
@@ -875,7 +982,9 @@ function SiteNav({
                       />
                     }
                   >
-                    <NotificationIcon className="size-[14px]" />
+                    <IconPop hover={{ scale: 1.15, y: -2 }} reduceMotion={reduceMotion}>
+                      <NotificationIcon className="size-[14px]" />
+                    </IconPop>
                     {notificationCount !== undefined && notificationCount > 0 && (
                       <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
                         {notificationCount > 9 ? '9+' : notificationCount}
@@ -897,7 +1006,9 @@ function SiteNav({
                   onClick={onNotificationsClick}
                   className="relative flex size-8 items-center justify-center rounded-[4px] bg-white/5 text-grey-500 transition-colors hover:bg-white/10 hover:text-white"
                 >
-                  <NotificationIcon className="size-[14px]" />
+                  <IconPop hover={{ scale: 1.15, y: -2 }} reduceMotion={reduceMotion}>
+                    <NotificationIcon className="size-[14px]" />
+                  </IconPop>
                   {notificationCount !== undefined && notificationCount > 0 && (
                     <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
                       {notificationCount > 9 ? '9+' : notificationCount}
@@ -924,7 +1035,9 @@ function SiteNav({
                 type="button"
                 aria-label="Compose"
                 aria-haspopup="true"
-                className="flex h-8 cursor-pointer items-center justify-center rounded-[4px] border border-white/5 bg-white/10 px-[8px] text-[12px] font-semibold leading-[16px] tracking-[-0.36px] text-white backdrop-blur-[15px] transition-colors hover:bg-white/[0.16]"
+                data-slot="button"
+                data-shimmer="brand"
+                className={CREATE_PILL_CLASSNAME}
               >
                 Create
               </button>
@@ -932,7 +1045,10 @@ function SiteNav({
                 <ComposeMenuPanel items={composeItems} />
               </div>
             </div>
-            {/* Mobile: click dropdown */}
+            {/* Mobile: click dropdown. Same "Create" pill as desktop — used to
+                be a bare circular "+" here, which read as an unrelated
+                control next to the boxed search/notif icons (owner
+                feedback); parity fixes that. */}
             <div className="sm:hidden">
               <DropdownMenu>
                 <DropdownMenuTrigger
@@ -940,11 +1056,13 @@ function SiteNav({
                     <button
                       type="button"
                       aria-label="Compose"
-                      className="flex size-[34px] items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/[0.16]"
+                      data-slot="button"
+                      data-shimmer="brand"
+                      className={CREATE_PILL_CLASSNAME}
                     />
                   }
                 >
-                  <Plus className="size-[18px]" weight="bold" />
+                  Create
                 </DropdownMenuTrigger>
                 <DropdownMenuContent
                   align="end"
@@ -967,8 +1085,8 @@ function SiteNav({
                   same frosted pill as "Create" and appends a CaretDown so it
                   reads as a dropdown trigger, not a plain avatar. */}
               <div className="group/avatar relative hidden sm:block">
-                <div className="flex h-8 cursor-pointer items-center gap-[8px] rounded-[4px] border border-white/5 bg-white/10 px-[8px] backdrop-blur-[15px]">
-                  <Avatar size="default" className="size-6">
+                <div className={ACCOUNT_TRIGGER_CLASSNAME}>
+                  <Avatar size="default" className={ACCOUNT_AVATAR_CLASSNAME}>
                     {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
                     <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
                   </Avatar>
@@ -983,7 +1101,12 @@ function SiteNav({
                   />
                 </div>
               </div>
-              {/* Mobile: click-opens the same panel inside a chrome-less menu. */}
+              {/* Mobile: click-opens the same panel inside a chrome-less menu.
+                  Trigger pill is byte-identical to desktop's
+                  (ACCOUNT_TRIGGER_CLASSNAME) — used to be a bare 34px avatar
+                  with no pill, taller than the cluster's other 32px buttons
+                  and one of the mismatched-looking controls the owner
+                  flagged. */}
               <div className="sm:hidden">
                 <DropdownMenu>
                   <DropdownMenuTrigger
@@ -991,14 +1114,15 @@ function SiteNav({
                       <button
                         type="button"
                         aria-label="Account"
-                        className="flex items-center justify-center"
+                        className={ACCOUNT_TRIGGER_CLASSNAME}
                       />
                     }
                   >
-                    <Avatar size="default" className="size-[34px]">
+                    <Avatar size="default" className={ACCOUNT_AVATAR_CLASSNAME}>
                       {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
                       <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
                     </Avatar>
+                    <CaretDown size={14} weight="regular" className="text-white" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
