@@ -240,6 +240,74 @@ export const ViewerWindowBottom = meta.story({
   ),
 });
 
+/* Trace fixture (residual focus bug): viewer is GLOBAL rank 1 — the very
+ * top of the leaderboard, not just the top of a windowed slice. The window
+ * clamps to start at rank 1 (`sliceViewerWindow` start=0), so the centring
+ * effect should land `scrollTop=0` and rank 1 should be the first visible
+ * row, never scrolled above the fold. */
+export const ViewerWindowRank1 = meta.story({
+  name: 'viewerWindowSize · viewer is rank 1 (TRACE)',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: LONG_ENTRIES.map((entry) => ({
+      ...entry,
+      isViewer: entry.rank === 1,
+    })),
+    viewerWindowSize: 50,
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
+/* Trace fixture (residual focus bug): viewer is GLOBAL rank 2 — one off
+ * the top, so the window still starts at rank 1 but the viewer's row isn't
+ * the first one. */
+export const ViewerWindowRank2 = meta.story({
+  name: 'viewerWindowSize · viewer is rank 2 (TRACE)',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: LONG_ENTRIES.map((entry) => ({
+      ...entry,
+      isViewer: entry.rank === 2,
+    })),
+    viewerWindowSize: 50,
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[640px] bg-black p-6">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
+/* Trace fixture: same rank-1 viewer, rendered in a real 375px mobile
+ * viewport (not the 640px story shell) — matches the owner report, which
+ * was on a real narrow viewport, not the desktop Storybook canvas. */
+export const ViewerWindowRank1Mobile = meta.story({
+  name: 'viewerWindowSize · viewer is rank 1 · 375px viewport (TRACE)',
+  args: {
+    leagueLabel: 'BTL World Cup',
+    squadHandle: 'breakingthelines',
+    entries: LONG_ENTRIES.map((entry) => ({
+      ...entry,
+      isViewer: entry.rank === 1,
+    })),
+    viewerWindowSize: 50,
+    pendingNote: 'Picks lock at kickoff in 14:13:29',
+  },
+  render: (args) => (
+    <div className="w-[375px] bg-black p-3">
+      <PredictionLeaderboardPanel {...args} />
+    </div>
+  ),
+});
+
 /* Wave 6.34o: viewer not enrolled (signed-out / non-member) — falls back
  * to the top `viewerWindowSize` rows so the panel still truncates to the
  * same predictable shape. */
