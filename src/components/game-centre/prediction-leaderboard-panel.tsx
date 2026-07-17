@@ -57,9 +57,18 @@ import { cn } from '#/lib/utils';
  *     panel renders the full list and lets the scroll container clamp it.
  *     When the viewer isn't in the leaderboard (signed-out, not a member),
  *     the window falls back to the top `viewerWindowSize` rows.
- *   - On mount the viewer row scrolls into view (`block: 'center'`) so the
- *     user lands looking at their own slot in the slice. One-shot
- *     `useLayoutEffect` — no data-flow useEffect.
+ *   - The first time the viewer's row is available, the list scrolls (via
+ *     `list.scrollTop`, never `scrollIntoView` — see the effect below) so
+ *     the user lands looking at their own slot in the slice, then leaves the
+ *     reader's scroll position alone — a re-render that hands back an
+ *     equivalent `entries` array (e.g. a per-second countdown tick upstream)
+ *     is a no-op, not a re-centre. The scroll container is `relative` so
+ *     `row.offsetTop` reads as list-relative — without it the maths still
+ *     runs but centres against the row's position on the PAGE instead of
+ *     in the list, which silently clips rank 1 (or rank 2) above the fold
+ *     for a top-of-leaderboard viewer. A rank-1 viewer opens with `scrollTop
+ *     = 0` (rank 1 pinned at the top, never centred past it); everyone else
+ *     centres, clamped at the tail for a near-bottom viewer.
  *
  * Honest empty states:
  *   - `entries` empty + no `pendingNote` → "Be the first to pick in this
@@ -187,10 +196,8 @@ export function PredictionLeaderboardPanel({
     );
   const showStickyViewer = viewerEntry !== undefined && !viewerAlreadyListed;
 
-  // Wave 6.34o: centre the viewer's row in the visible window on mount.
-  // One-shot useLayoutEffect — no data-flow useEffect. We re-anchor when the
-  // visible entries change (e.g. league switch in match-detail) so the viewer
-  // lands centred every time.
+  // Wave 6.34o: centre the viewer's row in the visible window the first time
+  // it becomes available, then leave the reader's own scrolling alone.
   //
   // We set the CONTAINER's scrollTop directly rather than calling
   // `row.scrollIntoView({block:'center'})`. scrollIntoView bubbles to EVERY
@@ -201,17 +208,57 @@ export function PredictionLeaderboardPanel({
   // who has started scrolling back toward the top. Driving `list.scrollTop`
   // keeps the adjustment strictly inside this container and can never move the
   // window. Only scroll when the content actually overflows.
+  //
+  // Fix: this used to depend on `[visibleEntries]` (the sliced array).
+  // Hosts that re-render on a timer — e.g. the league hub's per-second
+  // "Kickoff in" countdown (`useNowTick`) — hand this component a
+  // brand-new-but-equal `entries` array on every tick, which produced a new
+  // `visibleEntries` reference every second and re-ran the centring on top of
+  // whatever the reader had scrolled to: the list opened already off rank 1,
+  // and any manual scroll snapped back within a second. The reader's own
+  // scroll position is not derivable from props, so once we've centred a
+  // given viewer row we must stop — there's no "current scroll" to diff
+  // against. We key the one-shot guard on the viewer's rank + handle instead
+  // of the array reference: identical content (a re-render with an
+  // equivalent array) is a no-op, while a genuine change — the viewer's rank
+  // moves, or a different league/viewer is shown — re-centres, matching the
+  // original "re-anchor on a real switch" intent without re-arming on every
+  // incidental re-render.
+  //
+  // Second bug (found tracing a "rank 1 opens hidden behind the fold" report
+  // once the above was fixed): `row.offsetTop` is only relative to THIS
+  // list when `list` is the row's nearest positioned CSS ancestor
+  // (`offsetParent`). Neither this container nor the `<ol>` between it and
+  // the rows set a `position`, so both stayed `static` and `row.offsetTop`
+  // resolved all the way up to `<body>` — i.e. the row's distance from the
+  // top of the PAGE (panel header + everything the host renders above the
+  // leaderboard), not its distance from the top of the scrollable list.
+  // For a mid-pack viewer the resulting `target` was still in-range so it
+  // silently over-scrolled instead of erroring; for a rank-1 (or rank-2)
+  // viewer it was small-but-positive instead of the intended negative
+  // value, so `Math.max(0, …)` no longer clamped it back to 0 — the list
+  // opened scrolled a few dozen px down, clipping rank 1 above the fold
+  // with rank 2 reading as the first visible row. `relative` on the list
+  // (below) makes IT the offsetParent, so `row.offsetTop` is genuinely
+  // list-relative and the existing clamp math is correct for every rank.
   const listRef = React.useRef<HTMLDivElement | null>(null);
   const viewerRowRef = React.useRef<HTMLLIElement | null>(null);
+  const viewerRowInView = visibleEntries.find((entry) => entry.isViewer);
+  const viewerAnchorKey = viewerRowInView
+    ? `${viewerRowInView.rank}-${viewerRowInView.userHandle}`
+    : undefined;
+  const anchoredKeyRef = React.useRef<string | undefined>(undefined);
   React.useLayoutEffect(() => {
+    if (!viewerAnchorKey || anchoredKeyRef.current === viewerAnchorKey) return;
     const list = listRef.current;
     const row = viewerRowRef.current;
-    if (!list || !row) return;
+    if (!list || !row) return; // refs not attached yet — retry next render
+    anchoredKeyRef.current = viewerAnchorKey; // one-shot per viewer position
     if (list.scrollHeight <= list.clientHeight) return; // not scrollable → nothing to centre, never touch the page
     const target = row.offsetTop - (list.clientHeight - row.offsetHeight) / 2;
     const max = list.scrollHeight - list.clientHeight;
     list.scrollTop = Math.max(0, Math.min(target, max));
-  }, [visibleEntries]);
+  }, [viewerAnchorKey]);
 
   return (
     <section
@@ -248,8 +295,12 @@ export function PredictionLeaderboardPanel({
         <div
           ref={listRef}
           data-slot="prediction-leaderboard-table"
+          // `relative` is load-bearing, not decorative: it makes this the
+          // CSS offsetParent for the rows, which the centring effect above
+          // requires to read `row.offsetTop` as list-relative. Don't drop
+          // it — see the effect's comment for the bug this prevents.
           className={cn(
-            'flex flex-col overflow-y-auto overscroll-contain',
+            'relative flex flex-col overflow-y-auto overscroll-contain',
             DEFAULT_MAX_HEIGHT_CLASS
           )}
         >

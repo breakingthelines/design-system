@@ -5,6 +5,33 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.63.0]
+
+### Fixed — `PredictionLeaderboardPanel`: rank-1 viewer opened hidden above the fold; scroll snapped back on re-render
+
+- Traced a residual report that a rank-1 (top of the leaderboard) viewer's
+  own row opened scrolled just out of view, with rank 2 reading as the
+  first visible row. Root cause: the viewer-centring `useLayoutEffect`
+  reads `row.offsetTop` assuming it's relative to the scroll container, but
+  neither the container nor the `<ol>` between it and the rows set a CSS
+  `position`, so both stayed `static` and `offsetTop` resolved all the way
+  to `<body>` — the row's distance from the top of the PAGE, not the list.
+  A mid-pack viewer's resulting target was still in-range so it silently
+  over-scrolled instead of erroring; a rank-1 (or rank-2) viewer's target
+  came out small-but-positive instead of negative, so the `Math.max(0, …)`
+  clamp no longer caught it. Fix: the scroll container is now `relative`,
+  making it the row's `offsetParent` so `offsetTop` is genuinely
+  list-relative. Verified with live DOM measurements in Storybook — a
+  rank-1 viewer now opens at `scrollTop=0` (rank 1 pinned at the top), a
+  rank-60 viewer centres within a fraction of a pixel of true-centre.
+- Folds in a second, previously-unreleased fix: the same effect's one-shot
+  guard keyed on the sliced `visibleEntries` array reference, so a host
+  that re-renders on a timer (the league hub's per-second "Kickoff in"
+  countdown) handing back a brand-new-but-equal `entries` array re-ran the
+  centring on top of any manual scroll — any reader who scrolled away from
+  their own row got snapped back within a second. Re-keyed on the viewer's
+  rank + handle instead, so an equivalent re-render is a no-op.
+
 ## [0.62.0]
 
 ### Changed — `SiteNav` avatar: drop ring/border, shrink 24px → 20px
