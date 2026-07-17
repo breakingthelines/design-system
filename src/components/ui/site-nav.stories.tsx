@@ -173,6 +173,31 @@ export const SignedInFullCluster = meta.story({
   },
 });
 
+/** Same real signed-in cluster as {@link SignedInFullCluster}, but with
+ *  `onGoBack` set — the CONTENT/reader page configuration (platform's single
+ *  `ChromeShell` passes `onGoBack` whenever the route has a logical parent,
+ *  see `useGoBack`/`go-back-parents`). The Go-back pill eats ~50-80px of the
+ *  left side that `SignedInFullCluster` doesn't spend, so the actions cluster
+ *  has measurably less room at narrow widths — use THIS story (not the
+ *  no-go-back one) to verify the priority-collapse thresholds for content
+ *  pages at 320/360/375px. */
+export const SignedInFullClusterWithGoBack = meta.story({
+  args: {
+    tabs,
+    avatarUrl: 'https://i.pravatar.cc/150?u=zach',
+    initials: 'ZL',
+    composeItems: composeItemsWithIcons,
+    onSearchClick: () => {},
+    onNotificationsClick: () => {},
+    notificationCount: 12,
+    learnHref: 'https://docs.breakingthelines.com',
+    profileHref: '/@zach',
+    studioHref: 'https://studio.breakingthelines.com',
+    onLogout: () => {},
+    onGoBack: () => {},
+  },
+});
+
 /** Compose dropdown pinned open (via a hover play step) so the new flat
  *  grey-200 panel — "Create Content" header, 14px icon rows, red "Soon"
  *  badges on the disabled rows — can be reviewed without having to hover

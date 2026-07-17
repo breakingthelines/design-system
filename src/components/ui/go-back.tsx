@@ -34,6 +34,16 @@ export interface GoBackProps
   label?: string;
   /** Enable whileHover/whileTap micro-motion. Default true. */
   animated?: boolean;
+  /** Renders just the circular chevron well — no label, symmetric padding.
+   *  Opt-in (default false, unaffected existing behavior). The `label` is
+   *  still used as the accessible name (`aria-label`) since removing the
+   *  text node would otherwise leave the button unnamed. Callers that need a
+   *  responsive icon-only-below-a-breakpoint control (e.g. SiteNav's
+   *  content-page Go-back slot reclaiming width at narrow viewports) render
+   *  two `GoBack`s side by side and toggle visibility with Tailwind
+   *  responsive classes — same dual-render pattern SiteNav already uses for
+   *  Search text/icon and the notification bell's desktop/mobile triggers. */
+  iconOnly?: boolean;
 }
 
 function GoBack({
@@ -45,6 +55,8 @@ function GoBack({
   disabled,
   render,
   nativeButton,
+  iconOnly = false,
+  'aria-label': ariaLabelProp,
   ...props
 }: GoBackProps) {
   const resolvedNativeButton =
@@ -56,10 +68,14 @@ function GoBack({
   const button = (
     <ButtonPrimitive
       data-slot="go-back"
-      className={cn(goBackVariants({ variant, size, className }))}
+      // Icon-only drops the label's own pr-3/pr-3.5 (sized for trailing
+      // text) down to the well's own pl-1, so the button reads as a
+      // symmetric circle rather than a chevron with dead space trailing it.
+      className={cn(goBackVariants({ variant, size, className }), iconOnly && 'pr-1')}
       disabled={disabled}
       render={render}
       nativeButton={resolvedNativeButton}
+      aria-label={ariaLabelProp ?? (iconOnly ? label : undefined)}
       {...props}
     >
       <span
@@ -69,7 +85,7 @@ function GoBack({
       >
         <CaretLeft weight="bold" />
       </span>
-      {label}
+      {!iconOnly && label}
     </ButtonPrimitive>
   );
 
