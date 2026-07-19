@@ -5,6 +5,26 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.65.0]
+
+### Fixed — `ThoughtComposer`: large dead gap in the footer row before Post
+
+- The bottom row (toolbar icons + char-count + Post) used `justify-between`
+  across the full composer width. With only 3-4 sparse icons on one side and
+  a compact count+Post cluster on the other, this stretched an awkward, very
+  visible empty gap between them on any wide host composer (e.g. the
+  `/thoughts` feed composer) — worse the wider the composer got.
+- Fixed by capping the row's width (`max-w-[460px]`, non-compact only) so
+  `justify-between` distributes space within a bounded strip instead of the
+  full card width: toolbar stays left, count+Post stay grouped tight to its
+  right, any leftover width becomes harmless trailing space past Post rather
+  than a gap between the two clusters. Capping only ever shrinks the row
+  from its previous full-stretch size, so mobile (already narrower than the
+  cap) and every other width below 460px render byte-identical to before —
+  verified against the `submit-rating-sheet` compact-mode consumer (its own
+  narrow split layout, no Post button, left untouched via the `!compact`
+  guard) and the `/thoughts` desktop + mobile composer live on prod.
+
 ## [0.64.0]
 
 ### Fixed — `SiteNav`: signed-in header overflowed at 320px, worse on content pages with "Go back"

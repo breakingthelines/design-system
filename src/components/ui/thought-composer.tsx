@@ -451,8 +451,21 @@ function ThoughtComposer({
       {/* Image error message */}
       {imageError && <p className="text-xs text-red-100">{imageError}</p>}
 
-      {/* Bottom row — action icons + submit (submit hidden in compact mode) */}
-      <div className="mt-auto flex items-center justify-between gap-4">
+      {/* Bottom row — action icons + submit (submit hidden in compact mode).
+          Non-compact caps the row's width: with only 3-4 sparse toolbar icons,
+          letting justify-between stretch edge-to-edge on a wide host composer
+          left a large dead gap before Post. Capping keeps the two clusters
+          close together on wide composers while staying a no-op on mobile
+          (natural width there is already under the cap, so justify-between
+          computes the same tight gap it always did). Compact mode (the
+          grade-submission sheet's narrow split layout, no Post button) is
+          unaffected. */}
+      <div
+        className={cn(
+          'mt-auto flex items-center justify-between gap-4',
+          !compact && 'w-full max-w-[460px]'
+        )}
+      >
         <div className={cn('flex items-center', compact ? 'gap-6 pl-0' : 'gap-9 pl-[62px]')}>
           {showImageButton && (
             <button
