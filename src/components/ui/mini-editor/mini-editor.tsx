@@ -13,6 +13,7 @@ import {
   $createParagraphNode,
   $createTextNode,
   $isElementNode,
+  DecoratorNode,
   type EditorState,
   type Klass,
   type LexicalEditor,
@@ -68,8 +69,16 @@ interface MiniEditorProps {
   submitOn?: 'enter' | 'mod-enter';
   /** Called with plain text on submit */
   onSubmit?: (text: string) => void;
-  /** Called on every text change with plain text content */
-  onChange?: (text: string) => void;
+  /**
+   * Called on every editor-state change with the plain text content, plus
+   * whether the document is EFFECTIVELY empty — no text AND no non-text
+   * child (a host-registered decorator/block node, e.g. a Lineup card). A
+   * card-only document (a block, no typed text) has `text === ''` but
+   * `isEmpty === false`; a host gating submit on content should key off
+   * `isEmpty`, not `text.length`, so inserting a block alone is postable. See
+   * {@link isRootEffectivelyEmpty}.
+   */
+  onChange?: (text: string, isEmpty: boolean) => void;
   /** Called when remaining character count changes (requires maxLength) */
   onRemainingChange?: (remaining: number) => void;
   /** Imperative ref: clear(), focus(), getText() */
@@ -211,6 +220,24 @@ function EditorReadyPlugin({ onReady }: { onReady: (editor: LexicalEditor) => vo
   return null;
 }
 
+/**
+ * True when the root has neither typed text NOR a non-text child. Walks only
+ * the TOP-LEVEL children (a decorator block never nests inside a paragraph in
+ * this editor's shape, so one level is enough): any `DecoratorNode` (a
+ * host-registered block — Lineup, Game Stats, any StatsBomb viz) means real,
+ * postable content even with zero characters typed, so it short-circuits to
+ * "not empty" before the text check. `extraNodes` callers (see
+ * `MiniEditorProps`) register exactly this kind of node, so this stays
+ * correct for every current and future block type without enumerating them.
+ */
+function isRootEffectivelyEmpty(): boolean {
+  for (const child of $getRoot().getChildren()) {
+    if (child instanceof DecoratorNode) return false;
+    if (child.getTextContent().length > 0) return false;
+  }
+  return true;
+}
+
 /* ────────────────────────────────────────────────────────────
  * MiniEditor
  * ──────────────────────────────────────────────────────────── */
@@ -248,7 +275,7 @@ function MiniEditor({
     (editorState: EditorState) => {
       if (!onChange) return;
       editorState.read(() => {
-        onChange($getRoot().getTextContent());
+        onChange($getRoot().getTextContent(), isRootEffectivelyEmpty());
       });
     },
     [onChange]
