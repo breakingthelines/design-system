@@ -214,3 +214,56 @@ export const GameBlockFullBleed = meta.story({
     </div>
   ),
 });
+
+/**
+ * Header meta row (display name + tier badge + @handle + timestamp) at
+ * narrow mobile widths. Regression coverage for the overflow bug: without
+ * `min-w-0` + `truncate` on the name, a long display name pushes
+ * @handle/timestamp off the right edge of the ~276px content column instead
+ * of wrapping or truncating. Each `data-testid="mobile-header-*"` wrapper
+ * pins a viewport width so a measurement pass (Storybook + a real browser)
+ * can assert the header row never exceeds its content column at
+ * 320 / 375 / 430px. The tier badge must stay fully visible at every width.
+ */
+export const MobileHeaderOverflow = meta.story({
+  name: 'Header — mobile overflow (320/375/430)',
+  render: () => (
+    <div className="flex flex-col gap-6">
+      {[320, 375, 430].map((width) => (
+        <div key={width} data-testid={`mobile-header-${width}`} style={{ width }}>
+          <p className="pb-2 font-mono text-[10px] text-white/40">{width}px</p>
+          <ThoughtCard
+            thought={{
+              ...thought,
+              id: `overflow-reported-${width}`,
+              author: {
+                name: 'Thomas',
+                handle: 'tommy',
+                initials: 'T',
+                tier: 'Line Breaker',
+              },
+              body: 'Reported repro: short-ish name, still enough meta to overflow the column pre-fix.',
+              createdAt: 'Just now',
+              stats: { likes: 12, comments: 3 },
+            }}
+          />
+          <ThoughtCard
+            thought={{
+              ...thought,
+              id: `overflow-longname-${width}`,
+              author: {
+                name: 'Alexandria Fitzgerald-Whitmore',
+                handle: 'alexfw',
+                initials: 'AF',
+                tier: 'Line Breaker',
+              },
+              body: 'Stress test: a genuinely long display name — must ellipsize, badge must stay visible.',
+              createdAt: '2h ago',
+              stats: { likes: 4, comments: 1 },
+            }}
+          />
+        </div>
+      ))}
+    </div>
+  ),
+});

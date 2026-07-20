@@ -5,6 +5,36 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.74.0]
+
+### Fixed: `ThoughtCard` — header meta row no longer overflows at narrow mobile widths
+
+- The author header row (display name + tier badge + @handle + timestamp) had
+  no shrink/truncation mechanism: every part was `whitespace-nowrap` with no
+  `min-w-0`, so at narrow widths (320–430px) a long display name pushed
+  `@handle` and the timestamp off the right edge of the content column
+  instead of wrapping or truncating.
+- Fix is scoped to the name only, since it's the one field of unbounded
+  length: the name's wrapping flex group (`div.flex.items-center.gap-1`,
+  holding the name + verified check + tier badge) gains `min-w-0`, and the
+  name element itself switches from `whitespace-nowrap` to `truncate`. That
+  combination is what lets the flexbox shrink algorithm assign all of the
+  available shrink to the name (down to an ellipsis) while every sibling
+  that doesn't opt in (tier `Badge`, `VerifiedBadge` — both already
+  `shrink-0` in their own component styles) keeps its natural size and never
+  disappears. `@handle`/timestamp are unaffected — they only stop overflowing
+  because the name no longer forces them off-screen, not because they
+  changed.
+- Desktop is untouched: `min-w-0` and `truncate` are no-ops whenever there's
+  enough room, so nothing changes above the mobile breakpoint.
+- Measured in Storybook (new `Header — mobile overflow (320/375/430)` story)
+  against the content column at 320/375/430px, before vs after, using both
+  the reported repro (short name, still enough combined meta to overflow)
+  and a deliberately long display name: before, overflow ranged up to
+  ~200px past the column's right edge; after, 0px overflow (or negative,
+  i.e. comfortably fits) at every width, in both cases, with the "Line
+  Breaker" tier badge fully visible throughout.
+
 ## [0.73.0]
 
 ### Fixed: `ThoughtComposer` — Post stayed disabled for a card-only thought (block, no typed text)
