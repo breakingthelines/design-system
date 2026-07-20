@@ -51,6 +51,17 @@ interface ThoughtComposerMedia {
 interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubmit' | 'onChange'> {
   avatarUrl?: string;
   initials?: string;
+  /**
+   * The viewer's display name, shown in the composer header row next to the
+   * avatar (non-compact only). When omitted the header shows the avatar alone.
+   */
+  displayName?: string;
+  /**
+   * The viewer's @handle, shown under {@link displayName} in the header
+   * (non-compact only). Pass it WITHOUT a leading `@` — the composer renders
+   * the `@`. Only shown when {@link displayName} is also present.
+   */
+  handle?: string;
   placeholder?: string;
   /** Called on post — text + optional media attachments */
   onSubmit?: (text: string, media?: ThoughtComposerMedia) => void;
@@ -149,6 +160,8 @@ function ThoughtComposer({
   className,
   avatarUrl,
   initials,
+  displayName,
+  handle,
   placeholder = 'Share your thoughts',
   onSubmit,
   onImageUpload,
@@ -389,14 +402,33 @@ function ThoughtComposer({
           />
         </div>
       ) : (
-        <div className="flex cursor-text items-center gap-5" onClick={handleExpand}>
-          <Avatar className="size-[42px] shrink-0">
-            {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
-            <AvatarFallback>{initials ?? '?'}</AvatarFallback>
-          </Avatar>
+        <div className="flex flex-col gap-3.5">
+          {/* Header row: avatar + name/handle, left-aligned. The avatar no
+              longer gutters the content — it sits ABOVE a full-width input so
+              blocks inserted into the editor (lineup / game cards) get the
+              whole composer width instead of a narrow right column. When no
+              name/handle is supplied the header is the avatar alone. */}
+          <div data-slot="thought-composer-header" className="flex items-center gap-3">
+            <Avatar className="size-9 shrink-0">
+              {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
+              <AvatarFallback>{initials ?? '?'}</AvatarFallback>
+            </Avatar>
+            {(displayName || handle) && (
+              <div className="flex min-w-0 flex-col leading-tight">
+                {displayName && (
+                  <span className="truncate text-sm font-semibold text-foreground">
+                    {displayName}
+                  </span>
+                )}
+                {handle && <span className="truncate text-xs text-white/45">@{handle}</span>}
+              </div>
+            )}
+          </div>
 
-          {expanded ? (
-            <div className="flex-1 min-w-0">
+          {/* Full-width content: the editable surface (and any blocks inserted
+              into it) spans the whole composer. Click-to-expand lives here. */}
+          <div className="cursor-text" onClick={handleExpand}>
+            {expanded ? (
               <MiniEditor
                 placeholder={`${placeholder}...`}
                 submitOn="mod-enter"
@@ -422,15 +454,15 @@ function ThoughtComposer({
                 className="min-h-[34px] text-base font-medium leading-6 text-foreground sm:text-sm"
                 placeholderClassName="text-base font-medium leading-6 text-white/45 sm:text-sm"
               />
-            </div>
-          ) : (
-            // Matches the MiniEditor placeholder's size above so nothing
-            // visibly resizes the instant this collapsed prompt is clicked
-            // into the real (auto-zoom-safe) editable placeholder.
-            <span className="text-base font-medium leading-6 text-white/45 select-none sm:text-sm">
-              {placeholder}...
-            </span>
-          )}
+            ) : (
+              // Matches the MiniEditor placeholder's size above so nothing
+              // visibly resizes the instant this collapsed prompt is clicked
+              // into the real (auto-zoom-safe) editable placeholder.
+              <span className="text-base font-medium leading-6 text-white/45 select-none sm:text-sm">
+                {placeholder}...
+              </span>
+            )}
+          </div>
         </div>
       )}
 
@@ -474,36 +506,21 @@ function ThoughtComposer({
       {/* Image error message */}
       {imageError && <p className="text-xs text-red-100">{imageError}</p>}
 
-      {/* Bottom row — action icons + submit (submit hidden in compact mode).
-          `justify-between` on its own always spreads the toolbar and the
-          count+Post cluster to the row's full width — a prior fix tried
-          capping that width (max-w-[460px]) but a max-width cannot remove a
-          gap that `justify-between` re-creates at every width below the cap,
-          and it re-opens further above the cap on very wide hosts too. The
-          actual fix is to stop the row from stretching to the host's width
-          at all: `w-fit` sizes it to its own content (toolbar + gap-4 +
-          count/Post) so the two clusters sit only `gap-4` apart on any host
-          width, with `justify-between` left in place but inert (no leftover
-          space for it to distribute). `flex-wrap` is the fallback for host
-          widths narrower than that combined content — e.g. the Pro-tier
-          composerActions slot on a ~343px mobile composer — where the
-          count+Post cluster drops to its own line under the toolbar rather
-          than forcing a squeeze or a horizontal scrollbar. Compact mode (the
-          grade-submission sheet's narrow split layout, no Post button) keeps
-          its original full-width `justify-between` untouched.
-
-          The `pl-[62px]` avatar-clearing indent lives on THIS outer row (not
-          the inner toolbar div) so both flex children inherit it: on a single
-          line nothing moves (the toolbar still starts 62px in), but when the
-          row wraps, the count+Post line starts from the same indented content
-          edge — so "497 Post" drops directly under the icons instead of the
-          card's far-left edge. Keeping the indent on the toolbar div alone
-          left the wrapped line un-indented and misaligned. */}
+      {/* Bottom row — media toolbar (left) + count/Post (right), full width.
+          Option B moved the avatar into a header row above, so the footer no
+          longer needs the old avatar-gutter indent (`pl-[62px]`) or the
+          shrink-to-fit / wrap-alignment logic that went with it. The toolbar
+          sits at the content's left edge and the count+Post cluster is pushed
+          right with `ml-auto` — the standard composer footer (media
+          bottom-left, Post bottom-right). `flex-wrap` stays only as an
+          overflow guard: on a very narrow Pro composer (~≤340px, where four
+          toolbar icons + count + Post can't share one line) the count+Post
+          cluster drops to its own line, and `ml-auto` keeps it right-aligned
+          there too — no overlap, no horizontal scroll. Compact mode (the
+          grade-submission sheet) keeps its original full-width
+          `justify-between` split. */}
       <div
-        className={cn(
-          'mt-auto flex items-center justify-between gap-4',
-          !compact && 'w-fit flex-wrap pl-[62px]'
-        )}
+        className={cn('mt-auto flex items-center gap-4', compact ? 'justify-between' : 'flex-wrap')}
       >
         <div className={cn('flex items-center', compact ? 'gap-6 pl-0' : 'gap-9')}>
           {showImageButton && (
@@ -561,7 +578,7 @@ function ThoughtComposer({
         </div>
 
         {expanded && !compact && (
-          <div className="flex items-center gap-3">
+          <div className="ml-auto flex items-center gap-3">
             {hasText && (
               <span
                 data-slot="thought-composer-remaining"
