@@ -125,12 +125,24 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
    * "Lineup" insert button) without design-system knowing about them.
    *
    * Accepts either a plain node or a render function that receives the inner
-   * {@link LexicalEditor} (or `null` before it mounts). Use the function form to
-   * dispatch commands / insert nodes into the composer's editor from a
-   * host-provided toolbar button (e.g. a game-blocks menu next to the emoji
-   * button).
+   * {@link LexicalEditor} (or `null` before it mounts) plus an `expand`
+   * callback. Use the function form to dispatch commands / insert nodes into
+   * the composer's editor from a host-provided toolbar button (e.g. a
+   * game-blocks menu next to the emoji button).
+   *
+   * This toolbar row (unlike the editable surface itself) renders regardless
+   * of {@link expanded} — the collapsed prompt state never mounts
+   * {@link MiniEditor} at all, so `editor` is `null` until something expands
+   * the composer first. A host whose action doesn't itself expand (a picker
+   * MENU, as opposed to the built-in image/GIF/emoji buttons, which already
+   * call `togglePicker`/`handleImageButtonClick` — those expand as part of
+   * opening) needs `expand()` to bring the editor into existence before (or
+   * queued until) it dispatches anything — see `GameBlockToolbar` in platform
+   * for the queue-until-`editor`-exists pattern this exists for.
    */
-  composerActions?: React.ReactNode | ((editor: LexicalEditor | null) => React.ReactNode);
+  composerActions?:
+    | React.ReactNode
+    | ((editor: LexicalEditor | null, expand: () => void) => React.ReactNode);
 }
 
 function ThoughtComposer({
@@ -539,8 +551,13 @@ function ThoughtComposer({
           )}
           {/* Host-provided action slot (e.g. a tier-gated block-insert button).
               Render-function form receives the inner editor so the host can
-              dispatch insert commands into the composer. */}
-          {typeof composerActions === 'function' ? composerActions(editor) : composerActions}
+              dispatch insert commands into the composer, plus `handleExpand`
+              (as `expand`) so it can bring the editor into existence first if
+              the composer is still collapsed — this row renders whether or
+              not MiniEditor has mounted. */}
+          {typeof composerActions === 'function'
+            ? composerActions(editor, handleExpand)
+            : composerActions}
         </div>
 
         {expanded && !compact && (
