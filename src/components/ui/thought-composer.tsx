@@ -452,18 +452,26 @@ function ThoughtComposer({
       {imageError && <p className="text-xs text-red-100">{imageError}</p>}
 
       {/* Bottom row — action icons + submit (submit hidden in compact mode).
-          Non-compact caps the row's width: with only 3-4 sparse toolbar icons,
-          letting justify-between stretch edge-to-edge on a wide host composer
-          left a large dead gap before Post. Capping keeps the two clusters
-          close together on wide composers while staying a no-op on mobile
-          (natural width there is already under the cap, so justify-between
-          computes the same tight gap it always did). Compact mode (the
-          grade-submission sheet's narrow split layout, no Post button) is
-          unaffected. */}
+          `justify-between` on its own always spreads the toolbar and the
+          count+Post cluster to the row's full width — a prior fix tried
+          capping that width (max-w-[460px]) but a max-width cannot remove a
+          gap that `justify-between` re-creates at every width below the cap,
+          and it re-opens further above the cap on very wide hosts too. The
+          actual fix is to stop the row from stretching to the host's width
+          at all: `w-fit` sizes it to its own content (toolbar + gap-4 +
+          count/Post) so the two clusters sit only `gap-4` apart on any host
+          width, with `justify-between` left in place but inert (no leftover
+          space for it to distribute). `flex-wrap` is the fallback for host
+          widths narrower than that combined content — e.g. the Pro-tier
+          composerActions slot on a ~343px mobile composer — where the
+          count+Post cluster drops to its own line under the toolbar rather
+          than forcing a squeeze or a horizontal scrollbar. Compact mode (the
+          grade-submission sheet's narrow split layout, no Post button) keeps
+          its original full-width `justify-between` untouched. */}
       <div
         className={cn(
           'mt-auto flex items-center justify-between gap-4',
-          !compact && 'w-full max-w-[460px]'
+          !compact && 'w-fit flex-wrap'
         )}
       >
         <div className={cn('flex items-center', compact ? 'gap-6 pl-0' : 'gap-9 pl-[62px]')}>
@@ -520,6 +528,7 @@ function ThoughtComposer({
           <div className="flex items-center gap-3">
             {hasText && (
               <span
+                data-slot="thought-composer-remaining"
                 className={cn(
                   'text-xs tabular-nums',
                   isOverLimit

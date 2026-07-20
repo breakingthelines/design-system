@@ -5,6 +5,37 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.66.0]
+
+### Fixed: `ThoughtComposer` footer still had a dead gap below ~460px, after 0.65.0
+
+- 0.65.0 capped the footer row at `max-w-[460px]` so `justify-between` had less
+  width to spread across on wide composers. That only ever shrinks the row:
+  on any composer narrower than 460px, which is every real mobile width and
+  several real desktop widths too, the cap never engages, so
+  `justify-between` still spread the toolbar and the count+Post cluster
+  across the row's full (uncapped) width, gap unchanged. Reported again on
+  prod at a ~430px composer.
+- The width of the row was never the problem. `justify-between` distributes
+  space across whatever width the row is forced to stretch to, and no
+  max-width removes that distribution below the cap, or stops it from
+  reopening on hosts wider than 460px (confirmed up to ~1112px on the
+  sidebar-less entity Thoughts tab). Replaced the cap with `w-fit`: the row
+  now sizes to its own content (toolbar + `gap-4` + count/Post), so the two
+  clusters sit only `gap-4` apart at any host width. `flex-wrap` is the
+  fallback for hosts too narrow to fit both clusters on one line, e.g. the
+  Pro-tier `composerActions` slot on the ~343px `/thoughts` mobile composer,
+  where the count+Post cluster now drops to its own line under the toolbar
+  instead of forcing a squeeze. `justify-between` stays in the class list
+  for both branches; it has nothing left to distribute once the row no
+  longer stretches past its content.
+- Measured via new Storybook stories (`Footer - {320,375,430,600}px,
+{free,Pro} tier`) at every combination: toolbar-to-Post distance is
+  12-16px everywhere, whether as a single-line gap or as the vertical gap
+  between two wrapped lines. Never a dead gap, at any width or tier.
+- Compact mode (the grade-submission sheet) is untouched, still gated by
+  the same `!compact` guard.
+
 ## [0.65.0]
 
 ### Fixed — `ThoughtComposer`: large dead gap in the footer row before Post
