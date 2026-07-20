@@ -130,17 +130,22 @@ function ThoughtCard({
         <div className="flex min-w-0 flex-1 flex-col gap-4">
           {/* Author header */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1">
+            {/* min-w-0 lets this group shrink below its content's natural
+                width inside the row (flex items default to min-width:auto,
+                which otherwise refuses to shrink and pushes @handle/timestamp
+                off-screen for a long display name); `truncate` on the name
+                itself is what actually turns that shrink into an ellipsis. */}
+            <div className="flex min-w-0 items-center gap-1">
               {thought.author.handle ? (
                 <Link
                   href={`/@${thought.author.handle}`}
-                  className="font-content text-sm font-semibold leading-5 text-foreground whitespace-nowrap transition-colors hover:text-red-100"
+                  className="font-content text-sm font-semibold leading-5 text-foreground truncate transition-colors hover:text-red-100"
                   onClick={(e: React.MouseEvent) => e.stopPropagation()}
                 >
                   {thought.author.name}
                 </Link>
               ) : (
-                <span className="font-content text-sm font-semibold leading-5 text-foreground whitespace-nowrap">
+                <span className="font-content text-sm font-semibold leading-5 text-foreground truncate">
                   {thought.author.name}
                 </span>
               )}
