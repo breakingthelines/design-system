@@ -17,9 +17,22 @@ function PopoverContent({
   alignOffset = 0,
   side = 'bottom',
   sideOffset = 4,
+  // Collision props are forwarded straight to the base-ui Positioner and left
+  // UNDEFINED by default, so every existing consumer keeps base-ui's defaults
+  // byte-for-byte. A host that needs the popup kept fully on-screen from an
+  // off-centre trigger on narrow viewports (e.g. the thoughts composer's
+  // game-blocks menu) passes `collisionAvoidance={{ align: 'shift' }}` — base-ui
+  // only continuously shifts along the align axis when asked (its default is
+  // flip-only), so without this a wide menu anchored near one edge runs off the
+  // opposite edge instead of sliding back into view.
+  collisionAvoidance,
+  collisionPadding,
   ...props
 }: PopoverPrimitive.Popup.Props &
-  Pick<PopoverPrimitive.Positioner.Props, 'align' | 'alignOffset' | 'side' | 'sideOffset'>) {
+  Pick<
+    PopoverPrimitive.Positioner.Props,
+    'align' | 'alignOffset' | 'side' | 'sideOffset' | 'collisionAvoidance' | 'collisionPadding'
+  >) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Positioner
@@ -27,6 +40,8 @@ function PopoverContent({
         alignOffset={alignOffset}
         side={side}
         sideOffset={sideOffset}
+        collisionAvoidance={collisionAvoidance}
+        collisionPadding={collisionPadding}
         className="isolate z-50"
       >
         <PopoverPrimitive.Popup
