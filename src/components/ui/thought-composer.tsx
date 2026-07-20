@@ -366,8 +366,14 @@ function ThoughtComposer({
             extraNodes={extraNodes}
             plugins={plugins}
             onEditorReady={setEditor}
-            className="min-h-[60px] text-sm font-medium leading-6 text-foreground"
-            placeholderClassName="text-sm font-medium leading-6 text-white/45"
+            // text-base (16px) below `sm`, THEN down to the compact 14px
+            // desktop size — MiniEditor's own ContentEditable already defaults
+            // to this exact responsive pair, but a plain `text-sm` here (no
+            // breakpoint) clobbers it back to a flat 14px at every width via
+            // the class merge, which is under iOS Safari's 16px auto-zoom-on-
+            // focus threshold. Same fix as game-block.tsx's inputs.
+            className="min-h-[60px] text-base font-medium leading-6 text-foreground sm:text-sm"
+            placeholderClassName="text-base font-medium leading-6 text-white/45 sm:text-sm"
           />
         </div>
       ) : (
@@ -399,12 +405,17 @@ function ThoughtComposer({
                 extraNodes={extraNodes}
                 plugins={plugins}
                 onEditorReady={setEditor}
-                className="min-h-[34px] text-sm font-medium leading-6 text-foreground"
-                placeholderClassName="text-sm font-medium leading-6 text-white/45"
+                // See the compact MiniEditor above: text-base below `sm` so
+                // focusing this on a touch device doesn't auto-zoom.
+                className="min-h-[34px] text-base font-medium leading-6 text-foreground sm:text-sm"
+                placeholderClassName="text-base font-medium leading-6 text-white/45 sm:text-sm"
               />
             </div>
           ) : (
-            <span className="text-sm font-medium leading-6 text-white/45 select-none">
+            // Matches the MiniEditor placeholder's size above so nothing
+            // visibly resizes the instant this collapsed prompt is clicked
+            // into the real (auto-zoom-safe) editable placeholder.
+            <span className="text-base font-medium leading-6 text-white/45 select-none sm:text-sm">
               {placeholder}...
             </span>
           )}
