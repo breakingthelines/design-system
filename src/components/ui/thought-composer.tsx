@@ -467,14 +467,22 @@ function ThoughtComposer({
           count+Post cluster drops to its own line under the toolbar rather
           than forcing a squeeze or a horizontal scrollbar. Compact mode (the
           grade-submission sheet's narrow split layout, no Post button) keeps
-          its original full-width `justify-between` untouched. */}
+          its original full-width `justify-between` untouched.
+
+          The `pl-[62px]` avatar-clearing indent lives on THIS outer row (not
+          the inner toolbar div) so both flex children inherit it: on a single
+          line nothing moves (the toolbar still starts 62px in), but when the
+          row wraps, the count+Post line starts from the same indented content
+          edge — so "497 Post" drops directly under the icons instead of the
+          card's far-left edge. Keeping the indent on the toolbar div alone
+          left the wrapped line un-indented and misaligned. */}
       <div
         className={cn(
           'mt-auto flex items-center justify-between gap-4',
-          !compact && 'w-fit flex-wrap'
+          !compact && 'w-fit flex-wrap pl-[62px]'
         )}
       >
-        <div className={cn('flex items-center', compact ? 'gap-6 pl-0' : 'gap-9 pl-[62px]')}>
+        <div className={cn('flex items-center', compact ? 'gap-6 pl-0' : 'gap-9')}>
           {showImageButton && (
             <button
               type="button"
