@@ -5,6 +5,26 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.67.0]
+
+### Fixed: `ThoughtComposer` wrapped footer line was not indented under the toolbar
+
+- 0.66.0 fixed the dead gap by making the footer row shrink-to-fit and wrap.
+  But the avatar-clearing `pl-[62px]` indent still lived on the inner toolbar
+  div only, so when the row wrapped, the count+Post line started from the
+  card's far-left content edge while the toolbar icons above it were indented
+  62px. "497 Post" sat left of the icons instead of under them.
+- Moved the `pl-[62px]` indent from the inner toolbar div onto the outer
+  footer row (non-compact only), so both flex children share one indent.
+  Single-line layout is unchanged (the toolbar still starts 62px in, and the
+  count/Post positions are byte-identical, measured); when the row wraps, the
+  count+Post line now starts from the same indented edge and drops directly
+  under the icons.
+- Measured (wrapped states, count's left edge vs the first toolbar icon's
+  left edge): 320px free, 320/375/430px Pro all wrap with a 0px delta, the
+  count sits exactly under the first icon. Non-wrapped 600px is unchanged
+  from 0.66.0. Compact mode untouched (indent change is `!compact`-gated).
+
 ## [0.66.0]
 
 ### Fixed: `ThoughtComposer` footer still had a dead gap below ~460px, after 0.65.0
