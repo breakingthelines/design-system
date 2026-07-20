@@ -198,6 +198,14 @@ function ThoughtComposer({
   const [expanded, setExpanded] = React.useState(compact);
   const [remaining, setRemaining] = React.useState(MAX_CHARS);
   const [hasText, setHasText] = React.useState(false);
+  // Distinct from `hasText`: true when the editor holds ANY postable content —
+  // typed text OR a host-inserted block (Lineup / Game Stats / StatsBomb) —
+  // fed by MiniEditor's `isEmpty` (see `onChange` below). `hasText` stays
+  // text-length-only (it also drives the remaining-chars counter's
+  // visibility, which a card-only, zero-character post shouldn't trigger);
+  // `hasEditorContent` is what submit-gating actually needs, so a lineup
+  // dropped in with no caption still enables Post.
+  const [hasEditorContent, setHasEditorContent] = React.useState(false);
   const [activePicker, setActivePicker] = React.useState<ActivePicker>(null);
   const [selectedGif, setSelectedGif] = React.useState<GifSelection | null>(null);
 
@@ -208,7 +216,7 @@ function ThoughtComposer({
   const [imageError, setImageError] = React.useState<string | null>(null);
 
   const isOverLimit = remaining < 0;
-  const hasContent = hasText || selectedGif !== null || imageUrl !== null;
+  const hasContent = hasEditorContent || selectedGif !== null || imageUrl !== null;
   const canSubmit = hasContent && !isOverLimit && !disabled && !imageUploading;
 
   const showImageButton = !!onImageUpload || !!onImageClick;
@@ -379,8 +387,9 @@ function ThoughtComposer({
             disabled={disabled}
             editorRef={editorRef}
             onSubmit={handleSubmit}
-            onChange={(text) => {
+            onChange={(text, isEmpty) => {
               setHasText(text.length > 0);
+              setHasEditorContent(!isEmpty);
               if (onChange) {
                 const mentions = editorRef.current?.getMentions() ?? [];
                 onChange(text, mentions, editorRef.current?.getBodyJson());
@@ -437,8 +446,9 @@ function ThoughtComposer({
                 disabled={disabled}
                 editorRef={editorRef}
                 onSubmit={handleSubmit}
-                onChange={(text) => {
+                onChange={(text, isEmpty) => {
                   setHasText(text.length > 0);
+                  setHasEditorContent(!isEmpty);
                   if (onChange) {
                     const mentions = editorRef.current?.getMentions() ?? [];
                     onChange(text, mentions);

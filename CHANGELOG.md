@@ -5,6 +5,23 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.73.0]
+
+### Fixed: `ThoughtComposer` — Post stayed disabled for a card-only thought (block, no typed text)
+
+- `canSubmit` was gated on `hasText` (`text.length > 0`) OR a GIF/image
+  attachment — a thought carrying ONLY a host-inserted block (Lineup / Game
+  Stats / any StatsBomb viz, via `extraNodes`) has zero typed characters, so
+  Post stayed disabled with no way to post a card-only thought.
+- `MiniEditor`'s `onChange` now reports a second argument, `isEmpty`: true
+  only when the root has neither text NOR a non-text (decorator/block) child.
+  A card-only editor state is `text === ''` but `isEmpty === false`.
+- `ThoughtComposer` now derives its content-gating state from `isEmpty`
+  (`hasEditorContent`) instead of `hasText.length`; `hasText` itself is
+  unchanged and still drives only the remaining-chars counter's visibility.
+  Inserting a block with no caption now enables Post; an entirely empty
+  composer still keeps it disabled.
+
 ## [0.72.0]
 
 ### Changed: `ThoughtCard` — game/decorator blocks render full-bleed to the card edges
