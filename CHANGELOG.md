@@ -5,6 +5,36 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.72.0]
+
+### Changed: `ThoughtCard` — game/decorator blocks render full-bleed to the card edges
+
+- A rendered thought carrying a game block (lineup / game-stats / StatsBomb
+  viz) previously showed the block inset by the card's content-column gutter
+  (avatar column + horizontal padding), so it had side margins. It now spans
+  the full thought-card width, edge to edge — matching the full-width composer
+  (0.70.0). The thought's TEXT/caption keeps its normal inset; only the block
+  bleeds.
+- `ThoughtBody` gains an optional `blockClassName` prop, applied to a wrapper
+  around each host (`blockRenderers`) block only — never around text
+  paragraphs. Omitted → the block renders as a bare fragment, exactly as
+  before (no DOM change for callers that don't bleed, e.g. `ThoughtComment`
+  and raw `ThoughtBody`).
+- `ThoughtCard` passes `blockClassName="-mr-4 -ml-[76px]"`: the content column
+  is inset by the left gutter (`px-4` 16 + avatar 48 + `gap-3` 12 = 76px) and
+  `px-4` (16px) on the right, so those negative margins pull the block back out
+  to both card edges. Measured in Storybook: block spans the full card width
+  (0px from each edge), text paragraph stays inset (76px left / 16px right),
+  no horizontal overflow.
+
+## [0.71.0]
+
+### Changed: `Popover` — forward `collisionAvoidance` + `collisionPadding`
+
+- The `Popover` primitive now forwards `collisionAvoidance` and
+  `collisionPadding` to the base-ui popover, so a host (the game-blocks menu)
+  can tune how the panel shifts/flips to stay on-screen.
+
 ## [0.70.0]
 
 ### Changed: `ThoughtComposer` (non-compact) — avatar moved to a header row, content goes full-width

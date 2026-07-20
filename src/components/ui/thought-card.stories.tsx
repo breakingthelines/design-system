@@ -162,3 +162,55 @@ export const FromGradePillFallback = meta.story({
     </div>
   ),
 });
+
+/**
+ * A thought carrying a game/decorator block (lineup, stats, StatsBomb viz).
+ * The block is full-bleed to the card's edges (via ThoughtCard's
+ * `blockClassName` → ThoughtBody), matching the full-width composer, while the
+ * text paragraph keeps the normal content-column inset. The mock renderer here
+ * mirrors the real `GameBlockReader` container (`my-6` + a rounded plate) so a
+ * measurement / visual diff catches any regression to the bleed geometry.
+ */
+export const GameBlockFullBleed = meta.story({
+  name: 'Game block — full-bleed',
+  render: () => (
+    <div className="w-[600px]">
+      <ThoughtCard
+        thought={{
+          ...thought,
+          id: 'gb-1',
+          body: 'My XI for the north London derby — back three, invert the fullbacks:',
+          bodyJson: JSON.stringify({
+            root: {
+              children: [
+                {
+                  type: 'paragraph',
+                  children: [
+                    {
+                      type: 'text',
+                      text: 'My XI for the north London derby — back three, invert the fullbacks:',
+                    },
+                  ],
+                },
+                { type: 'game-lineup', config: { teamName: 'Arsenal' } },
+              ],
+            },
+          }),
+          stats: { likes: 210, comments: 12 },
+        }}
+        blockRenderers={{
+          'game-lineup': () => (
+            <div className="my-6">
+              <div
+                data-testid="mock-lineup-plate"
+                className="flex h-40 items-center justify-center rounded-[10px] border border-white/10 bg-white/[0.04] text-sm text-white/60"
+              >
+                Lineup card (full-bleed to card edges)
+              </div>
+            </div>
+          ),
+        }}
+      />
+    </div>
+  ),
+});
