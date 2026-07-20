@@ -57,6 +57,14 @@ export interface ThoughtBodyProps extends Omit<React.ComponentProps<'div'>, 'chi
    * decorator/game block. Keyed by the serialized node `type`.
    */
   blockRenderers?: Record<string, (node: SerializedNode) => React.ReactNode>;
+  /**
+   * Class applied to a wrapper around EACH host block (the {@link blockRenderers}
+   * game/decorator blocks) — never around text paragraphs. A card that insets
+   * its body in a gutter (avatar column + horizontal padding) passes negative
+   * margins here to full-bleed those blocks back out to the card's edges while
+   * the text stays inset. Omitted → the block renders with no wrapper (unchanged).
+   */
+  blockClassName?: string;
 }
 
 /**
@@ -124,6 +132,7 @@ export function ThoughtBody({
   body,
   bodyJson,
   blockRenderers,
+  blockClassName,
   className,
   ...props
 }: ThoughtBodyProps) {
@@ -149,8 +158,15 @@ export function ThoughtBody({
         // game block) the host knows how to render read-only. Design-system
         // stays agnostic — it just hands the serialized node back.
         if (block.type && blockRenderers?.[block.type]) {
-          return (
-            <React.Fragment key={`b-${i}`}>{blockRenderers[block.type](block)}</React.Fragment>
+          const rendered = blockRenderers[block.type](block);
+          // Wrap only when a bleed class is supplied — keeps the DOM identical
+          // (bare fragment) for callers that don't full-bleed their blocks.
+          return blockClassName ? (
+            <div key={`b-${i}`} data-slot="thought-body-block" className={blockClassName}>
+              {rendered}
+            </div>
+          ) : (
+            <React.Fragment key={`b-${i}`}>{rendered}</React.Fragment>
           );
         }
         const children = Array.isArray(block.children) ? block.children : [];

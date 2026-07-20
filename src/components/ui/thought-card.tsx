@@ -268,6 +268,11 @@ function ThoughtCard({
               bodyJson={thought.bodyJson}
               blockRenderers={blockRenderers}
               className="font-content text-sm leading-[18px] text-foreground"
+              // Full-bleed game/decorator blocks (lineup, stats) out to the
+              // card's edges: the content column is inset by the left gutter
+              // (px-4 16 + avatar 48 + gap-3 12 = 76px) and px-4 (16px) on the
+              // right. Text paragraphs are unwrapped, so they keep the inset.
+              blockClassName="-mr-4 -ml-[76px]"
             />
           )}
 
