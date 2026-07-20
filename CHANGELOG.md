@@ -5,6 +5,33 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.70.0]
+
+### Changed: `ThoughtComposer` (non-compact) — avatar moved to a header row, content goes full-width
+
+- The main composer now leads with a header ROW: the avatar (36px) plus the
+  viewer's display name and `@handle`, left-aligned. Below it, the text input
+  and anything inserted into the editor (a lineup / game-block card) span the
+  FULL composer width — the avatar no longer opens a ~62px left side-gutter
+  that squeezed embedded blocks into a narrow right column.
+- New optional props `displayName` and `handle` feed the header. When neither
+  is supplied the header is the avatar alone (still full-width content), so
+  existing avatar-only callers keep working. Pass `handle` without the `@`.
+- Footer simplified to a standard full-width composer footer: media toolbar at
+  the left content edge, count + Post pushed right with `ml-auto`. This drops
+  the whole avatar-gutter apparatus the last three fixes were about
+  (`max-w-[460px]` cap → `w-fit`/`flex-wrap` → `pl-[62px]` wrap-alignment):
+  with no gutter there is nothing to align to. `flex-wrap` stays only as an
+  overflow guard — on a very narrow Pro composer (~≤340px, four toolbar icons
+  - count + Post can't share a line) the count+Post cluster drops to its own
+    line and `ml-auto` keeps it right-aligned. Measured: no horizontal overflow
+    and no overlap at 320/375/430/600px in both free (3-icon) and Pro (4-icon)
+    configs; the editable surface now spans the full content width (e.g. 542px
+    inside a 600px composer, vs ~482px with the old gutter).
+- Compact mode (the grade-submission sheet) is untouched — the redesign is
+  gated to `!compact`, and compact keeps its headerless, full-width
+  `justify-between` split.
+
 ## [0.67.0]
 
 ### Fixed: `ThoughtComposer` wrapped footer line was not indented under the toolbar
