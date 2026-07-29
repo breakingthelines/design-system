@@ -29,9 +29,18 @@ export const FACE_COLORS = {
   red: '#eb0000',
 } as const;
 
-/** Canvas family string for the chosen heading font. */
+/**
+ * Canvas family string for the chosen heading font.
+ *
+ * The serif is `lemonde-journal`, not `le-monde-journal-std`. The typekit kit
+ * (use.typekit.net/vfh2lle.css) publishes three Le Monde families —
+ * `lemonde-journal`, `le-monde-journal-std-2` and `le-monde-livre-std` — and
+ * `le-monde-journal-std` is not one of them, so every reference to that name
+ * fell back to Georgia. Of the two journal cuts only `lemonde-journal` ships a
+ * real 700, which headings need; `-std-2` is 400-only and would be faux-bolded.
+ */
 export function headingFamily(font: HeadingFont): string {
-  return font === 'le-monde' ? "'le-monde-journal-std', Georgia, serif" : "'Inter', sans-serif";
+  return font === 'le-monde' ? "'lemonde-journal', Georgia, serif" : "'Inter', sans-serif";
 }
 
 /** The body / UI family (always Inter). */

@@ -96,7 +96,7 @@ function FilterModal({
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className={cn(
-                'h-[34px] w-full rounded-[2px] border border-grey-300 bg-grey-100 pl-9 pr-4',
+                'h-[34px] w-full rounded-[4px] border border-grey-300 bg-grey-100 pl-9 pr-4',
                 'font-[family-name:var(--font-content)] text-base font-normal text-white sm:text-xs',
                 'placeholder:text-[#807c7c]',
                 'outline-none transition-colors focus:border-white/30'
@@ -153,7 +153,7 @@ function FilterModal({
               type="button"
               onClick={() => onOpenChange(false)}
               className={cn(
-                'flex h-[42px] w-full items-center justify-center rounded-[2px]',
+                'flex h-[42px] w-full items-center justify-center rounded-[4px]',
                 'bg-grey-300 text-sm font-medium text-white/50 transition-colors hover:text-white/70'
               )}
             >

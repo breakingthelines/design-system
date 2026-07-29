@@ -125,7 +125,7 @@ function FilterBar({
             value={searchValue}
             onChange={(e) => onSearchChange?.(e.target.value)}
             className={cn(
-              'h-[34px] w-full rounded-[2px] border border-grey-300 bg-grey-100 pl-9 pr-8 sm:w-[300px]',
+              'h-[34px] w-full rounded-[4px] border border-grey-300 bg-grey-100 pl-9 pr-8 sm:w-[300px]',
               'font-[family-name:var(--font-content)] text-base font-normal text-white sm:text-xs',
               'placeholder:text-[#807c7c]',
               'outline-none transition-colors focus:border-white/30'

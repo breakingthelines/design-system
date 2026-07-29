@@ -1257,7 +1257,7 @@ function SiteNav({
                 </div>
                 {/* Dropdown — same pattern as Media dropdown */}
                 <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
-                  <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200 p-1 shadow-xl">
+                  <div className="relative min-w-[160px] overflow-hidden rounded-[8px] border border-white/10 bg-grey-200 p-1 shadow-xl">
                     <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                     <nav className="flex flex-col gap-0.5">
                       {avatarMenu.map((item) =>
@@ -1268,7 +1268,7 @@ function SiteNav({
                               href={item.href}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                              className="block rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                             >
                               {item.label}
                             </a>
@@ -1276,7 +1276,7 @@ function SiteNav({
                             <LinkComponent
                               key={item.label}
                               href={item.href}
-                              className="block rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                              className="block rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                             >
                               {item.label}
                             </LinkComponent>
@@ -1286,7 +1286,7 @@ function SiteNav({
                             key={item.label}
                             type="button"
                             onClick={item.onClick}
-                            className="block w-full cursor-pointer rounded-[2px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            className="block w-full cursor-pointer rounded-[4px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                           >
                             {item.label}
                           </button>
@@ -1419,7 +1419,7 @@ function SiteNav({
             <DropdownMenuContent
               align="end"
               sideOffset={8}
-              className="relative min-w-[180px] overflow-hidden rounded-[2px] border-white/10 !bg-grey-200 p-1 shadow-xl"
+              className="relative min-w-[180px] overflow-hidden rounded-[8px] border-white/10 !bg-grey-200 p-1 shadow-xl"
             >
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
               {/* Search moved in from the mobile top bar (was crammed in
@@ -1432,7 +1432,7 @@ function SiteNav({
               {isLoggedOut && onSearchClick && (
                 <DropdownMenuItem
                   onClick={onSearchClick}
-                  className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                  className="rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                 >
                   Search
                 </DropdownMenuItem>
@@ -1453,7 +1453,7 @@ function SiteNav({
                             <LinkComponent href={child.href} />
                           )
                         }
-                        className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                        className="rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                       >
                         {child.label}
                       </DropdownMenuItem>
@@ -1463,7 +1463,7 @@ function SiteNav({
                   <DropdownMenuItem
                     key={getNavTabKey(tab)}
                     render={<LinkComponent href={tab.href ?? '#'} />}
-                    className="rounded-[2px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                    className="rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                   >
                     {tab.label}
                   </DropdownMenuItem>

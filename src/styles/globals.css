@@ -33,7 +33,7 @@
   --chart-3: oklch(0.577 0.245 27.325);
   --chart-4: oklch(0.505 0.213 27.518);
   --chart-5: oklch(0.444 0.177 26.899);
-  --radius: 0.45rem;
+  --radius: 0.5rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.577 0.245 27.325);
@@ -143,14 +143,23 @@
   --color-muted-text: rgba(255, 255, 255, 0.5);
   --color-overlay: rgba(255, 255, 255, 0.1);
 
-  /* BTL Typography - Adobe Fonts + Google Fonts */
-  --font-display: 'le-monde-journal-std', Georgia, serif;
+  /* BTL Typography — Inter across every role.
+     The editorial serif (le-monde-journal-std) is no longer a global default.
+     It survives only where a creator explicitly opts in, and both of those
+     paths set the family themselves rather than reading this token:
+       - editor game blocks — GAME_BLOCK_FONT_FAMILY (editor/src/components/game-block.tsx)
+       - programme issues   — HeadingFont (src/page-flip/faces/face-spec.ts)
+     That is why the typekit @import at the top of this file stays: the face
+     must remain loaded for those two toggles to resolve. Removing it would
+     silently drop both to a Georgia fallback. */
+  --font-display: 'Inter', sans-serif;
+  --font-serif: 'Inter', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-sans: 'Inter', sans-serif;
   --font-content: 'Inter', sans-serif;
 
-  /* BTL Radius - Lyra sharp style */
-  --radius-btl-sm: 2px;
+  /* BTL Radius — 4px controls, 8px surfaces */
+  --radius-btl-sm: 4px;
   --radius-btl-md: 12px;
   --radius-btl-full: 16px;
 

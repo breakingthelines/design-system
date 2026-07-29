@@ -18,9 +18,9 @@ const sizePresets: Record<
     overlayHeight: number;
   }
 > = {
-  sm: { width: 600, height: 400, blur: 80, opacity: 0.25, scale: 1, overlayHeight: 500 },
-  md: { width: 700, height: 500, blur: 90, opacity: 0.32, scale: 1.15, overlayHeight: 650 },
-  lg: { width: 789, height: 588, blur: 100, opacity: 0.4, scale: 1.3, overlayHeight: 800 },
+  sm: { width: 600, height: 400, blur: 80, opacity: 0.18, scale: 1, overlayHeight: 500 },
+  md: { width: 700, height: 500, blur: 90, opacity: 0.22, scale: 1.15, overlayHeight: 650 },
+  lg: { width: 789, height: 588, blur: 100, opacity: 0.28, scale: 1.3, overlayHeight: 800 },
 };
 
 /* -------------------------------------------------------------------------- */
@@ -267,8 +267,8 @@ function AmbientEmitter({
           <div
             className="absolute inset-0"
             style={{
-              background: `radial-gradient(ellipse 70% 55% at 50% 50%, rgba(${dominantColor}, ${Math.min(1, mountedOpacity * 1.2)}) 0%, transparent 70%)`,
-              filter: `blur(${Math.round(preset.blur * 0.7)}px) saturate(1.5) brightness(${brightness})`,
+              background: `radial-gradient(ellipse 70% 55% at 50% 50%, rgba(${dominantColor}, ${Math.min(1, mountedOpacity)}) 0%, transparent 70%)`,
+              filter: `blur(${Math.round(preset.blur * 0.7)}px) saturate(1.3) brightness(${brightness})`,
               transform: `scale(${finalScale * 1.3})`,
               transition,
             }}

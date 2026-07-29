@@ -5,6 +5,55 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.75.0]
+
+### Changed: Inter across every typographic role
+
+- `--font-display` and a new `--font-serif` now resolve to Inter, matching the
+  new Figma foundation (file `e5dghsmu54gH7g6KumhS0Q`). This flips roughly 130
+  `font-display` / `font-serif` usages across platform, studio and this package
+  in a single token edit rather than a per-file sweep.
+- The typekit `@import` **stays**. Two surfaces still offer an explicit serif
+  opt-in and both name the family inline rather than reading the token, so the
+  face must remain loaded: the editor's game-block font picker
+  (`GAME_BLOCK_FONT_FAMILY`) and page-flip's `HeadingFont`
+  (`src/page-flip/faces/face-spec.ts`).
+- Type scale from the Figma variables: H2 28/500, H3 20/600, H4 16/600,
+  H5 14/600, H6 12/400, P3 14/400·18, Captions 12/400·18, Caption Bold 12/600·16.
+
+### Changed: 4px controls / 8px surfaces radius scale
+
+- `--radius` `0.45rem` → `0.5rem`, so sm/md/lg/xl land on 4/6/8/12px.
+- `--radius-btl-sm` `2px` → `4px`, which carries the editor's 46 usages.
+- `Button` was `rounded-none` on the base and on four size variants → `rounded-[4px]`.
+- Literal `rounded-[2px]` → `rounded-[4px]` package-wide.
+- Dropdowns are split by role instead of swept flat: the popup is a surface and
+  takes 8px, its rows are controls and take 4px. Applies to both `site-nav` and
+  `dropdown-menu`.
+- Oversized media radii (`rounded-[10px]`) → 8px.
+- Pills and avatars are untouched — `rounded-full` already matches the Figma's
+  `rounded-[99px]`, and the nav's liquid-glass treatment is deliberately kept
+  over the flat `#151515` the static mock shows.
+
+### Changed: `AmbientEmitter` is more subtle
+
+- The glow was dominating pages it was meant to sit behind. Preset opacity drops
+  about 30% (sm `0.25`→`0.18`, md `0.32`→`0.22`, lg `0.4`→`0.28`) and center mode
+  stops over-boosting its gradient base (`×1.2`→`×1.0`, `saturate(1.5)`→`1.3`).
+- Luminance adaptation, the analysis cache and the mount fade-in are unchanged,
+  so dark images keep their automatic boost.
+
+### Fixed: the Le Monde serif never actually loaded
+
+- Code across four repos asked for `le-monde-journal-std`, which the typekit kit
+  does not publish — it ships `lemonde-journal`, `le-monde-journal-std-2` and
+  `le-monde-livre-std`. Every reference fell through to a generic serif, so the
+  "classic" heading option in programme issues has never rendered Le Monde.
+- Now `lemonde-journal`: the journal cut, and the only journal cut with a real
+  700 weight. Verified in Chromium against a bare-`serif` baseline —
+  `le-monde-journal-std` measured identically to `serif` (unresolved), while
+  `le-monde-journal-std-2` measured the same at 400 and 700 (no true bold).
+
 ## [0.74.0]
 
 ### Fixed: `ThoughtCard` — header meta row no longer overflows at narrow mobile widths

@@ -132,7 +132,7 @@ function FooterNavItem({ link }: { link: FooterLink }) {
         )}
       >
         {/* Glass panel */}
-        <div className="relative min-w-[160px] overflow-hidden rounded-[2px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
+        <div className="relative min-w-[160px] overflow-hidden rounded-[4px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
           {/* Subtle top accent line */}
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
           <nav className="flex flex-col gap-0.5">
@@ -141,7 +141,7 @@ function FooterNavItem({ link }: { link: FooterLink }) {
                 key={child.href}
                 href={child.href}
                 onClick={() => setOpen(false)}
-                className="block rounded-[2px] px-4 py-2.5 text-xs tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                className="block rounded-[4px] px-4 py-2.5 text-xs tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
               >
                 {child.label}
               </LinkComponent>

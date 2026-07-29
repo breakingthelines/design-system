@@ -501,7 +501,7 @@ function ThoughtsPanel({
                       handleSubmit(text);
                     }}
                     className={cn(
-                      'w-[100px] rounded-[2px] px-6 py-2',
+                      'w-[100px] rounded-[4px] px-6 py-2',
                       hasText || selectedGif || imageUrl
                         ? 'bg-red-300 border-red-100 hover:bg-red-100'
                         : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]'

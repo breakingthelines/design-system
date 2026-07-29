@@ -155,7 +155,7 @@ function AccentStripe({ selected, accent }: { selected: boolean; accent?: string
 
 function RefGlyph({ data, glyph }: { data: G5SubjectRef; glyph?: React.ReactNode }) {
   const radiusClass =
-    data.kind === 'team' || data.kind === 'competition' ? 'rounded-full' : 'rounded-[2px]';
+    data.kind === 'team' || data.kind === 'competition' ? 'rounded-full' : 'rounded-[4px]';
   return (
     <span
       data-slot="ref-card-glyph"
@@ -191,7 +191,7 @@ function SelectionMark({ selected }: { selected: boolean }) {
       data-selected={selected || undefined}
       className={cn(
         'inline-flex size-5 shrink-0 items-center justify-center',
-        'rounded-[2px] border transition-colors duration-150',
+        'rounded-[4px] border transition-colors duration-150',
         selected
           ? 'border-[var(--color-red-100)] bg-[var(--color-red-300)]'
           : 'border-white/20 bg-transparent group-hover/ref:border-white/35'
