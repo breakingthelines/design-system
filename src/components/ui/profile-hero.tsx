@@ -290,7 +290,7 @@ function ProfileHero({
                   variant="outline"
                   size="lg"
                   onClick={onFollow}
-                  className="flex-1 sm:w-[130px] sm:flex-none rounded-[2px] bg-grey-200 border-grey-300 backdrop-blur-[15px] hover:bg-grey-200 hover:border-[#807c7c]"
+                  className="flex-1 sm:w-[130px] sm:flex-none rounded-[4px] bg-grey-200 border-grey-300 backdrop-blur-[15px] hover:bg-grey-200 hover:border-[#807c7c]"
                 >
                   {isFollowing ? 'Following' : 'Follow'}
                 </Button>

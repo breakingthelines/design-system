@@ -58,7 +58,7 @@ export function EntityStatsSummary({ header, metrics, bio, className }: EntitySt
     >
       <header
         data-slot="entity-stats-summary-bar"
-        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[2px] border border-white/[0.05] bg-[var(--color-grey-300)] px-2 py-3"
+        className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 rounded-[4px] border border-white/[0.05] bg-[var(--color-grey-300)] px-2 py-3"
       >
         <div className="flex min-w-0 items-center gap-2">
           {header.crestUrl ? (

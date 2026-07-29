@@ -203,7 +203,7 @@ export const GameBlockFullBleed = meta.story({
             <div className="my-6">
               <div
                 data-testid="mock-lineup-plate"
-                className="flex h-40 items-center justify-center rounded-[10px] border border-white/10 bg-white/[0.04] text-sm text-white/60"
+                className="flex h-40 items-center justify-center rounded-[8px] border border-white/10 bg-white/[0.04] text-sm text-white/60"
               >
                 Lineup card (full-bleed to card edges)
               </div>

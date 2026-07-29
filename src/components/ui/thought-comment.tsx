@@ -666,7 +666,7 @@ export function ThoughtComment({
                   resetReplyMedia();
                   onCancelReply();
                 }}
-                className="rounded-[2px] px-4 py-1.5 text-xs bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]"
+                className="rounded-[4px] px-4 py-1.5 text-xs bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]"
               >
                 Cancel
               </Button>
@@ -700,7 +700,7 @@ export function ThoughtComment({
                   }
                 }}
                 className={cn(
-                  'rounded-[2px] px-4 py-1.5 text-xs',
+                  'rounded-[4px] px-4 py-1.5 text-xs',
                   replyHasText || replyGif || replyImageUrl
                     ? 'bg-red-300 border-red-100 hover:bg-red-100'
                     : 'bg-grey-200 border-grey-300 hover:bg-grey-200 hover:border-[#807c7c]'

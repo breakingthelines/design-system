@@ -143,7 +143,7 @@ function AvatarStack({
               side="bottom"
               sideOffset={8}
               showArrow={false}
-              className="rounded-[10px] border border-white/10 bg-black/90 px-3 py-2 text-left text-white shadow-xl backdrop-blur-sm"
+              className="rounded-[8px] border border-white/10 bg-black/90 px-3 py-2 text-left text-white shadow-xl backdrop-blur-sm"
             >
               <div className="flex flex-col gap-0.5">
                 <span className="font-medium">{user.name}</span>
