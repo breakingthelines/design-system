@@ -63,7 +63,7 @@ async function ensureFonts(): Promise<void> {
     "700 64px 'Inter'",
     "500 28px 'Inter'",
     "600 22px 'Inter'",
-    "700 64px 'le-monde-journal-std'",
+    "700 64px 'lemonde-journal'",
   ];
   await Promise.race([
     Promise.allSettled(faces.map((f) => fonts.load(f))),

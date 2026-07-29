@@ -1,7 +1,7 @@
 // drawFaceCanvas — render a FaceSpec onto a 2D canvas, for use as a 3D page
 // texture. Pure (no React); given a spec + the already-loaded images, it paints
 // a crisp editorial page. Text is drawn in the real platform fonts (Inter +
-// le-monde-journal-std, ensured loaded by the caller via document.fonts), real
+// lemonde-journal, ensured loaded by the caller via document.fonts), real
 // crests/photos via drawImage, and the hand-drawn tactical doodle composites
 // faintly behind content pages (never the cover/photo).
 
