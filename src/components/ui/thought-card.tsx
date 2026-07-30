@@ -137,11 +137,18 @@ function ThoughtCard({
             <AvatarFallback branded />
           </Avatar>
 
-          {/* Name over @handle · time, 8px apart (Figma 2142:9209). Stacking
-            them is what stops a long display name pushing the handle and
-            timestamp off the row, and it gives the name its own line to be
-            read on. */}
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {/* Name over @handle · time (Figma 2142:9209). Stacking them is what
+            stops a long display name pushing the handle and timestamp off the
+            row, and it gives the name its own line to be read on.
+
+            The Figma says 8px, but that is measured between text-box-TRIMMED
+            boxes, and CSS gap is not: it stacks on top of each line's leading.
+            The name is 14px on leading-5 and the handle 12px on leading-[18px],
+            so each contributes 3px of half-leading into the space between them.
+            A literal gap-2 therefore rendered ~14px of optical gap, nearly
+            double the intent, which is why the two lines read as drifting
+            apart. gap-0.5 puts it back at 3 + 2 + 3 = 8px on screen. */}
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <div className="flex items-center gap-1.5">
               {/* min-w-0 lets this group shrink below its content's natural
                 width inside the row (flex items default to min-width:auto,
