@@ -281,16 +281,21 @@
    on both dark and light backgrounds (like the white play button).
    Skipped for link-variant buttons (no background to shimmer over). */
 
+/* List content cards opt out: they stack densely, and a sweep firing on each
+   row as the cursor travels down a rail reads as noise rather than polish.
+   They keep the cursor tilt, which is the interaction the rest of the page
+   uses anyway. */
+
 [data-slot='button']:not([class*='variant-link']),
 [data-slot='filter-chip'],
-[data-slot='content-card'] {
+[data-slot='content-card']:not([data-variant='list']) {
   position: relative;
   overflow: hidden;
 }
 
 [data-slot='button']:not([class*='variant-link'])::after,
 [data-slot='filter-chip']::after,
-[data-slot='content-card']::after {
+[data-slot='content-card']:not([data-variant='list'])::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -310,7 +315,7 @@
 
 [data-slot='button']:not([class*='variant-link']):hover::after,
 [data-slot='filter-chip']:hover::after,
-[data-slot='content-card']:hover::after {
+[data-slot='content-card']:not([data-variant='list']):hover::after {
   translate: 110% 0 0;
   transition: translate 0.5s var(--ease-standard);
 }
