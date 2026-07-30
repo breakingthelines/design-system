@@ -141,25 +141,22 @@ function ThoughtCard({
             stops a long display name pushing the handle and timestamp off the
             row, and it gives the name its own line to be read on.
 
-            2px optical, deliberately tighter than the Figma's 8px: these two
-            lines are one identity, and at 8px they read as two separate
-            things.
+            No gap at all: the two lines are one identity and stack directly,
+            which reads tighter than the Figma's 8px and is the intent here.
 
-            Getting to 2px takes more than a small gap. CSS gap does not
+            Reaching zero takes more than removing the gap. CSS gap does not
             replace leading, it stacks on top of it, so the half-leading either
-            side sets a floor the gap cannot go below. At the previous
-            leading-5 on the 14px name and leading-[18px] on the 12px handle,
-            each line contributed 3px, so even gap-0 would have floored at 6px
-            optical and the original literal gap-2 rendered ~14px. Both lines
-            are single-line and truncated, so their leading buys nothing:
-            leading-none drops the floor to zero and gap-0.5 is then the whole
-            2px.
+            side sets a floor. At the original leading-5 on the 14px name and
+            leading-[18px] on the 12px handle, each line contributed 3px, so
+            even gap-0 would have floored at 6px optical and the literal gap-2
+            taken from the Figma rendered ~14px. Both lines are single-line and
+            truncated, so their leading buys nothing: leading-none removes the
+            floor, and with no gap on top the two line boxes meet exactly.
 
-            One consequence worth knowing: with no leading, a descender in the
-            name (the g in "Gondal") and an ascender in the handle now have
-            only those 2px between them. That is the intent, but it is why the
-            gap cannot simply be tightened further. */}
-          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            They cannot go tighter than this without overlapping. Descenders in
+            the name and ascenders in the handle now sit in adjacent line
+            boxes, so a "g" above an "h" is as close as the two get. */}
+          <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex items-center gap-1.5">
               {/* min-w-0 lets this group shrink below its content's natural
                 width inside the row (flex items default to min-width:auto,
