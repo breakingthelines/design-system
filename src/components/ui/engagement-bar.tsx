@@ -78,7 +78,11 @@ function EngagementBar({ className, variant, actions, ...props }: EngagementBarP
                 ? 'text-red-100'
                 : isActive
                   ? 'text-cyan-500'
-                  : 'text-muted-foreground hover:text-foreground'
+                  : // White at rest, not muted. These counts sit on dark card
+                    // art where `text-muted-foreground` fell close enough to the
+                    // background to read as disabled. Hover still lifts to full
+                    // white from a slight step down.
+                    'text-white/90 hover:text-white'
             )}
             onClick={(event) => action.onClick?.(event)}
             aria-label={labelMap[action.type]}

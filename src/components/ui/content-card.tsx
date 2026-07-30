@@ -164,15 +164,15 @@ function ContentCard({
           {/* Content */}
           <div className="flex min-h-[86px] min-w-0 flex-1 flex-col gap-4">
             {/* Title + Author */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5">
               {href ? (
                 <LinkComponent href={href} className="group/title">
-                  <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-semibold leading-none tracking-[-0.42px] text-white transition-colors group-hover/title:text-red-100">
+                  <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-semibold leading-[1.3] tracking-[-0.42px] text-white transition-colors group-hover/title:text-red-100">
                     {item.title}
                   </h3>
                 </LinkComponent>
               ) : (
-                <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-semibold leading-none tracking-[-0.42px] text-white">
+                <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-sm font-semibold leading-[1.3] tracking-[-0.42px] text-white">
                   {item.title}
                 </h3>
               )}
@@ -314,12 +314,12 @@ function ContentCard({
               <AuthorAccent name={item.author.name} href={authorHref} />
               {href ? (
                 <LinkComponent href={href} className="group/title">
-                  <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-none tracking-[-0.48px] text-white transition-colors group-hover/title:text-red-100">
+                  <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-[1.3] tracking-[-0.48px] text-white transition-colors group-hover/title:text-red-100">
                     {item.title}
                   </h3>
                 </LinkComponent>
               ) : (
-                <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-none tracking-[-0.48px] text-white">
+                <h3 className="line-clamp-2 font-[family-name:var(--font-content)] text-base font-semibold leading-[1.3] tracking-[-0.48px] text-white">
                   {item.title}
                 </h3>
               )}

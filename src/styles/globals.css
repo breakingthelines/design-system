@@ -282,13 +282,15 @@
    Skipped for link-variant buttons (no background to shimmer over). */
 
 [data-slot='button']:not([class*='variant-link']),
-[data-slot='filter-chip'] {
+[data-slot='filter-chip'],
+[data-slot='content-card'] {
   position: relative;
   overflow: hidden;
 }
 
 [data-slot='button']:not([class*='variant-link'])::after,
-[data-slot='filter-chip']::after {
+[data-slot='filter-chip']::after,
+[data-slot='content-card']::after {
   content: '';
   position: absolute;
   inset: 0;
@@ -307,7 +309,8 @@
 }
 
 [data-slot='button']:not([class*='variant-link']):hover::after,
-[data-slot='filter-chip']:hover::after {
+[data-slot='filter-chip']:hover::after,
+[data-slot='content-card']:hover::after {
   translate: 110% 0 0;
   transition: translate 0.5s var(--ease-standard);
 }
