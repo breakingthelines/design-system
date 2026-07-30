@@ -14,10 +14,9 @@ import { VerifiedBadge } from '#/components/ui/verified-badge';
  * CreatorCard
  *
  * A presentational card for a creator (a BTL person) — powers the homepage
- * "Creators to Watch" rail and any ranked creator list. Unlike SearchEntityCard
- * (football entities), this represents a user: avatar with an optional rank
- * badge, name + handle + verified tick, a short bio, and a Followers / Thoughts
- * stat line.
+ * "Creators to Watch" rail and any creator list. Unlike SearchEntityCard
+ * (football entities), this represents a user: a rounded-square avatar, name +
+ * handle + verified tick, a short bio, and a Followers / Thoughts stat line.
  *
  * Presentational only: the whole card links to `item.href` via the host's
  * router (useLinkComponent), matching the other cards so SSR + client routing
@@ -43,7 +42,10 @@ export interface CreatorCardItem {
   thoughtCount?: number;
   /** Destination, e.g. /@zachlowy. */
   href: string;
-  /** 1-based rank; renders the numbered badge on the avatar when present. */
+  /**
+   * 1-based rank. Accepted for source compatibility but no longer drawn — see
+   * the identity row. Callers may keep passing it for ordering.
+   */
   rank?: number;
 }
 
@@ -74,7 +76,7 @@ function CreatorCard({ item, className }: CreatorCardProps) {
       whileHover={{ y: -4 }}
       transition={motionTokens.spring.gentle}
       className={cn(
-        'group/creator-card relative h-full overflow-hidden rounded-2xl text-white',
+        'group/creator-card relative h-full overflow-hidden rounded-[8px] text-white',
         'border border-white/8 bg-white/[0.025] transition-colors',
         'hover:border-white/14 hover:bg-white/[0.04]',
         className
@@ -85,26 +87,22 @@ function CreatorCard({ item, className }: CreatorCardProps) {
         data-slot="creator-link"
         className="flex h-full flex-col gap-4 p-5"
       >
-        {/* ── identity row: avatar (+ rank) | name + handle ── */}
+        {/* ── identity row: avatar | name + handle ──
+            The avatar is a rounded square, not a circle: these cards sit in a
+            grid of square-cornered surfaces, and a circle was the only round
+            element in it.
+            No rank badge. The rail is "Creators to Watch", not a leaderboard —
+            a number on the avatar implied an ordering that isn't meaningful and
+            read as a notification count. `item.rank` is still accepted so
+            callers don't break; it just isn't drawn. */}
         <div className="flex items-start gap-4">
           <span data-slot="creator-avatar" className="relative shrink-0">
-            <Avatar size="lg" className="size-12">
-              <AvatarImage src={item.avatarUrl} />
-              <AvatarFallback branded>{entityMonogram(item.name)}</AvatarFallback>
+            <Avatar size="lg" className="size-12 rounded-[8px]">
+              <AvatarImage src={item.avatarUrl} className="rounded-[8px]" />
+              <AvatarFallback branded className="rounded-[8px]">
+                {entityMonogram(item.name)}
+              </AvatarFallback>
             </Avatar>
-            {item.rank != null ? (
-              <span
-                data-slot="creator-rank"
-                aria-label={`Rank ${item.rank}`}
-                className={cn(
-                  'absolute -bottom-1 -right-1 flex size-5 items-center justify-center rounded-full',
-                  'bg-[var(--color-grey-300)] text-[11px] font-bold leading-none tabular-nums text-white',
-                  'ring-2 ring-background'
-                )}
-              >
-                {item.rank}
-              </span>
-            ) : null}
           </span>
 
           <div className="min-w-0 flex-1 pt-0.5">

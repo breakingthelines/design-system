@@ -75,7 +75,10 @@ function HeroCard({
       whileHover={{}}
       transition={motionTokens.spring.gentle}
       className={cn(
-        'group/hero-card relative w-full overflow-hidden shadow-[0_4px_48px_rgba(0,0,0,0.25)]',
+        // 8px corners + a 1px hairline at 5% white — the shared card edge every
+        // surface on the landing grid wears, so the hero sits in the same
+        // family as the cards beneath it rather than reading as a bare bleed.
+        'group/hero-card relative w-full overflow-hidden rounded-[8px] border border-white/[0.05] shadow-[0_4px_48px_rgba(0,0,0,0.25)]',
         onClick && 'cursor-pointer',
         className
       )}

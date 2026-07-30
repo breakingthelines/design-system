@@ -76,12 +76,12 @@ function FilterBar({
                   data-slot="filter-chip"
                   onClick={() => onFilterChange?.(filter.value)}
                   className={cn(
-                    'inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[24px] px-4 py-3 cursor-pointer',
+                    'inline-flex h-[34px] shrink-0 items-center gap-2 rounded-[8px] border px-4 py-3 cursor-pointer',
                     'font-[family-name:var(--font-content)] text-sm font-medium tracking-[-0.42px]',
                     'transition-colors',
                     isActive
-                      ? 'bg-white/20 text-white backdrop-blur-[15px]'
-                      : 'bg-white/10 text-[#ccc4c4] backdrop-blur-[15px] hover:bg-white/15'
+                      ? 'border-white/10 bg-white/[0.08] text-white backdrop-blur-[15px]'
+                      : 'border-white/[0.05] bg-[#151515] text-[#ccc4c4] backdrop-blur-[15px] hover:border-white/15 hover:text-white'
                   )}
                 >
                   {filter.icon && (
