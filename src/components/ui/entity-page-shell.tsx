@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -51,7 +52,11 @@ export interface EntityPageShellProps {
   secondary?: React.ReactNode;
   /** Crest / portrait / poster. */
   imageUrl?: string;
-  /** Fallback initials when the image is missing. */
+  /**
+   * @deprecated No longer rendered. A missing or broken entity image now falls
+   * back to the BTL brand placeholder (matching the hero portrait) rather than
+   * initials. Retained so existing call sites keep type-checking.
+   */
   initials?: string;
   /** Brand tint behind the crest. */
   accentColor?: string;
@@ -87,7 +92,6 @@ export function EntityPageShell({
   name,
   secondary,
   imageUrl,
-  initials,
   accentColor,
   meta,
   metaChips,
@@ -102,6 +106,15 @@ export function EntityPageShell({
   // whole (object-contain) on a clean square tile rather than cropping them
   // into a circle. Player/manager portraits stay a cover-cropped circle.
   const isLogo = kind === 'team' || kind === 'competition';
+
+  // Entity image URLs are built by convention from the entity id, so `imageUrl`
+  // is almost always non-empty even when the asset was never mirrored and 404s.
+  // A bare truthiness gate therefore renders a broken <img> that never degrades.
+  // Track the src that failed (keyed on the URL so a new imageUrl auto-retries
+  // without an effect) and fall back to the BTL brand placeholder — matching the
+  // hero portrait's fallback — on both a missing URL and a load error.
+  const [erroredSrc, setErroredSrc] = React.useState<string | null>(null);
+  const activeImageUrl = imageUrl && erroredSrc !== imageUrl ? imageUrl : null;
   return (
     <section
       data-slot="entity-page-shell"
@@ -124,18 +137,23 @@ export function EntityPageShell({
               isLogo ? 'rounded-[6px]' : 'rounded-full border border-white/10'
             )}
           >
-            {imageUrl ? (
+            {activeImageUrl ? (
               <img
-                src={imageUrl}
+                src={activeImageUrl}
                 alt=""
                 loading="eager"
+                onError={() => setErroredSrc(activeImageUrl)}
                 className={cn(
                   'size-full',
                   isLogo ? 'object-contain' : 'absolute inset-0 object-cover'
                 )}
               />
             ) : (
-              <span>{initials ?? name.slice(0, 2).toUpperCase()}</span>
+              <BtlPlaceholder
+                variant={isLogo ? 'media' : 'avatar'}
+                brand="logo"
+                className="absolute inset-0 size-full"
+              />
             )}
           </span>
 
