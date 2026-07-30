@@ -141,13 +141,24 @@ function ThoughtCard({
             stops a long display name pushing the handle and timestamp off the
             row, and it gives the name its own line to be read on.
 
-            The Figma says 8px, but that is measured between text-box-TRIMMED
-            boxes, and CSS gap is not: it stacks on top of each line's leading.
-            The name is 14px on leading-5 and the handle 12px on leading-[18px],
-            so each contributes 3px of half-leading into the space between them.
-            A literal gap-2 therefore rendered ~14px of optical gap, nearly
-            double the intent, which is why the two lines read as drifting
-            apart. gap-0.5 puts it back at 3 + 2 + 3 = 8px on screen. */}
+            2px optical, deliberately tighter than the Figma's 8px: these two
+            lines are one identity, and at 8px they read as two separate
+            things.
+
+            Getting to 2px takes more than a small gap. CSS gap does not
+            replace leading, it stacks on top of it, so the half-leading either
+            side sets a floor the gap cannot go below. At the previous
+            leading-5 on the 14px name and leading-[18px] on the 12px handle,
+            each line contributed 3px, so even gap-0 would have floored at 6px
+            optical and the original literal gap-2 rendered ~14px. Both lines
+            are single-line and truncated, so their leading buys nothing:
+            leading-none drops the floor to zero and gap-0.5 is then the whole
+            2px.
+
+            One consequence worth knowing: with no leading, a descender in the
+            name (the g in "Gondal") and an ascender in the handle now have
+            only those 2px between them. That is the intent, but it is why the
+            gap cannot simply be tightened further. */}
           <div className="flex min-w-0 flex-1 flex-col gap-0.5">
             <div className="flex items-center gap-1.5">
               {/* min-w-0 lets this group shrink below its content's natural
@@ -159,13 +170,13 @@ function ThoughtCard({
                 {thought.author.handle ? (
                   <Link
                     href={`/@${thought.author.handle}`}
-                    className="font-content text-sm font-semibold leading-5 text-foreground truncate transition-colors hover:text-red-100"
+                    className="font-content text-sm font-semibold leading-none text-foreground truncate transition-colors hover:text-red-100"
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
                     {thought.author.name}
                   </Link>
                 ) : (
-                  <span className="font-content text-sm font-semibold leading-5 text-foreground truncate">
+                  <span className="font-content text-sm font-semibold leading-none text-foreground truncate">
                     {thought.author.name}
                   </span>
                 )}
@@ -199,7 +210,7 @@ function ThoughtCard({
                 {thought.author.handle && (
                   <Link
                     href={`/@${thought.author.handle}`}
-                    className="text-xs leading-[18px] text-foreground/50 whitespace-nowrap transition-colors hover:text-foreground/80"
+                    className="text-xs leading-none text-foreground/50 whitespace-nowrap transition-colors hover:text-foreground/80"
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
                     @{thought.author.handle}
@@ -212,13 +223,13 @@ function ThoughtCard({
                   (thought.permalinkHref ? (
                     <Link
                       href={thought.permalinkHref}
-                      className="text-xs leading-[18px] text-foreground/50 whitespace-nowrap transition-colors hover:text-foreground/70"
+                      className="text-xs leading-none text-foreground/50 whitespace-nowrap transition-colors hover:text-foreground/70"
                       onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     >
                       {thought.createdAt}
                     </Link>
                   ) : (
-                    <span className="text-xs leading-[18px] text-foreground/50 whitespace-nowrap">
+                    <span className="text-xs leading-none text-foreground/50 whitespace-nowrap">
                       {thought.createdAt}
                     </span>
                   ))}
