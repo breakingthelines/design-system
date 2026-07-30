@@ -121,8 +121,12 @@ function ContentCard({
     return (
       <motion.article
         data-slot="content-card"
+        // List rows carry the tilt and nothing else: they sit in dense stacks
+        // where a hover sweep across every neighbouring row reads as noise, and
+        // the lift fights the tilt for the same few pixels. `data-variant` is
+        // what globals.css keys the shimmer opt-out off.
+        data-variant="list"
         style={{ transformPerspective: 1000, rotateX: tilt.rotateX, rotateY: tilt.rotateY }}
-        whileHover={{ y: -4 }}
         transition={motionTokens.spring.gentle}
         className={cn(contentCardVariants({ variant, className }), 'relative')}
         onClick={onClick}
