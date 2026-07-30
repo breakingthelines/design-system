@@ -79,6 +79,25 @@ describe('EntityPageShell', () => {
     expect(getSlotAttr(portrait, 'entity-page-shell-crest', 'data-variant')).toBe('avatar');
   });
 
+  it('falls back to the BTL brand placeholder when no image URL is supplied', () => {
+    const markup = render(<EntityPageShell kind="player" name="Tomás Pochettino" />);
+    expect(hasSlot(markup, 'btl-placeholder')).toBe(true);
+    // The placeholder renders inside the crest, not initials text.
+    expect(slotText(markup, 'entity-page-shell-crest')).not.toContain('TO');
+  });
+
+  it('renders the image (not the placeholder) when an image URL is supplied', () => {
+    const markup = render(
+      <EntityPageShell
+        kind="player"
+        name="Mohamed Salah"
+        imageUrl="https://cdn.example/salah.jpg"
+      />
+    );
+    expect(hasSlot(markup, 'btl-placeholder')).toBe(false);
+    expect(markup).toContain('https://cdn.example/salah.jpg');
+  });
+
   it('renders the meta block only when at least one entry is supplied', () => {
     const markup = render(<EntityPageShell kind="player" name="x" />);
     expect(hasSlot(markup, 'entity-page-shell-meta')).toBe(false);
