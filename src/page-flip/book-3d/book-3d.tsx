@@ -14,7 +14,7 @@
 // textures there, so it rides the page geometry as it bends.
 
 import { Environment, Float, OrbitControls, useCursor } from '@react-three/drei';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { easing } from 'maath';
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -39,6 +39,12 @@ const easingFactorFold = 0.3;
 const insideCurveStrength = 0.18;
 const outsideCurveStrength = 0.05;
 const turningCurveStrength = 0.09;
+
+/** Vertical offset of the book group, matched by the camera's aim. */
+const BOOK_GROUP_Y = 0.12;
+
+/** The authored camera position, used as the base for the responsive dolly. */
+const CAMERA_HOME: readonly [number, number, number] = [2.28, 0.5, 3.18];
 
 const PAGE_WIDTH = 1.28;
 const PAGE_HEIGHT = 1.71;
@@ -287,6 +293,63 @@ export interface Book3DProps {
 }
 
 /** The 3D book stage: lighting, contact shadow, a gentle float, orbit. */
+/**
+ * Reference viewport aspect the default camera framing was authored against.
+ * At or above this the camera is left exactly as it was.
+ */
+const CAMERA_REF_ASPECT = 1.2;
+/** Ceiling on the pull-back, so an extreme aspect can't shrink the book to nothing. */
+const CAMERA_MAX_DOLLY = 2.4;
+
+/**
+ * Keep the whole book in frame on a portrait viewport.
+ *
+ * The camera was a hardcoded `position: [2.28, 0.5, 3.18], fov: 40` with no
+ * aspect awareness anywhere. That frames well on a landscape screen and fails
+ * badly on a phone: at 390x844 the rendered book sat with ~35% of the frame
+ * empty on the left while its right edge and bottom were clipped off-canvas —
+ * the reader could see maybe half the issue and had no way to reach the rest,
+ * because OrbitControls had also killed native pinch and pan (see below).
+ *
+ * The book is portrait (page aspect 0.748). When the VIEWPORT is narrower than
+ * that, width is the binding constraint, so the camera dollies back along its
+ * own axis — direction, tilt and composition are all preserved, the book just
+ * sits further away and fits. Clamped at both ends: never closer than the
+ * authored framing, never so far that the ceremony becomes a postage stamp.
+ */
+/**
+ * True on a coarse (touch) primary pointer. Evaluated once on mount so the
+ * server render and the client's first paint agree.
+ */
+function useCoarsePointer(): boolean {
+  const [coarse, setCoarse] = useState(false);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    setCoarse(window.matchMedia('(pointer: coarse)').matches);
+  }, []);
+  return coarse;
+}
+
+function ResponsiveCamera() {
+  const camera = useThree((state) => state.camera);
+  const size = useThree((state) => state.size);
+
+  useEffect(() => {
+    const aspect = size.height > 0 ? size.width / size.height : CAMERA_REF_ASPECT;
+    const dolly = Math.min(CAMERA_MAX_DOLLY, Math.max(1, CAMERA_REF_ASPECT / aspect));
+    camera.position.set(CAMERA_HOME[0] * dolly, CAMERA_HOME[1] * dolly, CAMERA_HOME[2] * dolly);
+    // No `lookAt` here on purpose. When OrbitControls is mounted it owns the
+    // camera's aim and re-applies its own `target` every frame, so a `lookAt`
+    // set once from an effect is silently overwritten — it reads as a
+    // recentring that does nothing. Recentring the composition means moving
+    // OrbitControls' target, which is a separate change; the dolly alone is
+    // what stops the book being clipped.
+    camera.updateProjectionMatrix();
+  }, [camera, size.width, size.height]);
+
+  return null;
+}
+
 export function Book3D({
   pages,
   page,
@@ -296,6 +359,7 @@ export function Book3D({
   className,
   style,
 }: Book3DProps) {
+  const coarsePointer = useCoarsePointer();
   return (
     <div className={className} style={{ width: '100%', height: '100%', ...style }}>
       <Canvas
@@ -307,10 +371,11 @@ export function Book3D({
         shadows="percentage"
         frameloop="always"
         dpr={[1, 2]}
-        camera={{ position: [2.28, 0.5, 3.18], fov: 40 }}
+        camera={{ position: [...CAMERA_HOME], fov: 40 }}
       >
+        <ResponsiveCamera />
         <color attach="background" args={['#08080a']} />
-        <group position-y={0.12}>
+        <group position-y={BOOK_GROUP_Y}>
           <Float
             rotation-x={-MathUtils.degToRad(tiltDeg)}
             floatIntensity={0.28}
@@ -338,7 +403,18 @@ export function Book3D({
           <planeGeometry args={[60, 60]} />
           <shadowMaterial transparent opacity={0.32} />
         </mesh>
-        {interactive ? (
+        {/* OrbitControls sets `touch-action: none` on the wrapper div when it
+            connects, which silently disables NATIVE pinch-zoom and pan across
+            the entire reader — and it does so while offering nothing in
+            exchange, because `enablePan` and `enableZoom` are both false. All
+            it actually provides is a +/-36 degree azimuth wobble on drag.
+
+            On a phone that trade is plainly wrong: the reader loses the only
+            gestures that could rescue a mis-framed book, and gains a wobble.
+            So the orbit is desktop-only; a touch device keeps its native
+            gestures as an escape hatch. The page-turn tap is unaffected — it is
+            an onClick on the mesh, not an OrbitControls behaviour. */}
+        {interactive && !coarsePointer ? (
           <OrbitControls
             enablePan={false}
             enableZoom={false}
