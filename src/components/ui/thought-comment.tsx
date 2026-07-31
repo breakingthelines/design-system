@@ -83,6 +83,19 @@ const itemVariants = {
  *
  * Supports one level of nested replies (renders reply children as flat,
  * without a further reply button — matches current UX).
+ *
+ * Layout is ThoughtCard's model (Figma 2142:9201), not a parallel one: a
+ * COLUMN of rows at gap-3 — identity, then anchor/media/body, then actions
+ * — with the avatar living only in the identity row and everything below
+ * it full width. Before this pass the avatar sat beside a `flex-1`
+ * content column that held every row (an outer gap-3 nested around an
+ * inner gap-4), which is the two-column model the card moved off in
+ * 0.79.0. A top-level comment keeps the card's own 40px avatar and text
+ * sizes — it is a first-class entry in the thread, and the panel's
+ * near-black surface already marks "this is a comment" without also
+ * shrinking it. A reply drops to 32px / smaller type: that is the nesting
+ * signal, not a thought-vs-comment one. See the identity-row and
+ * `pl-[52px]` comments below for the rest of the reasoning.
  * ──────────────────────────────────────────────────────────── */
 
 export interface ThoughtCommentProps {
@@ -271,95 +284,115 @@ export function ThoughtComment({
     [onShare, thought]
   );
 
+  // Nesting indent: one avatar-width (40) + one gap-3 (12) = 52px per
+  // reply level — the same "avatar + gap" unit the identity row below
+  // spends between its own avatar and name column. The body and actions
+  // rows no longer live in an avatar gutter (see ThoughtCard 0.79.0), so
+  // this indent isn't continuing a column that starts above it; it is a
+  // block-level nesting device applied once per level, parking a reply's
+  // own avatar under roughly where its parent's name began — the same
+  // idiom threaded UIs (Reddit, Twitter replies) use.
   return (
-    <motion.div className="flex flex-col" variants={itemVariants} data-thought-id={thought.id}>
-      <div className={cn('flex gap-3', isReply && 'pl-[52px]')}>
-        {/* Avatar */}
-        <Avatar className={cn(isReply ? 'size-8' : 'size-10', 'shrink-0')}>
-          {thought.author.avatarUrl && (
-            <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
-          )}
-          <AvatarFallback>
-            {thought.author.initials ?? thought.author.name.charAt(0)}
-          </AvatarFallback>
-        </Avatar>
+    <motion.div
+      className={cn('flex flex-col', isReply && 'pl-[52px]')}
+      variants={itemVariants}
+      data-thought-id={thought.id}
+    >
+      {/* Figma parity with ThoughtCard 2142:9201 — a COLUMN of rows at the
+          same gap-3 rhythm: identity, then anchor/media/body, then
+          actions. The body used to sit beside a persistent avatar in a
+          `flex-1` content column (an outer gap-3 nested around an inner
+          gap-4); now the avatar appears once, in the identity row, and
+          every row below it runs full width, exactly like the card. */}
+      <div className="flex flex-col gap-3">
+        {/* Pinned indicator */}
+        {thought.pinnedBy && (
+          <div className="flex items-center gap-1">
+            <PushPin size={14} className="text-[#807c7c]" />
+            <span className="font-body text-[10px] font-medium leading-6 text-[#807c7c]">
+              Pinned by {thought.pinnedBy}
+            </span>
+          </div>
+        )}
 
-        {/* Content */}
-        <div className="flex min-w-0 flex-1 flex-col gap-4">
-          {/* Pinned indicator */}
-          {thought.pinnedBy && (
-            <div className="flex items-center gap-1">
-              <PushPin size={14} className="text-[#807c7c]" />
-              <span className="font-body text-[10px] font-medium leading-6 text-[#807c7c]">
-                Pinned by {thought.pinnedBy}
-              </span>
-            </div>
-          )}
+        {/* Identity row — avatar beside the stacked name / @handle · time,
+            the same shape as ThoughtCard's identity row.
 
-          {/* Author + timestamp — two treatments */}
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-2">
-              {isOP ? (
-                /* Original author: grey pill + regular weight + verified badge */
-                <span className="inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c] px-2 py-1">
-                  {thought.author.handle ? (
-                    <Link
-                      href={`/@${thought.author.handle}`}
-                      className="font-content text-xs font-normal tracking-[-0.36px] text-white transition-colors hover:text-red-100"
-                    >
-                      {thought.author.name}
-                    </Link>
-                  ) : (
-                    <span className="font-content text-xs font-normal tracking-[-0.36px] text-white">
-                      {thought.author.name}
-                    </span>
-                  )}
-                  {thought.author.verified && <VerifiedBadge size="sm" />}
-                </span>
-              ) : (
-                <span
-                  className={cn(
-                    'inline-flex items-center gap-1 font-content font-semibold tracking-[-0.42px] text-white',
-                    isReply ? 'py-[2px] text-xs' : 'py-[3.5px] text-sm'
-                  )}
-                >
-                  {thought.author.handle ? (
-                    <Link
-                      href={`/@${thought.author.handle}`}
-                      className="text-white transition-colors hover:text-red-100"
-                    >
-                      {thought.author.name}
-                    </Link>
-                  ) : (
-                    thought.author.name
-                  )}
-                  {thought.author.verified && <VerifiedBadge size="sm" />}
-                </span>
-              )}
-              {/* Tier badge — shared AuthorLine treatment (Pro = secondary, Line
-                  Breaker = tinted brand red); `dark` flips the secondary tokens so
-                  the Pro badge reads on the panel's black surface. */}
-              {thought.author.tier && thought.author.tier !== 'Free' && (
-                <Badge variant={tierVariantMap[thought.author.tier]} className="dark">
-                  {thought.author.tier}
-                </Badge>
-              )}
-              {thought.createdAt &&
-                (thought.permalinkHref ? (
-                  <Link
-                    href={thought.permalinkHref}
-                    className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c] transition-colors hover:text-white"
-                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
-                  >
-                    {thought.createdAt}
-                  </Link>
-                ) : (
-                  <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-                    {thought.createdAt}
+            Avatar size is the nesting signal here, not a thought-vs-comment
+            one: a top-level comment keeps the card's own 40px so it reads
+            as a first-class entry in the thread — the panel itself
+            (near-black, versus the card's light surface) already carries
+            "this is a comment", so shrinking the avatar too would be
+            double-signalling the same fact with a second variable. A reply
+            drops to 32px; that is what marks it one level down from its
+            parent, same as before this pass. */}
+        <div className="flex items-center gap-3">
+          <Avatar className={cn(isReply ? 'size-8' : 'size-10', 'shrink-0')}>
+            {thought.author.avatarUrl && (
+              <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
+            )}
+            <AvatarFallback>
+              {thought.author.initials ?? thought.author.name.charAt(0)}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="flex min-w-0 flex-1 flex-col">
+            <div className="flex items-center gap-1.5">
+              <div className="flex min-w-0 items-center gap-1">
+                {isOP ? (
+                  /* Original author: grey pill + regular weight + verified badge */
+                  <span className="inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c] px-2 py-1">
+                    {thought.author.handle ? (
+                      <Link
+                        href={`/@${thought.author.handle}`}
+                        className="font-content text-xs font-normal leading-none tracking-[-0.36px] text-white transition-colors hover:text-red-100"
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      >
+                        {thought.author.name}
+                      </Link>
+                    ) : (
+                      <span className="font-content text-xs font-normal leading-none tracking-[-0.36px] text-white">
+                        {thought.author.name}
+                      </span>
+                    )}
+                    {thought.author.verified && <VerifiedBadge size="sm" />}
                   </span>
-                ))}
-              {/* Overflow `…` — pinned right. Dark tone so it reads on
-                  the near-black match Thoughts panel. */}
+                ) : (
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 truncate font-content font-semibold leading-none tracking-[-0.42px] text-white',
+                      isReply ? 'text-xs' : 'text-sm'
+                    )}
+                  >
+                    {thought.author.handle ? (
+                      <Link
+                        href={`/@${thought.author.handle}`}
+                        className="text-white transition-colors hover:text-red-100"
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      >
+                        {thought.author.name}
+                      </Link>
+                    ) : (
+                      thought.author.name
+                    )}
+                    {thought.author.verified && <VerifiedBadge size="sm" />}
+                  </span>
+                )}
+                {/* Tier badge — shared AuthorLine treatment (Pro = secondary,
+                    Line Breaker = tinted brand red); `dark` flips the
+                    secondary tokens so it reads on the panel's black
+                    surface, `ml-1` matches the card's extra breathing room
+                    ahead of the badge. */}
+                {thought.author.tier && thought.author.tier !== 'Free' && (
+                  <Badge variant={tierVariantMap[thought.author.tier]} className="dark ml-1">
+                    {thought.author.tier}
+                  </Badge>
+                )}
+              </div>
+              {/* Overflow `…` — pinned right of the name row, level with
+                  the name rather than floating between the two lines.
+                  Dark tone so it reads on the panel's near-black
+                  background. */}
               <ThoughtOverflowMenu
                 thought={thought}
                 canDelete={!!viewerId && !!thought.publisherId && thought.publisherId === viewerId}
@@ -371,131 +404,176 @@ export function ThoughtComment({
               />
             </div>
 
-            {/* Content anchor quote — clickable when onAnchorClick provided */}
-            {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (
-              <div
-                className={cn(
-                  'rounded-md border-l-2 border-red-100/40 bg-white/[0.03] py-1.5 pl-3 pr-2',
-                  onAnchorClick &&
-                    'cursor-pointer transition-colors hover:bg-white/[0.06] hover:border-red-100/60'
+            {/* Second line: @handle · time (Figma parity with ThoughtCard
+                3000:10971). The handle line didn't exist before this pass —
+                createdAt sat inline next to the name instead. Moving it
+                onto its own line matches the card's info architecture (name
+                is identity, handle/time is metadata) and, same as the
+                card, stops a long display name pushing the timestamp off
+                the row.
+
+                Same leading-none + zero-gap treatment as the card, and for
+                the same reason: gap alone cannot close the two lines. The
+                half-leading either side of a non-`none` leading sets a
+                floor gap-0 cannot go under, so both lines need
+                leading-none before removing the gap does anything. */}
+            {(thought.author.handle || thought.createdAt) && (
+              <div className="flex items-center gap-2">
+                {thought.author.handle && (
+                  <Link
+                    href={`/@${thought.author.handle}`}
+                    className="whitespace-nowrap font-content text-xs leading-none tracking-[-0.36px] text-[#807c7c] transition-colors hover:text-white"
+                    onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                  >
+                    @{thought.author.handle}
+                  </Link>
                 )}
-                onClick={onAnchorClick ? () => onAnchorClick(thought.anchor!) : undefined}
-                role={onAnchorClick ? 'button' : undefined}
-                tabIndex={onAnchorClick ? 0 : undefined}
-              >
-                <p className="font-content text-[11px] leading-relaxed text-white/40 italic line-clamp-3">
-                  &ldquo;{thought.anchor.text.selectedText}&rdquo;
-                </p>
-              </div>
-            )}
-
-            {/* Timestamp anchor badge — clickable when onAnchorClick provided */}
-            {thought.anchor?.type === 'timestamp' && thought.anchor.label && (
-              <span
-                className={cn(
-                  'inline-flex items-center gap-1 self-start rounded-full bg-red-100/10 px-2 py-0.5 text-red-100',
-                  onAnchorClick && 'cursor-pointer transition-colors hover:bg-red-100/20'
+                {thought.author.handle && thought.createdAt && (
+                  <span className="size-0.5 shrink-0 rounded-full bg-[#807c7c]" />
                 )}
-                onClick={onAnchorClick ? () => onAnchorClick(thought.anchor!) : undefined}
-                role={onAnchorClick ? 'button' : undefined}
-                tabIndex={onAnchorClick ? 0 : undefined}
-              >
-                <Clock size={10} weight="bold" />
-                <span className="font-content text-[10px] font-semibold tabular-nums">
-                  {thought.anchor.label}
-                </span>
-              </span>
-            )}
-
-            {/* From-grade pill — Wave 6.16. Marks a comment that was spawned
-                by a GLOBAL grade fan-out (game-service). Same primitive as
-                ThoughtCard's pill, dark-tone so it reads on the match panel's
-                near-black background. PRIVATE grades never reach this path —
-                privacy is enforced upstream in the fan-out. */}
-            {thought.fromGrade && <FromGradePill data={thought.fromGrade} tone="dark" />}
-
-            {/* Body */}
-            {thought.body && (
-              <ThoughtBody
-                body={thought.body}
-                bodyJson={thought.bodyJson}
-                blockRenderers={blockRenderers}
-                className={cn(
-                  'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
-                  isReply ? 'text-xs' : 'text-sm'
-                )}
-              />
-            )}
-
-            {/* GIF / Image attachment */}
-            {(thought.gifUrl || thought.imageUrl) && (
-              <div className="mt-1.5 max-w-[240px] overflow-hidden rounded-[6px] border border-white/[0.06]">
-                <img
-                  src={thought.gifUrl || thought.imageUrl}
-                  alt=""
-                  className="block max-h-[180px] w-full object-cover"
-                  loading="lazy"
-                />
+                {thought.createdAt &&
+                  (thought.permalinkHref ? (
+                    <Link
+                      href={thought.permalinkHref}
+                      className="whitespace-nowrap font-content text-xs leading-none tracking-[-0.36px] text-[#807c7c] transition-colors hover:text-white"
+                      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                    >
+                      {thought.createdAt}
+                    </Link>
+                  ) : (
+                    <span className="whitespace-nowrap font-content text-xs leading-none tracking-[-0.36px] text-[#807c7c]">
+                      {thought.createdAt}
+                    </span>
+                  ))}
               </div>
             )}
           </div>
+        </div>
 
-          {/* Actions: Reply + ThumbsUp + utility icons */}
-          <div className="flex items-center gap-4">
-            {!isReply && user && (
-              <button
-                type="button"
-                onClick={() => onStartReply(thought.id)}
-                className="cursor-pointer font-content text-xs font-normal leading-[18px] tracking-[-0.36px] text-white transition-colors hover:text-red-100"
-              >
-                Reply{replyCount > 0 ? ` (${replyCount})` : ''}
-              </button>
+        {/* Content anchor quote — clickable when onAnchorClick provided */}
+        {thought.anchor?.type === 'text' && thought.anchor.text?.selectedText && (
+          <div
+            className={cn(
+              'rounded-md border-l-2 border-red-100/40 bg-white/[0.03] py-1.5 pl-3 pr-2',
+              onAnchorClick &&
+                'cursor-pointer transition-colors hover:bg-white/[0.06] hover:border-red-100/60'
             )}
-            {!isReply && !user && replyCount > 0 && (
-              <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-                {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
-              </span>
+            onClick={onAnchorClick ? () => onAnchorClick(thought.anchor!) : undefined}
+            role={onAnchorClick ? 'button' : undefined}
+            tabIndex={onAnchorClick ? 0 : undefined}
+          >
+            <p className="font-content text-[11px] leading-relaxed text-white/40 italic line-clamp-3">
+              &ldquo;{thought.anchor.text.selectedText}&rdquo;
+            </p>
+          </div>
+        )}
+
+        {/* Timestamp anchor badge — clickable when onAnchorClick provided */}
+        {thought.anchor?.type === 'timestamp' && thought.anchor.label && (
+          <span
+            className={cn(
+              'inline-flex items-center gap-1 self-start rounded-full bg-red-100/10 px-2 py-0.5 text-red-100',
+              onAnchorClick && 'cursor-pointer transition-colors hover:bg-red-100/20'
             )}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => (thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id))}
-                className={cn(
-                  'cursor-pointer transition-colors',
-                  thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white'
-                )}
-              >
-                <ThumbsUp size={14} weight={thought.liked ? 'fill' : 'regular'} />
-              </button>
-              {(thought.stats.likes ?? 0) > 0 && (
-                <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-                  {thought.stats.likes}
-                </span>
-              )}
-            </div>
+            onClick={onAnchorClick ? () => onAnchorClick(thought.anchor!) : undefined}
+            role={onAnchorClick ? 'button' : undefined}
+            tabIndex={onAnchorClick ? 0 : undefined}
+          >
+            <Clock size={10} weight="bold" />
+            <span className="font-content text-[10px] font-semibold tabular-nums">
+              {thought.anchor.label}
+            </span>
+          </span>
+        )}
+
+        {/* From-grade pill — Wave 6.16. Marks a comment that was spawned
+            by a GLOBAL grade fan-out (game-service). Same primitive as
+            ThoughtCard's pill, dark-tone so it reads on the match panel's
+            near-black background. PRIVATE grades never reach this path —
+            privacy is enforced upstream in the fan-out. */}
+        {thought.fromGrade && <FromGradePill data={thought.fromGrade} tone="dark" />}
+
+        {/* Body — full width, no longer inset into an avatar gutter. */}
+        {thought.body && (
+          <ThoughtBody
+            body={thought.body}
+            bodyJson={thought.bodyJson}
+            blockRenderers={blockRenderers}
+            className={cn(
+              'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
+              isReply ? 'text-xs' : 'text-sm'
+            )}
+          />
+        )}
+
+        {/* GIF / Image attachment — a direct sibling row now, spaced by
+            the row's own gap-3 rather than a bolted-on mt-1.5. */}
+        {(thought.gifUrl || thought.imageUrl) && (
+          <div className="max-w-[240px] overflow-hidden rounded-[6px] border border-white/[0.06]">
+            <img
+              src={thought.gifUrl || thought.imageUrl}
+              alt=""
+              className="block max-h-[180px] w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        )}
+
+        {/* Actions: Reply + ThumbsUp + utility icons */}
+        <div className="flex items-center gap-4">
+          {!isReply && user && (
             <button
               type="button"
-              onClick={() =>
-                thoughtIsBookmarked ? onUnbookmark?.(thought.id) : onBookmark?.(thought.id)
-              }
+              onClick={() => onStartReply(thought.id)}
+              className="cursor-pointer font-content text-xs font-normal leading-[18px] tracking-[-0.36px] text-white transition-colors hover:text-red-100"
+            >
+              Reply{replyCount > 0 ? ` (${replyCount})` : ''}
+            </button>
+          )}
+          {!isReply && !user && replyCount > 0 && (
+            <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
+              {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
+            </span>
+          )}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => (thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id))}
               className={cn(
                 'cursor-pointer transition-colors',
-                thoughtIsBookmarked ? 'text-white' : 'text-[#807c7c] hover:text-white'
+                thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white'
               )}
-              aria-label="Bookmark"
-              aria-pressed={thoughtIsBookmarked}
             >
-              <Bookmark size={14} weight={thoughtIsBookmarked ? 'fill' : 'regular'} />
+              <ThumbsUp size={14} weight={thought.liked ? 'fill' : 'regular'} />
             </button>
-            <button
-              type="button"
-              onClick={handleShare}
-              className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
-              aria-label="Share"
-            >
-              <UploadSimple size={14} weight="regular" />
-            </button>
+            {(thought.stats.likes ?? 0) > 0 && (
+              <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
+                {thought.stats.likes}
+              </span>
+            )}
           </div>
+          <button
+            type="button"
+            onClick={() =>
+              thoughtIsBookmarked ? onUnbookmark?.(thought.id) : onBookmark?.(thought.id)
+            }
+            className={cn(
+              'cursor-pointer transition-colors',
+              thoughtIsBookmarked ? 'text-white' : 'text-[#807c7c] hover:text-white'
+            )}
+            aria-label="Bookmark"
+            aria-pressed={thoughtIsBookmarked}
+          >
+            <Bookmark size={14} weight={thoughtIsBookmarked ? 'fill' : 'regular'} />
+          </button>
+          <button
+            type="button"
+            onClick={handleShare}
+            className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
+            aria-label="Share"
+          >
+            <UploadSimple size={14} weight="regular" />
+          </button>
         </div>
       </div>
 
