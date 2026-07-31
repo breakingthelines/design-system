@@ -21,6 +21,11 @@ export const Default = meta.story({
       'Co-creator of @btlvid . Words for @theScore, @NICETYo, @90minUSV, @iraqgoalsports, @ReissxMUFC and @BBCWorld.',
     socialLinks: [
       { type: 'x', url: 'https://x.com/zachlowy' },
+      { type: 'bluesky', url: 'https://bsky.app/profile/zachlowy' },
+      { type: 'youtube', url: 'https://youtube.com/@btlvid' },
+      { type: 'instagram', url: 'https://instagram.com/zachlowy' },
+      { type: 'tiktok', url: 'https://tiktok.com/@zachlowy' },
+      { type: 'linkedin', url: 'https://linkedin.com/in/zachlowy' },
       { type: 'website', url: 'https://breakingthelines.com' },
     ],
     followers: 65200,

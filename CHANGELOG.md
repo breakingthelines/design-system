@@ -5,6 +5,27 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.81.0]
+
+### Fixed: profile social links render the right logo
+
+- `ProfileHero` picked its social icon with a single `link.type === 'x'`
+  ternary, so every platform except X fell to the generic `LinkSimple` chain
+  icon — including `bluesky`, which was already in the type union. Icon
+  selection is now a lookup keyed by platform.
+- `SocialLink['type']` is widened and exported as `SocialLinkType`:
+  `x | bluesky | youtube | instagram | tiktok | linkedin | website`. The named
+  members mirror the picker studio offers (plus LinkedIn) so the compose and
+  read surfaces agree on which logo represents a platform.
+- The fallback is now `Globe`, not `LinkSimple`. Anything unrecognised — an
+  unspecified platform, or a value that slips past the type, which the profile
+  API permits because it does not constrain the stored enum — renders the globe.
+- New export `socialLinkIcon(type)` resolves the same icon outside the hero, so
+  surfaces like platform's profile About tab stop keeping their own copy of the
+  decision.
+- Each link now carries `data-slot="profile-hero-social-link"` and
+  `data-platform`.
+
 ## [0.75.0]
 
 ### Changed: Inter across every typographic role
