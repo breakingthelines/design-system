@@ -2,7 +2,16 @@
 
 import * as React from 'react';
 import { motion } from 'framer-motion';
-import { XLogo, LinkSimple } from '@phosphor-icons/react';
+import {
+  Butterfly,
+  Globe,
+  InstagramLogo,
+  LinkedinLogo,
+  TiktokLogo,
+  XLogo,
+  YoutubeLogo,
+  type Icon,
+} from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { Button } from '#/components/ui/button';
@@ -15,10 +24,53 @@ import { Badge } from '#/components/ui/badge';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { useTilt } from '#/hooks/use-tilt';
 
+/**
+ * Social platforms a profile can display a link for.
+ *
+ * The named members mirror the picker studio offers plus LinkedIn, so the
+ * compose and read surfaces agree on which logo represents a platform.
+ * `website` is the catch-all for a generic external link and renders a globe.
+ */
+export type SocialLinkType =
+  | 'x'
+  | 'bluesky'
+  | 'youtube'
+  | 'instagram'
+  | 'tiktok'
+  | 'linkedin'
+  | 'website';
+
 export interface SocialLink {
-  type: 'x' | 'bluesky' | 'website';
+  type: SocialLinkType;
   url: string;
   label?: string;
+}
+
+/** Logo per social link type. Keep in step with studio's `SOCIAL_OPTIONS`. */
+const SOCIAL_LINK_ICONS: Record<SocialLinkType, Icon> = {
+  x: XLogo,
+  bluesky: Butterfly,
+  youtube: YoutubeLogo,
+  instagram: InstagramLogo,
+  tiktok: TiktokLogo,
+  linkedin: LinkedinLogo,
+  website: Globe,
+};
+
+/**
+ * Resolve the icon for a social link.
+ *
+ * Links arrive from the profile API, which stores the platform enum without
+ * constraining it, so a value outside the union can reach render at runtime.
+ * The lookup is therefore treated as partial and anything unrecognised (or
+ * unspecified) falls back to the globe rather than rendering nothing.
+ *
+ * Exported so surfaces that render social links outside this component (the
+ * profile About tab, for one) resolve the same icon instead of keeping their
+ * own copy of the decision.
+ */
+export function socialLinkIcon(type: SocialLinkType): Icon {
+  return (SOCIAL_LINK_ICONS as Partial<Record<SocialLinkType, Icon>>)[type] ?? Globe;
 }
 
 interface ProfileHeroProps extends React.ComponentProps<'div'> {
@@ -262,22 +314,23 @@ function ProfileHero({
             {/* Social links */}
             {socialLinks && socialLinks.length > 0 && (
               <div className="flex items-center gap-5">
-                {socialLinks.map((link) => (
-                  <a
-                    key={link.url}
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-red-100 transition-opacity hover:opacity-80"
-                    aria-label={link.label ?? link.type}
-                  >
-                    {link.type === 'x' ? (
-                      <XLogo weight="regular" className="size-5" />
-                    ) : (
-                      <LinkSimple weight="regular" className="size-5" />
-                    )}
-                  </a>
-                ))}
+                {socialLinks.map((link) => {
+                  const SocialIcon = socialLinkIcon(link.type);
+                  return (
+                    <a
+                      key={link.url}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-slot="profile-hero-social-link"
+                      data-platform={link.type}
+                      className="text-red-100 transition-opacity hover:opacity-80"
+                      aria-label={link.label ?? link.type}
+                    >
+                      <SocialIcon weight="regular" className="size-5" />
+                    </a>
+                  );
+                })}
               </div>
             )}
           </div>
