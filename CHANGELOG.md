@@ -5,6 +5,40 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.82.0]
+
+### Fixed: the social icon is derived from the link's URL, not the stored platform
+
+The 0.81.0 mapping was correct but it trusted `link.type`, and the stored
+platform is not trustworthy. user-service persists the enum without validating
+it and blind-casts it back on read, so any client can put any value on any row —
+and most did. Of the 37 production links that claim X, 26 point somewhere that
+is not X: YouTube channels, LinkedIn profiles, Instagram accounts, a Pinterest
+board and a long tail of plain company websites, all rendering the X logo.
+
+- New `resolveSocialLinkType(url, storedType?)` and
+  `resolveSocialLinkIcon(url, storedType?)` resolve a link URL-first.
+  `ProfileHero` now uses them, and `data-platform` reports the resolved
+  platform rather than the stored one.
+- Matching is on the parsed host with an optional `www.`, never on a substring
+  of the raw URL — `notyoutube.com` is not YouTube, and a path containing the
+  word "instagram" is not Instagram. Known hosts: `x.com`/`twitter.com`,
+  `bsky.app`, `youtube.com`/`youtu.be`, `instagram.com`, `tiktok.com`,
+  `linkedin.com`.
+- A readable URL decides both ways. A known host gives that platform; a
+  readable URL on any other host resolves to `website`, _not_ to the stored
+  platform — if the link were X it would be on `x.com`. This is what makes a
+  platform the enum has no member for (Pinterest, Facebook, Reddit) degrade to
+  the globe instead of inheriting a junk enum.
+- The stored platform is consulted only when nothing can be read from the value
+  at all — a bare handle like `@name`, or empty/garbage input — where it is the
+  single remaining signal. A malformed or relative URL never throws.
+- `SocialLinkType`, `socialLinkIcon` and the new resolvers moved to
+  `#/lib/social-links` and are still exported from the package root, so
+  existing imports are unchanged. `socialLinkIcon(type)` is kept for callers
+  that have already resolved a platform; prefer `resolveSocialLinkIcon` wherever
+  a URL is available.
+
 ## [0.81.0]
 
 ### Fixed: profile social links render the right logo

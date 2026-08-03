@@ -1,15 +1,33 @@
 import { Globe } from '@phosphor-icons/react';
 import { describe, expect, it } from 'vitest';
 
-import { ProfileHero, type SocialLink, type SocialLinkType } from '../profile-hero';
+import { type SocialLinkType } from '#/lib/social-links';
+import { ProfileHero, type SocialLink } from '../profile-hero';
 import { countSlot, getSlotAttr, render, sliceSlot } from './test-utils';
 
 const SLOT = 'profile-hero-social-link';
 
+/**
+ * A URL on each platform's own host. The hero resolves its icon from the URL,
+ * so a fixture has to carry an address consistent with the platform it claims.
+ */
+const URL_BY_PLATFORM: Record<SocialLinkType, string> = {
+  x: 'https://x.com/test',
+  bluesky: 'https://bsky.app/profile/test',
+  youtube: 'https://www.youtube.com/@test',
+  instagram: 'https://www.instagram.com/test',
+  tiktok: 'https://www.tiktok.com/@test',
+  linkedin: 'https://www.linkedin.com/in/test',
+  website: 'https://example.com/',
+};
+
 /** Render a hero carrying a single social link and return just that link's markup. */
-function renderLink(type: SocialLink['type']): string {
+function renderLink(type: SocialLink['type'], url?: string): string {
   const markup = render(
-    <ProfileHero name="Test Profile" socialLinks={[{ type, url: `https://example.com/${type}` }]} />
+    <ProfileHero
+      name="Test Profile"
+      socialLinks={[{ type, url: url ?? URL_BY_PLATFORM[type] ?? `https://example.com/${type}` }]}
+    />
   );
   const slice = sliceSlot(markup, SLOT);
   expect(slice, `expected a social link to render for "${type}"`).toBeDefined();
@@ -55,12 +73,51 @@ describe('ProfileHero social links', () => {
     // The profile API stores the platform enum without constraining it, so a
     // value outside the union can reach render. It must degrade to the globe.
     const unknown = 'discord' as unknown as SocialLinkType;
-    expect(renderLink(unknown)).toContain(GLOBE_MARKUP);
+    expect(renderLink(unknown, 'not a url')).toContain(GLOBE_MARKUP);
   });
 
   it('falls back to the globe for an unspecified platform', () => {
     const unspecified = '' as unknown as SocialLinkType;
-    expect(renderLink(unspecified)).toContain(GLOBE_MARKUP);
+    expect(renderLink(unspecified, 'not a url')).toContain(GLOBE_MARKUP);
+  });
+
+  it('renders the icon the URL calls for, not the one the row claims', () => {
+    // Production shape: user-service does not validate the enum, so most
+    // stored links claim X whatever they point at. The URL decides.
+    expect(renderLink('x', 'https://www.youtube.com/@test')).toBe(renderLink('youtube'));
+    expect(renderLink('x', 'https://www.linkedin.com/in/test')).toBe(renderLink('linkedin'));
+    expect(renderLink('instagram', 'https://x.com/test')).toBe(renderLink('x'));
+  });
+
+  it('gives an unsupported platform the globe even when the row claims X', () => {
+    // Pinterest, Facebook and Reddit have no enum member. A readable URL on an
+    // unknown host must not inherit the row's bogus platform.
+    for (const url of [
+      'https://ca.pinterest.com/test/',
+      'https://www.facebook.com/test',
+      'https://www.reddit.com/user/test/',
+    ]) {
+      expect(renderLink('x', url), url).toContain(GLOBE_MARKUP);
+    }
+  });
+
+  it('keeps the stored platform when the URL cannot be read at all', () => {
+    // A bare handle is the one case where the stored value is the only signal.
+    const markup = render(
+      <ProfileHero name="Test Profile" socialLinks={[{ type: 'x', url: '@kapoordhruv755' }]} />
+    );
+    expect(getSlotAttr(markup, SLOT, 'data-platform')).toBe('x');
+    expect(sliceSlot(markup, SLOT)).not.toContain(GLOBE_MARKUP);
+  });
+
+  it('reports the resolved platform, not the stored one, on data-platform', () => {
+    const markup = render(
+      <ProfileHero
+        name="Test Profile"
+        socialLinks={[{ type: 'x', url: 'https://www.youtube.com/@test' }]}
+      />
+    );
+    expect(getSlotAttr(markup, SLOT, 'data-platform')).toBe('youtube');
   });
 
   it('exposes the platform on the link for styling and assertions', () => {
