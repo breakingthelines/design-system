@@ -5,6 +5,35 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.83.0]
+
+### Added: `Sheet` supports `side="bottom"` — a real bottom sheet, not a stretched drawer
+
+`Sheet` only slid from the left or right. A chat-style thread (studio's task
+Activity panel) needs a bottom sheet instead: near-full-height, rounded top
+corners, drag-to-dismiss.
+
+- New `side="bottom"`: slides up to `90dvh` (capped at `min(90dvh, 720px)` on
+  `sm:` and wider, where it also becomes a centered `max-w-lg` floating card
+  with a `bottom-6` gap, instead of stretching edge-to-edge) — desktop gets
+  the same primitive, not a mobile-only special case. Rounded top corners
+  (`rounded-2xl` all round once floating at `sm:`), safe-area-bottom inset on
+  the scrollable body so content clears the home indicator.
+- Drag-to-dismiss, gated on scroll position: a gesture that starts on the
+  scrollable body only arms into a dismiss-drag when that body has no
+  remaining upward scroll (`scrollTop <= 0`). If there's scroll left, the
+  pointerdown handler captures nothing and native scroll handles the
+  gesture untouched — scroll wins, not dismiss. A dedicated grab handle is
+  exempt from that gate, matching every native bottom-sheet affordance. The
+  arbitration is pure, DOM-free logic in `sheet-drag.ts` (`sheet-drag.test.ts`,
+  11 tests) so the load-bearing rule is verified directly, not just eyeballed.
+- Respects `prefers-reduced-motion` (via framer-motion's `useReducedMotion`)
+  for both the open/close transition and the drag-release snap-back.
+- The page's own scroll is locked while any `Sheet` is open (all sides) —
+  a near-full-height bottom sheet leaves a sliver of the page visible on
+  purpose, and without the lock that sliver competes with the sheet for the
+  gesture.
+
 ## [0.82.0]
 
 ### Fixed: the social icon is derived from the link's URL, not the stored platform
