@@ -5,6 +5,66 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.85.1]
+
+### Fixed: `Sheet` no longer crashes where `matchMedia` is not implemented
+
+0.85.0 regression. The keyboard fix gated itself on `useIsMobile()`, and
+`useMediaQuery` called `window.matchMedia` unguarded inside an effect. jsdom
+does not implement `matchMedia`, so any consumer mounting a `Sheet` in a jsdom
+test threw on mount:
+
+```
+TypeError: window.matchMedia is not a function
+```
+
+Studio's suite went from green to 10 failures on the bump. It was latent for
+every consumer, not specific to studio — platform passed only because its
+tests never mount that path. `useMediaQuery` had been in the package since
+long before, but no design-system component had ever called it, so 0.85.0 was
+the release that made it reachable.
+
+- `resolveMediaQueryList` now returns `null` instead of throwing for the three
+  real shapes: no `window` at all, a `window` with no `matchMedia`, and a
+  partial stub whose answer has no boolean `matches`.
+- Subscribing is guarded too. The polyfill commonly pasted into test setups is
+  `() => ({ matches: false, addListener() {}, removeListener() {} })`, which
+  answers the query but has no `addEventListener` — so the legacy pair is used
+  where it is the only one present, and a list offering neither is read once
+  rather than crashed on. Guarding only the call would have moved the crash
+  one line down.
+- **An unevaluable query reports `false`**, so `useIsMobile` reports desktop.
+  That is already this hook's answer for "cannot evaluate yet" — the state
+  initialises `false` and only consults `matchMedia` in an effect, a contract
+  `Sheet` and the editor's `PlayerPickerSurface` both lean on — so
+  "cannot evaluate ever" now gives the same answer rather than introducing a
+  second rule. It is also the inert branch: desktop `Sheet` subscribes to
+  nothing and writes no inline style, where mobile would switch on
+  visual-viewport tracking in exactly the environment that has no
+  `visualViewport` either. And it is the conservative one: layout is decided
+  by CSS, this hook only gates a JS correction on top, so `false` leaves the
+  stylesheet in charge exactly as it was before 0.85.0.
+
+`window.visualViewport`, which jsdom also does not implement, did NOT have the
+same hole — it was guarded in 0.85.0 and still is. That is now proven rather
+than asserted: a story drives a real mobile media query with `visualViewport`
+removed, so the tracking effect is genuinely enabled and reaches the guard,
+and deleting the guard fails it with
+`Cannot read properties of undefined (reading 'height')`.
+
+Two new stories, both mounting `Sheet` for the first time inside the test
+rather than merely revealing it — `useMediaQuery`'s effect runs once per
+query, so a sheet mounted while `matchMedia` still existed never reaches the
+crash, and a first draft that rendered it up front passed against the
+unguarded code. One removes `matchMedia` and `visualViewport` together and
+asserts the sheet renders, carries its content, writes no inline override and
+still closes. The other removes `visualViewport` alone at a real phone width.
+Nine unit tests cover the resolver in the node project, where `window` is
+genuinely absent.
+
+No behaviour change where the APIs exist: the eight mutations covering the
+keyboard fix and these guards all still fail as intended.
+
 ## [0.85.0]
 
 ### Fixed: the bottom `Sheet` sits above the on-screen keyboard instead of under it
