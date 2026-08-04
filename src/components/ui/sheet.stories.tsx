@@ -84,6 +84,23 @@ function installFakeVisualViewport(fake: FakeVisualViewport): () => void {
 }
 
 /**
+ * Makes a `window` API read as `undefined` for the duration of a test, the way
+ * it does in a host that never implemented it.
+ *
+ * `matchMedia` lives on `Window.prototype` and `visualViewport` on the window
+ * instance, so neither can simply be deleted — shadowing the name with an own
+ * property whose value is `undefined` is what covers both.
+ */
+function removeWindowApi(name: 'matchMedia' | 'visualViewport'): () => void {
+  const own = Object.getOwnPropertyDescriptor(window, name);
+  Object.defineProperty(window, name, { configurable: true, value: undefined, writable: true });
+  return () => {
+    if (own) Object.defineProperty(window, name, own);
+    else Reflect.deleteProperty(window, name);
+  };
+}
+
+/**
  * Puts the page at phone dimensions and hands back a restore.
  *
  * Under vitest the browser window itself is resized, which is the faithful
@@ -187,6 +204,36 @@ function SheetDemo({
           ))}
         </div>
       </Sheet>
+    </div>
+  );
+}
+
+/**
+ * Same sheet, but the whole `Sheet` subtree is created by the click rather
+ * than merely revealed by it — see `BottomWithoutViewportApis`, which needs a
+ * first mount to happen inside its `play`.
+ */
+function LateMountedSheet() {
+  const [mounted, setMounted] = useState(false);
+
+  return (
+    <div className="min-h-dvh bg-grey-100 p-6">
+      <Button onClick={() => setMounted(true)}>Open picker</Button>
+      {mounted && (
+        <Sheet open onClose={() => setMounted(false)} side="bottom" title="Add GK">
+          <div className="flex flex-col gap-3">
+            <Input placeholder="Search players" />
+            {Array.from({ length: 14 }, (_, index) => (
+              <div
+                key={index}
+                className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-3 text-sm text-white/70"
+              >
+                Player {index + 1}
+              </div>
+            ))}
+          </div>
+        </Sheet>
+      )}
     </div>
   );
 }
@@ -328,6 +375,100 @@ export const BottomOnAndroidDoesNotDoubleCompensate = meta.story({
  * applies. Nothing is stubbed here except the visual viewport itself — the
  * breakpoint gate is the real one, evaluated against the real window.
  */
+/**
+ * The case that escaped 0.85.0 and broke studio's suite.
+ *
+ * `Sheet` gained a `useIsMobile()` gate, which calls `window.matchMedia` in an
+ * effect. jsdom implements neither `matchMedia` nor `visualViewport`, so every
+ * consumer test that mounted a sheet — in any environment missing either —
+ * threw `window.matchMedia is not a function` on mount. Both APIs are removed
+ * here, together, and the only thing being asserted is that the component
+ * still renders.
+ */
+export const BottomWithoutViewportApis = meta.story({
+  name: 'Bottom — renders where matchMedia and visualViewport do not exist',
+  // `Sheet` is absent from the tree until the button is clicked. It has to
+  // MOUNT after the APIs are gone: `useMediaQuery`'s effect runs once per
+  // query, so a sheet that mounted while `matchMedia` still existed has
+  // already made its one call and never reaches the crash. That is what a
+  // consumer's test does — build a fresh tree containing a sheet — and a
+  // first draft of this story that rendered the sheet up front passed against
+  // the unguarded code, proving nothing.
+  render: () => <LateMountedSheet />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    // Removed BEFORE the sheet mounts, so the effects that read them are the
+    // ones under test.
+    const restoreMatchMedia = removeWindowApi('matchMedia');
+    const restoreVisualViewport = removeWindowApi('visualViewport');
+
+    try {
+      expect(window.matchMedia).toBeUndefined();
+      expect(window.visualViewport).toBeUndefined();
+
+      await userEvent.click(canvas.getByRole('button', { name: 'Open picker' }));
+
+      // Rendered, laid out, and carrying its content — not merely mounted.
+      const panel = await canvas.findByRole('dialog');
+      expect(panel).toBeInTheDocument();
+      expect(within(panel).getByText('Player 1')).toBeInTheDocument();
+      expect((await waitForStableGeometry(panel)).height).toBeGreaterThan(0);
+
+      // With no way to evaluate the breakpoint, the sheet takes the desktop
+      // branch and writes nothing — the exact behaviour it had before the
+      // keyboard fix existed.
+      expect(panel.getAttribute('style') ?? '').not.toContain('--sheet-keyboard-inset');
+
+      // And it still closes, so the guard did not cost the component its
+      // behaviour.
+      await userEvent.click(canvas.getByRole('button', { name: 'Close' }));
+      await waitFor(() => expect(canvas.queryByRole('dialog')).toBeNull());
+    } finally {
+      restoreVisualViewport();
+      restoreMatchMedia();
+    }
+  },
+});
+
+/**
+ * The other half of the same question, asked so the answer is not a guess.
+ *
+ * `BottomWithoutViewportApis` removes both APIs at once, but with `matchMedia`
+ * gone the sheet takes the desktop branch and the visual-viewport code never
+ * runs — so it proves nothing about that guard. Here the media query is real
+ * and really reports mobile (the window is genuinely 390 wide), so the
+ * tracking effect IS enabled and reaches its `visualViewport` read with
+ * nothing there.
+ */
+export const BottomWithoutVisualViewport = meta.story({
+  name: 'Bottom — mobile, with no visualViewport at all',
+  render: () => <LateMountedSheet />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const restoreViewport = await enterPhoneViewport();
+    const restoreVisualViewport = removeWindowApi('visualViewport');
+
+    try {
+      // The gate is live and says mobile — this is the enabled path.
+      expect(window.matchMedia('(max-width: 639px)').matches).toBe(true);
+      expect(window.visualViewport).toBeUndefined();
+
+      await userEvent.click(canvas.getByRole('button', { name: 'Open picker' }));
+      const panel = await canvas.findByRole('dialog');
+      expect(within(panel).getByText('Player 1')).toBeInTheDocument();
+
+      // Flush to the bottom of the layout viewport, exactly as it was before
+      // the keyboard fix: nothing to read, so nothing is corrected.
+      const resting = await waitForStableGeometry(panel);
+      expect(resting.bottom).toBe(window.innerHeight);
+      expect(panel.getAttribute('style') ?? '').not.toContain('--sheet-keyboard-inset');
+    } finally {
+      restoreVisualViewport();
+      await restoreViewport();
+    }
+  },
+});
+
 export const BottomAtDesktopWidthIsUnchanged = meta.story({
   name: 'Bottom — untouched at sm and up',
   render: () => <SheetDemo side="bottom" />,
