@@ -5,6 +5,58 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.84.0]
+
+### Fixed: the `@`-mention typeahead flips above the caret instead of opening off-screen
+
+`MiniEditor`'s mention menu always opened downward. With the composer at the
+bottom of the viewport — the shape both of today's new surfaces have, studio's
+task Activity bottom sheet and the editor's inline comment thread — it opened
+past the bottom edge. Measured in a bottom sheet at 390x780: caret at y=716,
+menu 226px tall, 166px of it off-screen and unclickable, and unreachable too
+since `Sheet` locks page scroll while open.
+
+Lexical's `LexicalTypeaheadMenuPlugin` does have a flip branch, but it is
+unreachable for a composer this size. Its guard asks whether the menu would
+fit above the caret _within the contenteditable root_:
+
+```js
+top - rootElementRect.top > menuHeight + height
+```
+
+A `MiniEditor` root is ~60px tall, so that difference is at most a line or
+two — 25px available against 245.5px required in the case above — and the
+branch never runs, no matter that 716px of viewport sat unused directly above.
+
+- The menu now opens above the caret when it does not fit below, and stays
+  below whenever it does fit (a flip the user did not need is a surprise).
+- When it fits on neither side — a short viewport with the caret mid-screen —
+  it opens on the roomier side and clamps to that room, scrolling internally.
+  A clamped menu is entirely reachable; an overflowing one puts options past
+  an edge where they cannot be clicked at all.
+- A final clamp keeps the box inside the viewport even when the _caret_ is
+  outside it, which happens when a short window is resized with the composer
+  scrolled below the fold.
+- Placement is decided from the MENU's measured height. Lexical pins the
+  anchor element's inline height to the caret box (19.5px against a 226px
+  menu), so anything read off the anchor describes the caret, not the menu.
+- No visible jump: the menu is laid out but hidden on its first frame and
+  placed in a layout effect, before the browser paints. Verified by sampling
+  every animation frame from the moment it enters the DOM — one painted
+  state, already correct.
+- The decision itself is pure, DOM-free logic in `typeahead-placement.ts`
+  (`typeahead-placement.test.ts`, 28 tests), including a sweep that asserts
+  the menu never leaves the viewport at any caret position, on or off screen.
+- No transition is attached to the flip, so there is nothing for
+  `prefers-reduced-motion` to gate — deliberately: animating a correction to
+  a position the user has not seen yet has nothing to communicate.
+- Layering is unchanged. The menu is still a positioned `z-[100]` element
+  above the `z-50` `Sheet` backdrop and panel; `absolute` replaces `relative`,
+  both positioned, so the fix from Wave 6.4.15b still holds.
+
+New story `MiniEditor > Mentions in a bottom Sheet` puts the composer on the
+viewport floor inside `Sheet side="bottom"`, so this stays checkable.
+
 ## [0.83.0]
 
 ### Added: `Sheet` supports `side="bottom"` — a real bottom sheet, not a stretched drawer
