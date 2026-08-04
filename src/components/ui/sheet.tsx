@@ -5,7 +5,13 @@ import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer
 import { X } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import { useIsMobile } from '#/hooks/use-media-query';
 import { createDragToDismissController } from './sheet-drag';
+import {
+  deriveSheetViewportOffset,
+  sameSheetViewportOffset,
+  type SheetViewportOffset,
+} from './sheet-viewport';
 
 /* ────────────────────────────────────────────────────────────
  * Animation variants
@@ -69,6 +75,69 @@ interface SheetProps {
 }
 
 /* ────────────────────────────────────────────────────────────
+ * Keyboard / visual-viewport tracking
+ * ──────────────────────────────────────────────────────────── */
+
+/**
+ * Tracks how much of the layout viewport's bottom edge is currently hidden —
+ * in practice, the on-screen keyboard — and returns what the bottom sheet
+ * should override while that is true, or `null` when it should be left alone.
+ *
+ * The arithmetic (and the reason it is right on both iOS and Android without
+ * branching on either) lives in `sheet-viewport.ts`. This hook is only the
+ * subscription: read the two viewports together, on every event that can move
+ * either of them.
+ *
+ *  - `visualViewport`'s `resize` is the keyboard opening and closing.
+ *  - `visualViewport`'s `scroll` is iOS panning the visual viewport to reveal
+ *    a focused field, which changes `offsetTop` without changing `height`.
+ *  - `window`'s `resize` is rotation, and it is also the belt-and-braces for
+ *    a browser that updates `innerHeight` on a later tick than
+ *    `visualViewport.height`: if the two ever disagree momentarily, the
+ *    second event settles it rather than leaving the sheet mispositioned.
+ *
+ * All three are attached only while `enabled`, and removed the moment it goes
+ * false — so a closed sheet, or one on a viewport with no on-screen keyboard,
+ * runs nothing at all.
+ */
+function useSheetViewportOffset(enabled: boolean): SheetViewportOffset | null {
+  const [offset, setOffset] = React.useState<SheetViewportOffset | null>(null);
+
+  React.useEffect(() => {
+    if (!enabled) {
+      setOffset(null);
+      return;
+    }
+
+    // No `visualViewport` at all means no way to know, and nothing to do:
+    // the sheet keeps the geometry it has always had.
+    const viewport = typeof window === 'undefined' ? null : window.visualViewport;
+    if (!viewport) return;
+
+    const read = () => {
+      const next = deriveSheetViewportOffset({
+        layoutHeight: window.innerHeight,
+        visualHeight: viewport.height,
+        visualOffsetTop: viewport.offsetTop,
+      });
+      setOffset((prev) => (sameSheetViewportOffset(prev, next) ? prev : next));
+    };
+
+    read();
+    viewport.addEventListener('resize', read);
+    viewport.addEventListener('scroll', read);
+    window.addEventListener('resize', read);
+    return () => {
+      viewport.removeEventListener('resize', read);
+      viewport.removeEventListener('scroll', read);
+      window.removeEventListener('resize', read);
+    };
+  }, [enabled]);
+
+  return offset;
+}
+
+/* ────────────────────────────────────────────────────────────
  * Sheet
  * ──────────────────────────────────────────────────────────── */
 
@@ -84,6 +153,15 @@ function Sheet({
 }: SheetProps) {
   const reducedMotion = Boolean(useReducedMotion());
   const isBottom = side === 'bottom';
+
+  // Only the phone-width bottom sheet is corrected. At `sm` and up the bottom
+  // sheet is a different thing entirely — a floating card at `bottom-6`, on a
+  // viewport that has no on-screen keyboard — and every override below is
+  // gated on this so that path keeps exactly the geometry it has today.
+  // `useIsMobile` initialises `false` and only reads `matchMedia` in an
+  // effect, so SSR and the client's first render agree.
+  const isMobile = useIsMobile();
+  const viewportOffset = useSheetViewportOffset(open && isBottom && isMobile);
 
   const bodyRef = React.useRef<HTMLDivElement>(null);
   // The live drag-follow offset lives on its own inner element (see below),
@@ -116,6 +194,24 @@ function Sheet({
       document.body.style.overflow = original;
     };
   }, [open]);
+
+  // `undefined` — not an object of resting values — whenever nothing is
+  // occluded, so the panel carries no inline style at all and the stylesheet
+  // is left to speak for itself.
+  //
+  // `--sheet-body-pb` drops the safe-area term while the keyboard is up.
+  // `env(safe-area-inset-bottom)` reserves room for the home indicator, and
+  // iOS keeps reporting it once the keyboard covers the indicator entirely —
+  // so leaving it in adds ~34px of dead space at the bottom of the body at
+  // exactly the moment vertical room is scarcest.
+  const sheetStyle = React.useMemo<React.CSSProperties | undefined>(() => {
+    if (!viewportOffset) return undefined;
+    return {
+      '--sheet-keyboard-inset': `${viewportOffset.insetPx}px`,
+      '--sheet-max-height': `${viewportOffset.maxHeightPx}px`,
+      '--sheet-body-pb': '1.25rem',
+    } as React.CSSProperties;
+  }, [viewportOffset]);
 
   const handleDragEnd = React.useCallback(
     ({ dismissed }: { dismissed: boolean }) => {
@@ -176,12 +272,23 @@ function Sheet({
               'fixed z-50 flex flex-col bg-black',
               isBottom
                 ? cn(
-                    'inset-x-0 bottom-0 mx-auto max-h-[90dvh] w-full overflow-hidden rounded-t-2xl',
+                    // Both of these read a custom property that is only ever
+                    // SET while the keyboard is up (see `sheetStyle` below).
+                    // Unset, each falls back to the value it has always had,
+                    // so the resting sheet is byte-identical to before — the
+                    // property is the whole mechanism for making the
+                    // correction exactly reversible.
+                    'inset-x-0 bottom-[var(--sheet-keyboard-inset,0px)] mx-auto w-full',
+                    'max-h-[var(--sheet-max-height,90dvh)] overflow-hidden rounded-t-2xl',
+                    // Untouched at `sm` and up: these win inside the media
+                    // query regardless of what the properties say, and the
+                    // hook that sets them never runs at this width anyway.
                     'sm:bottom-6 sm:max-h-[min(90dvh,720px)] sm:max-w-lg sm:rounded-2xl'
                   )
                 : cn('top-0 h-full', side === 'right' ? 'right-0' : 'left-0', widthClass),
               className
             )}
+            style={sheetStyle}
             variants={getSlideVariants(side, reducedMotion)}
             initial="hidden"
             animate="visible"
@@ -264,7 +371,8 @@ function Sheet({
                   // something to rely on for correctness.
                   isBottom
                     ? cn(
-                        'overscroll-y-contain pb-[calc(env(safe-area-inset-bottom)+1.25rem)]',
+                        'overscroll-y-contain',
+                        'pb-[var(--sheet-body-pb,calc(env(safe-area-inset-bottom)+1.25rem))]',
                         dragOffset > 0 && 'overflow-hidden'
                       )
                     : 'pb-5',
