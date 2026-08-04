@@ -5,6 +5,67 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.85.0]
+
+### Fixed: the bottom `Sheet` sits above the on-screen keyboard instead of under it
+
+Reported on a phone against the editor's lineup player picker: tapping a slot
+opens the picker, the picker's search field takes focus, and the keyboard is
+drawn straight over the sheet. It is not specific to that picker — every
+bottom sheet with an input in it had the same bug, including the comment
+thread sheet.
+
+The sheet is `position: fixed; bottom: 0`, which anchors it to the LAYOUT
+viewport, and iOS never shrinks the layout viewport for the keyboard — only
+the VISUAL viewport, the part the user can see. `max-h-[90dvh]` does not help
+either: `dvh` tracks browser chrome, not keyboards. So the sheet stayed
+exactly where it was and the keyboard covered it.
+
+`Sheet` now sizes and positions the phone-width bottom variant against the
+visual viewport, via `window.visualViewport`.
+
+- **The lift is derived from the residual, not from the keyboard.** What gets
+  measured is the strip of the layout viewport the user cannot see:
+  `innerHeight - visualViewport.height - visualViewport.offsetTop`. Lift the
+  sheet by that and its bottom edge lands on the bottom edge of the visible
+  area.
+- **It cannot double-compensate.** Chrome on Android defaults to
+  `interactive-widget=resizes-content`, which shrinks the layout viewport, so
+  `bottom: 0` is already clear of the keyboard there — and `innerHeight`
+  shrinks in lockstep with `visualViewport.height`, making the residual zero
+  and the correction a no-op. Same expression on both platforms, no
+  user-agent branch. (Neither platform nor studio sets `interactive-widget`,
+  so both get their browser's default, and both defaults are handled.)
+- **`offsetTop` is part of the expression, not an afterthought.** iOS pans the
+  visual viewport to reveal a focused field, which shrinks the strip below it
+  without resizing anything; dropping the term over-lifts by the pan.
+- **The sheet also shrinks.** Lifting alone would push its top off the screen,
+  so its height is capped at the same 90% share it always took — of the
+  VISIBLE viewport now, rather than the dynamic one.
+- **`env(safe-area-inset-bottom)` is dropped while the keyboard is up.** iOS
+  keeps reporting the home-indicator inset once the keyboard covers the
+  indicator entirely, so leaving it in reserved ~34px of dead space at exactly
+  the moment vertical room was scarcest.
+- **Exactly reversible.** Nothing is written to the panel's inline style
+  unless something is genuinely occluded — the overrides ride CSS custom
+  properties whose fallbacks are the old values — and readings below a 20px
+  noise floor are ignored, so sub-pixel disagreement between the two
+  viewports cannot drift the sheet a pixel per event.
+- **Untouched above `sm`.** The floating `bottom-6` card, and every desktop
+  viewport, keep the geometry they have today; the tracking never runs there,
+  and no listener is attached while a sheet is closed.
+- Drag-to-dismiss is unchanged. The lift rides `bottom` on the panel, the
+  drag rides `transform` on the inner wrapper, and no pointer handler was
+  added, moved or re-gated.
+
+The arithmetic is pure, DOM-free logic in `sheet-viewport.ts`
+(`sheet-viewport.test.ts`, 24 tests), same discipline as `sheet-drag.ts`. New
+`UI/Sheet` stories drive `window.visualViewport` directly in a real browser
+and measure the panel's `getBoundingClientRect()`: that it rises by exactly
+the occluded height on iOS, that it does not move at all on the Android
+reading, that it returns to identical geometry over repeated keyboard cycles,
+and that a desktop-width sheet ignores the whole thing.
+
 ## [0.84.0]
 
 ### Fixed: the `@`-mention typeahead flips above the caret instead of opening off-screen
