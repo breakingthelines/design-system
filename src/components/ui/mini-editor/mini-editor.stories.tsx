@@ -3,6 +3,7 @@ import preview from '#.storybook/preview';
 import { MiniEditor, type MiniEditorHandle, type MentionItem } from './mini-editor';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
+import { Sheet } from '#/components/ui/sheet';
 import { Image, Gif, SoccerBall } from '@phosphor-icons/react';
 
 // Mock federated mention corpus. Items are the polymorphic MentionItem shape the
@@ -157,6 +158,47 @@ export const WithMentions = meta.story({
         <p className="text-xs text-muted-foreground">
           Mentions: <code>{mentions.map((m) => `${m.kind}:${m.label}`).join(', ') || '—'}</code>
         </p>
+      </div>
+    );
+  },
+});
+
+export const MentionsInBottomSheet = meta.story({
+  name: 'Mentions in a bottom Sheet',
+  parameters: { layout: 'fullscreen' },
+  render: () => {
+    const [open, setOpen] = useState(true);
+    const ref = useRef<MiniEditorHandle>(null);
+
+    return (
+      <div className="min-h-dvh bg-grey-100 p-6">
+        <Button onClick={() => setOpen(true)}>Open activity</Button>
+        <Sheet open={open} onClose={() => setOpen(false)} side="bottom" title="Activity">
+          <div className="flex flex-col gap-4">
+            {['Kicked this off.', 'Draft is up for review.', 'Two notes on the intro.'].map(
+              (line) => (
+                <div key={line} className="flex items-start gap-3">
+                  <Avatar size="sm" className="shrink-0">
+                    <AvatarFallback branded />
+                  </Avatar>
+                  <p className="text-sm text-white/70">{line}</p>
+                </div>
+              )
+            )}
+            {/* The composer sits at the very bottom of the sheet body — the
+                exact geometry that puts the caret within a few px of the
+                viewport floor and leaves the typeahead nowhere to open
+                downward. */}
+            <div className="mt-2 rounded-md border border-white/10 bg-white/[0.03] px-3 py-2">
+              <MiniEditor
+                placeholder="Reply, or @mention someone..."
+                multiline
+                editorRef={ref}
+                onMentionSearch={mockMentionSearch}
+              />
+            </div>
+          </div>
+        </Sheet>
       </div>
     );
   },
