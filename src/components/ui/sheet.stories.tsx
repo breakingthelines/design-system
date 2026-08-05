@@ -5,7 +5,12 @@ import preview from '#.storybook/preview';
 import { Sheet } from './sheet';
 import { Button } from './button';
 import { Input } from './input';
-import { SHEET_VISIBLE_HEIGHT_RATIO } from './sheet-viewport';
+import {
+  MIN_TRACKED_INSET_PX,
+  SHEET_FLOATING_BOTTOM_GAP_PX,
+  SHEET_FLOATING_MAX_HEIGHT_PX,
+  SHEET_VISIBLE_HEIGHT_RATIO,
+} from './sheet-viewport';
 
 const meta = preview.meta({
   title: 'UI/Sheet',
@@ -28,6 +33,24 @@ const meta = preview.meta({
 
 /** An iPhone 14's keyboard with the predictive bar, in CSS px. */
 const KEYBOARD_PX = 336;
+
+/**
+ * An iPad Air 11" in portrait, and its on-screen keyboard with the shortcut
+ * bar. The point of the size is that 820 is comfortably above `sm` (640), so
+ * the sheet under test is genuinely the floating card — the variant the first
+ * cut of this fix left behind on the reasoning that a keyboard implies a phone.
+ */
+const TABLET_WIDTH = 820;
+const TABLET_HEIGHT = 1180;
+const TABLET_KEYBOARD_PX = 398;
+
+/**
+ * A classic (non-overlay) horizontal scrollbar, the one standing reason a
+ * DESKTOP browser's two viewport heights disagree: `innerHeight` includes it
+ * and `visualViewport.height` does not. 17px is the widest in common use —
+ * Firefox on Windows; Chrome's is 15 and macOS's overlay scrollbars are 0.
+ */
+const DESKTOP_SCROLLBAR_PX = 17;
 
 /**
  * Stands in for `window.visualViewport`. Shrinking it and firing `resize` is
@@ -101,30 +124,44 @@ function removeWindowApi(name: 'matchMedia' | 'visualViewport'): () => void {
 }
 
 /**
- * Puts the page at phone dimensions and hands back a restore.
+ * Resizes the real browser window, or reports that it cannot.
  *
- * Under vitest the browser window itself is resized, which is the faithful
- * thing: a real 390x844 layout viewport, a real `window.innerHeight`, and a
- * real `(max-width: 639px)` match driving `useIsMobile` — nothing about the
- * breakpoint gate is mocked. Outside vitest (a human opening this story in
- * Storybook at desktop width) there is no way to resize the window, so the
- * phone media query is reported instead, and the same assertions run.
+ * Under vitest this is the faithful thing and the only honest one: which of
+ * the two bottom variants is live is decided by the STYLESHEET, so a story
+ * about one of them needs a window that genuinely matches its media query.
+ * Nothing about the breakpoint is mocked. Returns `null` outside vitest (a
+ * human opening the story in Storybook), where no such API exists.
  */
-async function enterPhoneViewport(): Promise<() => Promise<void>> {
+async function resizeViewport(
+  width: number,
+  height: number
+): Promise<(() => Promise<void>) | null> {
   const before = { width: window.innerWidth, height: window.innerHeight };
 
   const context = await import('vitest/browser').catch(() => null);
   const viewport = context?.page?.viewport as
     | ((width: number, height: number) => Promise<void>)
     | undefined;
+  if (typeof viewport !== 'function') return null;
 
-  if (typeof viewport === 'function') {
-    await viewport(390, 844);
-    await waitFor(() => expect(window.innerWidth).toBe(390));
-    return async () => {
-      await viewport(before.width, before.height);
-    };
-  }
+  await viewport(width, height);
+  await waitFor(() => expect(window.innerWidth).toBe(width));
+  return async () => {
+    await viewport(before.width, before.height);
+  };
+}
+
+/**
+ * Puts the page at phone dimensions — a real 390x844 layout viewport and a
+ * real `window.innerHeight` — and hands back a restore.
+ *
+ * Outside vitest there is no way to resize the window, so the phone media
+ * query is reported instead. That keeps a human's Storybook run on the flush
+ * variant's code path even in a wide window.
+ */
+async function enterPhoneViewport(): Promise<() => Promise<void>> {
+  const resized = await resizeViewport(390, 844);
+  if (resized) return resized;
 
   const originalMatchMedia = window.matchMedia;
   window.matchMedia = ((query: string) =>
@@ -132,6 +169,21 @@ async function enterPhoneViewport(): Promise<() => Promise<void>> {
   return async () => {
     window.matchMedia = originalMatchMedia;
   };
+}
+
+/**
+ * Puts the page at tablet dimensions, above `sm`, where the sheet is the
+ * floating card.
+ *
+ * There is no fallback here and there cannot be a useful one: the floating
+ * variant is selected by a real media query against a real window, so faking
+ * `matchMedia` would change nothing about which CSS applies. Outside vitest
+ * the story runs at whatever width the window already is, and asserts up
+ * front that it is wide enough to be the variant under test.
+ */
+async function enterTabletViewport(): Promise<() => Promise<void>> {
+  const resized = await resizeViewport(TABLET_WIDTH, TABLET_HEIGHT);
+  return resized ?? (async () => {});
 }
 
 interface Geometry {
@@ -370,11 +422,149 @@ export const BottomOnAndroidDoesNotDoubleCompensate = meta.story({
 });
 
 /**
- * The other half of the contract: at `sm` and up the sheet is a floating card
- * at `bottom-6` on a viewport with no on-screen keyboard, and none of this
- * applies. Nothing is stubbed here except the visual viewport itself — the
- * breakpoint gate is the real one, evaluated against the real window.
+ * The case 0.85.0 scoped itself out of.
+ *
+ * That fix gated on a phone-width media query, on the reasoning that a
+ * keyboard implies a phone. An iPad has an on-screen keyboard and a viewport
+ * well above `sm`, so the original bug survived there untouched — and `sm` is
+ * not the same sheet: it is a floating card held clear of the bottom edge and
+ * capped at its own ceiling, so getting it right is not just a matter of
+ * letting the existing correction through.
+ *
+ * The two things this measures that the phone story cannot:
+ *
+ *  1. the card's resting GAP survives the lift — it ends up the same 24px
+ *     clear of the edge the user can see that it sits clear of the screen at
+ *     rest, rather than being flattened onto it;
+ *  2. the raised card is shorter than the resting one, which is only true if
+ *     the `sm` height cap moved too. Leave `sm:max-h-[min(90dvh,720px)]` as it
+ *     was and the card stays 720px tall in a 782px visible slice, which no
+ *     longer fits above the gap.
  */
+export const BottomOnATabletAboveTheKeyboard = meta.story({
+  name: 'Bottom — floating card clears the keyboard at sm and up',
+  render: () => <SheetDemo side="bottom" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const restoreViewport = await enterTabletViewport();
+    const fake = new FakeVisualViewport(window.innerWidth, window.innerHeight);
+    const restoreVisualViewport = installFakeVisualViewport(fake);
+
+    try {
+      // The variant under test is the floating one, decided by the real
+      // stylesheet against the real window — not by anything stubbed here.
+      expect(window.matchMedia('(min-width: 40rem)').matches).toBe(true);
+
+      const layoutHeight = window.innerHeight;
+      const visibleWithKeyboard = layoutHeight - TABLET_KEYBOARD_PX;
+      // Independently derived: the same 90% share the flush variant takes,
+      // under the card's own ceiling, with room left for the gap.
+      const expectedRaisedHeight = Math.min(
+        Math.round(visibleWithKeyboard * SHEET_VISIBLE_HEIGHT_RATIO),
+        visibleWithKeyboard - SHEET_FLOATING_BOTTOM_GAP_PX,
+        SHEET_FLOATING_MAX_HEIGHT_PX
+      );
+
+      await userEvent.click(canvas.getByRole('button', { name: 'Open picker' }));
+      const panel = await canvas.findByRole('dialog');
+
+      // Resting: a floating card, 24px clear of the bottom edge and capped at
+      // its ceiling. Unchanged from before this fix, and the thing the
+      // property fallbacks exist to preserve exactly.
+      const resting = await waitForStableGeometry(panel);
+      expect(resting.bottom).toBe(layoutHeight - SHEET_FLOATING_BOTTOM_GAP_PX);
+      expect(resting.height).toBe(SHEET_FLOATING_MAX_HEIGHT_PX);
+
+      // Three cycles, because drift is the failure mode of a
+      // reposition-on-event fix, not a wrong first answer — and the `sm` path
+      // now has two properties to put back rather than none.
+      for (let cycle = 0; cycle < 3; cycle++) {
+        fake.setVisible(visibleWithKeyboard);
+        const raised = await waitForStableGeometry(panel);
+
+        // Lifted by exactly the occluded strip…
+        expect(resting.bottom - raised.bottom).toBe(TABLET_KEYBOARD_PX);
+        // …and the gap composed with it rather than swallowed by it: the card
+        // is still floating, just above a different edge.
+        expect(visibleWithKeyboard - raised.bottom).toBe(SHEET_FLOATING_BOTTOM_GAP_PX);
+
+        // Shorter than at rest, and short enough to fit above the gap.
+        expect(raised.height).toBe(expectedRaisedHeight);
+        expect(raised.height).toBeLessThan(resting.height);
+        expect(raised.top).toBeGreaterThanOrEqual(0);
+
+        fake.setVisible(layoutHeight);
+        const restored = await waitForStableGeometry(panel);
+        expect(restored).toEqual(resting);
+        expect(panel.getAttribute('style') ?? '').not.toContain('--sheet-floating-keyboard-inset');
+      }
+
+      // Drag-to-dismiss still works from the raised position, which on this
+      // variant is a position the drag has never started from before.
+      fake.setVisible(visibleWithKeyboard);
+      await waitForStableGeometry(panel);
+
+      const handle = panel.querySelector('div[aria-hidden="true"]');
+      expect(handle).not.toBeNull();
+      const handleRect = handle!.getBoundingClientRect();
+      const startY = handleRect.top + handleRect.height / 2;
+      const pointer = { bubbles: true, pointerId: 1, isPrimary: true };
+      handle!.dispatchEvent(new PointerEvent('pointerdown', { ...pointer, clientY: startY }));
+      handle!.dispatchEvent(new PointerEvent('pointermove', { ...pointer, clientY: startY + 220 }));
+      handle!.dispatchEvent(new PointerEvent('pointerup', { ...pointer, clientY: startY + 220 }));
+
+      await waitFor(() => expect(canvas.queryByRole('dialog')).toBeNull());
+    } finally {
+      restoreVisualViewport();
+      await restoreViewport();
+    }
+  },
+});
+
+/**
+ * The Android trap, asked again at tablet width.
+ *
+ * Android tablets are as much the target of this change as iPads, and Chrome
+ * there shrinks the LAYOUT viewport for the keyboard. The residual is what
+ * keeps that from lifting a card which is already clear — the same protection
+ * the phone variant has, on the variant that now also composes a 24px gap into
+ * its answer, where a double lift would show up as the card floating a
+ * keyboard's height above the keyboard.
+ */
+export const BottomOnATabletDoesNotDoubleCompensate = meta.story({
+  name: 'Bottom — no double lift at sm where the browser already resized',
+  render: () => <SheetDemo side="bottom" />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const restoreViewport = await enterTabletViewport();
+    const fake = new FakeVisualViewport(window.innerWidth, window.innerHeight);
+    const restoreVisualViewport = installFakeVisualViewport(fake);
+    let restoreLayoutHeight: (() => void) | null = null;
+
+    try {
+      expect(window.matchMedia('(min-width: 40rem)').matches).toBe(true);
+      const layoutHeight = window.innerHeight;
+
+      await userEvent.click(canvas.getByRole('button', { name: 'Open picker' }));
+      const panel = await canvas.findByRole('dialog');
+      const resting = await waitForStableGeometry(panel);
+      expect(resting.bottom).toBe(layoutHeight - SHEET_FLOATING_BOTTOM_GAP_PX);
+
+      // Both viewports lose the keyboard's height, together.
+      restoreLayoutHeight = installFakeLayoutHeight(layoutHeight - TABLET_KEYBOARD_PX);
+      fake.setVisible(layoutHeight - TABLET_KEYBOARD_PX);
+      window.dispatchEvent(new Event('resize'));
+
+      expect(await waitForStableGeometry(panel)).toEqual(resting);
+      expect(panel.getAttribute('style') ?? '').not.toContain('--sheet-floating-keyboard-inset');
+    } finally {
+      restoreLayoutHeight?.();
+      restoreVisualViewport();
+      await restoreViewport();
+    }
+  },
+});
+
 /**
  * The case that escaped 0.85.0 and broke studio's suite.
  *
@@ -384,6 +574,13 @@ export const BottomOnAndroidDoesNotDoubleCompensate = meta.story({
  * threw `window.matchMedia is not a function` on mount. Both APIs are removed
  * here, together, and the only thing being asserted is that the component
  * still renders.
+ *
+ * `Sheet` no longer calls `useIsMobile` at all: the correction is gated on the
+ * viewport reading rather than on a breakpoint, so there is nothing left for
+ * it to ask `matchMedia`. That makes this story STRICTLY the consumer's
+ * contract — mount a sheet in a host missing both APIs and it must render —
+ * rather than a test of one hook through another. The `useMediaQuery` guards
+ * themselves keep their own unit tests, and other components still call it.
  */
 export const BottomWithoutViewportApis = meta.story({
   name: 'Bottom — renders where matchMedia and visualViewport do not exist',
@@ -414,9 +611,9 @@ export const BottomWithoutViewportApis = meta.story({
       expect(within(panel).getByText('Player 1')).toBeInTheDocument();
       expect((await waitForStableGeometry(panel)).height).toBeGreaterThan(0);
 
-      // With no way to evaluate the breakpoint, the sheet takes the desktop
-      // branch and writes nothing — the exact behaviour it had before the
-      // keyboard fix existed.
+      // With no `visualViewport` there is nothing to read, so nothing is
+      // written — the exact behaviour the sheet had before the keyboard fix
+      // existed.
       expect(panel.getAttribute('style') ?? '').not.toContain('--sheet-keyboard-inset');
 
       // And it still closes, so the guard did not cost the component its
@@ -433,12 +630,17 @@ export const BottomWithoutViewportApis = meta.story({
 /**
  * The other half of the same question, asked so the answer is not a guess.
  *
- * `BottomWithoutViewportApis` removes both APIs at once, but with `matchMedia`
- * gone the sheet takes the desktop branch and the visual-viewport code never
- * runs — so it proves nothing about that guard. Here the media query is real
- * and really reports mobile (the window is genuinely 390 wide), so the
- * tracking effect IS enabled and reaches its `visualViewport` read with
+ * `BottomWithoutViewportApis` removes both APIs at once. When that story was
+ * written, `matchMedia` being gone sent the sheet down the desktop branch and
+ * the visual-viewport code never ran, so it proved nothing about that guard.
+ * Here the window is genuinely 390 wide, so the flush variant is the one being
+ * measured, and the tracking effect reaches its `visualViewport` read with
  * nothing there.
+ *
+ * The effect is now enabled for every open bottom sheet regardless of width,
+ * so this is no longer the only story that reaches that guard — but it is
+ * still the one that reaches it at a width where a correction would otherwise
+ * be owed.
  */
 export const BottomWithoutVisualViewport = meta.story({
   name: 'Bottom — mobile, with no visualViewport at all',
@@ -449,7 +651,7 @@ export const BottomWithoutVisualViewport = meta.story({
     const restoreVisualViewport = removeWindowApi('visualViewport');
 
     try {
-      // The gate is live and says mobile — this is the enabled path.
+      // Below `sm`, so the flush variant is the one on screen.
       expect(window.matchMedia('(max-width: 639px)').matches).toBe(true);
       expect(window.visualViewport).toBeUndefined();
 
@@ -469,8 +671,31 @@ export const BottomWithoutVisualViewport = meta.story({
   },
 });
 
+/**
+ * Desktop, where the correction must stay a no-op — and now does so by
+ * arithmetic rather than by a breakpoint.
+ *
+ * This story used to shrink the visual viewport by a keyboard's worth at
+ * desktop width and assert the sheet did not move. That was a proof of the
+ * `sm` GATE, and the gate is precisely what this change removes: a viewport
+ * above `sm` reporting a 336px occlusion is an iPad with its keyboard up, and
+ * it is now acted on — `BottomOnATabletAboveTheKeyboard` is where that reading
+ * is asserted. Keeping the old assertion would have been keeping the bug.
+ *
+ * What replaces it is the claim the gate was only ever a proxy for, stated
+ * directly: a desktop browser reports no occlusion, so nothing is written. The
+ * tracking effect really is running here — it is no longer switched off by
+ * width — so this is a live path being driven, not an inert one being left
+ * alone. The visual viewport is a FAITHFUL desktop one, its height equal to
+ * `innerHeight`.
+ *
+ * Real desktop pinch-zoom is the one thing that can still make a desktop
+ * browser report a residual. It is not stubbed here because it is not a
+ * keyboard and not what this fixes; see the CHANGELOG for why the correction
+ * is the right answer to it anyway.
+ */
 export const BottomAtDesktopWidthIsUnchanged = meta.story({
-  name: 'Bottom — untouched at sm and up',
+  name: 'Bottom — no correction on a desktop viewport',
   render: () => <SheetDemo side="bottom" />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -484,16 +709,25 @@ export const BottomAtDesktopWidthIsUnchanged = meta.story({
       await userEvent.click(canvas.getByRole('button', { name: 'Open picker' }));
       const panel = await canvas.findByRole('dialog');
 
-      // `sm:bottom-6` — 24px clear of the bottom edge.
+      // `sm:bottom-6` — 24px clear of the bottom edge, exactly as before.
       const resting = await waitForStableGeometry(panel);
-      expect(resting.bottom).toBe(layoutHeight - 24);
+      expect(resting.bottom).toBe(layoutHeight - SHEET_FLOATING_BOTTOM_GAP_PX);
+      expect(panel.getAttribute('style') ?? '').not.toContain('--sheet-keyboard-inset');
 
-      // Shrink the visual viewport as hard as a keyboard would. Nothing may
-      // move, and nothing may be written to the panel's inline style.
-      fake.setVisible(layoutHeight - KEYBOARD_PX);
-      const after = await waitForStableGeometry(panel);
+      // Drive the live effect with the events a desktop really fires. The two
+      // viewports agree, so every one of them must produce nothing.
+      fake.setVisible(layoutHeight);
+      window.dispatchEvent(new Event('resize'));
+      expect(await waitForStableGeometry(panel)).toEqual(resting);
+      expect(panel.getAttribute('style') ?? '').not.toContain('--sheet-keyboard-inset');
 
-      expect(after).toEqual(resting);
+      // The one standing disagreement a desktop browser does produce. Now that
+      // desktop is inside the tracked path, the noise floor is what stops a
+      // scrollbar's thickness from creeping the sheet upwards — so assert the
+      // margin rather than trusting it.
+      expect(DESKTOP_SCROLLBAR_PX).toBeLessThan(MIN_TRACKED_INSET_PX);
+      fake.setVisible(layoutHeight - DESKTOP_SCROLLBAR_PX);
+      expect(await waitForStableGeometry(panel)).toEqual(resting);
       expect(panel.getAttribute('style') ?? '').not.toContain('--sheet-keyboard-inset');
     } finally {
       restoreVisualViewport();

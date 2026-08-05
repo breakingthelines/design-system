@@ -5,6 +5,88 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.86.0]
+
+### Fixed: the bottom `Sheet` now clears the keyboard on tablets too
+
+0.85.0 fixed the keyboard covering the bottom sheet, and scoped itself to
+phone widths on the reasoning that desktop has no on-screen keyboard. That is
+true of desktop and false of tablets. An iPad has an on-screen keyboard and a
+viewport well above `sm` — as does a phone held in landscape — so the original
+bug survived there untouched, on the one variant the fix never looked at.
+
+**The gate was the bug, not the arithmetic.** `occluded = innerHeight −
+visualViewport.height − visualViewport.offsetTop` was already platform-
+agnostic and is unchanged. What sat on top of it was `useIsMobile()`, which
+conflates "narrow viewport" with "has no keyboard". It is now gated on whether
+an occlusion is actually **reported**:
+
+- A device with no on-screen keyboard never reports one. Its two viewport
+  heights agree and `offsetTop` is zero, so the residual is zero and the
+  correction is a no-op **by construction** — the same way the Android case
+  has always resolved itself, where `innerHeight` shrinks in lockstep and the
+  residual comes out zero. Desktop is now inert by arithmetic rather than by
+  assumption, which is the claim the breakpoint was only ever a proxy for.
+- Every open bottom sheet subscribes, at any width. Nothing runs while a sheet
+  is shut, and `Sheet` no longer calls `useMediaQuery` at all.
+- The 20px noise floor does real work in the newly-covered environment. A
+  classic horizontal scrollbar is inside `innerHeight` and outside
+  `visualViewport.height`, so a desktop page reads a standing residual of its
+  thickness — 17px at the widest in common use, under the floor. (The sheet
+  also locks `body` overflow while open, so the scrollbar is gone for the
+  whole window in which this is read.)
+
+**`sm` is a different sheet, and is handled as one rather than waved through.**
+It is a floating card, not a flush panel, so two things needed their own
+answer:
+
+- **The 24px offset is composed with, not replaced.** The raised card sits the
+  same `sm:bottom-6` clear of the edge the user can _see_ that a resting one
+  sits clear of the bottom of the screen. Substituting the occlusion for the
+  offset would flatten the card onto the top of the keyboard exactly when the
+  keyboard is up, which reads as a bug rather than a fix.
+- **The `sm` height cap has an `sm` equivalent.** It keeps the same 90% share
+  of the visible viewport the flush variant takes, still under the card's own
+  `720px` ceiling, and additionally yields to the room actually left above the
+  gap. That last clamp is not hypothetical: a phone in landscape is above
+  `sm`, and with a keyboard up its visible slice can be short enough that 90%
+  of it plus the gap no longer fits — without it the card's header is pushed
+  off the top of the visible area, which is the same class of bug one
+  breakpoint over.
+
+Both are derived in `sheet-viewport.ts` with the rest of the arithmetic, and
+ride two more custom properties whose fallbacks are `1.5rem` and
+`min(90dvh,720px)` — character for character the values they replace. A
+resting card at any width is unchanged, and the correction stays exactly
+reversible.
+
+**The desktop story changed deliberately.** It used to shrink the visual
+viewport by a keyboard's worth at desktop width and assert the sheet did not
+move; that was a proof of the `sm` gate, and the gate is what this removes.
+Keeping the assertion would have been keeping the bug. It now asserts the
+thing that is still true and now load-bearing — a faithful desktop visual
+viewport reports nothing, so nothing is written — plus the scrollbar-noise
+case. The tablet reading it used to stand in for is asserted for real in
+`Bottom — floating card clears the keyboard at sm and up`.
+
+Real desktop **pinch-zoom** is the one non-keyboard thing that can make a
+browser report a residual, and it will now move the sheet. This was already
+true on mobile from 0.85.0 and is not new behaviour so much as newly reachable
+at width; the result is the sheet tracking the edge of the visible area, which
+is what a `position: fixed` element ought to do when the user has zoomed away
+from it. It is not stubbed in any story.
+
+Fourteen mutations, each caught: the eight from 0.85.0/0.85.1 (mutation 6 now
+inverted — _reinstating_ a breakpoint gate is the failure), plus leaving
+either `sm:` utility uncomposed, replacing the gap instead of composing with
+it, dropping either the containment clamp or the card ceiling, and comparing
+only the flush pair for equality. Two new stories drive `window.visualViewport`
+at a real 820x1180 tablet viewport and measure `getBoundingClientRect()`: the
+raised card moves by exactly the occlusion with its 24px gap intact and its
+height down from 720 to 704, survives three cycles deep-equal, and is still
+dismissable by drag from the raised position; and the Android reading, where
+both viewports shrink together, must not move it.
+
 ## [0.85.1]
 
 ### Fixed: `Sheet` no longer crashes where `matchMedia` is not implemented
