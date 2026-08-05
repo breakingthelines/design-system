@@ -5,7 +5,6 @@ import { motion, AnimatePresence, useReducedMotion, type Variants } from 'framer
 import { X } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
-import { useIsMobile } from '#/hooks/use-media-query';
 import { createDragToDismissController } from './sheet-drag';
 import {
   deriveSheetViewportOffset,
@@ -97,8 +96,17 @@ interface SheetProps {
  *    second event settles it rather than leaving the sheet mispositioned.
  *
  * All three are attached only while `enabled`, and removed the moment it goes
- * false — so a closed sheet, or one on a viewport with no on-screen keyboard,
- * runs nothing at all.
+ * false — so a closed sheet, or a sheet that isn't a bottom sheet, runs
+ * nothing at all.
+ *
+ * `enabled` deliberately does NOT include a breakpoint. What this corrects for
+ * is an occlusion, and a viewport with no on-screen keyboard does not report
+ * one: `visualViewport.height` equals `innerHeight`, `offsetTop` is zero, the
+ * residual is zero, and this returns `null` without a width ever being
+ * consulted. Gating on the reading rather than on the width is what makes the
+ * correction right on a tablet, whose keyboard is real and whose viewport is
+ * above `sm`, without a tablet-shaped branch — and it leaves desktop inert by
+ * arithmetic instead of by assumption.
  */
 function useSheetViewportOffset(enabled: boolean): SheetViewportOffset | null {
   const [offset, setOffset] = React.useState<SheetViewportOffset | null>(null);
@@ -154,14 +162,10 @@ function Sheet({
   const reducedMotion = Boolean(useReducedMotion());
   const isBottom = side === 'bottom';
 
-  // Only the phone-width bottom sheet is corrected. At `sm` and up the bottom
-  // sheet is a different thing entirely — a floating card at `bottom-6`, on a
-  // viewport that has no on-screen keyboard — and every override below is
-  // gated on this so that path keeps exactly the geometry it has today.
-  // `useIsMobile` initialises `false` and only reads `matchMedia` in an
-  // effect, so SSR and the client's first render agree.
-  const isMobile = useIsMobile();
-  const viewportOffset = useSheetViewportOffset(open && isBottom && isMobile);
+  // Every open bottom sheet tracks the viewport, at every width. The reading
+  // is what decides whether anything is written — see `useSheetViewportOffset`
+  // for why that is the right gate and a breakpoint is not.
+  const viewportOffset = useSheetViewportOffset(open && isBottom);
 
   const bodyRef = React.useRef<HTMLDivElement>(null);
   // The live drag-follow offset lives on its own inner element (see below),
@@ -204,11 +208,19 @@ function Sheet({
   // iOS keeps reporting it once the keyboard covers the indicator entirely —
   // so leaving it in adds ~34px of dead space at the bottom of the body at
   // exactly the moment vertical room is scarcest.
+  //
+  // Both variants' properties are written together and the media query picks
+  // one. Nothing here measures the width: the flush pair is dead weight at
+  // `sm` and the floating pair is dead weight below it, and a property nobody
+  // reads costs nothing — whereas asking JS which variant is live would put a
+  // second, laggier copy of the breakpoint next to the stylesheet's.
   const sheetStyle = React.useMemo<React.CSSProperties | undefined>(() => {
     if (!viewportOffset) return undefined;
     return {
       '--sheet-keyboard-inset': `${viewportOffset.insetPx}px`,
       '--sheet-max-height': `${viewportOffset.maxHeightPx}px`,
+      '--sheet-floating-keyboard-inset': `${viewportOffset.floatingInsetPx}px`,
+      '--sheet-floating-max-height': `${viewportOffset.floatingMaxHeightPx}px`,
       '--sheet-body-pb': '1.25rem',
     } as React.CSSProperties;
   }, [viewportOffset]);
@@ -280,10 +292,17 @@ function Sheet({
                     // correction exactly reversible.
                     'inset-x-0 bottom-[var(--sheet-keyboard-inset,0px)] mx-auto w-full',
                     'max-h-[var(--sheet-max-height,90dvh)] overflow-hidden rounded-t-2xl',
-                    // Untouched at `sm` and up: these win inside the media
-                    // query regardless of what the properties say, and the
-                    // hook that sets them never runs at this width anyway.
-                    'sm:bottom-6 sm:max-h-[min(90dvh,720px)] sm:max-w-lg sm:rounded-2xl'
+                    // At `sm` and up the sheet is a floating card, so it reads
+                    // the FLOATING pair — same mechanism, different resting
+                    // value in the fallback. Unset, these are character-for-
+                    // character the `bottom-6` and `min(90dvh,720px)` they
+                    // replace, so a resting card at this width is unchanged;
+                    // set, they already carry the 24px gap and the 720px
+                    // ceiling composed in (see `sheet-viewport.ts`), which is
+                    // why neither number is repeated in a `calc()` here.
+                    'sm:bottom-[var(--sheet-floating-keyboard-inset,1.5rem)]',
+                    'sm:max-h-[var(--sheet-floating-max-height,min(90dvh,720px))]',
+                    'sm:max-w-lg sm:rounded-2xl'
                   )
                 : cn('top-0 h-full', side === 'right' ? 'right-0' : 'left-0', widthClass),
               className
