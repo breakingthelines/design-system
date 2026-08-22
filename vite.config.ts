@@ -19,11 +19,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
-  // Pre-bundle the Lexical typeahead entry so the storybook-vitest browser
-  // project doesn't re-optimise it mid-run (which triggers a Vite reload that
-  // breaks in-flight dynamic imports on a cold cache).
+  // Pre-bundle these entries so the storybook-vitest browser project doesn't
+  // re-optimise them mid-run (which triggers a Vite reload that breaks
+  // in-flight dynamic imports on a cold cache). `@base-ui/react/dialog` joined
+  // the list when FilterModal gained stories — it is the first story in the
+  // suite that reaches the dialog primitive.
   optimizeDeps: {
-    include: ['@lexical/react/LexicalTypeaheadMenuPlugin'],
+    include: ['@lexical/react/LexicalTypeaheadMenuPlugin', '@base-ui/react/dialog'],
   },
   test: {
     projects: [

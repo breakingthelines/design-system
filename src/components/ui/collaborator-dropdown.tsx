@@ -4,6 +4,7 @@ import * as React from 'react';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import { matchesSearchQuery } from '#/lib/search-match';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from './dropdown-menu';
 import { Avatar, AvatarImage, AvatarFallback, type AvatarStatus } from './avatar';
 import { SquadRoleBadge } from './squad-role-badge';
@@ -56,10 +57,13 @@ function CollaboratorDropdown({
     </button>
   );
 
+  // Case- AND accent-insensitive, same fold as the other DS search inputs.
+  // Collaborator names are people's real names, so this is the same defect the
+  // player pickers had: a viewer typing "joao" must find "João Pedro", and a
+  // viewer typing "João" must still find them too.
   const filteredUsers = React.useMemo(() => {
     if (!search.trim()) return users;
-    const query = search.toLowerCase();
-    return users.filter((user) => user.name.toLowerCase().includes(query));
+    return users.filter((user) => matchesSearchQuery(user.name, search));
   }, [users, search]);
 
   // Reset highlighted index when search changes

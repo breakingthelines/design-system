@@ -5,6 +5,106 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.87.0]
+
+### Fixed: search inputs now match accent-insensitively
+
+A viewer reported that searching "joao" in the goalscorers picker found
+nothing, because the match-day squad carries "João Pedro" exactly as the
+provider ships it and the filter was a raw `toLowerCase().includes()`. Most
+keyboards make reproducing the diacritic anything from awkward to impossible,
+so the row was effectively unreachable.
+
+Three components had their own copy of that filter, and all three had the
+defect. It was never specific to the player picker:
+
+- **`PlayerMultiSelectField`** filtered `player.name`. This is the reported
+  bug. Goalscorers and bookings are the pickers it backs.
+- **`CollaboratorDropdown`** filtered `user.name`. Same defect on the same
+  kind of data, people's real names, one component family over.
+- **`FilterModal`** filtered `option.label`. Those labels are club,
+  competition and country names, so "Atlético Madrid", "Bayern München" and
+  "Deportivo La Coruña" were all unreachable without the accent.
+
+Every other component that takes a query delegates matching to the host
+(`GifPicker`, `FilterBar`, `MentionPlugin`, `ThoughtsPanel` and the panels
+that pass through to it), so none of them could carry this bug and none are
+touched.
+
+**Both sides of the comparison are folded, never just one.** The new
+`foldForSearch` in `lib/search-match.ts` decomposes to NFD, strips the
+Combining Diacritical Marks block (U+0300..U+036F) and lower-cases. Folding
+only the candidate would let "joao" find "João Pedro" while breaking the
+viewer who does type "João"; folding only the query would do the reverse.
+With both folded the two spellings collapse onto the same key and either
+input finds the player.
+
+It is deliberately not a slug. Punctuation, spaces and apostrophes survive, so
+"N'Golo" and "A. Alexander-Arnold" keep matching on the substrings a viewer
+actually types. Letters that are their own codepoint rather than a base plus a
+combining mark (ø, ß, ł, đ) pass through unchanged and still match themselves.
+`lib/country-flags.ts` keeps its own stricter normaliser, which does strip
+punctuation, because that one builds a lookup key for a fixed table rather
+than matching free text.
+
+Folding is for matching only. Nothing here changes what is rendered: rows keep
+the real, accented name.
+
+Names that differ by more than a diacritic still do not match each other, so
+"miller" does not find "Müller". Names whose accent is their only
+distinguishing feature become mutually reachable rather than unreachable: a
+query for either spelling surfaces both rows and the viewer picks by sight.
+That is the direction a substring search should move in. It widens what
+matches and never hides a row the old behaviour would have shown.
+
+### Added: `matchPlayer` on `PlayerMultiSelectField`
+
+An optional predicate, `(player, query) => boolean`, consulted only when
+`searchable` is on and the query is non-empty. The default is unchanged
+behaviour for everyone who does not pass it.
+
+The row already carries `jerseyNumber` and `caption`, and the component
+deliberately searches neither. Until now a host that wanted either had no way
+to say so and would have had to fork the component, which is not hypothetical:
+platform forked exactly this component when the accent bug had no other
+remedy. The escape hatch is a predicate rather than a list transform on
+purpose, so an override cannot reorder, duplicate or fabricate rows. Ordering
+and the selection and cap invariants stay owned by the component, and an empty
+query short-circuits to "show everything" before the predicate is consulted,
+so a faulty matcher cannot break the rest state.
+
+`FilterModal` and `CollaboratorDropdown` get no equivalent prop. Nothing has
+asked for one, and the correct default is now in place for both.
+
+### Added: `foldForSearch` and `matchesSearchQuery` exports
+
+Both are exported from the package root. A consumer that owns its own search
+input can fold identically to the design system instead of writing a fourth
+copy of the same normalise-and-strip, and a host supplying `matchPlayer`
+composes with `matchesSearchQuery` rather than reimplementing it.
+
+### Notes
+
+- Twelve unit tests cover the fold and the matcher in the node project, both
+  directions of the reported bug plus the non-match cases.
+- Three stories drive the real components in the browser project: the picker
+  with a squad containing "João Pedro", the collaborator dropdown, and
+  `FilterModal`, which had no stories at all before this. Each types the
+  unaccented query, then the accented one, then an unaccented control name,
+  then a near-miss on a different base letter. `FilterModal` option rows gained
+  `data-slot="filter-modal-option"` and `data-value` so they can be asserted
+  on, matching the data-slot convention the rest of the package already uses.
+- Mutation-verified in both directions. Reverting the fold inside
+  `foldForSearch` fails six of the twelve unit tests and all four story tests.
+  Reverting only the picker's filter back to `toLowerCase().includes()`, with
+  the helper left intact, keeps every unit test green and fails the picker's
+  two story tests alone, which is what proves the story is load-bearing on the
+  wiring rather than on the helper.
+- `@base-ui/react/dialog` joined `optimizeDeps.include`. `FilterModal`'s new
+  stories are the first in the suite to reach the dialog primitive, and on a
+  cold cache Vite re-optimised it mid-run and broke in-flight dynamic imports.
+  Same reason `@lexical/react/LexicalTypeaheadMenuPlugin` is already there.
+
 ## [0.86.0]
 
 ### Fixed: the bottom `Sheet` now clears the keyboard on tablets too

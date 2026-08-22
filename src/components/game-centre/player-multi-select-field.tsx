@@ -5,6 +5,7 @@ import * as React from 'react';
 import { Check, Minus, Plus } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import { matchesSearchQuery } from '#/lib/search-match';
 import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -28,11 +29,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '#/components/ui/avatar';
  * No score gating in here — gating belongs to the host. The hint slot is
  * purely advisory copy.
  *
- * Wave 6.25m — `searchable` prop adds a small case-insensitive search input
- * above the list. When the roster is a full match-day squad (~23 players per
- * side, or 46 across both) scanning by sight is painful; the search lets the
- * viewer type a surname to filter visible rows. Selections persist across
- * filters; the cap is computed against the full selection set.
+ * Wave 6.25m — `searchable` prop adds a small search input above the list.
+ * When the roster is a full match-day squad (~23 players per side, or 46
+ * across both) scanning by sight is painful; the search lets the viewer type a
+ * surname to filter visible rows. Selections persist across filters; the cap
+ * is computed against the full selection set. Matching is case- AND
+ * accent-insensitive (see `matchPlayer` below).
  *
  * Wave 6.25n — `mode` prop adds a per-player COUNTER variant. In
  * `mode="counter"` each row renders [−] [count] [+] instead of a checkbox.
@@ -112,10 +114,10 @@ interface PlayerMultiSelectFieldBaseProps extends Omit<
   emptyCopy?: string;
   /**
    * Wave 6.25m — when true, the field renders a small search input above
-   * the list. The query filters rows by a case-insensitive substring on
-   * `player.name`. Selections are preserved across filters (a hidden row
-   * stays selected), and the at-cap state is computed against the full
-   * selection set, not the visible subset. Off by default for back-compat
+   * the list. The query filters rows by a case- and accent-insensitive
+   * substring on `player.name`. Selections are preserved across filters (a
+   * hidden row stays selected), and the at-cap state is computed against the
+   * full selection set, not the visible subset. Off by default for back-compat
    * — existing consumers see no visual change unless they opt in.
    */
   searchable?: boolean;
@@ -123,6 +125,31 @@ interface PlayerMultiSelectFieldBaseProps extends Omit<
    * Optional placeholder for the search input. Defaults to "Search players".
    */
   searchPlaceholder?: string;
+  /**
+   * Optional override for how a row is matched against the search query.
+   * Only consulted when `searchable` is on and the query is non-empty.
+   *
+   * The default is `matchesSearchQuery(player.name, query)` — an
+   * accent-folded, case-insensitive substring on the name only. That is the
+   * right default and most hosts should leave it alone. The hook exists
+   * because the row carries `jerseyNumber` and `caption` too, and a host that
+   * wants either of those searchable (or wants fuzzy/ranked matching) would
+   * otherwise have to fork the whole component to get it. Compose with the
+   * exported `matchesSearchQuery` rather than reimplementing the fold:
+   *
+   * ```tsx
+   * matchPlayer={(p, q) =>
+   *   matchesSearchQuery(p.name, q) || String(p.jerseyNumber ?? '') === q.trim()
+   * }
+   * ```
+   *
+   * It is a PREDICATE, not a list transform, so an override cannot reorder,
+   * duplicate or fabricate rows — ordering and the selection/cap invariants
+   * stay owned by the component. An empty query short-circuits to "show
+   * everything" before this is called, so a faulty matcher cannot break the
+   * rest state.
+   */
+  matchPlayer?: (player: PlayerMultiSelectOption, query: string) => boolean;
 }
 
 interface PlayerMultiSelectFieldMultiProps extends PlayerMultiSelectFieldBaseProps {
@@ -193,22 +220,27 @@ function PlayerMultiSelectField(props: PlayerMultiSelectFieldProps) {
     emptyCopy = 'No players available yet.',
     searchable = false,
     searchPlaceholder = 'Search players',
+    matchPlayer,
     className,
     mode = 'multi',
     ...rest
   } = props as PlayerMultiSelectFieldProps & { mode?: PlayerMultiSelectMode };
 
   // Wave 6.25m — local search state. Off by default; only allocated when the
-  // host opts in via `searchable`. Filter is a case-insensitive substring on
-  // `player.name`. We deliberately do NOT filter on jersey or caption — name
-  // is the field viewers reach for.
+  // host opts in via `searchable`. The filter is a case- AND accent-insensitive
+  // substring on `player.name`: both the query and the name are NFD-folded, so
+  // "joao" and "João" both find "João Pedro" and neither spelling is privileged
+  // over the other. We deliberately do NOT filter on jersey or caption — name
+  // is the field viewers reach for — but a host that wants to can say so via
+  // `matchPlayer`.
   const [query, setQuery] = React.useState('');
   const visiblePlayers = React.useMemo(() => {
     if (!searchable) return players;
-    const q = query.trim().toLowerCase();
-    if (q === '') return players;
-    return players.filter((p) => p.name.toLowerCase().includes(q));
-  }, [searchable, players, query]);
+    if (query.trim() === '') return players;
+    const match =
+      matchPlayer ?? ((p: PlayerMultiSelectOption) => matchesSearchQuery(p.name, query));
+    return players.filter((p) => match(p, query));
+  }, [searchable, players, query, matchPlayer]);
 
   // Pluck the rest of the discriminated props out for the render branches.
   // Casts here are safe because the public type is a discriminated union on
