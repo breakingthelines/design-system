@@ -1,3 +1,5 @@
+import { expect, fireEvent, userEvent, within } from 'storybook/test';
+
 import preview from '#.storybook/preview';
 import { CollaboratorDropdown } from './collaborator-dropdown';
 import { Button } from './button';
@@ -165,4 +167,89 @@ export const CustomTrigger = meta.story({
       onUserClick={(id) => console.log('Clicked user:', id)}
     />
   ),
+});
+
+/* ── Accent-insensitive search ─────────────────────────────────────────────
+ * The collaborator list filters on people's real names, so it had the same
+ * defect the player pickers did: a raw `toLowerCase().includes()` meant a
+ * viewer typing "joao" never found "João Pedro". Both sides of the comparison
+ * are now folded, so either spelling finds the row.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+const ACCENTED_TEAM = [
+  'João Pedro',
+  'Thomas Müller',
+  'Mesut Özil',
+  'Sarah Connor',
+  'John Smith',
+  'Maria Garcia',
+  'David Chen',
+  'Emma Wilson',
+  'James Brown',
+  'Lisa Taylor',
+  'Michael Lee',
+].map((name, i) => ({
+  id: String(i + 1),
+  name,
+  initials: name
+    .split(' ')
+    .map((part) => part.charAt(0))
+    .join(''),
+  cursorColor: cursorPalette[i % cursorPalette.length].hex,
+  role: ['captain', 'editor', 'viewer'][i % 3],
+}));
+
+/** Names of the collaborator rows the dropdown is currently showing. */
+function visibleNames(): string[] {
+  return Array.from(document.querySelectorAll('[role="menu"] button'))
+    .map((row) => row.querySelector('.truncate')?.textContent ?? '')
+    .filter(Boolean);
+}
+
+export const AccentInsensitiveSearch = meta.story({
+  name: 'Many Users — accent-insensitive search',
+  render: () => (
+    <CollaboratorDropdown
+      users={ACCENTED_TEAM}
+      trigger={<Button variant="outline">+8 more</Button>}
+      onUserClick={() => {}}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: '+8 more' }));
+    const menu = within(await within(document.body).findByRole('menu'));
+    const input = menu.getByPlaceholderText('Search collaborators...');
+
+    // `fireEvent.change` rather than `userEvent.type`: the search input lives
+    // inside the menu popup, whose own typeahead consumes keydowns before they
+    // reach the field. Driving the controlled value directly is what we are
+    // asserting on anyway — this story is about the FILTER, not about focus
+    // management inside the popup.
+    async function searchFor(text: string) {
+      await fireEvent.change(input, { target: { value: text } });
+    }
+
+    // The reported bug: an unaccented query against an accented name.
+    await searchFor('joao');
+    await expect(visibleNames()).toEqual(['João Pedro']);
+
+    // The accented spelling must still work — the fix folds both sides.
+    await searchFor('João');
+    await expect(visibleNames()).toEqual(['João Pedro']);
+
+    await searchFor('muller');
+    await expect(visibleNames()).toEqual(['Thomas Müller']);
+
+    await searchFor('Özil');
+    await expect(visibleNames()).toEqual(['Mesut Özil']);
+
+    // A name with no diacritic is unaffected.
+    await searchFor('connor');
+    await expect(visibleNames()).toEqual(['Sarah Connor']);
+
+    // Folding must not turn a miss into a hit on a different base letter.
+    await searchFor('miller');
+    await expect(visibleNames()).toEqual([]);
+    await expect(menu.getByText('No collaborators found')).toBeInTheDocument();
+  },
 });

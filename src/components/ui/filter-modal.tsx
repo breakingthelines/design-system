@@ -4,6 +4,7 @@ import * as React from 'react';
 import { Dialog as DialogPrimitive } from '@base-ui/react/dialog';
 import { MagnifyingGlass, Check, X } from '@phosphor-icons/react';
 import { cn } from '#/lib/utils';
+import { matchesSearchQuery } from '#/lib/search-match';
 
 interface FilterOption {
   value: string;
@@ -43,9 +44,11 @@ function FilterModal({
     if (open) setSearch('');
   }, [open]);
 
-  const filtered = search
-    ? options.filter((o) => o.label.toLowerCase().includes(search.toLowerCase()))
-    : options;
+  // Case- AND accent-insensitive: option labels are club, competition and
+  // country names, which carry diacritics ("Atlético Madrid", "Bayern
+  // München", "Deportivo La Coruña"). Both sides of the comparison are folded,
+  // so "atletico" and "Atlético" each find the same row.
+  const filtered = search ? options.filter((o) => matchesSearchQuery(o.label, search)) : options;
 
   function toggle(value: string) {
     if (selectedValues.includes(value)) {
@@ -115,6 +118,8 @@ function FilterModal({
                   <button
                     key={option.value}
                     type="button"
+                    data-slot="filter-modal-option"
+                    data-value={option.value}
                     onClick={() => toggle(option.value)}
                     className={cn(
                       'flex w-full items-center gap-3 rounded-sm px-3 py-2.5 text-left transition-colors',

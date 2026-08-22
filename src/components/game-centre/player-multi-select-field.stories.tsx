@@ -1,6 +1,10 @@
 import * as React from 'react';
 
+import { expect, userEvent, within } from 'storybook/test';
+
 import preview from '#.storybook/preview';
+
+import { matchesSearchQuery } from '#/lib/search-match';
 
 import { PlayerMultiSelectField, type PlayerMultiSelectOption } from './player-multi-select-field';
 
@@ -102,6 +106,7 @@ const FULL_SQUAD: PlayerMultiSelectOption[] = [
   { id: 'p-bruno', name: 'B. Fernandes', jerseyNumber: 8, caption: 'Man Utd' },
   { id: 'p-salah', name: 'M. Salah', jerseyNumber: 11, caption: 'Liverpool' },
   { id: 'p-mbappe', name: 'K. Mbappé', jerseyNumber: 7, caption: 'PSG' },
+  { id: 'p-joao', name: 'João Pedro', jerseyNumber: 20, caption: 'Chelsea' },
 ];
 
 export const Searchable = meta.story({
@@ -114,6 +119,107 @@ export const Searchable = meta.story({
     searchable: true,
   },
   render: (args) => <GoalscorersWrapper {...args} />,
+});
+
+/* ── Accent-insensitive search ─────────────────────────────────────────────
+ * A viewer reported that searching "joao" found nothing, because the squad
+ * list carries "João Pedro" exactly as the provider ships it and the filter
+ * was a raw `toLowerCase().includes()`. The filter now folds BOTH the query
+ * and the name, so neither spelling is privileged. These stories are the
+ * load-bearing proof of that at the component level — the unit tests in
+ * `lib/search-match.test.ts` prove the fold, these prove the field uses it.
+ * ────────────────────────────────────────────────────────────────────────── */
+
+/** Player ids of the rows the field is currently showing, in order. */
+function visibleIds(canvasElement: HTMLElement): string[] {
+  return Array.from(
+    canvasElement.querySelectorAll('[data-slot="player-multi-select-field-row"]')
+  ).map((row) => row.getAttribute('data-player-id') ?? '');
+}
+
+async function searchFor(canvasElement: HTMLElement, text: string) {
+  const canvas = within(canvasElement);
+  const input = canvas.getByRole('searchbox', { name: 'Search Goalscorers' });
+  await userEvent.clear(input);
+  await userEvent.type(input, text);
+  return input;
+}
+
+export const SearchableAccentFolded = meta.story({
+  name: 'Searchable — "joao" finds "João Pedro"',
+  args: {
+    label: 'Goalscorers',
+    description: 'Typing without the accent still finds the accented name.',
+    players: FULL_SQUAD,
+    selectedIds: [],
+    searchable: true,
+  },
+  render: (args) => <GoalscorersWrapper {...args} />,
+  play: async ({ canvasElement }) => {
+    // The reported bug: an unaccented query against an accented name.
+    await searchFor(canvasElement, 'joao');
+    await expect(visibleIds(canvasElement)).toEqual(['p-joao']);
+
+    // The other direction must not have been traded away for it: a viewer who
+    // DOES type the accent still finds the same row.
+    await searchFor(canvasElement, 'João');
+    await expect(visibleIds(canvasElement)).toEqual(['p-joao']);
+
+    // And the query the provider's own spelling produces, lower-cased.
+    await searchFor(canvasElement, 'joão');
+    await expect(visibleIds(canvasElement)).toEqual(['p-joao']);
+
+    // A name with no diacritic anywhere in it is untouched by the change.
+    await searchFor(canvasElement, 'saka');
+    await expect(visibleIds(canvasElement)).toEqual(['p-saka']);
+
+    // Folding widens what matches; it must not turn a miss into a hit on a
+    // different BASE letter.
+    await searchFor(canvasElement, 'joan');
+    await expect(visibleIds(canvasElement)).toEqual([]);
+    await expect(within(canvasElement).getByText(/No players match/)).toBeInTheDocument();
+
+    // Other accented squad members fold the same way.
+    await searchFor(canvasElement, 'mbappe');
+    await expect(visibleIds(canvasElement)).toEqual(['p-mbappe']);
+    await searchFor(canvasElement, 'fernandez');
+    await expect(visibleIds(canvasElement)).toEqual(['p-enzo']);
+  },
+});
+
+/**
+ * `matchPlayer` escape hatch — a host that wants the shirt number searchable
+ * too composes the exported `matchesSearchQuery` rather than reimplementing
+ * the fold. The default (name only, accent-folded) is unchanged for everyone
+ * who does not pass this.
+ */
+export const SearchableCustomMatcher = meta.story({
+  name: 'Searchable — host-supplied matcher (name or shirt number)',
+  args: {
+    label: 'Goalscorers',
+    description: 'This host also lets you search by shirt number.',
+    players: FULL_SQUAD,
+    selectedIds: [],
+    searchable: true,
+    searchPlaceholder: 'Name or number',
+    matchPlayer: (player, query) =>
+      matchesSearchQuery(player.name, query) || String(player.jerseyNumber ?? '') === query.trim(),
+  },
+  render: (args) => <GoalscorersWrapper {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const input = canvas.getByRole('searchbox', { name: 'Search Goalscorers' });
+
+    // The host's extra rule fires.
+    await userEvent.clear(input);
+    await userEvent.type(input, '41');
+    await expect(visibleIds(canvasElement)).toEqual(['p-rice']);
+
+    // The composed default still folds accents.
+    await userEvent.clear(input);
+    await userEvent.type(input, 'joao');
+    await expect(visibleIds(canvasElement)).toEqual(['p-joao']);
+  },
 });
 
 // Wave 6.25n — per-player counter mode. Picking Saka three times means
