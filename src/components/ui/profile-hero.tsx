@@ -272,7 +272,10 @@ function ProfileHero({
                       key={link.url}
                       href={link.url}
                       target="_blank"
-                      rel="noopener noreferrer"
+                      // A profile link is a self-declared URL, never editorial:
+                      // any account can point one anywhere, so it is `ugc
+                      // nofollow` for everyone with no authorised exception.
+                      rel="ugc nofollow noopener noreferrer"
                       data-slot="profile-hero-social-link"
                       data-platform={platform}
                       className="text-red-100 transition-opacity hover:opacity-80"
