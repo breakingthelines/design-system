@@ -142,4 +142,17 @@ describe('ProfileHero social links', () => {
   it('renders no links when none are supplied', () => {
     expect(countSlot(render(<ProfileHero name="Test Profile" />), SLOT)).toBe(0);
   });
+
+  /**
+   * A profile link is a self-declared URL that any account can point anywhere,
+   * so it never carries link equity — there is no authorised exception here the
+   * way there is for an article body. This link used to render dofollow, which
+   * made every public profile a free backlink for whoever signed up.
+   */
+  it.each(LOGO_PLATFORMS)('withholds link equity from a %s link', (type) => {
+    const rel = (/\brel="([^"]*)"/.exec(renderLink(type))?.[1] ?? '').split(/\s+/);
+    expect(rel).toEqual(expect.arrayContaining(['ugc', 'nofollow']));
+    // The tab-nabbing defence must survive alongside the new tokens.
+    expect(rel).toEqual(expect.arrayContaining(['noopener', 'noreferrer']));
+  });
 });

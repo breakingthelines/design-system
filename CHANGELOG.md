@@ -5,6 +5,26 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.89.0]
+
+### Fixed: profile social links no longer pass link equity
+
+`ProfileHero` rendered each social link with `rel="noopener noreferrer"` —
+which is to say **dofollow**. A profile link is free text that any account can
+point anywhere, so every public profile was a backlink anyone could mint by
+signing up: no article, no editorial review, and no moderation surface in the
+way. It is the cheapest version of the thing an SEO placement pays for.
+
+The links now render `rel="ugc nofollow noopener noreferrer"`. `ugc` marks
+them as user-generated and `nofollow` withholds the equity; the existing
+noopener/noreferrer pair is unchanged, so the tab-nabbing defence is intact.
+
+**No authorised exception.** An article body has one — a publisher can be
+trusted to link out editorially — but a profile link is never editorial. It is
+a self-declared URL, identical in kind whoever supplies it, so this applies to
+every account including first-party ones. A trusted account loses nothing that
+mattered: nobody links their own X profile for the PageRank.
+
 ## [0.87.0]
 
 ### Fixed: search inputs now match accent-insensitively
