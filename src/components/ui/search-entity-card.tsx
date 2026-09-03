@@ -9,6 +9,7 @@ import { motion as motionTokens } from '#/tokens/motion';
 import { useTilt } from '#/hooks/use-tilt';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { entityMonogram } from '#/lib/entity-image';
+import type { VariantFn } from '#/lib/cva';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * SearchEntityCard
@@ -61,14 +62,16 @@ export function entityKindLabel(kind: SearchEntityKind): string {
   return ENTITY_KIND_LABELS[kind] ?? kind;
 }
 
-const searchEntityCardVariants = cva(
+export type SearchEntityCardVariant = 'grid' | 'list';
+
+const searchEntityCardVariants: VariantFn<{ variant?: SearchEntityCardVariant | null }> = cva(
   'group/entity-card relative overflow-hidden text-white transition-colors',
   {
     variants: {
       variant: {
         grid: 'flex flex-col backdrop-blur-[20px]',
         list: 'flex flex-col backdrop-blur-[20px]',
-      },
+      } satisfies Record<SearchEntityCardVariant, string>,
     },
     defaultVariants: {
       variant: 'grid',

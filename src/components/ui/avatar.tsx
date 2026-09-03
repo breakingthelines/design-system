@@ -8,8 +8,11 @@ import { motion, type HTMLMotionProps } from 'framer-motion';
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
+import type { VariantFn } from '#/lib/cva';
 
-const avatarBorderVariants = cva('ring-2', {
+export type AvatarBorderColor = 'default' | 'red' | 'cyan' | 'white' | 'grey';
+
+const avatarBorderVariants: VariantFn<{ borderColor?: AvatarBorderColor | null }> = cva('ring-2', {
   variants: {
     borderColor: {
       default: 'ring-background',
@@ -17,7 +20,7 @@ const avatarBorderVariants = cva('ring-2', {
       cyan: 'ring-cyan-500',
       white: 'ring-white',
       grey: 'ring-grey-300',
-    },
+    } satisfies Record<AvatarBorderColor, string>,
   },
   defaultVariants: {
     borderColor: 'default',

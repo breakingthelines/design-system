@@ -4,25 +4,34 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '#/lib/utils';
+import type { VariantFn } from '#/lib/cva';
 
-const statusDotVariants = cva('relative inline-flex shrink-0 rounded-full', {
+export type StatusDotSize = 'sm' | 'default' | 'lg';
+
+export type StatusDotVariant = 'success' | 'warning' | 'error' | 'info' | 'neutral';
+
+const statusDotVariants: VariantFn<{
+  size?: StatusDotSize | null;
+  variant?: StatusDotVariant | null;
+  pulse?: boolean | null;
+}> = cva('relative inline-flex shrink-0 rounded-full', {
   variants: {
     size: {
       sm: 'size-1.5',
       default: 'size-2',
       lg: 'size-2.5',
-    },
+    } satisfies Record<StatusDotSize, string>,
     variant: {
       success: 'bg-cursor-mint',
       warning: 'bg-cursor-gold',
       error: 'bg-destructive',
       info: 'bg-cursor-sky',
       neutral: 'bg-muted-foreground',
-    },
+    } satisfies Record<StatusDotVariant, string>,
     pulse: {
       true: '',
       false: '',
-    },
+    } satisfies Record<'true' | 'false', string>,
   },
   defaultVariants: {
     size: 'default',

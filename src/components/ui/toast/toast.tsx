@@ -8,8 +8,9 @@ import { cva } from 'class-variance-authority';
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
 import type { Toast as ToastType, ToastVariant } from './types';
+import type { VariantFn } from '#/lib/cva';
 
-const toastVariants = cva(
+const toastVariants: VariantFn<{ variant?: ToastVariant | null }> = cva(
   [
     'relative flex items-start gap-3 w-full max-w-sm p-3',
     'bg-card border border-border rounded-btl-sm shadow-lg',
@@ -23,7 +24,7 @@ const toastVariants = cva(
         error: 'border-destructive/30',
         warning: 'border-cursor-gold/30',
         info: 'border-cursor-sky/30',
-      },
+      } satisfies Record<ToastVariant, string>,
     },
     defaultVariants: {
       variant: 'default',

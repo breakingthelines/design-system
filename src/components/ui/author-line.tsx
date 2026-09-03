@@ -6,18 +6,24 @@ import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
 import { Badge } from '#/components/ui/badge';
 import type { ContentAuthor } from '#/types/content';
+import type { VariantFn } from '#/lib/cva';
 
-const authorLineVariants = cva('inline-flex items-center group/author-line', {
-  variants: {
-    size: {
-      sm: 'gap-2',
-      default: 'gap-2',
+export type AuthorLineSize = 'sm' | 'default';
+
+const authorLineVariants: VariantFn<{ size?: AuthorLineSize | null }> = cva(
+  'inline-flex items-center group/author-line',
+  {
+    variants: {
+      size: {
+        sm: 'gap-2',
+        default: 'gap-2',
+      } satisfies Record<AuthorLineSize, string>,
     },
-  },
-  defaultVariants: {
-    size: 'default',
-  },
-});
+    defaultVariants: {
+      size: 'default',
+    },
+  }
+);
 
 interface AuthorLineProps
   extends Omit<React.ComponentProps<'div'>, 'children'>, VariantProps<typeof authorLineVariants> {

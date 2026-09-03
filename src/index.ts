@@ -63,13 +63,20 @@ export * from './components/ui/user-pill';
 export * from './components/ui/verified-badge';
 
 // StatusDot
-export { StatusDot, statusDotVariants, type StatusDotProps } from './components/ui/status-dot';
+export {
+  StatusDot,
+  statusDotVariants,
+  type StatusDotProps,
+  type StatusDotSize,
+  type StatusDotVariant,
+} from './components/ui/status-dot';
 
 // ConnectionIndicator
 export {
   ConnectionIndicator,
   connectionIndicatorVariants,
   type ConnectionIndicatorProps,
+  type ConnectionIndicatorSize,
   type ConnectionStatus,
 } from './components/ui/connection-indicator';
 

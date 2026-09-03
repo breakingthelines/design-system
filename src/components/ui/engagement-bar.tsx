@@ -8,18 +8,24 @@ import { Heart, Chats, ArrowsClockwise, Bookmark, UploadSimple } from '@phosphor
 import { cn } from '#/lib/utils';
 import { formatCount } from '#/lib/format';
 import { motion as motionTokens } from '#/tokens/motion';
+import type { VariantFn } from '#/lib/cva';
 
-const engagementBarVariants = cva('flex items-center', {
-  variants: {
-    variant: {
-      compact: 'gap-2',
-      full: 'gap-4',
+export type EngagementBarVariant = 'compact' | 'full';
+
+const engagementBarVariants: VariantFn<{ variant?: EngagementBarVariant | null }> = cva(
+  'flex items-center',
+  {
+    variants: {
+      variant: {
+        compact: 'gap-2',
+        full: 'gap-4',
+      } satisfies Record<EngagementBarVariant, string>,
     },
-  },
-  defaultVariants: {
-    variant: 'compact',
-  },
-});
+    defaultVariants: {
+      variant: 'compact',
+    },
+  }
+);
 
 export interface EngagementAction {
   type: 'like' | 'comment' | 'repost' | 'bookmark' | 'share';

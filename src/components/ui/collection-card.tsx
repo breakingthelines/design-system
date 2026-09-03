@@ -10,15 +10,16 @@ import { useTilt } from '#/hooks/use-tilt';
 import { Image } from '#/components/ui/image';
 import { useLinkComponent } from '#/components/ui/link-context';
 import type { CollectionItem } from '#/types/content';
+import type { VariantFn } from '#/lib/cva';
 
-const collectionCardVariants = cva(
+const collectionCardVariants: VariantFn<{ variant?: CollectionCardVariant | null }> = cva(
   'group/collection-card overflow-hidden text-white transition-colors',
   {
     variants: {
       variant: {
         grid: 'flex flex-col backdrop-blur-[20px]',
         list: 'flex flex-col backdrop-blur-[20px]',
-      },
+      } satisfies Record<CollectionCardVariant, string>,
     },
     defaultVariants: {
       variant: 'grid',

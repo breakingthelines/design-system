@@ -11,24 +11,28 @@ import { EngagementBar, type EngagementAction } from '#/components/ui/engagement
 import { Image } from '#/components/ui/image';
 import { useLinkComponent } from '#/components/ui/link-context';
 import type { ContentItem } from '#/types/content';
+import type { VariantFn } from '#/lib/cva';
 
 /* ─────────────────────────────────────────────────
  * Variants
  * Grid  → tall card, image on top (Figma 80:1052, 366×526)
  * List  → horizontal card (Figma 720:9926, 559.5×110)
  * ───────────────────────────────────────────────── */
-const contentCardVariants = cva('group/content-card overflow-hidden text-white transition-colors', {
-  variants: {
-    variant: {
-      grid: 'flex flex-col backdrop-blur-[20px]',
-      list: 'flex flex-col backdrop-blur-[20px]',
-      portrait: 'flex flex-col backdrop-blur-[20px]',
+const contentCardVariants: VariantFn<{ variant?: ContentCardVariant | null }> = cva(
+  'group/content-card overflow-hidden text-white transition-colors',
+  {
+    variants: {
+      variant: {
+        grid: 'flex flex-col backdrop-blur-[20px]',
+        list: 'flex flex-col backdrop-blur-[20px]',
+        portrait: 'flex flex-col backdrop-blur-[20px]',
+      } satisfies Record<ContentCardVariant, string>,
     },
-  },
-  defaultVariants: {
-    variant: 'grid',
-  },
-});
+    defaultVariants: {
+      variant: 'grid',
+    },
+  }
+);
 
 type ContentCardVariant = 'grid' | 'list' | 'portrait';
 type MotionSafeArticleProps = Omit<

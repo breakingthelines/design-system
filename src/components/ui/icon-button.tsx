@@ -7,8 +7,16 @@ import { motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
+import type { VariantFn } from '#/lib/cva';
 
-const iconButtonVariants = cva(
+export type IconButtonVariant = 'ghost' | 'outline' | 'solid';
+
+export type IconButtonSize = 'sm' | 'md' | 'lg' | 'xl';
+
+const iconButtonVariants: VariantFn<{
+  variant?: IconButtonVariant | null;
+  size?: IconButtonSize | null;
+}> = cva(
   'inline-flex items-center justify-center rounded-full transition-all outline-none select-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0',
   {
     variants: {
@@ -18,13 +26,13 @@ const iconButtonVariants = cva(
         outline:
           'backdrop-blur-[15px] border border-grey-300 bg-grey-100 hover:bg-grey-200 text-white',
         solid: 'bg-red-300 border border-red-100 hover:bg-red-400 text-white',
-      },
+      } satisfies Record<IconButtonVariant, string>,
       size: {
         sm: 'size-[18px] [&_svg]:size-[10px]',
         md: 'size-[24px] [&_svg]:size-[14px]',
         lg: 'size-[32px] [&_svg]:size-[18px]',
         xl: 'size-[40px] [&_svg]:size-[24px]',
-      },
+      } satisfies Record<IconButtonSize, string>,
     },
     defaultVariants: {
       variant: 'ghost',
