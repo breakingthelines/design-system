@@ -12,15 +12,18 @@ import {
 } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import type { VariantFn } from '#/lib/cva';
 
-const audioPlayerVariants = cva(
+export type AudioPlayerVariant = 'default' | 'minimal';
+
+const audioPlayerVariants: VariantFn<{ variant?: AudioPlayerVariant | null }> = cva(
   'flex items-center gap-3 rounded-lg border px-4 py-3 transition-colors',
   {
     variants: {
       variant: {
         default: 'border-white/10 bg-white/[0.03]',
         minimal: 'border-transparent bg-transparent px-0',
-      },
+      } satisfies Record<AudioPlayerVariant, string>,
     },
     defaultVariants: {
       variant: 'default',

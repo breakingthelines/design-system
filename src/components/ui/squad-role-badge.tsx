@@ -3,15 +3,18 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '#/lib/utils';
 import { roleColors, type RoleType } from '#/tokens/colors';
+import type { VariantFn } from '#/lib/cva';
 
-const squadRoleBadgeVariants = cva(
+export type SquadRoleBadgeSize = 'sm' | 'default';
+
+const squadRoleBadgeVariants: VariantFn<{ size?: SquadRoleBadgeSize | null }> = cva(
   'inline-flex items-center justify-center rounded-full font-medium whitespace-nowrap',
   {
     variants: {
       size: {
         sm: 'px-1.5 py-0.5 text-[10px]',
         default: 'px-2 py-1 text-xs',
-      },
+      } satisfies Record<SquadRoleBadgeSize, string>,
     },
     defaultVariants: {
       size: 'default',

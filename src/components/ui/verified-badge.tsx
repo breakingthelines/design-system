@@ -3,18 +3,24 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '#/lib/utils';
+import type { VariantFn } from '#/lib/cva';
 
-const verifiedBadgeVariants = cva('inline-flex shrink-0 items-center justify-center', {
-  variants: {
-    size: {
-      sm: 'size-3',
-      default: 'size-4',
+export type VerifiedBadgeSize = 'sm' | 'default';
+
+const verifiedBadgeVariants: VariantFn<{ size?: VerifiedBadgeSize | null }> = cva(
+  'inline-flex shrink-0 items-center justify-center',
+  {
+    variants: {
+      size: {
+        sm: 'size-3',
+        default: 'size-4',
+      } satisfies Record<VerifiedBadgeSize, string>,
     },
-  },
-  defaultVariants: {
-    size: 'default',
-  },
-});
+    defaultVariants: {
+      size: 'default',
+    },
+  }
+);
 
 interface VerifiedBadgeProps
   extends React.ComponentProps<'span'>, VariantProps<typeof verifiedBadgeVariants> {}

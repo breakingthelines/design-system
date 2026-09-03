@@ -52,13 +52,15 @@ function ToggleGroup({
   );
 }
 
+export type ToggleGroupItemProps = TogglePrimitive.Props & VariantProps<typeof toggleVariants>;
+
 function ToggleGroupItem({
   className,
   children,
   variant = 'default',
   size = 'default',
   ...props
-}: TogglePrimitive.Props & VariantProps<typeof toggleVariants>) {
+}: ToggleGroupItemProps) {
   const context = React.useContext(ToggleGroupContext);
 
   return (

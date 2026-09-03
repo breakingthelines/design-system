@@ -4,6 +4,7 @@ import * as React from 'react';
 import { cva } from 'class-variance-authority';
 
 import { cn } from '#/lib/utils';
+import type { VariantFn } from '#/lib/cva';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * Skeleton — a refined loading placeholder with a glossy shimmer sweep.
@@ -13,7 +14,9 @@ import { cn } from '#/lib/utils';
  * glossy surface catching light rather than a generic loading bar.
  * ───────────────────────────────────────────────────────────────────────────── */
 
-const skeletonVariants = cva(
+export type SkeletonVariant = 'rect' | 'circle' | 'text';
+
+const skeletonVariants: VariantFn<{ variant?: SkeletonVariant | null }> = cva(
   [
     'bg-white/[0.06]',
     // Dual-band shimmer gradient — soft highlight + faint secondary
@@ -27,7 +30,7 @@ const skeletonVariants = cva(
         rect: 'rounded',
         circle: 'rounded-full aspect-square',
         text: 'h-3.5 w-full rounded-sm',
-      },
+      } satisfies Record<SkeletonVariant, string>,
     },
     defaultVariants: {
       variant: 'rect',

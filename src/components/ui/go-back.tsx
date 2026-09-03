@@ -7,19 +7,24 @@ import { motion } from 'framer-motion';
 
 import { cn } from '#/lib/utils';
 import { motion as motionTokens } from '#/tokens/motion';
+import type { VariantFn } from '#/lib/cva';
 
-const goBackVariants = cva(
+export type GoBackVariant = 'default' | 'subtle';
+
+export type GoBackSize = 'sm' | 'md';
+
+const goBackVariants: VariantFn<{ variant?: GoBackVariant | null; size?: GoBackSize | null }> = cva(
   'group/go-back inline-flex cursor-pointer select-none items-center gap-1.5 rounded-full py-1 pl-1 pr-3.5 font-sans font-bold tracking-[-0.28px] transition-colors outline-none backdrop-blur-sm disabled:pointer-events-none disabled:opacity-50',
   {
     variants: {
       variant: {
         default: 'bg-white/[0.06] text-white/70 hover:bg-white/[0.12] hover:text-white',
         subtle: 'bg-transparent text-muted-foreground hover:bg-white/[0.06] hover:text-foreground',
-      },
+      } satisfies Record<GoBackVariant, string>,
       size: {
         sm: 'text-xs pr-3 [&_[data-slot=go-back-well]]:size-5 [&_[data-slot=go-back-well]_svg]:size-[9px]',
         md: 'text-sm [&_[data-slot=go-back-well]]:size-6 [&_[data-slot=go-back-well]_svg]:size-3',
-      },
+      } satisfies Record<GoBackSize, string>,
     },
     defaultVariants: { variant: 'default', size: 'md' },
   }

@@ -2,8 +2,21 @@ import { Button as ButtonPrimitive } from '@base-ui/react/button';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '#/lib/utils';
+import type { VariantFn } from '#/lib/cva';
 
-const buttonVariants = cva(
+export type ButtonVariant = 'default' | 'outline' | 'secondary' | 'ghost' | 'destructive' | 'link';
+
+export type ButtonSize =
+  | 'default'
+  | 'xs'
+  | 'sm'
+  | 'lg'
+  | 'icon'
+  | 'icon-xs'
+  | 'icon-sm'
+  | 'icon-lg';
+
+const buttonVariants: VariantFn<{ variant?: ButtonVariant | null; size?: ButtonSize | null }> = cva(
   "focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 cursor-pointer rounded-[4px] border border-transparent bg-clip-padding text-xs font-medium focus-visible:ring-1 aria-invalid:ring-1 [&_svg:not([class*='size-'])]:size-4 inline-flex items-center justify-center whitespace-nowrap transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none shrink-0 [&_svg]:shrink-0 outline-none group/button select-none",
   {
     variants: {
@@ -18,7 +31,7 @@ const buttonVariants = cva(
         destructive:
           'bg-destructive/10 hover:bg-destructive/20 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/20 text-destructive focus-visible:border-destructive/40 dark:hover:bg-destructive/30',
         link: 'text-primary hover:text-primary/80',
-      },
+      } satisfies Record<ButtonVariant, string>,
       size: {
         default:
           'h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2',
@@ -29,7 +42,7 @@ const buttonVariants = cva(
         'icon-xs': "size-6 [&_svg:not([class*='size-'])]:size-3",
         'icon-sm': 'size-7',
         'icon-lg': 'size-9',
-      },
+      } satisfies Record<ButtonSize, string>,
     },
     defaultVariants: {
       variant: 'default',
@@ -38,6 +51,8 @@ const buttonVariants = cva(
   }
 );
 
+export type ButtonProps = ButtonPrimitive.Props & VariantProps<typeof buttonVariants>;
+
 function Button({
   className,
   variant = 'default',
@@ -45,7 +60,7 @@ function Button({
   render,
   nativeButton,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps) {
   // Auto-detect non-button render elements so consumers don't need to
   // manually set nativeButton={false} when using render={<a />} etc.
   // Covers both native elements (<a />) and React components (<LinkComponent />).

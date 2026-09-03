@@ -5,20 +5,26 @@ import { cva, type VariantProps } from 'class-variance-authority';
 
 import { cn } from '#/lib/utils';
 import { StatusDot } from './status-dot';
+import type { VariantFn } from '#/lib/cva';
 
 export type ConnectionStatus = 'connected' | 'connecting' | 'disconnected' | 'reconnecting';
 
-const connectionIndicatorVariants = cva('inline-flex items-center gap-2 text-xs', {
-  variants: {
-    size: {
-      sm: 'text-[10px] gap-1.5',
-      default: 'text-xs gap-2',
+export type ConnectionIndicatorSize = 'sm' | 'default';
+
+const connectionIndicatorVariants: VariantFn<{ size?: ConnectionIndicatorSize | null }> = cva(
+  'inline-flex items-center gap-2 text-xs',
+  {
+    variants: {
+      size: {
+        sm: 'text-[10px] gap-1.5',
+        default: 'text-xs gap-2',
+      } satisfies Record<ConnectionIndicatorSize, string>,
     },
-  },
-  defaultVariants: {
-    size: 'default',
-  },
-});
+    defaultVariants: {
+      size: 'default',
+    },
+  }
+);
 
 export interface ConnectionIndicatorProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof connectionIndicatorVariants> {
