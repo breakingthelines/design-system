@@ -316,6 +316,32 @@ export { SearchField, type SearchFieldProps } from './components/ui/search-field
 
 export { FullscreenLoader, type FullscreenLoaderProps } from './components/ui/fullscreen-loader';
 
+export {
+  LoadingOverlay,
+  loadingOverlayVariants,
+  type LoadingOverlayProps,
+  type LoadingOverlayRadius,
+} from './components/ui/loading-overlay';
+
+export {
+  LineChart,
+  getLinePoints,
+  buildSmoothLinePath,
+  buildAreaPath,
+  type LineChartProps,
+  type LineChartTooltip,
+  type LineChartPoint,
+} from './components/ui/line-chart';
+
+export {
+  BarChart,
+  barChartBarVariants,
+  barHeightPercents,
+  type BarChartProps,
+  type BarChartLabel,
+  type BarChartBarState,
+} from './components/ui/bar-chart';
+
 // G6 Game Centre composite primitives (promoted from platform 0.3.0)
 export * from './components/game-centre/index';
 

@@ -5,6 +5,76 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.93.0]
+
+### Added: LineChart, BarChart and LoadingOverlay
+
+Three more pieces admin-dashboard was carrying locally. Two charts and the
+in-panel loading scrim it had defined eleven separate times (#218). All three
+are new exports. No existing component, style or type changes.
+
+**The charts are the estate's first.** `EngagementOpsHeader` takes a `sparkline`
+node rather than drawing one, and `MetricCard` deliberately holds no chart at
+all, because a charting dependency was a decision the estate had not made. These
+two are not that decision: they are hand-drawn SVG and CSS grid with no library
+behind them, promoted as they stood. Anything that needs axes, a legend or a
+second series still needs a real charting library, and this is not it.
+
+**Both palettes are derived, not painted.** `LineChart` drew a `#bfbfbf` to
+`#2B2B2B` area gradient under a `#ffffff` stroke, and `BarChart` drew
+`#151515`-to-`#2b2b2b` bars with a `#9a9a9a` active tone. None of that is
+legible on a light surface: the line disappears and the bars go to grey slabs.
+The stroke is `--color-foreground` now, and every gradient stop and bar tone is
+that foreground mixed toward `--color-muted`, which is the same idiom
+`MetricCard`'s delta tones use. One definition, and it flips with the theme
+rather than needing a second.
+
+**Both charts sized their own grid wrong.** `LineChart`'s axis was pinned to
+eight columns whatever it was handed, so the three-label axis its own call site
+passed sat crammed into the left third of the plot. `BarChart`'s bars were
+pinned to fourteen, so every window other than a fortnight was drawn wrong: a
+seven-day range left half the plot empty and a ninety-day range ran off the end
+of it. The track counts follow the data now, published as
+`--line-chart-x-count` and `--bar-chart-count`.
+
+**`BarChart` scales its own bars.** The local version took pixel heights, so the
+call site had to know the plot height and do the arithmetic, and did it against
+a 120px ceiling inside a 220px plot, which is why the chart never filled its own
+box. `bars` is the values now, `height` is the only place the plot's size is
+stated, and a window whose values are all zero still reads as empty rather than
+being stretched to look full.
+
+**A bar is only a button when it does something.** Without `onSelect` the local
+version still rendered a `<button>` per bar, labelled "Select bar 1", "Select
+bar 2" and so on. Its own analytics page passed no handler, so a ninety-day
+window put ninety unreachable buttons in the tab order. A chart that cannot be
+selected is drawn as plain marks now, and the labels beneath carry the reading.
+`barLabel` names a bucket for the pressable form, so the accessible name can be
+the date rather than the position.
+
+**`LoadingOverlay` is the third loader, and the one the estate actually needed.**
+`FullscreenLoader` is the wait that owns the viewport, when there is nothing yet
+to show. `Skeleton` is the wait for a body being swapped out, held in the shape
+of the thing arriving. This is a scrim over a panel whose contents are still on
+screen: a table being refetched, a list changing under a new filter. The old
+figures stay legible underneath and the layout does not collapse and jolt back.
+
+**The eleven copies had drifted, and one definition settles it.** Four different
+scrim colours, two z-indexes, two corner radii, and `backdrop-filter` on some
+but not others. The scrim is `--color-background` mixed toward transparent, so
+it dims a light panel as well as a dark one, where `rgba(0, 0, 0, 0.4)` and
+`rgba(13, 13, 13, 0.65)` simply blacked one out. `radius` is the one thing that
+genuinely varied and it stays as a variant. Several of the copies were a silent
+`div` around a spinner; this carries `role="status"` and `aria-live="polite"`,
+so a screen-reader user is told when the wait starts and when it ends.
+
+**It is positioned, so its panel must be.** `LoadingOverlay` is
+`absolute inset-0` and needs a containing block on the section it covers, which
+is what every call site already had. Loading states that are not scrims are not
+this component: a wait beside a button that has just been pressed, or a
+placeholder that stands in for a body that is not drawn at all, both stay as
+they are.
+
 ## [0.92.0]
 
 ### Added: MetricCard, PageHeader, SearchField and FullscreenLoader
