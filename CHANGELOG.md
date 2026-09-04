@@ -5,6 +5,75 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.91.0]
+
+### Added: a generic DataTable and PaginationFooter
+
+The design system had three tables and every one of them knew what a row
+meant: `PredictionLeaderboardTable` ranks squad members, `RatingsClubTable`
+ranks players, `CompetitionStandingsTable` ranks clubs. Nothing generic. So
+admin-dashboard wrote its own, in CSS Modules, and fourteen of its pages now
+render `DataTable`/`DataRow` while six render `PaginationFooter`. None of that
+is admin-specific work. It is the table and the pager any list surface needs.
+
+Both are now here, and both are new exports: no existing component, style or
+type changes.
+
+**`DataTable` is a grid with declared roles, not a `<table>`.** Every surface
+it backs collapses to a stacked card below `md`, and a real table cannot reflow
+that way without `display: block` on its rows, which drops the implicit table
+semantics in every engine. So `table` / `rowgroup` / `row` / `columnheader` /
+`cell` are set explicitly and survive the reflow. The local version admin was
+using declared no roles at all, and gave a clickable row `role="button"`, which
+traded the table's structure for a shortcut. A `DataRow` with `onActivate` here
+stays a row: focusable, Enter and Space bound, structure intact.
+
+**The column template is a prop, not a stylesheet.** `columns` takes a
+`grid-template-columns` string with a `minmax()` floor per column, published as
+`--dt-columns` and read only by a `md:` utility. Below that breakpoint the grid
+is one column and the header row is hidden, because there are no columns left
+to head. Nothing is lost with it: a cell carrying `data-label` (or a `DataCell`
+with a `label`) renders its column name above its value, where the heading
+would have been.
+
+**One element scrolls sideways and it is not the page.** The row grid refuses
+to shrink past its floors, so on a narrow viewport it is wider than its
+container. `[data-slot='data-table-scroll']` catches that width; the root sets
+`min-w-0` so a flex or grid parent cannot be widened by it either.
+
+**`PaginationFooter` never scrolls.** Prev and Next bracket the page numbers,
+so a strip that scrolls puts both off screen as soon as there are more than
+about five pages, and a suppressed scrollbar leaves nothing to say they are
+there. Every strip wraps instead, no element sets `overflow`, and below `md`
+each control grows to a 44px target. The page controls are a `nav` with a name,
+each page button is labelled and the current one carries `aria-current="page"`,
+and the per-page control is a keyboard-navigable listbox rather than a div that
+opens on click.
+
+**`buildPageList` ships with it.** The eliding page-list builder was copied into
+all six admin pages, character for character in two variants. Its behaviour is
+unchanged, including the case where a gap stands for a single hidden page; that
+is pinned by a test rather than quietly corrected during a move.
+
+**Tokens only, so both themes resolve.** The local version was written against
+a dark tool and hardcoded `#1f1f1f`, `#2b2b2b`, `#807c7c`, `#ffffff`. These use
+`bg-card`, `border-border`, `bg-muted`, `text-muted-foreground` and
+`text-foreground`, so the same markup is correct under `.dark` and without it.
+A test asserts no literal colour reaches the rendered markup.
+
+### New exports
+
+| Export                                                                                      | What it is                                           |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `DataTable`                                                                                 | The table surface: column template, headings, rows   |
+| `DataRow`                                                                                   | One row, optionally activatable                      |
+| `DataCell`                                                                                  | One cell, with the optional mobile caption as a prop |
+| `PaginationFooter`                                                                          | Total, page controls, per-page selector              |
+| `buildPageList`                                                                             | The elided page list to hand it                      |
+| `dataTableVariants`, `dataTableRowVariants`, `dataTableHeaderVariants`                      | cva helpers                                          |
+| `paginationFooterVariants`, `paginationControlVariants`                                     | cva helpers                                          |
+| `DataTableDensity`, `PaginationPage`, `PaginationFooterDensity`, `PaginationControlVariant` | variant and value unions                             |
+
 ## [0.89.0]
 
 ### Fixed: profile social links no longer pass link equity
