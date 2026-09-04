@@ -264,6 +264,32 @@ export {
   type ComposerFromSourceSignal,
 } from './components/ui/composer-from-source-card';
 
+// Generic table + pagination primitives. Domain-free, unlike
+// PredictionLeaderboardTable / RatingsClubTable.
+export {
+  DataTable,
+  DataRow,
+  DataCell,
+  dataTableVariants,
+  dataTableRowVariants,
+  dataTableHeaderVariants,
+  type DataTableProps,
+  type DataRowProps,
+  type DataCellProps,
+  type DataTableDensity,
+} from './components/ui/data-table';
+
+export {
+  PaginationFooter,
+  buildPageList,
+  paginationFooterVariants,
+  paginationControlVariants,
+  type PaginationFooterProps,
+  type PaginationPage,
+  type PaginationFooterDensity,
+  type PaginationControlVariant,
+} from './components/ui/pagination-footer';
+
 // G6 Game Centre composite primitives (promoted from platform 0.3.0)
 export * from './components/game-centre/index';
 
