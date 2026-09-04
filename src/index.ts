@@ -290,6 +290,32 @@ export {
   type PaginationControlVariant,
 } from './components/ui/pagination-footer';
 
+// Admin-surface primitives. Domain-free, and none of them replaces an existing
+// component: MetricCard is the standalone form of the KPI cell welded into
+// EngagementOpsHeader, PageHeader names a page where SectionHeader introduces a
+// block inside one.
+export {
+  MetricCard,
+  readDeltaDirection,
+  metricCardVariants,
+  metricCardDeltaVariants,
+  type MetricCardProps,
+  type MetricCardTone,
+  type MetricCardDensity,
+} from './components/ui/metric-card';
+
+export {
+  PageHeader,
+  pageHeaderVariants,
+  pageHeaderTitleVariants,
+  type PageHeaderProps,
+  type PageHeaderLevel,
+} from './components/ui/page-header';
+
+export { SearchField, type SearchFieldProps } from './components/ui/search-field';
+
+export { FullscreenLoader, type FullscreenLoaderProps } from './components/ui/fullscreen-loader';
+
 // G6 Game Centre composite primitives (promoted from platform 0.3.0)
 export * from './components/game-centre/index';
 

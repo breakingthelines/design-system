@@ -5,6 +5,81 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.92.0]
+
+### Added: MetricCard, PageHeader, SearchField and FullscreenLoader
+
+Four more primitives admin-dashboard was carrying locally, and none of them is
+admin-specific: a KPI card, a page title bar, a search box and a full-viewport
+loader are what any list-and-detail surface needs. All four are new exports. No
+existing component, style or type changes.
+
+**`MetricCard` is the KPI cell, unwelded.** The design system already had one,
+but only inside `EngagementOpsHeader`: a `dl` cell of a squad-engagement header,
+painted in `--color-grey-200` and `text-white`, impossible to lift out. This is
+the standalone form. It keeps that component's delta semantics: a direction
+published as `data-direction`, and up is good unless `higherIsBetter` says
+otherwise. The dark-only palette is gone.
+
+**The delta reads its own sign.** The local version defaulted the tone to
+`positive`, so a fall shown without a tone came out green, and so did the four
+content-detail metrics that pass `delta: ""`, because an empty string still
+rendered the span and its green dot. Here the sign in the value decides: `+12.4%` is a
+rise, `-4.1%` is a fall, `3 pending` and `over the last 7 days` are neither, and
+an absent or empty delta draws nothing at all. `deltaTone` remains as the
+override for what a sign cannot answer.
+
+**No chart, and no slot that could hold one.** `EngagementOpsHeader` takes a
+`sparkline` node rather than drawing one, because a charting dependency is a
+decision the estate has not made. This takes none: the pages it backs put their
+charts beside the cards, never inside them.
+
+**`PageHeader` names a page. `SectionHeader` still introduces a block inside
+one.** They are different animals and `SectionHeader` is untouched. Three things
+were fixed on the way in, and they are why the local version had two adopters
+out of twenty-one pages while nineteen hand-rolled a heading: it rendered `h2`
+where a page's own name is `h1`, it rendered a hardcoded "BTL Admin" kicker with
+no way to remove it, and it took no `className`. `level` is there for a header
+genuinely nested under another `h1`, `kicker` has no default, and `actions` sits
+opposite the title and wraps under it below `md` rather than squeezing it.
+
+**`SearchField` is composition, not a new box.** `InputGroup` + an
+`inline-start` addon + `InputGroupInput`, so the focus ring, the disabled and
+invalid states and the click-the-addon-to-focus behaviour are the ones every
+other grouped field already has. It takes input props directly: the local
+version wrapped them in an `inputProps` bag, which is why `value` and `onChange`
+were buried in an object literal at every call site, and why two of the four
+call sites shipped an unlabelled search box. It now always has an accessible
+name, defaulting to `Search` rather than to nothing.
+
+**The 16px mobile floor ships with the field.** iOS Safari zooms the viewport
+when a focused input renders below 16px, which reads to the user as the page
+breaking, and admin was patching that one stylesheet at a time: a rule in the
+component's own module, a page-level rule written to beat it on specificity, and
+a third aimed at the design system's `Textarea`. `text-base md:text-sm` is
+spelled out on the input itself so a page-level override has to beat a class on
+the same element, and a test holds it. Below `md` the control also grows to a
+44px target, matching `PaginationFooter`.
+
+**`FullscreenLoader` uses the loading idiom already here.** `SpinnerGap` with
+`animate-spin`, which is what `AudioPlayer`, `ThoughtComposer`, `ThoughtsPanel`
+and `ThoughtComment` all draw, in place of the hand-written `@keyframes rotate`
+the local version shipped. That one had to be a global stylesheet, and it put
+an unscoped `.spin` and `.fullscreen-loader` into every consumer's global
+namespace. It also announces itself: `role="status"` with `aria-live="polite"`,
+where the local version was a silent `div` that gave a screen-reader user no
+signal that a wait had started or ended.
+
+**Tokens only, so both themes resolve.** The local versions were written against
+a dark tool and hardcoded `#1f1f1f`, `#2b2b2b`, `#807c7c`, `#1feb00`, `#eb0000`,
+`#c2c2c2`, `#f7f8fb` and a stack of `rgba(255, 255, 255, …)`. These use
+`bg-card`, `border-border`, `text-card-foreground`, `text-muted-foreground`,
+`bg-background` and `border-input`. The two status hues are the one case with no
+semantic token to reach for, and both are tuned for a dark surface: each is
+mixed toward `--color-foreground`, which flips with the theme, so a single class
+darkens under `:root` and lightens under `.dark`. A test per component asserts
+no literal colour reaches the rendered markup.
+
 ## [0.91.0]
 
 ### Added: a generic DataTable and PaginationFooter
