@@ -3,6 +3,7 @@
 import * as React from 'react';
 
 import { cn } from '#/lib/utils';
+import { useLinkComponent } from '#/components/ui/link-context';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * StudioCockpitSidebar (L6 — Studio cockpit shell)
@@ -173,13 +174,15 @@ export function StudioCockpitSidebar({
 }
 
 function SidebarItem({ item }: { item: StudioCockpitSidebarItem }) {
+  const LinkComponent = useLinkComponent();
   const interactive = !item.disabled && (item.href !== undefined || item.onSelect !== undefined);
-  const Element: 'a' | 'button' | 'div' = item.href ? 'a' : item.onSelect ? 'button' : 'div';
+  const Element: React.ElementType =
+    item.href !== undefined ? LinkComponent : item.onSelect ? 'button' : 'div';
 
   const elementProps =
-    Element === 'a'
+    item.href !== undefined
       ? ({ href: item.href } as React.AnchorHTMLAttributes<HTMLAnchorElement>)
-      : Element === 'button'
+      : item.onSelect
         ? ({
             type: 'button' as const,
             onClick: () => item.onSelect?.(item.id),
