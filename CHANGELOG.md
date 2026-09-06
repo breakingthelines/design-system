@@ -5,6 +5,32 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.94.0]
+
+### Fixed: `StudioCockpitSidebar` now actually routes through `useLinkComponent`
+
+The component's docstring claimed nav hrefs were wired through the
+`LinkProvider` context "just like other navigation primitives." The code
+never did — `SidebarItem` rendered a raw `<a href>` regardless of what was
+configured. In a router SPA (Next `Link`, React Router's, etc.) that means a
+full page reload on every nav click instead of a client-side transition,
+exactly the cost `LinkProvider` exists to avoid.
+
+`SidebarItem` now resolves its element the way `AuthorAccent` and
+`ContentCard` already do: `useLinkComponent()` supplies the element when
+`item.href` is set, falling back to `'button'` for `onSelect` items and
+`'div'` for neither. The context default is still `'a'`, so a consumer that
+hasn't configured a `LinkProvider` sees no change.
+
+No current consumer is affected — studio composes its own shell from leaf
+primitives rather than this component, which is why the gap went unnoticed
+until the admin app-shell migration (admin-dashboard#81) went looking. Public
+API is unchanged.
+
+The component's other noted gaps — no collapse, no mobile mode, hardcoded
+`grey-100`/white/`red-100` instead of the unused `--sidebar-*` tokens — are
+unrelated to this fix and stay open on the issue.
+
 ## [0.93.0]
 
 ### Added: LineChart, BarChart and LoadingOverlay

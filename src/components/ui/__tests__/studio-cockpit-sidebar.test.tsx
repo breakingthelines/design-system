@@ -1,7 +1,24 @@
+import * as React from 'react';
 import { describe, expect, it } from 'vitest';
 
+import { LinkProvider } from '../link-context';
 import { StudioCockpitSidebar } from '../studio-cockpit-sidebar';
-import { countSlot, getSlotAttr, hasSlot, render, slotText } from './test-utils';
+import { countSlot, getSlotAttr, hasSlot, render, sliceSlot, slotText } from './test-utils';
+
+/** Stand-in "router link" — a real consumer would pass e.g. Next's `Link`.
+ *  Renders a distinguishing attribute so tests can tell it apart from a raw
+ *  `<a>` produced by the LinkContext default. */
+function MockRouterLink({
+  href,
+  children,
+  ...props
+}: React.AnchorHTMLAttributes<HTMLAnchorElement>) {
+  return (
+    <a data-mock-router-link="true" href={href} {...props}>
+      {children}
+    </a>
+  );
+}
 
 describe('StudioCockpitSidebar', () => {
   const sections = [
@@ -73,5 +90,50 @@ describe('StudioCockpitSidebar', () => {
     );
     expect(hasSlot(markup, 'studio-cockpit-sidebar-identity')).toBe(true);
     expect(slotText(markup, 'studio-cockpit-sidebar-identity-label')).toContain('Editor One');
+  });
+
+  it('routes nav item hrefs through a configured LinkProvider component', () => {
+    const linkSections = [
+      {
+        id: 'work',
+        label: 'Work',
+        items: [{ id: 'drafts', label: 'Drafts', href: '/studio/drafts' }],
+      },
+    ];
+
+    const markup = render(
+      <LinkProvider component={MockRouterLink}>
+        <StudioCockpitSidebar sections={linkSections} />
+      </LinkProvider>
+    );
+
+    const itemMarkup = sliceSlot(markup, 'studio-cockpit-sidebar-item');
+    expect(itemMarkup).toBeDefined();
+    // Pins the fix: a raw `<a href>` (ignoring useLinkComponent) would not
+    // carry the mock link's marker attribute, so this fails if the sidebar
+    // regresses to rendering the anchor directly instead of through context.
+    expect(itemMarkup).toContain('data-mock-router-link="true"');
+    expect(itemMarkup).toContain('href="/studio/drafts"');
+  });
+
+  it('does not route onSelect (button) items through the link component', () => {
+    const buttonSections = [
+      {
+        id: 'actions',
+        label: 'Actions',
+        items: [{ id: 'archive', label: 'Archive', onSelect: () => {} }],
+      },
+    ];
+
+    const markup = render(
+      <LinkProvider component={MockRouterLink}>
+        <StudioCockpitSidebar sections={buttonSections} />
+      </LinkProvider>
+    );
+
+    const itemMarkup = sliceSlot(markup, 'studio-cockpit-sidebar-item');
+    expect(itemMarkup).toBeDefined();
+    expect(itemMarkup).not.toContain('data-mock-router-link');
+    expect(itemMarkup).toContain('<button');
   });
 });
