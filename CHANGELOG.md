@@ -5,6 +5,69 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.95.0]
+
+### Added: the `btl` layer, and an entity image that walks a chain instead of holding a URL
+
+BTL now commissions its own crests, competition badges, avatars, heroes and
+ground photography, and the admin Entity assets surface writes them to
+`media/btl/<dir>/<entityId>.<ext>`. Until this release nothing read them. The
+resolver knew one address per `(kind, role)` — the mirrored provider one — so a
+World Cup badge could be 200 on the CDN and every surface still rendered the
+mirror's version, or a monogram.
+
+`entityAssetCandidates(kind, role, id, cdnBase, opts)` returns every address the
+image could be at, in the order to try them: BTL's own art first (`svg` then
+`webp` for a mark, `webp` for a photo), then whatever `entityAssetUrl` already
+resolved. `btlAssetCandidates` is the bespoke layer alone, for a caller that
+wants it explicitly. `entityAssetUrl` is UNCHANGED — it still returns the one
+pinned provider address, so every existing caller behaves exactly as before.
+
+`EntityImage` now walks that chain: each `onError` advances to the next address
+and the first 200 stops the walk. There is no manifest, no coverage index and no
+per-render RPC (ADR-036) — the browser's own 200/404 is the source of truth.
+Falling all the way through costs one request per address, each answered 404 and
+cached by the browser per URL for the asset's `max-age=300`. The consequence
+that matters: art uploaded five minutes ago appears on every surface with no
+deploy, no manifest regeneration and no cache purge.
+
+`useSourceChain(sources)` and `imageChain(sources, url)` are exported so a
+component with its own markup falls through identically without restating the
+logic, and the seams that already take a single URL gained an optional ordered
+list beside it:
+
+- `CompetitionStandingsTable` — `team.crestSources`
+- `MatchHeader` — `side.imageSources`
+- `FixtureRow` / `G5FixtureSide` — `imageSources`
+- `EntityPageShell` — `imageSources`
+- `EntityMetaChips` — `chip.imageSources`
+
+Each keeps its existing `imageUrl`/`crestUrl` prop as the chain's tail, so an
+unmigrated caller is unaffected. Three of those seams had no `onError` at all
+and rendered a broken glyph on a 404; they now degrade to their initials, empty
+square or Phosphor icon. `EntityMetaChips` is the sharpest case: it chose
+`imageSrc` over `icon` before the browser had said whether the image existed, so
+a 404 produced a broken glyph AND no Trophy.
+
+`EntityAssetKind` gains `'venue'`, whose `hero` role addresses
+`btl/stadium/<id>.webp` and has no provider tail — a ground has bespoke art or a
+monogram and nothing in between.
+
+### The read-side asymmetry, now written into the resolver
+
+The `btl` directories are ROLE-keyed; the provider layers are KIND-keyed. A
+player hero and a manager hero share `btl/hero/` (the canonical id prefix says
+who is in the frame) while the mirror splits them across `wikimedia/player/` and
+`wikimedia/manager/`. Neither side is wrong, but code that derives one segment
+from the other is wrong for exactly one of the two. It is documented in
+`btl/content/v1/entity_assets_service.proto` and now in `lib/entity-asset` as
+well, which is the file that has to hold both vocabularies at once. Two
+consequences are pinned by tests: `(manager, avatar)` has no bespoke candidate
+(the role pins player ids), and the retired `btl/player/` and `btl/manager/`
+directories are never addressed.
+
+`entityImage` (the manifest resolver) is untouched and still superseded.
+
 ## [0.94.0]
 
 ### Fixed: `StudioCockpitSidebar` now actually routes through `useLinkComponent`

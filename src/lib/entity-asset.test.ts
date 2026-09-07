@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { assetMonogram, entityAssetUrl, isBtlCdnSafe } from './entity-asset';
+import {
+  assetMonogram,
+  btlAssetCandidates,
+  entityAssetCandidates,
+  entityAssetUrl,
+  isBtlCdnSafe,
+} from './entity-asset';
 
 const BASE = 'https://cdn.breakingthelines.app/media';
 const TEAM = 'btl_football_team_t8596499a';
@@ -116,5 +122,134 @@ describe('assetMonogram', () => {
     expect(assetMonogram('Aston Villa')).toBe('AV');
     expect(assetMonogram('Arsenal')).toBe('A');
     expect(assetMonogram('  ')).toBe('?');
+  });
+});
+
+describe('entityAssetCandidates — the btl layer and the chain order', () => {
+  it('puts the two btl mark candidates before the provider crest, svg first', () => {
+    expect(entityAssetCandidates('team', 'crest', TEAM, BASE)).toEqual([
+      `${BASE}/btl/crest/${TEAM}.svg`,
+      `${BASE}/btl/crest/${TEAM}.webp`,
+      `${BASE}/provider/crest/${TEAM}.png`,
+    ]);
+  });
+
+  it('addresses a competition badge at btl/competition/, not btl/badge/', () => {
+    expect(entityAssetCandidates('competition', 'crest', COMP, BASE)).toEqual([
+      `${BASE}/btl/competition/${COMP}.svg`,
+      `${BASE}/btl/competition/${COMP}.webp`,
+      `${BASE}/provider/competition/${COMP}.png`,
+    ]);
+  });
+
+  it('gives a photo role ONE btl candidate (webp) — an svg hero is refused on write', () => {
+    expect(entityAssetCandidates('player', 'avatar', PLAYER, BASE)).toEqual([
+      `${BASE}/btl/avatar/${PLAYER}.webp`,
+      `${BASE}/apifootball/player/${PLAYER}.png`,
+    ]);
+  });
+
+  it('bespoke art wins: the btl candidate is ALWAYS ahead of the provider layer', () => {
+    for (const chain of [
+      entityAssetCandidates('team', 'crest', TEAM, BASE),
+      entityAssetCandidates('competition', 'crest', COMP, BASE),
+      entityAssetCandidates('player', 'avatar', PLAYER, BASE),
+      entityAssetCandidates('player', 'hero', PLAYER, BASE),
+      entityAssetCandidates('manager', 'hero', COACH, BASE),
+    ]) {
+      const firstProvider = chain.findIndex((url) => !url.includes('/btl/'));
+      const lastBespoke = chain.map((url) => url.includes('/btl/')).lastIndexOf(true);
+      expect(lastBespoke).toBeGreaterThanOrEqual(0);
+      expect(lastBespoke).toBeLessThan(firstProvider);
+    }
+  });
+
+  it('the ROLE/KIND asymmetry: one btl/hero/ directory, two wikimedia ones', () => {
+    const player = entityAssetCandidates('player', 'hero', PLAYER, BASE);
+    const manager = entityAssetCandidates('manager', 'hero', COACH, BASE);
+
+    // btl is ROLE-keyed: the same directory for both people.
+    expect(player[0]).toBe(`${BASE}/btl/hero/${PLAYER}.webp`);
+    expect(manager[0]).toBe(`${BASE}/btl/hero/${COACH}.webp`);
+
+    // the mirror is KIND-keyed: player and manager are different directories.
+    expect(player[1]).toBe(`${BASE}/wikimedia/player/${PLAYER}.jpg`);
+    expect(manager[1]).toBe(`${BASE}/wikimedia/manager/${COACH}.jpg`);
+  });
+
+  it('never addresses the RETIRED btl/player/ or btl/manager/ directories', () => {
+    const all = [
+      ...entityAssetCandidates('player', 'avatar', PLAYER, BASE),
+      ...entityAssetCandidates('player', 'hero', PLAYER, BASE),
+      ...entityAssetCandidates('manager', 'hero', COACH, BASE),
+    ];
+    expect(all.some((url) => url.includes('/btl/player/'))).toBe(false);
+    expect(all.some((url) => url.includes('/btl/manager/'))).toBe(false);
+  });
+
+  it('has NO bespoke candidate for a manager avatar (the role pins player ids)', () => {
+    expect(btlAssetCandidates('manager', 'avatar', COACH, BASE)).toEqual([]);
+    // ...and nothing else resolves either, so the caller monograms.
+    expect(entityAssetCandidates('manager', 'avatar', COACH, BASE)).toEqual([]);
+  });
+
+  it('has NO bespoke candidate for a flag: flags are mirrored only', () => {
+    expect(btlAssetCandidates('nation', 'flag', 'gb', BASE)).toEqual([]);
+    expect(entityAssetCandidates('nation', 'flag', 'GB', BASE)).toEqual([`${BASE}/flags/gb.svg`]);
+  });
+
+  it('addresses a venue photo at btl/stadium/ with no provider tail', () => {
+    const venue = 'btl_football_venue_v1234abc';
+    expect(entityAssetCandidates('venue', 'hero', venue, BASE)).toEqual([
+      `${BASE}/btl/stadium/${venue}.webp`,
+    ]);
+  });
+
+  it('keeps a BTL-safe backend value ahead of the provider address, behind btl', () => {
+    const chain = entityAssetCandidates('player', 'avatar', PLAYER, BASE, {
+      imageUrl: 'media/wikimedia/player/penzo.jpg',
+    });
+    expect(chain).toEqual([
+      `${BASE}/btl/avatar/${PLAYER}.webp`,
+      `${BASE}/wikimedia/player/penzo.jpg`,
+      `${BASE}/apifootball/player/${PLAYER}.png`,
+    ]);
+  });
+
+  it('still refuses a raw provider hotlink anywhere in the chain', () => {
+    const chain = entityAssetCandidates('team', 'crest', TEAM, BASE, {
+      imageUrl: 'https://media.api-sports.io/football/teams/42.png',
+    });
+    expect(chain.some((url) => url.includes('api-sports.io'))).toBe(false);
+    expect(chain).toEqual([
+      `${BASE}/btl/crest/${TEAM}.svg`,
+      `${BASE}/btl/crest/${TEAM}.webp`,
+      `${BASE}/provider/crest/${TEAM}.png`,
+    ]);
+  });
+
+  it('is empty with no id and with no cdnBase', () => {
+    expect(entityAssetCandidates('team', 'crest', '', BASE)).toEqual([]);
+    expect(entityAssetCandidates('team', 'crest', TEAM, '')).toEqual([]);
+  });
+
+  it('deduplicates: a backend value equal to the provider address appears once', () => {
+    const chain = entityAssetCandidates('team', 'crest', TEAM, BASE, {
+      imageUrl: `media/provider/crest/${TEAM}.png`,
+    });
+    expect(chain).toEqual([
+      `${BASE}/btl/crest/${TEAM}.svg`,
+      `${BASE}/btl/crest/${TEAM}.webp`,
+      `${BASE}/provider/crest/${TEAM}.png`,
+    ]);
+  });
+});
+
+describe('entityAssetUrl is unchanged by the btl layer', () => {
+  it('still returns the single provider address, never a btl one', () => {
+    expect(entityAssetUrl('team', 'crest', TEAM, BASE)).toBe(`${BASE}/provider/crest/${TEAM}.png`);
+    expect(entityAssetUrl('competition', 'crest', COMP, BASE)).toBe(
+      `${BASE}/provider/competition/${COMP}.png`
+    );
   });
 });

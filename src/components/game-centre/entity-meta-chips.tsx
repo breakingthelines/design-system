@@ -18,6 +18,7 @@ import {
 } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import { imageChain, useSourceChain } from '#/components/ui/entity-asset-image';
 import { useLinkComponent } from '#/components/ui/link-context';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -50,6 +51,14 @@ export interface EntityMetaChip {
    * `icon`; `flagSrc` (circular) takes precedence over this.
    */
   imageSrc?: string;
+  /**
+   * Ordered addresses for `imageSrc`, from `entityAssetCandidates` — BTL's own
+   * art, then the mirrored provider layer. Each 404 advances to the next; the
+   * chip falls back to `icon` only once every address has missed, which is the
+   * whole reason this exists: `imageSrc` alone was chosen over `icon` BEFORE
+   * the image loaded, so a 404 left a broken glyph and no icon.
+   */
+  imageSources?: readonly string[];
   /** Display value, e.g. "England", "27 (b. 1998)", "Right". */
   value: React.ReactNode;
   /**
@@ -123,31 +132,7 @@ export function EntityMetaChips({ kind, chips, className }: EntityMetaChipsProps
       className={cn('flex flex-wrap items-center gap-x-5 gap-y-2 text-white', className)}
     >
       {chips.map((chip, idx) => {
-        const ChipIcon = chip.icon;
-        const glyph = chip.flagSrc ? (
-          <img
-            src={chip.flagSrc}
-            alt={chip.label ?? ''}
-            aria-hidden={chip.label ? undefined : true}
-            loading="lazy"
-            className="size-4 shrink-0 rounded-full object-cover"
-          />
-        ) : chip.imageSrc ? (
-          <img
-            src={chip.imageSrc}
-            alt={chip.label ?? ''}
-            aria-hidden={chip.label ? undefined : true}
-            loading="lazy"
-            className="size-4 shrink-0 object-contain"
-          />
-        ) : ChipIcon ? (
-          <ChipIcon
-            aria-hidden={chip.label ? undefined : true}
-            aria-label={chip.label}
-            weight="regular"
-            className="size-4 shrink-0 text-[var(--color-grey-500)]"
-          />
-        ) : null;
+        const glyph = <ChipGlyph chip={chip} />;
         const value = (
           <span className="text-[12px] leading-none tracking-tight text-white">{chip.value}</span>
         );
@@ -176,4 +161,56 @@ export function EntityMetaChips({ kind, chips, className }: EntityMetaChipsProps
       })}
     </ul>
   );
+}
+
+/**
+ * A chip's leading glyph: the country flag, else the entity image chain, else
+ * the Phosphor icon.
+ *
+ * The image and the icon are alternatives resolved AT LOAD TIME, not at render
+ * time. A chip carrying a competition badge address used to suppress its Trophy
+ * icon before the browser had said whether the badge exists, so a 404 produced
+ * a broken glyph and no fallback at all. Now every address is tried in turn and
+ * the icon is what is left when none of them resolves.
+ */
+function ChipGlyph({ chip }: { chip: EntityMetaChip }) {
+  const ChipIcon = chip.icon;
+  const { src, onError } = useSourceChain(imageChain(chip.imageSources, chip.imageSrc));
+  const hidden = chip.label ? undefined : true;
+
+  if (chip.flagSrc) {
+    return (
+      <img
+        src={chip.flagSrc}
+        alt={chip.label ?? ''}
+        aria-hidden={hidden}
+        loading="lazy"
+        className="size-4 shrink-0 rounded-full object-cover"
+      />
+    );
+  }
+  if (src) {
+    return (
+      <img
+        key={src}
+        src={src}
+        alt={chip.label ?? ''}
+        aria-hidden={hidden}
+        loading="lazy"
+        onError={onError}
+        className="size-4 shrink-0 object-contain"
+      />
+    );
+  }
+  if (ChipIcon) {
+    return (
+      <ChipIcon
+        aria-hidden={hidden}
+        aria-label={chip.label}
+        weight="regular"
+        className="size-4 shrink-0 text-[var(--color-grey-500)]"
+      />
+    );
+  }
+  return null;
 }

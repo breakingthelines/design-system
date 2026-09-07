@@ -5,6 +5,7 @@ import { Prohibit, SoccerBall } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
 import { useLinkComponent } from '#/components/ui/link-context';
+import { imageChain, useSourceChain } from '#/components/ui/entity-asset-image';
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * MatchHeader (Wave 6.1 redesign)
@@ -62,6 +63,13 @@ export interface MatchHeaderSide {
   label: string;
   shortLabel?: string;
   imageUrl?: string;
+  /**
+   * Ordered crest addresses to try, from `entityAssetCandidates` — BTL's own
+   * art, then the mirrored provider layer, then any caller last resort. Each
+   * 404 advances to the next; the initials show only when every address has
+   * missed. Preferred over `imageUrl`, which is kept as the chain's tail.
+   */
+  imageSources?: readonly string[];
   accentColor?: string;
   /** League standing caption, e.g. "2nd in Premier League". */
   standingLabel?: string;
@@ -344,6 +352,7 @@ function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'en
 
 function SideCrest({ side }: { side: MatchHeaderSide }) {
   const initials = initialsFromMatchLabel(side.shortLabel ?? side.label);
+  const { src, onError } = useSourceChain(imageChain(side.imageSources, side.imageUrl));
   return (
     <span
       data-slot="match-header-crest"
@@ -353,13 +362,15 @@ function SideCrest({ side }: { side: MatchHeaderSide }) {
         'relative inline-flex size-11 shrink-0 items-center justify-center sm:size-16',
         'rounded-full text-xs font-bold tracking-tight text-white sm:text-sm',
         'overflow-hidden',
-        !side.imageUrl && 'border border-white/15'
+        !src && 'border border-white/15'
       )}
     >
-      {side.imageUrl ? (
+      {src ? (
         <img
-          src={side.imageUrl}
+          key={src}
+          src={src}
           alt=""
+          onError={onError}
           className="absolute inset-0 size-full object-contain"
           loading="lazy"
         />

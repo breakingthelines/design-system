@@ -4,6 +4,7 @@ import * as React from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ChatCircle, Clock, Star, Target } from '@phosphor-icons/react';
 
+import { imageChain, useSourceChain } from '#/components/ui/entity-asset-image';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { formatCount } from '#/lib/format';
 import { cn } from '#/lib/utils';
@@ -353,7 +354,12 @@ function FixtureTeam({
   widthClass: string;
 }) {
   const crest = (
-    <FixtureRowCrest label={side.label} imageUrl={side.imageUrl} accent={side.accentColor} />
+    <FixtureRowCrest
+      label={side.label}
+      imageUrl={side.imageUrl}
+      imageSources={side.imageSources}
+      accent={side.accentColor}
+    />
   );
   const name = (
     <span className="min-w-0 truncate text-[12px] tracking-[-0.36px] text-white">{side.label}</span>
@@ -386,27 +392,32 @@ function FixtureTeam({
 function FixtureRowCrest({
   label,
   imageUrl,
+  imageSources,
   accent,
 }: {
   label: string;
   imageUrl?: string;
+  imageSources?: readonly string[];
   accent?: string;
 }) {
+  const { src, onError } = useSourceChain(imageChain(imageSources, imageUrl));
   return (
     <span
       data-slot="fixture-row-crest"
       aria-hidden="true"
-      style={imageUrl ? undefined : { backgroundColor: accent ?? 'var(--color-grey-300)' }}
+      style={src ? undefined : { backgroundColor: accent ?? 'var(--color-grey-300)' }}
       className={cn(
         'relative inline-flex size-3.5 shrink-0 items-center justify-center overflow-hidden rounded-full',
-        !imageUrl && 'border border-white/10 text-[7px] font-bold text-white'
+        !src && 'border border-white/10 text-[7px] font-bold text-white'
       )}
     >
-      {imageUrl ? (
+      {src ? (
         <img
-          src={imageUrl}
+          key={src}
+          src={src}
           alt=""
           loading="lazy"
+          onError={onError}
           className="absolute inset-0 size-full object-contain"
         />
       ) : (

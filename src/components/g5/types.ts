@@ -34,6 +34,13 @@ export type G5FixtureStatus = 'scheduled' | 'live' | 'finished' | 'postponed' | 
 export type G5FixtureSide = {
   label: string;
   imageUrl?: string;
+  /**
+   * Ordered crest addresses to try, from `entityAssetCandidates` — BTL's own
+   * art, then the mirrored provider layer. Each 404 advances to the next; the
+   * initials show only once every address has missed. Preferred over
+   * `imageUrl`, which is kept as the chain's tail.
+   */
+  imageSources?: readonly string[];
   accentColor?: string;
 };
 
