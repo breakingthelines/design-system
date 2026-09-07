@@ -9,13 +9,55 @@
  * it was 200 on the CDN.) The browser's own 200/404 is the source of truth:
  * callers render optimistically and fall back to a monogram `onError`.
  *
- * role → (layer, seg, ext) — the PINNED address contract:
+ * role → (layer, seg, ext) — the PINNED PROVIDER address contract:
  *   crest   team        → provider/crest/<id>.png
  *   crest   competition → provider/competition/<id>.png
  *   avatar  player      → apifootball/player/<id>.png   (small round headshot)
  *   hero    player      → wikimedia/player/<id>.jpg      (high-res portrait)
  *   hero    manager     → wikimedia/manager/<id>.jpg
  *   flag    nation      → flags/<iso2>.svg               (id = iso2)
+ *
+ * Above the provider layers sits BTL's OWN art — the `btl` layer, written by
+ * the admin Entity assets surface straight into the content bucket. Its
+ * addresses are just as deterministic, so the read path is still a string
+ * build; what it is not is single-valued. A mark may be stored as SVG or as
+ * WebP and nothing on the render path knows which, so a mark contributes TWO
+ * candidates and the browser's 404 picks. See {@link entityAssetCandidates}.
+ *
+ *   crest   team        → btl/crest/<id>.svg        then btl/crest/<id>.webp
+ *   crest   competition → btl/competition/<id>.svg  then btl/competition/<id>.webp
+ *   avatar  player      → btl/avatar/<id>.webp
+ *   hero    player      → btl/hero/<id>.webp
+ *   hero    manager     → btl/hero/<id>.webp
+ *   hero    venue       → btl/stadium/<id>.webp
+ *
+ * # THE READ-SIDE ASYMMETRY, WRITTEN OUT BECAUSE IT LOOKS LIKE A BUG
+ *
+ * The btl directories are ROLE-keyed. The provider layers are KIND-keyed. The
+ * same two arguments therefore split differently on either side of the chain:
+ *
+ *   (player,  hero) → btl/hero/<id>.webp   and   wikimedia/player/<id>.jpg
+ *   (manager, hero) → btl/hero/<id>.webp   and   wikimedia/manager/<id>.jpg
+ *                     ^ ONE directory              ^ TWO directories
+ *
+ * A player hero and a manager hero are the same kind of picture of the same
+ * kind of subject, and the canonical id prefix (`btl_football_player_` vs
+ * `btl_football_coach_`) already disambiguates who is in the frame, so the
+ * bespoke layer shares one directory with no chance of collision. The mirror
+ * split its portraits by entity type before the role model existed and its
+ * objects were never moved. Neither side is wrong; they are keyed on different
+ * things, and code that derives one segment from the other is wrong for exactly
+ * one of the two. This is documented in `btl/content/v1/entity_assets_service.proto`
+ * (the `EntityAssetRole` enum) and is repeated here because this is the file
+ * that has to hold both vocabularies at once.
+ *
+ * Two more consequences of role-keying, both load bearing:
+ *   - `avatar` pins `btl_football_player_` ids only, so (manager, avatar) has
+ *     NO bespoke candidate — the server refuses a coach avatar and it would
+ *     never resolve if it did not.
+ *   - `btl/player/` and `btl/manager/` are RETIRED directories. Nothing writes
+ *     them and nothing may read them; the manifest resolver in `entity-image`
+ *     still addresses them, which is one of the reasons it is superseded.
  *
  * The resolver NEVER emits a non-BTL-CDN URL. A backend-supplied `imageUrl` is
  * honoured only when it is BTL-CDN-safe (a relative R2 key, or an absolute
@@ -37,7 +79,7 @@
  */
 
 /** Canonical entity kind (maps to identity entity types; `coach`→manager). */
-export type EntityAssetKind = 'team' | 'competition' | 'player' | 'manager' | 'nation';
+export type EntityAssetKind = 'team' | 'competition' | 'player' | 'manager' | 'nation' | 'venue';
 
 /** Which image of an entity is wanted. Part of the address. */
 export type EntityAssetRole = 'crest' | 'avatar' | 'hero' | 'flag';
@@ -68,6 +110,54 @@ function addressSpec(kind: EntityAssetKind, role: EntityAssetRole): AddressSpec 
       return null; // flag handled separately (id = iso2, no <seg>)
   }
 }
+
+/**
+ * The `btl` layer's address spec for a (kind, role): the directory segment and
+ * the extensions to probe, IN ORDER.
+ *
+ * ROLE-KEYED, and the directory comes from this table and nowhere else — see
+ * the module header. Deriving it from the role name would address `btl/badge/`
+ * and `btl/image/`; deriving it from the kind would address the retired
+ * `btl/player/` and `btl/manager/`. Both would be an upload that succeeds and
+ * an image that never appears.
+ *
+ * This table is the read-side mirror of the write path's role table (admin
+ * `lib/entity-assets.ts`, `EntityAssetRole` in
+ * `btl/content/v1/entity_assets_service.proto`) and the two are a matched pair:
+ * marks are vector first and photographic roles are raster only, so a mark
+ * probes svg then webp and a photo probes webp alone. An SVG hero is refused on
+ * write, so probing for one here would be a guaranteed 404 on every render.
+ *
+ * Null for a combination BTL cannot store art for: a flag (no bespoke layer), a
+ * manager avatar (the role pins player ids), a nation crest.
+ */
+function btlSpec(
+  kind: EntityAssetKind,
+  role: EntityAssetRole
+): { readonly dir: string; readonly exts: readonly string[] } | null {
+  switch (role) {
+    case 'crest':
+      // Marks: svg preferred, webp allowed. TWO candidates.
+      if (kind === 'team') return { dir: 'crest', exts: MARK_EXTS };
+      if (kind === 'competition') return { dir: 'competition', exts: MARK_EXTS };
+      return null;
+    case 'avatar':
+      if (kind === 'player') return { dir: 'avatar', exts: PHOTO_EXTS };
+      return null;
+    case 'hero':
+      // ONE directory for both people — the id prefix says who is in the frame.
+      if (kind === 'player' || kind === 'manager') return { dir: 'hero', exts: PHOTO_EXTS };
+      // A ground photograph. No provider layer exists for a venue at all, so
+      // bespoke art or a monogram and nothing in between.
+      if (kind === 'venue') return { dir: 'stadium', exts: PHOTO_EXTS };
+      return null;
+    default:
+      return null; // flag: mirrored only, there is no bespoke flag layer
+  }
+}
+
+const MARK_EXTS: readonly string[] = ['svg', 'webp'];
+const PHOTO_EXTS: readonly string[] = ['webp'];
 
 const TRAILING_SLASH = /\/+$/;
 const ABSOLUTE_URL = /^(?:[a-z][a-z0-9+.-]*:)?\/\//i;
@@ -172,4 +262,78 @@ export function assetMonogram(label: string): string {
     .map((w) => w[0]?.toUpperCase() ?? '')
     .join('');
   return initials || '?';
+}
+
+/**
+ * The `btl` layer's candidate addresses for one (kind, role), in probe order.
+ *
+ * LAYER-EXPLICIT: this is BTL's own art and nothing else, so a caller that
+ * wants only the bespoke address (an admin preview, a coverage probe) gets it
+ * without the provider tail. Empty for a combination with no bespoke layer.
+ *
+ * A backend `imageUrl` is deliberately not consulted: bespoke art is addressed
+ * by convention or not at all.
+ *
+ * @example
+ *   btlAssetCandidates('competition', 'crest', 'btl_football_competition_lb3d230cb', base)
+ *   // -> [".../btl/competition/<id>.svg", ".../btl/competition/<id>.webp"]
+ */
+export function btlAssetCandidates(
+  kind: EntityAssetKind,
+  role: EntityAssetRole,
+  id: string,
+  cdnBase: string
+): string[] {
+  if (!id || !cdnBase) return [];
+  const spec = btlSpec(kind, role);
+  if (!spec) return [];
+  const base = cdnBase.replace(TRAILING_SLASH, '');
+  return spec.exts.map((ext) => `${base}/btl/${spec.dir}/${id}.${ext}`);
+}
+
+/**
+ * Every address this entity's image could be at, in the order to try them.
+ *
+ * This is the FALLBACK CHAIN, and it is the whole read path for bespoke art.
+ * There is no manifest, no coverage index and no per-render RPC (ADR-036): the
+ * renderer walks the list and the browser's own 200/404 answers which address
+ * exists. Each miss costs one image request that the CDN answers 404 to and the
+ * browser caches per URL for the asset's `max-age=300`, so a chain that falls
+ * through is cheap and stops being paid within the cache window.
+ *
+ * Order, and why:
+ *   1. BTL's own art (svg then webp for a mark; webp for a photo). Bespoke wins
+ *      — that is the point of commissioning it.
+ *   2. Whatever {@link entityAssetUrl} resolves, WHICH IS UNCHANGED: a BTL-safe
+ *      backend `imageUrl` where the role consults one, else the pinned provider
+ *      address. The precedence below the bespoke layer is not re-litigated here.
+ *   3. The bare pinned provider address, when (2) was a backend value and
+ *      differs. Breadth only — it can never displace something above it.
+ *   4. Nothing. The caller renders its monogram.
+ *
+ * The list is deduplicated and never contains a non-BTL-CDN host: every entry
+ * is either built here or has passed {@link isBtlCdnSafe}.
+ *
+ * @example
+ *   entityAssetCandidates('team', 'crest', TEAM_ID, base)
+ *   // -> [".../btl/crest/<id>.svg", ".../btl/crest/<id>.webp", ".../provider/crest/<id>.png"]
+ */
+export function entityAssetCandidates(
+  kind: EntityAssetKind,
+  role: EntityAssetRole,
+  id: string,
+  cdnBase: string,
+  opts: EntityAssetOptions = {}
+): string[] {
+  const out: string[] = [...btlAssetCandidates(kind, role, id, cdnBase)];
+
+  // The provider tail is entityAssetUrl's own answer, then its answer with no
+  // backend value. Expressed in terms of the pinned resolver rather than
+  // restated, so the two can never drift apart.
+  const resolved = entityAssetUrl(kind, role, id, cdnBase, opts);
+  if (resolved) out.push(resolved);
+  const deterministic = entityAssetUrl(kind, role, id, cdnBase);
+  if (deterministic && deterministic !== resolved) out.push(deterministic);
+
+  return out.filter((url, i) => out.indexOf(url) === i);
 }

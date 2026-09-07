@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import { imageChain, useSourceChain } from '#/components/ui/entity-asset-image';
 import { cn } from '#/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -129,6 +130,13 @@ export interface MatchRecapSide {
   label: string;
   shortLabel?: string;
   imageUrl?: string;
+  /**
+   * Ordered crest addresses to try, from `entityAssetCandidates` — BTL's own
+   * art, then the mirrored provider layer. Each 404 advances to the next; the
+   * initials show only once every address has missed. Preferred over
+   * `imageUrl`, which is kept as the chain's tail.
+   */
+  imageSources?: readonly string[];
 }
 
 export function MatchRecapStrip({
@@ -172,16 +180,19 @@ export function MatchRecapStrip({
 
 function RecapSide({ side, align }: { side: MatchRecapSide; align: 'start' | 'end' }) {
   const initials = initialsFromLabel(side.shortLabel ?? side.label);
+  const { src, onError } = useSourceChain(imageChain(side.imageSources, side.imageUrl));
   const crest = (
     <span
       aria-hidden="true"
       className="relative inline-flex size-5 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-[var(--color-grey-300)] text-[8px] font-bold tracking-tight text-white"
     >
-      {side.imageUrl ? (
+      {src ? (
         <img
-          src={side.imageUrl}
+          key={src}
+          src={src}
           alt=""
           loading="lazy"
+          onError={onError}
           className="absolute inset-0 size-full object-cover"
         />
       ) : (

@@ -3,6 +3,7 @@
 import * as React from 'react';
 
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
+import { imageChain, useSourceChain } from '#/components/ui/entity-asset-image';
 import { cn } from '#/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -53,6 +54,13 @@ export interface EntityPageShellProps {
   /** Crest / portrait / poster. */
   imageUrl?: string;
   /**
+   * Ordered addresses to try, from `entityAssetCandidates` — BTL's own art,
+   * then the mirrored provider layer. Each 404 advances to the next and the
+   * brand placeholder shows only once every address has missed. Preferred over
+   * `imageUrl`, which is kept as the chain's tail.
+   */
+  imageSources?: readonly string[];
+  /**
    * @deprecated No longer rendered. A missing or broken entity image now falls
    * back to the BTL brand placeholder (matching the hero portrait) rather than
    * initials. Retained so existing call sites keep type-checking.
@@ -92,6 +100,7 @@ export function EntityPageShell({
   name,
   secondary,
   imageUrl,
+  imageSources,
   accentColor,
   meta,
   metaChips,
@@ -107,14 +116,13 @@ export function EntityPageShell({
   // into a circle. Player/manager portraits stay a cover-cropped circle.
   const isLogo = kind === 'team' || kind === 'competition';
 
-  // Entity image URLs are built by convention from the entity id, so `imageUrl`
+  // Entity image URLs are built by convention from the entity id, so an address
   // is almost always non-empty even when the asset was never mirrored and 404s.
   // A bare truthiness gate therefore renders a broken <img> that never degrades.
-  // Track the src that failed (keyed on the URL so a new imageUrl auto-retries
-  // without an effect) and fall back to the BTL brand placeholder — matching the
-  // hero portrait's fallback — on both a missing URL and a load error.
-  const [erroredSrc, setErroredSrc] = React.useState<string | null>(null);
-  const activeImageUrl = imageUrl && erroredSrc !== imageUrl ? imageUrl : null;
+  // Walk every address the entity could be at — BTL's own art, then the mirrored
+  // provider layer — and fall back to the BTL brand placeholder (matching the
+  // hero portrait's fallback) only once all of them have missed.
+  const { src: activeImageUrl, onError } = useSourceChain(imageChain(imageSources, imageUrl));
   return (
     <section
       data-slot="entity-page-shell"
@@ -139,10 +147,11 @@ export function EntityPageShell({
           >
             {activeImageUrl ? (
               <img
+                key={activeImageUrl}
                 src={activeImageUrl}
                 alt=""
                 loading="eager"
-                onError={() => setErroredSrc(activeImageUrl)}
+                onError={onError}
                 className={cn(
                   'size-full',
                   isLogo ? 'object-contain' : 'absolute inset-0 object-cover'

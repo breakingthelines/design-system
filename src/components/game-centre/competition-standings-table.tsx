@@ -5,7 +5,41 @@ import * as React from 'react';
 import { cn } from '#/lib/utils';
 import { useLinkComponent } from '#/components/ui/link-context';
 
+import { useSourceChain } from '#/components/ui/entity-asset-image';
+
 import { FallbackState, type FallbackReason } from './fallback-state';
+
+/**
+ * The crest cell: walks the team's candidate addresses and shows the empty
+ * square only when every one of them has missed. See `crestSources`.
+ */
+function TeamCrest({ team }: { team: CompetitionStandingsTeam }) {
+  const sources = React.useMemo(() => {
+    const list = [...(team.crestSources ?? [])];
+    if (team.crestUrl && !list.includes(team.crestUrl)) list.push(team.crestUrl);
+    return list;
+  }, [team.crestSources, team.crestUrl]);
+  const { src, onError } = useSourceChain(sources);
+
+  if (!src) {
+    return (
+      <span
+        aria-hidden="true"
+        className="size-5 shrink-0 rounded-[3px] border border-white/10 bg-white/[0.04]"
+      />
+    );
+  }
+  return (
+    <img
+      key={src}
+      src={src}
+      alt=""
+      loading="lazy"
+      onError={onError}
+      className="size-5 shrink-0 object-contain"
+    />
+  );
+}
 
 /* ─────────────────────────────────────────────────────────────────────────────
  * CompetitionStandingsTable (Entity page — Competition "Standings" tab)
@@ -40,6 +74,18 @@ export interface CompetitionStandingsTeam {
   name: string;
   /** Optional crest image URL, rendered beside the name. */
   crestUrl?: string;
+  /**
+   * Ordered crest addresses to try, from `entityAssetCandidates` — BTL's own
+   * art first, then the mirrored provider layer, then whatever last resort the
+   * caller appends (a national team's country flag). Each miss advances to the
+   * next; the empty square shows only once every address has 404ed.
+   *
+   * Preferred over `crestUrl`, which cannot express a fallback and so renders
+   * the empty square whenever the one address it holds happens to be the layer
+   * that does not exist. `crestUrl` is kept for callers that hold a single
+   * known-good URL and is used as the tail of the chain when both are given.
+   */
+  crestSources?: readonly string[];
   /** Optional route to the team page. When set, the name becomes a link. */
   href?: string;
 }
@@ -364,19 +410,7 @@ function StandingsRowItem({
       </td>
       <th scope="row" className="px-2 py-2 text-left font-medium">
         <span className="flex min-w-0 items-center gap-2.5">
-          {row.team.crestUrl ? (
-            <img
-              src={row.team.crestUrl}
-              alt=""
-              loading="lazy"
-              className="size-5 shrink-0 object-contain"
-            />
-          ) : (
-            <span
-              aria-hidden="true"
-              className="size-5 shrink-0 rounded-[3px] border border-white/10 bg-white/[0.04]"
-            />
-          )}
+          <TeamCrest team={row.team} />
           {row.team.href ? (
             <Link
               href={row.team.href}
