@@ -175,7 +175,7 @@ export function EntityMetaChips({ kind, chips, className }: EntityMetaChipsProps
  */
 function ChipGlyph({ chip }: { chip: EntityMetaChip }) {
   const ChipIcon = chip.icon;
-  const { src, onError } = useSourceChain(imageChain(chip.imageSources, chip.imageSrc));
+  const { src, onError, imgRef } = useSourceChain(imageChain(chip.imageSources, chip.imageSrc));
   const hidden = chip.label ? undefined : true;
 
   if (chip.flagSrc) {
@@ -197,6 +197,7 @@ function ChipGlyph({ chip }: { chip: EntityMetaChip }) {
         alt={chip.label ?? ''}
         aria-hidden={hidden}
         loading="lazy"
+        ref={imgRef}
         onError={onError}
         className="size-4 shrink-0 object-contain"
       />

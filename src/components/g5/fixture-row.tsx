@@ -400,7 +400,7 @@ function FixtureRowCrest({
   imageSources?: readonly string[];
   accent?: string;
 }) {
-  const { src, onError } = useSourceChain(imageChain(imageSources, imageUrl));
+  const { src, onError, imgRef } = useSourceChain(imageChain(imageSources, imageUrl));
   return (
     <span
       data-slot="fixture-row-crest"
@@ -417,6 +417,7 @@ function FixtureRowCrest({
           src={src}
           alt=""
           loading="lazy"
+          ref={imgRef}
           onError={onError}
           className="absolute inset-0 size-full object-contain"
         />

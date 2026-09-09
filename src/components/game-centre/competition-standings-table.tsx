@@ -19,7 +19,7 @@ function TeamCrest({ team }: { team: CompetitionStandingsTeam }) {
     if (team.crestUrl && !list.includes(team.crestUrl)) list.push(team.crestUrl);
     return list;
   }, [team.crestSources, team.crestUrl]);
-  const { src, onError } = useSourceChain(sources);
+  const { src, onError, imgRef } = useSourceChain(sources);
 
   if (!src) {
     return (
@@ -35,6 +35,7 @@ function TeamCrest({ team }: { team: CompetitionStandingsTeam }) {
       src={src}
       alt=""
       loading="lazy"
+      ref={imgRef}
       onError={onError}
       className="size-5 shrink-0 object-contain"
     />
