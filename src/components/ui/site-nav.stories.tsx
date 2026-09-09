@@ -7,7 +7,7 @@ import {
   Television,
   BookOpenUser,
 } from '@phosphor-icons/react';
-import { userEvent, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, within } from 'storybook/test';
 
 import preview from '#.storybook/preview';
 import { SiteNav, type NavTab } from './site-nav';
@@ -260,6 +260,70 @@ export const AboutDropdownOpen = meta.story({
  *  (logged in) opens the shared icon+label panel with an "Account" header and
  *  Profile / Studio / Log out rows. Enabled by the `profileHref` / `studioHref`
  *  / `onLogout` props; story values are inline placeholders. */
+/**
+ * The About submenu driven by CLICK rather than hover — the path an iPad has
+ * and a mouse does not. Until 0.96.0 these panels were pure
+ * `group-hover:visible` CSS, so a tap opened one and nothing could close it
+ * ("on my iPad I can't hover over the menus so they stay stuck, I can't go to
+ * about submenu"). The play function is the regression test: open, closed,
+ * with the ARIA state moving in step.
+ */
+export const AboutDropdownClickOpen = meta.story({
+  args: {
+    tabs: tabsWithDropdowns,
+    avatarUrl: 'https://i.pravatar.cc/150?u=zach',
+    initials: 'ZL',
+    onSearchClick: () => {},
+    onNotificationsClick: () => {},
+    onAvatarClick: () => {},
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: 'About' });
+
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(trigger);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    // The rows the owner could not reach.
+    await expect(await canvas.findByRole('link', { name: /Credo/ })).toBeVisible();
+
+    // A second click closes it. This is the affordance a synthesised hover
+    // can never offer, and the reason the panel used to stick.
+    await userEvent.click(trigger);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  },
+});
+
+/**
+ * A touch pointer must not hover-open anything. The gate is the event's own
+ * `pointerType`, not `@media (hover: hover)` — a trackpad-equipped iPad
+ * answers `hover: hover` for the whole document while a finger on that same
+ * device still arrives as `pointerType: 'touch'`, so the media query would
+ * classify the reported device as a desktop and leave it broken.
+ */
+export const AboutDropdownIgnoresTouchHover = meta.story({
+  args: {
+    tabs: tabsWithDropdowns,
+    avatarUrl: 'https://i.pravatar.cc/150?u=zach',
+    initials: 'ZL',
+    onSearchClick: () => {},
+    onNotificationsClick: () => {},
+    onAvatarClick: () => {},
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: 'About' });
+
+    fireEvent.pointerOver(trigger, { pointerType: 'touch', bubbles: true });
+    fireEvent.pointerEnter(trigger, { pointerType: 'touch' });
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    // The same gesture from a mouse does open it.
+    fireEvent.pointerOver(trigger, { pointerType: 'mouse', bubbles: true });
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+  },
+});
+
 export const AccountDropdownOpen = meta.story({
   args: {
     tabs,
