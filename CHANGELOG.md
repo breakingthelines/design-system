@@ -5,6 +5,119 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.96.0]
+
+### Fixed: every `SiteNav` dropdown opens on touch — the About submenu included
+
+Owner report, verbatim: _"on my iPad I can't hover over the menus so they stay
+stuck, I can't go to about submenu"_.
+
+Every dropdown in the desktop header was pure CSS. The panel was always in the
+DOM as `opacity-0 invisible`, and a `group-hover/<name>:visible` class on the
+wrapper was the only thing that revealed it. On a machine with a mouse that is
+fine. On a tablet it is a dead end: a tap synthesises a hover, so the panel
+appears — and then nothing retracts it. There is no state a second tap can
+toggle, so the panel hangs over the page, and the About submenu's rows sit under
+a finger with nowhere to go.
+
+Four controls carried the pattern, and all four are fixed, not just the one in
+the report:
+
+| Control                               | Old wrapper class |
+| ------------------------------------- | ----------------- |
+| Media / About tab submenus            | `group/sub`       |
+| Notifications popover                 | `group/notif`     |
+| Create (compose)                      | `group/compose`   |
+| Account (and the legacy `avatarMenu`) | `group/avatar`    |
+
+Each is now a **disclosure** — a new internal `NavDisclosure` in `site-nav.tsx`
+that owns the open state and hands its trigger the ARIA and event wiring:
+
+- **Tap/click toggles.** A second tap closes. This is the whole fix for touch.
+- **Hover still opens on desktop.** Unchanged behaviour, unchanged look: same
+  panel markup, same `transition-all duration-150 ease-out`, same `pt-2` bridge
+  between trigger and panel.
+- **A click on a hover-opened panel commits to it** instead of toggling it shut.
+  Without that, a desktop click hover-opens and then toggle-closes in the same
+  gesture and the menu flashes. Base UI applies the same rule to its own menus
+  as `stickIfOpen`.
+- **Escape** closes and returns focus to the trigger. An **outside
+  `pointerdown`** closes. **Focus leaving** closes. **Activating a row** closes,
+  which is what "navigating away closes the menu" means for a panel of links.
+- **Keyboard**: the trigger is a real `<button>`, so Enter and Space toggle it;
+  ArrowDown/ArrowUp open and walk the rows; Home/End jump. The Account trigger
+  used to be a bare `<div>` — unfocusable, unannounced, unreachable without a
+  hovering pointer — and is now a button with the same pill classes.
+- Closed, a panel is `invisible` (out of the tab order) **and** `inert`.
+
+Dismiss-on-activate is scoped, not blanket: a link closes the panel, and so
+does any row `NavDropdownPanel` marks with `data-nav-dismiss` (which covers the
+Account "Log out" action row). Every other in-panel control does not, because
+`notificationPopover` is host content with its own buttons — platform's Inbox
+has Activity/Tasks tabs and a "Mark as Read" — and closing the popover under
+those would trade the old bug for a new one.
+
+#### The gate is the pointer type, not a media query
+
+The obvious gate is `@media (hover: hover) and (pointer: fine)`. It is the wrong
+one for the reported device. `hover`/`pointer` describe a document's PRIMARY
+input, so an iPad with a keyboard case or a trackpad answers `hover: hover` —
+and would keep exactly the stuck menus the owner reported. The gate is instead
+the event's own `pointerType === 'mouse'`, evaluated per interaction: the same
+iPad hover-opens under its trackpad and tap-toggles under a finger, and no
+device is classified once for all of its inputs.
+
+That gate also stops a menu opening under a SCROLL. A finger that lands on a
+trigger and drags fires `pointerenter` and then `pointercancel` — no
+`pointerleave`, no click — so a hover-open there has nothing that can close it.
+That is the other half of "they stay stuck", and it is pinned by a test.
+
+#### Why not migrate onto the Base UI `Menu` primitive
+
+`DropdownMenu` is right there, the mobile branches of these same controls
+already use it, and it would supply outside-press and Escape for free. It is
+still the wrong shape here:
+
+1. **Role.** These panels hold site-navigation LINKS. `Menu` renders
+   `role="menu"` / `role="menuitem"`, the application-menu pattern. WAI-ARIA APG
+   is explicit that site navigation is a disclosure, and the role changes what a
+   screen reader announces and which keys it claims.
+2. **Stacking.** `DropdownMenuContent` mounts its positioner at the body root on
+   a hardcoded `isolate z-50`. platform pins that exact number in
+   `app/__tests__/z-layers.test.tsx` and deliberately keeps the nav _below_ the
+   overlay band so it cannot punch through a sheet. Portaling the header's own
+   panels would move them into the overlay tier — a contract change this bug
+   does not need.
+3. **Fidelity.** The panels are pixel-measured against Figma. Keeping their
+   markup and transitions byte-identical is why desktop cannot drift.
+
+The mobile (`sm:hidden`) branches keep using `DropdownMenu`, unchanged.
+
+#### Verification
+
+`src/components/ui/__tests__/site-nav-disclosure.test.tsx` pins the markup
+contract, including a guard that no `group-hover/<name>:visible` class returns.
+The stories gained `AboutDropdownClickOpen`, which drives the click path in the
+browser lane.
+
+Behaviour was proved in Chromium under two contexts driving the real component:
+
+- **Touch** (`hasTouch`, 1024×1366, taps only) — tap opens About; its rows are
+  tappable and navigate; a second tap closes; an outside tap closes; a scroll
+  starting on the trigger opens nothing; nothing is left open after navigating;
+  Media, Create, Account and Notifications all tap open and closed.
+- **Desktop** (mouse, no touch) — hover opens; hovering away closes; a click
+  after a settled hover keeps it open; the committed menu survives the pointer
+  leaving; a second click closes; Escape closes and restores focus; Enter opens;
+  ArrowDown walks the rows; hovering a sibling swaps menus rather than stacking
+  them.
+
+Three mutations confirm the tests bite: removing the trigger's click handler
+fails the touch run at "tap opens About" (the reported bug, reproduced);
+removing the `pointerType` gate fails "a scroll starting on the trigger opens
+nothing"; removing the click-commit rule fails all three desktop
+click-after-hover assertions.
+
 ## [0.95.0]
 
 ### Added: the `btl` layer, and an entity image that walks a chain instead of holding a URL

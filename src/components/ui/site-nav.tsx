@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { useState, useRef, useCallback, useLayoutEffect, useEffect } from 'react';
+import { useState, useRef, useCallback, useId, useLayoutEffect, useEffect } from 'react';
 import {
   motion,
   AnimatePresence,
@@ -571,6 +571,10 @@ function NavDropdownPanel({
               key={item.key}
               ref={setRowRef(item.key)}
               onMouseEnter={() => setHoveredKey(item.key)}
+              // Marks the row as one whose activation dismisses the enclosing
+              // {@link NavDisclosure} — covers the action rows (Account "Log
+              // out") as well as the links.
+              data-nav-dismiss=""
               className="relative z-10 flex"
             >
               {control}
@@ -692,6 +696,303 @@ const ACCOUNT_TRIGGER_CLASSNAME =
  *  primitive. size-5 (down from size-6) also gives it visible clearance from
  *  the pill edges now that the ring isn't filling that space. */
 const ACCOUNT_AVATAR_CLASSNAME = 'size-5 ring-0 after:border-transparent';
+
+/** Props handed to a {@link NavDisclosure} trigger. Spread them onto the real
+ *  `<button>` (whatever chrome it wears) — they carry the ref, the ARIA state
+ *  and the open/close wiring. */
+interface NavDisclosureTriggerProps {
+  ref: (element: HTMLButtonElement | null) => void;
+  'aria-expanded': boolean;
+  'aria-haspopup': 'true';
+  'aria-controls': string;
+  'data-state': 'open' | 'closed';
+  onClick: () => void;
+  onKeyDown: (event: React.KeyboardEvent) => void;
+}
+
+/**
+ * The open/close mechanism behind every SiteNav dropdown — tab submenus
+ * (Media / About), Notifications, Create and Account.
+ *
+ * ## Why this exists
+ *
+ * All four panels used to be pure CSS: an always-mounted `opacity-0 invisible`
+ * box flipped visible by `group-hover/<name>:visible`. That has no touch story.
+ * A tap on an iPad synthesises a hover, so the panel appears — and then STAYS,
+ * because nothing retracts a synthesised `:hover`. A second tap can't close it
+ * (there is no state to toggle), the panel hangs over the page, and the About
+ * submenu's rows sit under a finger with nowhere to go. That is the owner's
+ * report, verbatim: "on my iPad I can't hover over the menus so they stay
+ * stuck, I can't go to about submenu".
+ *
+ * ## Why a disclosure and not the DS `DropdownMenu` (Base UI `Menu`)
+ *
+ * `Menu` would hand us outside-press, Escape and hover-vs-click for free, and
+ * the mobile branches of these same controls already use it. It is the wrong
+ * shape HERE for three reasons, in order of weight:
+ *
+ *  1. **Role.** These panels hold site-navigation LINKS. `Menu` renders
+ *     `role="menu"` with `role="menuitem"` rows — the application-menu pattern.
+ *     WAI-ARIA APG is explicit that site navigation is a DISCLOSURE, not a
+ *     menu, and mis-declaring it changes what a screen reader announces and
+ *     which keys it claims.
+ *  2. **Stacking.** `DropdownMenuContent` mounts its positioner at the body
+ *     root on a hardcoded `isolate z-50`. platform pins that exact number in
+ *     `app/__tests__/z-layers.test.tsx` and deliberately keeps the nav BELOW
+ *     the overlay band (`chrome` = 30) so it can't punch through a sheet.
+ *     Portaling the nav's own panels would lift them out of the header's
+ *     stacking context into the overlay tier — a contract change for a bug
+ *     that doesn't need one.
+ *  3. **Fidelity.** The panels are pixel-measured against Figma and animate
+ *     with the nav's own spring vocabulary. Keeping their markup and
+ *     transition classes byte-identical means the desktop look cannot drift.
+ *
+ * So the panel DOM is untouched; only what flips it visible changed.
+ *
+ * ## Behaviour
+ *
+ * - **Tap/click toggles.** A second tap closes. Works with no hover at all.
+ * - **Hover still opens on desktop**, gated on the event's own
+ *   `pointerType === 'mouse'`. That is the precise JS equivalent of
+ *   `@media (hover: hover) and (pointer: fine)` and strictly better on
+ *   hybrids: a trackpad-equipped iPad reports `hover: hover` for the whole
+ *   document, yet a finger on that same device still arrives as
+ *   `pointerType: 'touch'`. The media query would re-break exactly the device
+ *   in the report; the pointer type cannot.
+ * - **A click on a hover-opened panel STICKS it open** rather than toggling it
+ *   shut. Without this, a desktop click both hover-opens and toggle-closes and
+ *   the menu flashes — the classic regression. Same rule Base UI's
+ *   `stickIfOpen` applies to its own menus.
+ * - **Escape** closes and returns focus to the trigger. An **outside
+ *   `pointerdown`** closes (contact, not click, so a touch dismiss lands the
+ *   moment the finger does). **Focus leaving** the disclosure closes it.
+ *   **Activating any row** closes — which is what "navigating away closes"
+ *   reduces to for a panel whose rows are links.
+ * - **Keyboard**: the trigger is a real `<button>`, so Enter/Space toggle
+ *   through `click`; ArrowDown/ArrowUp open and walk the rows, Home/End jump.
+ * - The panel keeps its resting markup and `transition-all` classes. Closed, it
+ *   is `invisible` (out of the tab order) *and* `inert`, so nothing inside is
+ *   reachable by pointer, caret or assistive tech while it is hidden.
+ */
+function NavDisclosure({
+  className,
+  panelClassName,
+  elementRef,
+  onMouseEnter,
+  renderTrigger,
+  children,
+}: {
+  /** Classes for the positioned wrapper that owns trigger + panel. */
+  className?: string;
+  /** Positioning + transition classes for the panel box. The open/closed
+   *  visibility classes are appended by this component. */
+  panelClassName: string;
+  /** Extra ref on the wrapper — the tab bar measures these boxes for its
+   *  liquid highlight. */
+  elementRef?: (element: HTMLDivElement | null) => void;
+  /** Extra wrapper `mouseenter` — the tab bar lights its pill from this. */
+  onMouseEnter?: () => void;
+  renderTrigger: (triggerProps: NavDisclosureTriggerProps, open: boolean) => React.ReactNode;
+  children: React.ReactNode;
+}) {
+  const [open, setOpenState] = useState(false);
+  const panelId = useId();
+  // Mirrors `open` for the pointer handlers, which need to know whether the
+  // panel was ALREADY open before this pointer arrived — a re-entering mouse
+  // must not re-arm `hoverOpenRef` on a panel a click has already committed
+  // to, or that panel could never be clicked shut again.
+  const openRef = useRef(false);
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
+  const panelRef = useRef<HTMLDivElement | null>(null);
+  // True while the panel is open only BECAUSE a mouse is hovering it and no
+  // click has committed to it yet. The click handler reads this to stick the
+  // panel open instead of toggling it shut.
+  const hoverOpenRef = useRef(false);
+  // `elementRef` is usually a fresh closure each render (`setTabRef(index)`),
+  // so it is read through a ref to keep the callback ref below stable —
+  // otherwise React detaches and re-attaches the wrapper every render.
+  const elementRefProp = useRef(elementRef);
+  elementRefProp.current = elementRef;
+
+  const setOpen = useCallback((next: boolean) => {
+    openRef.current = next;
+    setOpenState(next);
+  }, []);
+
+  const close = useCallback(() => {
+    hoverOpenRef.current = false;
+    setOpen(false);
+  }, [setOpen]);
+
+  const setWrapper = useCallback((element: HTMLDivElement | null) => {
+    wrapperRef.current = element;
+    elementRefProp.current?.(element);
+  }, []);
+
+  const setTrigger = useCallback((element: HTMLButtonElement | null) => {
+    triggerRef.current = element;
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && wrapperRef.current?.contains(target)) return;
+      close();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      close();
+      triggerRef.current?.focus();
+    };
+
+    const doc = wrapperRef.current?.ownerDocument ?? document;
+    // Capture phase: a row inside the panel may stop propagation on its own
+    // pointer events, and the dismiss must not depend on it not doing that.
+    doc.addEventListener('pointerdown', handlePointerDown, true);
+    doc.addEventListener('keydown', handleKeyDown);
+    return () => {
+      doc.removeEventListener('pointerdown', handlePointerDown, true);
+      doc.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [open, close]);
+
+  /** The panel's focusable rows, in DOM order. */
+  const rows = () =>
+    Array.from(
+      panelRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])') ?? []
+    );
+
+  const focusRow = (index: number) => {
+    const items = rows();
+    if (items.length === 0) return;
+    const wrapped = ((index % items.length) + items.length) % items.length;
+    items[wrapped]?.focus();
+  };
+
+  const handleTriggerClick = () => {
+    // `openRef`, not the `open` render value: React treats `pointerover` as a
+    // continuous (low-priority) event, so a hover-open scheduled microseconds
+    // before this discrete click may not have re-rendered yet. Reading the ref
+    // means the click always sees the state the pointer handlers actually put
+    // the disclosure in.
+    if (!openRef.current) {
+      hoverOpenRef.current = false;
+      setOpen(true);
+      return;
+    }
+    // Open because of hover, and this is the first click: commit to it rather
+    // than closing what the pointer just opened.
+    if (hoverOpenRef.current) {
+      hoverOpenRef.current = false;
+      return;
+    }
+    close();
+  };
+
+  const handleTriggerKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    hoverOpenRef.current = false;
+    setOpen(true);
+    // Rows are `visibility: hidden` until the open class lands, and hidden
+    // elements cannot take focus — so reach for them after the next frame.
+    const first = event.key === 'ArrowDown';
+    requestAnimationFrame(() => focusRow(first ? 0 : -1));
+  };
+
+  const handlePanelKeyDown = (event: React.KeyboardEvent) => {
+    const items = rows();
+    const current = items.indexOf(
+      (wrapperRef.current?.ownerDocument.activeElement ?? null) as HTMLElement
+    );
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      focusRow(current + 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      focusRow(current - 1);
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      focusRow(0);
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      focusRow(items.length - 1);
+    }
+  };
+
+  const triggerProps: NavDisclosureTriggerProps = {
+    ref: setTrigger,
+    'aria-expanded': open,
+    'aria-haspopup': 'true',
+    'aria-controls': panelId,
+    'data-state': open ? 'open' : 'closed',
+    onClick: handleTriggerClick,
+    onKeyDown: handleTriggerKeyDown,
+  };
+
+  return (
+    <div
+      data-slot="site-nav-disclosure"
+      data-state={open ? 'open' : 'closed'}
+      ref={setWrapper}
+      className={className}
+      onMouseEnter={onMouseEnter}
+      onPointerEnter={(event) => {
+        // The whole touch fix in one line: a finger never hover-opens.
+        if (event.pointerType !== 'mouse') return;
+        // Already open — by a click, by the keyboard, or by this same hover.
+        // Re-arming the hover flag here would make a click-committed panel
+        // stick forever, so the pointer only ever OPENS what was closed.
+        if (openRef.current) return;
+        hoverOpenRef.current = true;
+        setOpen(true);
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType !== 'mouse') return;
+        // A click-committed panel stays until it is dismissed; only a panel
+        // the pointer itself opened follows the pointer out.
+        if (!hoverOpenRef.current) return;
+        close();
+      }}
+      onBlur={(event) => {
+        const next = event.relatedTarget as Node | null;
+        if (next && wrapperRef.current?.contains(next)) return;
+        close();
+      }}
+    >
+      {renderTrigger(triggerProps, open)}
+      <div
+        id={panelId}
+        ref={panelRef}
+        data-slot="site-nav-dropdown"
+        data-state={open ? 'open' : 'closed'}
+        inert={open ? undefined : true}
+        onKeyDown={handlePanelKeyDown}
+        onClick={(event) => {
+          // Activating a ROW dismisses: every link (which is what "navigating
+          // away closes the menu" reduces to here) plus anything a panel has
+          // marked as a dismissing row (`data-nav-dismiss`, set by
+          // NavDropdownPanel and the legacy avatar menu).
+          //
+          // Deliberately NOT every `<button>`: `notificationPopover` is host
+          // content with its own controls — platform's Inbox has
+          // Activity/Tasks tabs and a "Mark as Read" — and closing the popover
+          // under those would trade the old bug for a new one.
+          if ((event.target as HTMLElement).closest('a[href], [data-nav-dismiss]')) close();
+        }}
+        className={cn(
+          panelClassName,
+          open ? 'visible translate-y-0 opacity-100' : 'invisible translate-y-1 opacity-0'
+        )}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 function SiteNav({
   className,
@@ -905,48 +1206,59 @@ function SiteNav({
             'relative block cursor-pointer px-3.5 py-2.5 text-[12px] leading-none tracking-[-0.36px] transition-colors',
             lit ? 'text-white' : 'text-grey-500 hover:text-white/80'
           );
-          return (
-            <div
-              key={getNavTabKey(tab)}
-              ref={setTabRef(index)}
-              onMouseEnter={() => setHoverIndex(index)}
-              className={cn('relative z-10', tab.children && 'group/sub')}
-            >
-              {tab.children ? (
-                <button type="button" className={tabClassName} aria-haspopup="true">
-                  {tab.label}
-                </button>
-              ) : (
+          if (!tab.children) {
+            return (
+              <div
+                key={getNavTabKey(tab)}
+                ref={setTabRef(index)}
+                onMouseEnter={() => setHoverIndex(index)}
+                className="relative z-10"
+              >
                 <LinkComponent href={tab.href ?? '#'} className={tabClassName}>
                   {tab.label}
                 </LinkComponent>
+              </div>
+            );
+          }
+
+          const children = tab.children;
+          return (
+            // A tab with children is a disclosure: it opens on hover for a
+            // mouse and on tap/click for everything else, so an iPad can reach
+            // the About submenu. See {@link NavDisclosure}.
+            <NavDisclosure
+              key={getNavTabKey(tab)}
+              elementRef={setTabRef(index)}
+              onMouseEnter={() => setHoverIndex(index)}
+              className="relative z-10"
+              // pt-2 keeps the invisible bridge between trigger and panel, so a
+              // mouse travelling into the panel never leaves the disclosure.
+              panelClassName="absolute left-1/2 top-full -translate-x-1/2 pt-2 transition-all duration-150 ease-out"
+              renderTrigger={(triggerProps) => (
+                <button type="button" className={tabClassName} {...triggerProps}>
+                  {tab.label}
+                </button>
               )}
-              {tab.children ? (
-                // Dropdown — pt-2 creates an invisible hover bridge between trigger and panel
-                <div className="absolute left-1/2 top-full -translate-x-1/2 pt-2 opacity-0 invisible translate-y-1 group-hover/sub:opacity-100 group-hover/sub:visible group-hover/sub:translate-y-0 transition-all duration-150 ease-out">
-                  {/* Optional section header per tab (`menuHeader`, e.g. Media
-                      "Watch & Listen"); omit for a headerless dropdown (About).
-                      Fixed widths per spec: title+description panels (About)
-                      317px so descriptions stay on one line; icon+label panels
-                      (Media) 210px. */}
-                  <NavDropdownPanel
-                    header={tab.menuHeader}
-                    compact={Boolean(tab.menuHeader)}
-                    className={
-                      tab.children.some((child) => child.description) ? 'w-[317px]' : 'w-[210px]'
-                    }
-                    items={tab.children.map((child) => ({
-                      key: getNavChildKey(child),
-                      label: child.label,
-                      href: child.href,
-                      external: child.external,
-                      icon: child.icon,
-                      description: child.description,
-                    }))}
-                  />
-                </div>
-              ) : null}
-            </div>
+            >
+              {/* Optional section header per tab (`menuHeader`, e.g. Media
+                  "Watch & Listen"); omit for a headerless dropdown (About).
+                  Fixed widths per spec: title+description panels (About)
+                  317px so descriptions stay on one line; icon+label panels
+                  (Media) 210px. */}
+              <NavDropdownPanel
+                header={tab.menuHeader}
+                compact={Boolean(tab.menuHeader)}
+                className={children.some((child) => child.description) ? 'w-[317px]' : 'w-[210px]'}
+                items={children.map((child) => ({
+                  key: getNavChildKey(child),
+                  label: child.label,
+                  href: child.href,
+                  external: child.external,
+                  icon: child.icon,
+                  description: child.description,
+                }))}
+              />
+            </NavDisclosure>
           );
         })}
       </nav>
@@ -1038,32 +1350,58 @@ function SiteNav({
         )}
         {(onNotificationsClick || notificationPopover) && (
           <>
-            <div className={cn('relative hidden sm:block', notificationPopover && 'group/notif')}>
-              <div className="relative flex size-8 items-center justify-center rounded-[4px] bg-white/5">
-                <button
-                  type="button"
-                  aria-label="Notifications"
-                  onClick={notificationPopover ? undefined : onNotificationsClick}
-                  className="flex size-full items-center justify-center rounded-[4px] text-grey-500 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
-                >
-                  {/* A little lift-and-grow on hover — same "cool" treatment
-                      family as Search, tuned to feel like the tray perking up. */}
-                  <IconPop hover={{ scale: 1.15, y: -2 }} reduceMotion={reduceMotion}>
-                    <NotificationIcon className="size-[14px]" />
-                  </IconPop>
-                </button>
-                {notificationCount !== undefined && notificationCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
-                    {notificationCount > 9 ? '9+' : notificationCount}
-                  </span>
+            {notificationPopover ? (
+              // Desktop notifications: hover-opens for a mouse, tap-toggles for
+              // a finger (it used to be a CSS-hover panel, which stuck on
+              // touch). See {@link NavDisclosure}.
+              <NavDisclosure
+                className="relative hidden sm:block"
+                panelClassName="absolute right-0 top-full pt-2 transition-all duration-150 ease-out"
+                renderTrigger={(triggerProps) => (
+                  <div className="relative flex size-8 items-center justify-center rounded-[4px] bg-white/5">
+                    <button
+                      type="button"
+                      aria-label="Notifications"
+                      {...triggerProps}
+                      className="flex size-full items-center justify-center rounded-[4px] text-grey-500 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+                    >
+                      {/* A little lift-and-grow on hover — same "cool" treatment
+                          family as Search, tuned to feel like the tray perking up. */}
+                      <IconPop hover={{ scale: 1.15, y: -2 }} reduceMotion={reduceMotion}>
+                        <NotificationIcon className="size-[14px]" />
+                      </IconPop>
+                    </button>
+                    {notificationCount !== undefined && notificationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                        {notificationCount > 9 ? '9+' : notificationCount}
+                      </span>
+                    )}
+                  </div>
                 )}
-              </div>
-              {notificationPopover && (
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/notif:opacity-100 group-hover/notif:visible group-hover/notif:translate-y-0 transition-all duration-150 ease-out">
-                  {notificationPopover}
+              >
+                {notificationPopover}
+              </NavDisclosure>
+            ) : (
+              <div className="relative hidden sm:block">
+                <div className="relative flex size-8 items-center justify-center rounded-[4px] bg-white/5">
+                  <button
+                    type="button"
+                    aria-label="Notifications"
+                    onClick={onNotificationsClick}
+                    className="flex size-full items-center justify-center rounded-[4px] text-grey-500 transition-colors hover:bg-white/10 hover:text-white cursor-pointer"
+                  >
+                    <IconPop hover={{ scale: 1.15, y: -2 }} reduceMotion={reduceMotion}>
+                      <NotificationIcon className="size-[14px]" />
+                    </IconPop>
+                  </button>
+                  {notificationCount !== undefined && notificationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-100 text-[9px] font-bold text-white pointer-events-none">
+                      {notificationCount > 9 ? '9+' : notificationCount}
+                    </span>
+                  )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
             <div className="relative sm:hidden">
               {notificationPopover ? (
                 <DropdownMenu>
@@ -1124,21 +1462,24 @@ function SiteNav({
             {/* Desktop: hover dropdown. Figma 719-5697 replaces the old
                 circular ＋ trigger with a labelled "Create" pill; the
                 dropdown panel it opens is unchanged. */}
-            <div className="group/compose relative hidden sm:block">
-              <button
-                type="button"
-                aria-label="Compose"
-                aria-haspopup="true"
-                data-slot="button"
-                data-shimmer="brand"
-                className={CREATE_PILL_CLASSNAME}
-              >
-                Create
-              </button>
-              <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/compose:opacity-100 group-hover/compose:visible group-hover/compose:translate-y-0 transition-all duration-150 ease-out">
-                <ComposeMenuPanel items={composeItems} />
-              </div>
-            </div>
+            <NavDisclosure
+              className="relative hidden sm:block"
+              panelClassName="absolute right-0 top-full pt-2 transition-all duration-150 ease-out"
+              renderTrigger={(triggerProps) => (
+                <button
+                  type="button"
+                  aria-label="Compose"
+                  data-slot="button"
+                  data-shimmer="brand"
+                  {...triggerProps}
+                  className={CREATE_PILL_CLASSNAME}
+                >
+                  Create
+                </button>
+              )}
+            >
+              <ComposeMenuPanel items={composeItems} />
+            </NavDisclosure>
             {/* Mobile: click dropdown. Byte-identical pill container to
                 desktop at every width (CREATE_PILL_CLASSNAME, unconditional)
                 — used to be a bare circular "+" here, which read as an
@@ -1191,23 +1532,34 @@ function SiteNav({
                   (Figma 3009-11910). Figma 719-5697 wraps the trigger in the
                   same frosted pill as "Create" and appends a CaretDown so it
                   reads as a dropdown trigger, not a plain avatar. */}
-              <div className="group/avatar relative hidden sm:block">
-                <div className={ACCOUNT_TRIGGER_CLASSNAME}>
-                  <Avatar size="default" className={ACCOUNT_AVATAR_CLASSNAME}>
-                    {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
-                    <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
-                  </Avatar>
-                  <CaretDown size={14} weight="regular" className="text-white" />
-                </div>
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
-                  <NavDropdownPanel
-                    header="Account"
-                    compact
-                    className="w-[210px]"
-                    items={accountItems}
-                  />
-                </div>
-              </div>
+              <NavDisclosure
+                className="relative hidden sm:block"
+                panelClassName="absolute right-0 top-full pt-2 transition-all duration-150 ease-out"
+                renderTrigger={(triggerProps) => (
+                  // Was a plain `<div>`: not focusable, no role, no ARIA state.
+                  // A real button costs nothing visually (same pill classes) and
+                  // makes the Account menu keyboard- and touch-reachable.
+                  <button
+                    type="button"
+                    aria-label="Account"
+                    {...triggerProps}
+                    className={ACCOUNT_TRIGGER_CLASSNAME}
+                  >
+                    <Avatar size="default" className={ACCOUNT_AVATAR_CLASSNAME}>
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                      <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
+                    </Avatar>
+                    <CaretDown size={14} weight="regular" className="text-white" />
+                  </button>
+                )}
+              >
+                <NavDropdownPanel
+                  header="Account"
+                  compact
+                  className="w-[210px]"
+                  items={accountItems}
+                />
+              </NavDisclosure>
               {/* Mobile: click-opens the same panel inside a chrome-less menu.
                   Trigger pill is byte-identical to desktop's
                   (ACCOUNT_TRIGGER_CLASSNAME) — used to be a bare 34px avatar
@@ -1248,54 +1600,63 @@ function SiteNav({
             </>
           ) : avatarMenu?.length ? (
             <>
-              <div className="group/avatar relative hidden sm:block">
-                <div className="flex items-center justify-center cursor-pointer">
-                  <Avatar size="default" className="size-[34px]">
-                    {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
-                    <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
-                  </Avatar>
-                </div>
+              <NavDisclosure
+                className="relative hidden sm:block"
+                panelClassName="absolute right-0 top-full pt-2 transition-all duration-150 ease-out"
+                renderTrigger={(triggerProps) => (
+                  <button
+                    type="button"
+                    aria-label="Account"
+                    {...triggerProps}
+                    className="flex items-center justify-center cursor-pointer"
+                  >
+                    <Avatar size="default" className="size-[34px]">
+                      {avatarUrl && <AvatarImage src={avatarUrl} alt="Profile" />}
+                      <AvatarFallback branded>{initials ?? '?'}</AvatarFallback>
+                    </Avatar>
+                  </button>
+                )}
+              >
                 {/* Dropdown — same pattern as Media dropdown */}
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible translate-y-1 group-hover/avatar:opacity-100 group-hover/avatar:visible group-hover/avatar:translate-y-0 transition-all duration-150 ease-out">
-                  <div className="relative min-w-[160px] overflow-hidden rounded-[8px] border border-white/10 bg-grey-200 p-1 shadow-xl">
-                    <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
-                    <nav className="flex flex-col gap-0.5">
-                      {avatarMenu.map((item) =>
-                        item.href ? (
-                          item.external ? (
-                            <a
-                              key={item.label}
-                              href={item.href}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                            >
-                              {item.label}
-                            </a>
-                          ) : (
-                            <LinkComponent
-                              key={item.label}
-                              href={item.href}
-                              className="block rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                            >
-                              {item.label}
-                            </LinkComponent>
-                          )
-                        ) : (
-                          <button
+                <div className="relative min-w-[160px] overflow-hidden rounded-[8px] border border-white/10 bg-grey-200 p-1 shadow-xl">
+                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
+                  <nav className="flex flex-col gap-0.5">
+                    {avatarMenu.map((item) =>
+                      item.href ? (
+                        item.external ? (
+                          <a
                             key={item.label}
-                            type="button"
-                            onClick={item.onClick}
-                            className="block w-full cursor-pointer rounded-[4px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            href={item.href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
                           >
                             {item.label}
-                          </button>
+                          </a>
+                        ) : (
+                          <LinkComponent
+                            key={item.label}
+                            href={item.href}
+                            className="block rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                          >
+                            {item.label}
+                          </LinkComponent>
                         )
-                      )}
-                    </nav>
-                  </div>
+                      ) : (
+                        <button
+                          key={item.label}
+                          type="button"
+                          onClick={item.onClick}
+                          data-nav-dismiss=""
+                          className="block w-full cursor-pointer rounded-[4px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                        >
+                          {item.label}
+                        </button>
+                      )
+                    )}
+                  </nav>
                 </div>
-              </div>
+              </NavDisclosure>
               <div className="sm:hidden">
                 <DropdownMenu>
                   <DropdownMenuTrigger
