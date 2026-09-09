@@ -124,9 +124,11 @@ function addressSpec(kind: EntityAssetKind, role: EntityAssetRole): AddressSpec 
  * This table is the read-side mirror of the write path's role table (admin
  * `lib/entity-assets.ts`, `EntityAssetRole` in
  * `btl/content/v1/entity_assets_service.proto`) and the two are a matched pair:
- * marks are vector first and photographic roles are raster only, so a mark
- * probes svg then webp and a photo probes webp alone. An SVG hero is refused on
- * write, so probing for one here would be a guaranteed 404 on every render.
+ * marks are vector only and photographic roles raster only, so each probes
+ * exactly ONE address: svg for a mark, webp for a photo. An SVG hero is
+ * refused on write, so probing for one here would be a guaranteed 404 on
+ * every render — and since content-service stopped accepting a raster mark,
+ * so would a webp crest.
  *
  * Null for a combination BTL cannot store art for: a flag (no bespoke layer), a
  * manager avatar (the role pins player ids), a nation crest.
@@ -137,7 +139,7 @@ function btlSpec(
 ): { readonly dir: string; readonly exts: readonly string[] } | null {
   switch (role) {
     case 'crest':
-      // Marks: svg preferred, webp allowed. TWO candidates.
+      // Marks: svg, and only svg. ONE candidate.
       if (kind === 'team') return { dir: 'crest', exts: MARK_EXTS };
       if (kind === 'competition') return { dir: 'competition', exts: MARK_EXTS };
       return null;
@@ -156,7 +158,22 @@ function btlSpec(
   }
 }
 
-const MARK_EXTS: readonly string[] = ['svg', 'webp'];
+// ONE address per mark, because content-service stores one.
+//
+// A crest used to be storable as svg OR webp, and nothing could tell which
+// without asking the CDN, so this list had two entries and every badge on a
+// page paid two guaranteed 404s before falling through to the mirrored
+// provider layer — arriving one at a time as their chains finished.
+// content-service now refuses a raster mark outright (ADR-036 position 3,
+// "normalize on write"), so the second address cannot be written any more and
+// probing for it is a round trip that can only ever miss.
+//
+// A .webp mark written under the old canon stops being probed here. It falls
+// through to the mirrored provider crest rather than to a monogram, and
+// re-uploading it as SVG restores it — which is why this needs no migration
+// and no coverage record. A coverage record is the gate ADR-036 exists to
+// remove, and it has shipped and been reverted once already (platform#363).
+const MARK_EXTS: readonly string[] = ['svg'];
 const PHOTO_EXTS: readonly string[] = ['webp'];
 
 const TRAILING_SLASH = /\/+$/;
@@ -302,8 +319,8 @@ export function btlAssetCandidates(
  * through is cheap and stops being paid within the cache window.
  *
  * Order, and why:
- *   1. BTL's own art (svg then webp for a mark; webp for a photo). Bespoke wins
- *      — that is the point of commissioning it.
+ *   1. BTL's own art — ONE address: svg for a mark, webp for a photo.
+ *      Bespoke wins; that is the point of commissioning it.
  *   2. Whatever {@link entityAssetUrl} resolves, WHICH IS UNCHANGED: a BTL-safe
  *      backend `imageUrl` where the role consults one, else the pinned provider
  *      address. The precedence below the bespoke layer is not re-litigated here.
