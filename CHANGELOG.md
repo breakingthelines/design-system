@@ -5,6 +5,69 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.97.0]
+
+### Fixed: the entity-image chain recovers from a failure that happened before hydration
+
+Owner report: the Premier League badge was uploaded, and the competition page
+showed an empty 64x64 box.
+
+The badge was on the CDN and returning 200. The chain never asked for it.
+
+`useSourceChain` advanced on the `<img>`'s `onError`, and that is enough only
+while React mounts the element itself — on a client-rendered page the handler is
+always attached before the address can answer. It is not enough on a
+server-rendered one. There the `<img>` arrives inside the HTML, so the browser
+requests the first address during parse, and on
+`/game/football/competition/lb3d230cb/premier-league` that address failed before
+React hydrated:
+
+1. First candidate is the bespoke `btl/.../<id>.svg`.
+2. The CDN worker answers a missing media key `404` with a **27KB `text/html`
+   body**, so Chromium applies Opaque Response Blocking:
+   `net::ERR_BLOCKED_BY_ORB`.
+3. The `error` event fires into a document that has no listener for it yet. It
+   is not queued and not replayed.
+4. Hydration attaches `onError` to an element that has already finished. The
+   element sits at `complete === true`, `naturalWidth === 0`, pinned to the dead
+   `.svg` forever, and the uploaded WebP one candidate down is never requested.
+
+The chain now reads the settled state on mount as well as listening for the
+event. `useSourceChain` returns an `imgRef` alongside `src` and `onError`, and
+every consumer hands it to its `<img>`:
+
+| State on mount          | `complete` | `naturalWidth` | What happens        |
+| ----------------------- | ---------- | -------------- | ------------------- |
+| Failed before hydration | `true`     | `0`            | Advance the walk    |
+| Loaded before hydration | `true`     | `> 0`          | Nothing (keep it)   |
+| Still in flight         | `false`    | `0`            | Nothing (`onError`) |
+
+An in-flight image is left alone because its `onError` is attached by the same
+commit that runs the ref, so a later failure still advances the walk as before.
+
+Both `onError` and the mount check compute the next index from the render's own
+cursor rather than incrementing the previous state, so if they both fire for one
+element the walk steps once rather than twice. A double step would skip the next
+address, which on a full chain means monogramming a crest that exists.
+
+The fix lives in the shared hook, so it reaches `EntityImage` and all six seams
+that walk a chain with their own markup: `FixtureRow`, `EntityPageShell`,
+`MatchHeader`, `CompetitionStandingsTable`, `MatchShell` and `EntityMetaChips`.
+
+**Breaking:** none. `imgRef` is an addition to the hook's return; a consumer that
+ignores it behaves exactly as it did in 0.96.0 (and stays exposed to this bug).
+
+New stories in `entity-asset-image.stories.tsx` cover it in real Chromium:
+`renderToString` produces the markup, the browser is allowed to settle the first
+address failed with no handler attached, and only then does `hydrateRoot` run —
+the lost-error sequence itself rather than a stand-in for it. The client-rendered
+walk and a pre-hydration _success_ are covered next to it; removing the mount
+check fails the three recovery stories and leaves those two green.
+
+Not fixed here, and worth fixing: the CDN worker's `text/html` 404 body is what
+makes ORB bite. An empty body, or `image/*`, would not be blocked and would not
+ship 27KB per miss on a chain designed around cheap 404s.
+
 ## [0.96.0]
 
 ### Fixed: every `SiteNav` dropdown opens on touch — the About submenu included

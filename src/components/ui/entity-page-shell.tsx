@@ -122,7 +122,11 @@ export function EntityPageShell({
   // Walk every address the entity could be at — BTL's own art, then the mirrored
   // provider layer — and fall back to the BTL brand placeholder (matching the
   // hero portrait's fallback) only once all of them have missed.
-  const { src: activeImageUrl, onError } = useSourceChain(imageChain(imageSources, imageUrl));
+  const {
+    src: activeImageUrl,
+    onError,
+    imgRef,
+  } = useSourceChain(imageChain(imageSources, imageUrl));
   return (
     <section
       data-slot="entity-page-shell"
@@ -151,6 +155,7 @@ export function EntityPageShell({
                 src={activeImageUrl}
                 alt=""
                 loading="eager"
+                ref={imgRef}
                 onError={onError}
                 className={cn(
                   'size-full',

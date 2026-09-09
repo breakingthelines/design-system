@@ -352,7 +352,7 @@ function SideText({ side, align }: { side: MatchHeaderSide; align: 'start' | 'en
 
 function SideCrest({ side }: { side: MatchHeaderSide }) {
   const initials = initialsFromMatchLabel(side.shortLabel ?? side.label);
-  const { src, onError } = useSourceChain(imageChain(side.imageSources, side.imageUrl));
+  const { src, onError, imgRef } = useSourceChain(imageChain(side.imageSources, side.imageUrl));
   return (
     <span
       data-slot="match-header-crest"
@@ -370,6 +370,7 @@ function SideCrest({ side }: { side: MatchHeaderSide }) {
           key={src}
           src={src}
           alt=""
+          ref={imgRef}
           onError={onError}
           className="absolute inset-0 size-full object-contain"
           loading="lazy"

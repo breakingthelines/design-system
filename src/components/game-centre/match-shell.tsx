@@ -180,7 +180,7 @@ export function MatchRecapStrip({
 
 function RecapSide({ side, align }: { side: MatchRecapSide; align: 'start' | 'end' }) {
   const initials = initialsFromLabel(side.shortLabel ?? side.label);
-  const { src, onError } = useSourceChain(imageChain(side.imageSources, side.imageUrl));
+  const { src, onError, imgRef } = useSourceChain(imageChain(side.imageSources, side.imageUrl));
   const crest = (
     <span
       aria-hidden="true"
@@ -192,6 +192,7 @@ function RecapSide({ side, align }: { side: MatchRecapSide; align: 'start' | 'en
           src={src}
           alt=""
           loading="lazy"
+          ref={imgRef}
           onError={onError}
           className="absolute inset-0 size-full object-cover"
         />

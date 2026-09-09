@@ -24,6 +24,23 @@
 // and no cache purge. The address was always being requested; it just started
 // returning 200.
 //
+// # THE WALK MUST SURVIVE HYDRATION
+//
+// `onError` alone only works if the handler is on the element before the
+// browser answers. On a server-rendered page it often is not: the img is in the
+// HTML, so the browser requests the first address during parse and can settle
+// it — 404, ORB-blocked, anything — BEFORE React hydrates and attaches
+// anything. That error event has no listener, is not replayed, and the walk
+// never starts: the element sits at `complete === true` with
+// `naturalWidth === 0` on a dead address forever, while the 200 two candidates
+// down is never asked for. (Live symptom: an uploaded Premier League badge
+// rendering as an empty 64x64 box, because the CDN answers a missing .svg with
+// a text/html body that Chromium ORB-blocks.)
+//
+// So the chain also checks the settled state on mount, via the `imgRef` that
+// every consumer hands its <img>. A client-rendered image is still in flight at
+// that point and is left to `onError`; only an already-failed one is advanced.
+//
 // Plain <img> (no crossOrigin): normal surfaces never rasterise to a canvas, so
 // a CORS request is unnecessary (and some mirrored crests are served without
 // CORS headers, which a crossOrigin request would fail → monogram). The WebGL
@@ -57,15 +74,32 @@ export function useSourceChain(sources: readonly string[]): {
   src: string | undefined;
   exhausted: boolean;
   onError: () => void;
+  imgRef: (node: HTMLImageElement | null) => void;
 } {
   const key = sources.join('\n');
   const [cursor, setCursor] = useState<{ key: string; index: number }>({ key, index: 0 });
   const index = cursor.key === key ? cursor.index : 0;
 
+  // Computed from the render's own `index`, never from the previous state. Two
+  // callers racing to advance the SAME address (the mount check below and a
+  // late `onError` for the same element) therefore both land on `index + 1`
+  // instead of stacking two increments and skipping a live candidate.
+  const advance = () => setCursor({ key, index: index + 1 });
+
   return {
     src: sources[index],
     exhausted: index >= sources.length,
-    onError: () => setCursor({ key, index: index + 1 }),
+    onError: advance,
+    imgRef: (node: HTMLImageElement | null) => {
+      if (!node || !node.getAttribute('src')) return;
+      // A settled image: `complete` with no pixels is the failed state, and the
+      // error event that would have said so is already gone. See the block
+      // comment above for why that happens on an SSR'd page. `complete` with
+      // pixels is a success (leave it), and an image still in flight is
+      // `complete === false` — its `onError` is attached by the same commit
+      // that runs this ref, so a later failure still advances the walk.
+      if (node.complete && node.naturalWidth === 0) advance();
+    },
   };
 }
 
@@ -147,7 +181,7 @@ export function EntityImage({
       : entityAssetCandidates(kind, role, id, cdnBase, { imageUrl });
   const sources = fallbackSources?.length ? [...chain, ...fallbackSources] : chain;
 
-  const { src, onError } = useSourceChain(sources);
+  const { src, onError, imgRef } = useSourceChain(sources);
   // Logos sit inside their box (contain); faces fill it (cover).
   const fit = role === 'crest' || role === 'flag' ? 'object-contain' : 'object-cover';
 
@@ -176,6 +210,7 @@ export function EntityImage({
       alt={alt ?? ''}
       loading="lazy"
       data-slot="entity-image"
+      ref={imgRef}
       onError={onError}
       className={`shrink-0 ${fit} ${className ?? ''}`}
     />
