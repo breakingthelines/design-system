@@ -126,10 +126,12 @@ describe('assetMonogram', () => {
 });
 
 describe('entityAssetCandidates — the btl layer and the chain order', () => {
-  it('puts the two btl mark candidates before the provider crest, svg first', () => {
+  it('gives a mark ONE btl candidate (svg) before the provider crest', () => {
+    // Two, until content-service stopped accepting a raster mark. The second
+    // address can no longer be written, so probing it was a guaranteed 404 in
+    // front of every badge on the page.
     expect(entityAssetCandidates('team', 'crest', TEAM, BASE)).toEqual([
       `${BASE}/btl/crest/${TEAM}.svg`,
-      `${BASE}/btl/crest/${TEAM}.webp`,
       `${BASE}/provider/crest/${TEAM}.png`,
     ]);
   });
@@ -137,7 +139,6 @@ describe('entityAssetCandidates — the btl layer and the chain order', () => {
   it('addresses a competition badge at btl/competition/, not btl/badge/', () => {
     expect(entityAssetCandidates('competition', 'crest', COMP, BASE)).toEqual([
       `${BASE}/btl/competition/${COMP}.svg`,
-      `${BASE}/btl/competition/${COMP}.webp`,
       `${BASE}/provider/competition/${COMP}.png`,
     ]);
   });
@@ -221,11 +222,7 @@ describe('entityAssetCandidates — the btl layer and the chain order', () => {
       imageUrl: 'https://media.api-sports.io/football/teams/42.png',
     });
     expect(chain.some((url) => url.includes('api-sports.io'))).toBe(false);
-    expect(chain).toEqual([
-      `${BASE}/btl/crest/${TEAM}.svg`,
-      `${BASE}/btl/crest/${TEAM}.webp`,
-      `${BASE}/provider/crest/${TEAM}.png`,
-    ]);
+    expect(chain).toEqual([`${BASE}/btl/crest/${TEAM}.svg`, `${BASE}/provider/crest/${TEAM}.png`]);
   });
 
   it('is empty with no id and with no cdnBase', () => {
@@ -237,11 +234,7 @@ describe('entityAssetCandidates — the btl layer and the chain order', () => {
     const chain = entityAssetCandidates('team', 'crest', TEAM, BASE, {
       imageUrl: `media/provider/crest/${TEAM}.png`,
     });
-    expect(chain).toEqual([
-      `${BASE}/btl/crest/${TEAM}.svg`,
-      `${BASE}/btl/crest/${TEAM}.webp`,
-      `${BASE}/provider/crest/${TEAM}.png`,
-    ]);
+    expect(chain).toEqual([`${BASE}/btl/crest/${TEAM}.svg`, `${BASE}/provider/crest/${TEAM}.png`]);
   });
 });
 
