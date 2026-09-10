@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { ReactionPills } from '../reaction-pills';
+import { ReactionPills, hasReactionRow } from '../reaction-pills';
 import {
   ThoughtComment,
   type ThoughtCommentProps,
@@ -9,14 +9,18 @@ import {
 import { countSlot, getSlotAttr, hasSlot, render, sliceSlot, slotText } from './test-utils';
 
 /*
- * The stacked reaction row (design-system#230).
+ * The stacked reaction row (design-system#230), and the one row it shares
+ * with like (design-system#232).
  *
- * Two properties are pinned here. First the row itself: server order kept,
+ * Three properties are pinned here. First the row itself: server order kept,
  * "mine" marked, counts formatted, a full 20-emoji stack still wrapping
  * inside the rail. Second — and this is the regression guard the thoughts
  * panel depends on — that a caller which knows nothing about reactions
  * renders exactly what it rendered before the row existed. No stack and no
  * `onReact` means no element, not an empty div taking a gap.
+ *
+ * Third, the band: like, then the stacks, then the add control, in ONE
+ * wrapping container rather than a like row under a pill row.
  */
 
 const noop = () => {};
@@ -106,6 +110,39 @@ describe('ReactionPills', () => {
   it('renders nothing at all when there is no stack and nothing to add', () => {
     expect(render(<ReactionPills />)).toBe('');
     expect(render(<ReactionPills reactions={[]} />)).toBe('');
+  });
+
+  it('renders the host affordance first, ahead of the stacks and the add control', () => {
+    const markup = render(
+      <ReactionPills
+        reactions={[{ emoji: '🔥', count: 9 }]}
+        onReact={noop}
+        leading={<button type="button">Like</button>}
+      />
+    );
+    expect(markup.indexOf('data-slot="reaction-leading"')).toBeLessThan(
+      markup.indexOf('data-slot="reaction-pill"')
+    );
+    expect(markup.indexOf('data-slot="reaction-pill"')).toBeLessThan(
+      markup.indexOf('data-slot="reaction-add"')
+    );
+  });
+
+  it('draws the row for a host affordance with no stack behind it', () => {
+    const markup = render(<ReactionPills leading={<button type="button">Like</button>} />);
+    expect(hasSlot(markup, 'reaction-pills')).toBe(true);
+    expect(countSlot(markup, 'reaction-pill')).toBe(0);
+    expect(slotText(markup, 'reaction-leading')).toBe('Like');
+  });
+
+  it('still renders nothing when there is no stack and no affordance', () => {
+    expect(render(<ReactionPills leading={null} />)).toBe('');
+    expect(hasReactionRow({})).toBe(false);
+    expect(hasReactionRow({ leading: <span /> })).toBe(true);
+    expect(hasReactionRow({ reactions: [{ emoji: '🔥', count: 1 }] })).toBe(true);
+    expect(hasReactionRow({ onReact: noop })).toBe(true);
+    expect(hasReactionRow({ onReact: noop, disabled: true })).toBe(false);
+    expect(hasReactionRow({ notice: 'Reactions are full.' })).toBe(true);
   });
 
   it('keeps the compact pill smaller than the comfortable one', () => {
@@ -225,5 +262,82 @@ describe('ThoughtComment — reactions', () => {
     });
     expect(countSlot(markup, 'reaction-notice')).toBe(1);
     expect(markup).toContain('Six is the limit.');
+  });
+});
+
+/* ── One row: like and the stacks together ────────────────────────────── */
+
+const bandStack = [
+  { emoji: '🔥', count: 12, viewerHasReacted: true },
+  { emoji: '👏', count: 5 },
+];
+
+describe('ThoughtComment — like and the reactions on one row', () => {
+  it('puts like inside the pill row, ahead of the stacks and the add control', () => {
+    const markup = renderRow({
+      thought: { ...thought, reactions: bandStack },
+      density: 'compact',
+      actions: ['like'],
+      onReact: noop,
+      onUnreact: noop,
+    });
+    const band = sliceSlot(markup, 'reaction-pills') ?? '';
+
+    // The like count lives inside the band, not in a row of its own.
+    expect(slotText(band, 'reaction-leading')).toBe('4');
+    expect(band.indexOf('data-slot="reaction-leading"')).toBeLessThan(
+      band.indexOf('data-slot="reaction-pill"')
+    );
+    expect(band.indexOf('data-slot="reaction-pill"')).toBeLessThan(
+      band.indexOf('data-slot="reaction-add"')
+    );
+  });
+
+  it('wraps as one band rather than stacking two', () => {
+    const markup = renderRow({
+      thought: { ...thought, reactions: bandStack },
+      density: 'compact',
+      actions: ['like'],
+      onReact: noop,
+    });
+    expect(countSlot(markup, 'reaction-pills')).toBe(1);
+    expect(getSlotAttr(markup, 'reaction-pills', 'class')).toContain('flex-wrap');
+  });
+
+  it('carries like on the band at both densities', () => {
+    for (const density of ['comfortable', 'compact'] as const) {
+      const markup = renderRow({
+        thought: { ...thought, reactions: bandStack },
+        density,
+        actions: ['like'],
+        onReact: noop,
+      });
+      expect(hasSlot(sliceSlot(markup, 'reaction-pills') ?? '', 'reaction-leading')).toBe(true);
+    }
+  });
+
+  it('renders the stacks alone when the caller hides like', () => {
+    const markup = renderRow({
+      thought: { ...thought, reactions: bandStack },
+      density: 'compact',
+      actions: [],
+      onReact: noop,
+    });
+    expect(countSlot(markup, 'reaction-pill')).toBe(2);
+    expect(hasSlot(markup, 'reaction-leading')).toBe(false);
+  });
+
+  it('renders like alone, with no band around it, when there are no reactions', () => {
+    const markup = renderRow({ density: 'compact', actions: ['like'] });
+    expect(hasSlot(markup, 'reaction-pills')).toBe(false);
+    // Like is still there: the count off the thought's own stats.
+    expect(markup).toContain('>4<');
+  });
+
+  it('emits no row at all when there is neither', () => {
+    const markup = renderRow({ density: 'compact', actions: [] });
+    expect(hasSlot(markup, 'reaction-pills')).toBe(false);
+    expect(markup).not.toContain('>4<');
+    expect(markup).toContain('That was never a corner.');
   });
 });
