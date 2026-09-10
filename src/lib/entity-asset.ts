@@ -305,6 +305,21 @@ export function btlAssetCandidates(
   const spec = btlSpec(kind, role);
   if (!spec) return [];
   const base = cdnBase.replace(TRAILING_SLASH, '');
+  // A MARK's first (and only bespoke-layer) address is its RESOLVED object:
+  // one extensionless key per entity, maintained server-side to always carry
+  // the winning image — the bespoke upload when one exists, else a copy of
+  // the mirrored provider mark (content-service#248). Once the backfill has
+  // swept, this address answers 200 for every mark the provider mirror knows,
+  // so a fixtures panel is one request per badge with nothing to probe. The
+  // format lives in the object's Content-Type, which is why there is no
+  // extension to guess here — the ambiguity that used to cost a 404 per
+  // wrong guess is inside the object now, not the address.
+  //
+  // Photo roles have no resolved layer (they render singly; the panel-scale
+  // stagger never applied) and keep their bespoke btl/ address.
+  if (role === 'crest' && (kind === 'team' || kind === 'competition')) {
+    return [`${base}/resolved/${spec.dir}/${id}`];
+  }
   return spec.exts.map((ext) => `${base}/btl/${spec.dir}/${id}.${ext}`);
 }
 
