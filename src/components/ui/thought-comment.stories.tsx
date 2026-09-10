@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
+import { expect, userEvent, within } from 'storybook/test';
 
 import preview from '#.storybook/preview';
 import {
@@ -6,6 +7,7 @@ import {
   type ThoughtCommentProps,
   type ThoughtCommentThought,
 } from './thought-comment';
+import type { ThoughtReaction } from '#/types/content';
 
 const meta = preview.meta({
   title: 'UI/ThoughtComment',
@@ -207,4 +209,263 @@ export const CompactThread = meta.story({
       <Row thought={mod} density="compact" actions={['like']} />
     </Rail>
   ),
+});
+
+/* ── Reactions ─────────────────────────────────────────────────────────
+   The stack is thought data: the server hydrates it on every read that
+   returns a thought, ordered highest count first with the emoji as
+   tiebreak, so these fixtures are written in the order they arrive and
+   the row maps them as given. The callbacks are the host's.
+   ──────────────────────────────────────────────────────────────────── */
+
+const stack: ThoughtReaction[] = [
+  { emoji: '🔥', count: 12, viewerHasReacted: true },
+  { emoji: '👏', count: 5 },
+  { emoji: '😂', count: 2 },
+];
+
+/** Twenty distinct emoji — the server's per-thought ceiling. */
+const fullStack: ThoughtReaction[] = [
+  '🔥',
+  '👏',
+  '😂',
+  '😮',
+  '😢',
+  '🙌',
+  '💯',
+  '⚽',
+  '🥶',
+  '🤝',
+  '🧠',
+  '🎯',
+  '🚀',
+  '👀',
+  '💔',
+  '🫡',
+  '🤯',
+  '🏆',
+  '🥵',
+  '😴',
+].map((emoji, i) => ({ emoji, count: 20 - i, viewerHasReacted: i < 6 }));
+
+export const ReactionsNone = meta.story({
+  name: 'Reactions — none',
+  render: () => (
+    <Rail>
+      {/* No stack, and no host handler: the row does not render, so a
+          caller that knows nothing about reactions is untouched. */}
+      <Row thought={host} density="compact" actions={['like']} />
+      {/* No stack, host handler present: just the add control. */}
+      <Row thought={mod} density="compact" actions={['like']} onReact={noop} />
+    </Rail>
+  ),
+});
+
+export const ReactionsFew = meta.story({
+  name: 'Reactions — a few',
+  render: () => (
+    <Rail>
+      <Row
+        thought={{ ...host, reactions: stack }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+      <Row
+        thought={{ ...mod, reactions: [{ emoji: '👏', count: 1 }] }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+      <Row thought={viewer} density="compact" actions={['like']} onReact={noop} />
+    </Rail>
+  ),
+});
+
+export const ReactionsMine = meta.story({
+  name: 'Reactions — mine vs not',
+  render: () => (
+    <Rail>
+      {/* Same emoji, same count, one held by the viewer and one not. */}
+      <Row
+        thought={{ ...host, reactions: [{ emoji: '🔥', count: 7, viewerHasReacted: true }] }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+      <Row
+        thought={{ ...mod, reactions: [{ emoji: '🔥', count: 7 }] }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+    </Rail>
+  ),
+});
+
+export const ReactionsFull = meta.story({
+  name: 'Reactions — a full stack',
+  render: () => (
+    <Rail>
+      {/* Twenty distinct emoji, six of them the viewer's. The row wraps
+          inside the 332px column: a long stack makes a message taller,
+          never wider. */}
+      <Row
+        thought={{ ...host, reactions: fullStack }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+        reactionNotice="Reaction limit reached."
+      />
+      <Row thought={mod} density="compact" actions={['like']} onReact={noop} />
+    </Rail>
+  ),
+});
+
+export const ReactionsLongCounts = meta.story({
+  name: 'Reactions — long counts',
+  render: () => (
+    <Rail>
+      <Row
+        thought={{
+          ...host,
+          reactions: [
+            { emoji: '🔥', count: 1284000, viewerHasReacted: true },
+            { emoji: '👏', count: 92400 },
+            { emoji: '😂', count: 1284 },
+            { emoji: '😮', count: 999 },
+          ],
+        }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+    </Rail>
+  ),
+});
+
+export const ReactionsRefused = meta.story({
+  name: 'Reactions — refused',
+  render: () => (
+    <Rail>
+      {/* Reacting takes the same read access as the thought, so a refusal
+          is a normal outcome. The stack stays legible, nothing toggles,
+          the add control is gone, and one quiet line says why. */}
+      <Row
+        thought={{ ...host, reactions: stack }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+        reactionsDisabled
+        reactionNotice="Reactions are closed."
+      />
+    </Rail>
+  ),
+});
+
+export const ReactionsDensityComparison = meta.story({
+  name: 'Reactions — density comparison',
+  render: () => (
+    <div className="flex items-start gap-6">
+      <div>
+        <p className="mb-2 font-content text-xs text-[#807c7c]">comfortable</p>
+        <Panel width={520}>
+          <div className="flex flex-col gap-8">
+            <Row
+              thought={{ ...host, authorRole: undefined, reactions: stack }}
+              user={{ initials: 'TA' }}
+              onReact={noop}
+              onUnreact={noop}
+            />
+            <Row
+              thought={{ ...viewerTwo, reactions: fullStack }}
+              user={{ initials: 'TA' }}
+              onReact={noop}
+              onUnreact={noop}
+            />
+          </div>
+        </Panel>
+      </div>
+      <div>
+        <p className="mb-2 font-content text-xs text-[#807c7c]">compact</p>
+        <Rail>
+          <Row
+            thought={{ ...host, reactions: stack }}
+            density="compact"
+            actions={['like']}
+            onReact={noop}
+            onUnreact={noop}
+          />
+          <Row
+            thought={{ ...viewerTwo, reactions: fullStack }}
+            density="compact"
+            actions={['like']}
+            onReact={noop}
+            onUnreact={noop}
+          />
+        </Rail>
+      </div>
+    </div>
+  ),
+});
+
+/**
+ * Toggling, with the stack held where the host holds it. The play function
+ * clicks a pill the viewer already holds and then one they do not, so the
+ * two directions are exercised against real state rather than a spy.
+ */
+function ToggleHarness() {
+  const [reactions, setReactions] = useState<ThoughtReaction[]>(stack);
+  const toggle = (_id: string, emoji: string) =>
+    setReactions((current) =>
+      current.map((r) =>
+        r.emoji === emoji
+          ? {
+              ...r,
+              count: r.viewerHasReacted ? r.count - 1 : r.count + 1,
+              viewerHasReacted: !r.viewerHasReacted,
+            }
+          : r
+      )
+    );
+  return (
+    <Rail>
+      <Row
+        thought={{ ...host, reactions }}
+        density="compact"
+        actions={['like']}
+        onReact={toggle}
+        onUnreact={toggle}
+      />
+    </Rail>
+  );
+}
+
+export const ReactionsToggle = meta.story({
+  name: 'Reactions — toggle',
+  render: () => <ToggleHarness />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const mine = canvas.getByRole('button', { name: '🔥 12' });
+    await expect(mine).toHaveAttribute('aria-pressed', 'true');
+    await userEvent.click(mine);
+    await expect(canvas.getByRole('button', { name: '🔥 11' })).toHaveAttribute(
+      'aria-pressed',
+      'false'
+    );
+
+    const theirs = canvas.getByRole('button', { name: '👏 5' });
+    await userEvent.click(theirs);
+    await expect(canvas.getByRole('button', { name: '👏 6' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+  },
 });
