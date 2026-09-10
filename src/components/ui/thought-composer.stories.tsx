@@ -104,6 +104,71 @@ export const HeaderAvatarOnly = meta.story({
   ),
 });
 
+/**
+ * `showAvatar={false}` — the live chat rail (platform's `live-chat-panel`).
+ * The rail is 332px, the composer always posts as the signed-in user, and
+ * there is no post-as choice for the picture to stand for, so the avatar is
+ * around 40px of column showing the viewer their own face. With nothing else
+ * in it the header row goes too, rather than leaving its gap behind.
+ *
+ * The rail's own shell classes are copied here so the two stories are
+ * comparable at the width the decision was made at.
+ */
+const RAIL_SHELL =
+  'min-h-0 gap-3 rounded-[8px] border-white/10 bg-white/[0.03] px-3.5 py-3 shadow-none backdrop-blur-none';
+
+export const RailWithAvatar = meta.story({
+  name: 'Chat rail — avatar on (default)',
+  render: () => (
+    <div className="bg-black p-4" style={{ width: 332 }}>
+      <ThoughtComposer
+        avatarUrl={DEMO_USER.avatarUrl}
+        initials={DEMO_USER.initials}
+        placeholder="Say something"
+        emojiEnabled
+        onSubmit={(text) => console.log('Submit:', text)}
+        className={RAIL_SHELL}
+      />
+    </div>
+  ),
+});
+
+export const RailWithoutAvatar = meta.story({
+  name: 'Chat rail — avatar off',
+  render: () => (
+    <div className="bg-black p-4" style={{ width: 332 }}>
+      <ThoughtComposer
+        showAvatar={false}
+        placeholder="Say something"
+        emojiEnabled
+        onSubmit={(text) => console.log('Submit:', text)}
+        className={RAIL_SHELL}
+      />
+    </div>
+  ),
+});
+
+/**
+ * Avatar off, name/handle still supplied: the header row stays, carrying the
+ * identity alone. Only an empty header is dropped.
+ */
+export const HeaderWithoutAvatar = meta.story({
+  name: 'Header without the avatar',
+  render: () => (
+    <div className="w-[500px]">
+      <ThoughtComposer
+        showAvatar={false}
+        displayName={DEMO_USER.displayName}
+        handle={DEMO_USER.handle}
+        onSubmit={(text) => console.log('Submit:', text)}
+        onImageClick={() => {}}
+        onGifClick={() => {}}
+        onEmojiClick={() => {}}
+      />
+    </div>
+  ),
+});
+
 export const Disabled = meta.story({
   render: () => (
     <div className="w-[500px]">

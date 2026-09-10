@@ -52,6 +52,19 @@ interface ThoughtComposerProps extends Omit<React.ComponentProps<'div'>, 'onSubm
   avatarUrl?: string;
   initials?: string;
   /**
+   * Renders the viewer's avatar in the header row. Defaults to `true`, which
+   * is what every existing call site gets.
+   *
+   * Pass `false` where the avatar carries no information: a narrow surface
+   * that always posts as the signed-in user, with no post-as choice to make,
+   * spends around 40px of column on a picture of the person typing. When it
+   * is off and no {@link displayName} or {@link handle} is given, the header
+   * row goes with it rather than staying as an empty gap.
+   *
+   * Non-compact only. {@link compact} has never rendered an avatar.
+   */
+  showAvatar?: boolean;
+  /**
    * The viewer's display name, shown in the composer header row next to the
    * avatar (non-compact only). When omitted the header shows the avatar alone.
    */
@@ -160,6 +173,7 @@ function ThoughtComposer({
   className,
   avatarUrl,
   initials,
+  showAvatar = true,
   displayName,
   handle,
   placeholder = 'Share your thoughts',
@@ -416,23 +430,32 @@ function ThoughtComposer({
               longer gutters the content — it sits ABOVE a full-width input so
               blocks inserted into the editor (lineup / game cards) get the
               whole composer width instead of a narrow right column. When no
-              name/handle is supplied the header is the avatar alone. */}
-          <div data-slot="thought-composer-header" className="flex items-center gap-3">
-            <Avatar className="size-9 shrink-0">
-              {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
-              <AvatarFallback>{initials ?? '?'}</AvatarFallback>
-            </Avatar>
-            {(displayName || handle) && (
-              <div className="flex min-w-0 flex-col leading-tight">
-                {displayName && (
-                  <span className="truncate text-sm font-semibold text-foreground">
-                    {displayName}
-                  </span>
-                )}
-                {handle && <span className="truncate text-xs text-white/45">@{handle}</span>}
-              </div>
-            )}
-          </div>
+              name/handle is supplied the header is the avatar alone.
+
+              With `showAvatar` off and nothing else to put in it, the row is
+              not rendered at all. Keeping an empty header would keep its
+              gap-3.5 too, which is the space the caller turned the avatar off
+              to get back. */}
+          {(showAvatar || displayName || handle) && (
+            <div data-slot="thought-composer-header" className="flex items-center gap-3">
+              {showAvatar && (
+                <Avatar className="size-9 shrink-0">
+                  {avatarUrl && <AvatarImage src={avatarUrl} alt="Your avatar" />}
+                  <AvatarFallback>{initials ?? '?'}</AvatarFallback>
+                </Avatar>
+              )}
+              {(displayName || handle) && (
+                <div className="flex min-w-0 flex-col leading-tight">
+                  {displayName && (
+                    <span className="truncate text-sm font-semibold text-foreground">
+                      {displayName}
+                    </span>
+                  )}
+                  {handle && <span className="truncate text-xs text-white/45">@{handle}</span>}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Full-width content: the editable surface (and any blocks inserted
               into it) spans the whole composer. Click-to-expand lives here. */}
