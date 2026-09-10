@@ -243,6 +243,39 @@ export interface ThoughtCommentProps {
   reactionNotice?: string;
   /** Same, resolved by id, so a threaded caller can mark one reply's row. */
   getReactionNotice?: (id: string) => string | undefined;
+  /**
+   * This message is the viewer's own. The author's display NAME renders in
+   * brand red instead of white, and nothing else moves: no stripe, no badge,
+   * no rename. In a room running at a message a second, colour on the name
+   * is what a person's eye can find while scrolling, and the name has to
+   * stay legible as a name while it does.
+   *
+   * Defaults to `false`, so every existing call site renders exactly what it
+   * rendered before this prop existed. A caller rendering a thread resolves
+   * it per message with {@link getIsOwn} instead.
+   *
+   * No effect on an `isOriginalAuthor` row: that name sits on a grey pill,
+   * where red-100 lands at 1.2:1 and stops being readable. The pill is
+   * already an author marker, so it keeps its own treatment.
+   */
+  isOwn?: boolean;
+  /**
+   * Same, resolved by id. Ownership is a fact about ONE message's author, so
+   * unlike a display option it is never inherited down a thread — a reply is
+   * marked only when this lookup says the viewer wrote that reply.
+   */
+  getIsOwn?: (id: string) => boolean;
+  /**
+   * Adds a faint red wash behind an own row, under the red name. Very low
+   * alpha, no border, no stripe.
+   *
+   * Opt-in and off by default, including in the live chat rail: the red name
+   * is the shipped treatment, and two markers for one fact is one too many.
+   * Here for a surface that needs an own message found without being read —
+   * a dense transcript, a long scrollback. Does nothing unless the row is
+   * already own.
+   */
+  ownRowTint?: boolean;
 }
 
 export function ThoughtComment({
@@ -283,6 +316,9 @@ export function ThoughtComment({
   reactionsDisabled = false,
   reactionNotice,
   getReactionNotice,
+  isOwn = false,
+  getIsOwn,
+  ownRowTint = false,
 }: ThoughtCommentProps) {
   const Link = useLinkComponent();
   const isOP = thought.isOriginalAuthor;
@@ -390,6 +426,9 @@ export function ThoughtComment({
   const hasUnloadedReplies = replyCount > 0 && replies.length === 0;
   const thoughtIsBookmarked = getBookmarkState?.(thought.id) ?? isBookmarked;
   const thoughtReactionNotice = getReactionNotice?.(thought.id) ?? reactionNotice;
+  /* Resolved the same way as the bookmark state above: the by-id lookup wins
+     where a threaded caller supplies one, the single boolean otherwise. */
+  const thoughtIsOwn = getIsOwn?.(thought.id) ?? isOwn;
 
   /* Which affordances this row offers. Bookmark and share used to render
      unconditionally, which is right in the thoughts panel and wrong in a
@@ -440,8 +479,21 @@ export function ThoughtComment({
           every row below it runs full width, exactly like the card.
 
           Compact tightens that rhythm to 6px: at chat density the three rows
-          are one utterance, not three sections. */}
-      <div className={cn('flex flex-col', isCompact ? 'gap-1.5' : 'gap-3')}>
+          are one utterance, not three sections.
+
+          `ownRowTint` washes this column, not the outer element, so a reply's
+          indent gutter stays outside the wash. Negative margins let the wash
+          bleed past the text without the row moving relative to its
+          neighbours. 6% alpha and a radius, never a border: the moment it
+          gets an edge it becomes a second piece of chrome competing with the
+          red name. Off by default. */}
+      <div
+        className={cn(
+          'flex flex-col',
+          isCompact ? 'gap-1.5' : 'gap-3',
+          thoughtIsOwn && ownRowTint && '-mx-2 rounded-[6px] bg-red-100/[0.06] px-2 py-1.5'
+        )}
+      >
         {/* Pinned indicator */}
         {thought.pinnedBy && (
           <div className="flex items-center gap-1">
@@ -498,16 +550,30 @@ export function ThoughtComment({
                     {thought.author.verified && <VerifiedBadge size="sm" />}
                   </span>
                 ) : (
+                  /* The viewer's own message is marked here and only here:
+                     the display name goes brand red, at the same weight and
+                     size it already had. red-100 (#eb0000), not red-300
+                     (#bf0000) — every surface this row renders on is
+                     near-black, where red-100 clears 4.5:1 against it and
+                     red-300 sits around 3.2:1, and red-100 is already the
+                     accent red the rest of this component uses. An own name
+                     that links hovers DOWN to red-300, since the usual
+                     hover target is the colour it is resting at. */
                   <span
                     className={cn(
-                      'inline-flex items-center gap-1 truncate font-content font-semibold leading-none tracking-[-0.42px] text-white',
+                      'inline-flex items-center gap-1 truncate font-content font-semibold leading-none tracking-[-0.42px]',
+                      thoughtIsOwn ? 'text-red-100' : 'text-white',
                       nameSizeClass
                     )}
                   >
                     {thought.author.handle ? (
                       <Link
                         href={`/@${thought.author.handle}`}
-                        className="text-white transition-colors hover:text-red-100"
+                        className={
+                          thoughtIsOwn
+                            ? 'text-red-100 transition-colors hover:text-red-300'
+                            : 'text-white transition-colors hover:text-red-100'
+                        }
                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
                       >
                         {thought.author.name}
@@ -1091,6 +1157,12 @@ export function ThoughtComment({
               onUnreact={onUnreact}
               reactionsDisabled={reactionsDisabled}
               getReactionNotice={getReactionNotice}
+              /* Never `isOwn` — the parent's ownership says nothing about
+                 who wrote the reply. Same shape as the bookmark state
+                 above: resolved per reply, or not marked at all. */
+              isOwn={getIsOwn?.(reply.id) ?? false}
+              getIsOwn={getIsOwn}
+              ownRowTint={ownRowTint}
             />
           ))}
         </div>

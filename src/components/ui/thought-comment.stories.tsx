@@ -211,6 +211,101 @@ export const CompactThread = meta.story({
   ),
 });
 
+/* ── The viewer's own messages ─────────────────────────────────────────
+   `isOwn` colours the display NAME brand red and changes nothing else.
+   The name stays the name — a room where the viewer's line reads "You"
+   is a room where nobody else can be told apart from them either.
+   ──────────────────────────────────────────────────────────────────── */
+
+/** Tommy is the signed-in viewer in every story below. */
+const own: ThoughtCommentThought = {
+  id: '5',
+  body: 'Give it to the left back and let him run at them.',
+  author: { name: 'Tommy Adams', handle: 'tommy', initials: 'TA', tier: 'Pro' },
+  createdAt: '12s',
+  stats: { likes: 1, comments: 0 },
+};
+
+const ownTwo: ThoughtCommentThought = {
+  ...own,
+  id: '6',
+  body: 'Told you.',
+  createdAt: 'now',
+  stats: { likes: 0, comments: 0 },
+};
+
+export const OwnMessagesRail = meta.story({
+  name: 'Own messages — compact rail',
+  render: () => (
+    <Rail>
+      <Row thought={host} density="compact" actions={['like']} />
+      <Row thought={own} density="compact" actions={['like']} isOwn />
+      <Row thought={mod} density="compact" actions={['like']} />
+      <Row thought={viewerTwo} density="compact" actions={['like']} />
+      <Row thought={ownTwo} density="compact" actions={['like']} isOwn />
+    </Rail>
+  ),
+});
+
+export const OwnMessagesDensityComparison = meta.story({
+  name: 'Own messages — density comparison',
+  render: () => (
+    <div className="flex items-start gap-6">
+      <div>
+        <p className="mb-2 font-content text-xs text-[#807c7c]">comfortable</p>
+        <Panel width={332}>
+          <div className="flex flex-col gap-8">
+            <Row thought={viewerTwo} />
+            <Row thought={own} isOwn />
+          </div>
+        </Panel>
+      </div>
+      <div>
+        <p className="mb-2 font-content text-xs text-[#807c7c]">compact</p>
+        <Rail>
+          <Row thought={viewerTwo} density="compact" actions={['like']} />
+          <Row thought={own} density="compact" actions={['like']} isOwn />
+        </Rail>
+      </div>
+    </div>
+  ),
+});
+
+/**
+ * `ownRowTint` — the opt-in second marker. OFF everywhere in platform; the
+ * red name is what ships. Here so a surface that needs an own message found
+ * without being read can ask for it.
+ */
+export const OwnMessageTint = meta.story({
+  name: 'Own messages — opt-in row tint',
+  render: () => (
+    <Rail>
+      <Row thought={host} density="compact" actions={['like']} />
+      <Row thought={own} density="compact" actions={['like']} isOwn ownRowTint />
+      <Row thought={mod} density="compact" actions={['like']} />
+      <Row thought={ownTwo} density="compact" actions={['like']} isOwn ownRowTint />
+    </Rail>
+  ),
+});
+
+/**
+ * A thread resolves ownership per message with `getIsOwn`. The parent is
+ * somebody else's, the reply is the viewer's, and only the reply is marked.
+ */
+export const OwnMessageInAThread = meta.story({
+  name: 'Own messages — resolved per reply',
+  render: () => (
+    <Rail>
+      <Row
+        thought={{ ...host, replyCount: 1, replies: [{ ...own, id: '5a' }] }}
+        density="compact"
+        actions={['like']}
+        getIsOwn={(id) => id === '5a'}
+      />
+    </Rail>
+  ),
+});
+
 /* ── Reactions ─────────────────────────────────────────────────────────
    The stack is thought data: the server hydrates it on every read that
    returns a thought, ordered highest count first with the emoji as
