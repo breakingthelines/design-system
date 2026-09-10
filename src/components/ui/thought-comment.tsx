@@ -32,6 +32,7 @@ import {
 } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
+import { ReactionPills } from '#/components/ui/reaction-pills';
 import type { ThoughtItem, ThoughtAnchor } from '#/types/content';
 
 /* ────────────────────────────────────────────────────────────
@@ -222,6 +223,26 @@ export interface ThoughtCommentProps {
    * and share have no handlers there and sit dead. `[]` drops the row.
    */
   actions?: ThoughtCommentAction[];
+  /**
+   * Viewer adds an emoji to this comment or any nested reply. Supplying it
+   * is what turns the add-reaction control on; without it the stack renders
+   * read-only. Send the emoji back to the server exactly as given.
+   */
+  onReact?: (id: string, emoji: string) => void;
+  /** Viewer removes their own reaction from this comment or a reply. */
+  onUnreact?: (id: string, emoji: string) => void;
+  /**
+   * Renders the reaction row read-only. Reacting takes the same read access
+   * as the thought itself, so a viewer can hold a stack they may not add to.
+   */
+  reactionsDisabled?: boolean;
+  /**
+   * Quiet inline line beside this comment's pills — the cap, or a refusal.
+   * The host owns the copy and clears it on the next success.
+   */
+  reactionNotice?: string;
+  /** Same, resolved by id, so a threaded caller can mark one reply's row. */
+  getReactionNotice?: (id: string) => string | undefined;
 }
 
 export function ThoughtComment({
@@ -257,6 +278,11 @@ export function ThoughtComment({
   blockRenderers,
   density = 'comfortable',
   actions = DEFAULT_ACTIONS,
+  onReact,
+  onUnreact,
+  reactionsDisabled = false,
+  reactionNotice,
+  getReactionNotice,
 }: ThoughtCommentProps) {
   const Link = useLinkComponent();
   const isOP = thought.isOriginalAuthor;
@@ -363,6 +389,7 @@ export function ThoughtComment({
   const replyCount = thought.replyCount ?? 0;
   const hasUnloadedReplies = replyCount > 0 && replies.length === 0;
   const thoughtIsBookmarked = getBookmarkState?.(thought.id) ?? isBookmarked;
+  const thoughtReactionNotice = getReactionNotice?.(thought.id) ?? reactionNotice;
 
   /* Which affordances this row offers. Bookmark and share used to render
      unconditionally, which is right in the thoughts panel and wrong in a
@@ -669,6 +696,21 @@ export function ThoughtComment({
             />
           </div>
         )}
+
+        {/* Reactions — under the body, above the actions. The stack is
+            thought data (the server hydrates it on every read), so a
+            nested reply carries its own; the callbacks come from the
+            host. At compact the pills wrap inside the rail column and
+            the picker opens in a portal, so a long stack lengthens the
+            row without widening it. */}
+        <ReactionPills
+          reactions={thought.reactions}
+          onReact={onReact ? (emoji) => onReact(thought.id, emoji) : undefined}
+          onUnreact={onUnreact ? (emoji) => onUnreact(thought.id, emoji) : undefined}
+          disabled={reactionsDisabled}
+          notice={thoughtReactionNotice}
+          density={density}
+        />
 
         {/* Actions: Reply + ThumbsUp + utility icons — each one only when
             the caller asked for it. The row itself disappears when nothing
@@ -1045,6 +1087,10 @@ export function ThoughtComment({
               blockRenderers={blockRenderers}
               density={density}
               actions={actions}
+              onReact={onReact}
+              onUnreact={onUnreact}
+              reactionsDisabled={reactionsDisabled}
+              getReactionNotice={getReactionNotice}
             />
           ))}
         </div>

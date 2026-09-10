@@ -132,6 +132,26 @@ export interface ThoughtSubjectRef {
   id: string;
 }
 
+/**
+ * One emoji on a thought's reaction stack, mirroring the proto
+ * `btl.thought.v1.ReactionSummary`. The server hydrates the stack on every
+ * read that returns a thought and orders it highest count first, emoji as
+ * tiebreak, so a renderer maps the list as given.
+ *
+ * `emoji` is the server's normalised form (a lone base character gains
+ * U+FE0F), which is not always byte-identical to what a client sent. It is
+ * the identity of the pill: key React off it, compare against it, and send
+ * it back untouched.
+ */
+export interface ThoughtReaction {
+  /** Normalised emoji character, as returned by the server. */
+  emoji: string;
+  /** How many people have reacted with it. */
+  count: number;
+  /** Whether the viewer is one of them. */
+  viewerHasReacted?: boolean;
+}
+
 export interface ThoughtItem {
   id: string;
   /**
@@ -179,6 +199,13 @@ export interface ThoughtItem {
    * thought came from a cast grade and tap through to the match.
    */
   fromGrade?: ThoughtFromGrade;
+  /**
+   * Reaction stack for this thought, highest count first. Rendered as a pill
+   * row by {@link ThoughtComment}; other thought surfaces ignore it today.
+   * It lives on the thought rather than on the component so a nested reply
+   * carries its own stack instead of inheriting its parent's.
+   */
+  reactions?: ThoughtReaction[];
 }
 
 export interface CollectionItem {

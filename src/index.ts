@@ -39,6 +39,9 @@ export * from './components/ui/label';
 export * from './components/ui/mini-editor/index';
 export * from './components/ui/popover';
 export * from './components/ui/profile-hero';
+// ReactionPills — the stacked emoji row under a thought body. Exports
+// ReactionPills and the ReactionPills* types.
+export * from './components/ui/reaction-pills';
 export * from './components/ui/profile-tabs';
 export * from './components/ui/progress';
 export * from './components/ui/section-header';
