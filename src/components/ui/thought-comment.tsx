@@ -63,7 +63,53 @@ export interface ThoughtCommentMedia {
 export interface ThoughtCommentThought extends ThoughtItem {
   /** If set, the comment is pinned and shows "Pinned by {name}" */
   pinnedBy?: string;
+  /**
+   * Chat role marker for the author of THIS message — rendered beside the
+   * tier badge, never instead of it. It lives on the thought rather than on
+   * the component so a nested reply carries its own author's role instead of
+   * inheriting its parent's.
+   */
+  authorRole?: ThoughtCommentRole;
 }
+
+/**
+ * Row density.
+ *
+ * `comfortable` is the discussion anatomy every existing caller renders, and
+ * stays the default: 40px avatar, a 14px name line over `@handle · time`, a
+ * 14px body, the full engagement row.
+ *
+ * `compact` is the approved chat anatomy (design boards; platform#955's 332px
+ * live rail): 24px avatar, ONE 11px identity line that carries the time
+ * inline, a 12.5px body. The handle is dropped there — the name is already a
+ * link to the profile, and a second metadata line costs a third of a message.
+ * Stack compact rows at a 14px gap: the list owns the space between messages,
+ * the row owns the space inside one.
+ */
+export type ThoughtCommentDensity = 'comfortable' | 'compact';
+
+/**
+ * An affordance the action row can offer, named. This row wires its own
+ * handlers from `onLike`/`onBookmark`/`onShare` (unlike ThoughtCard, which
+ * takes whole `EngagementAction`s), so a caller picks names from this list
+ * rather than building the actions itself.
+ */
+export type ThoughtCommentAction = 'reply' | 'like' | 'bookmark' | 'share';
+
+/** Today's set, and the default — so no existing call site changes. */
+const DEFAULT_ACTIONS: ThoughtCommentAction[] = ['reply', 'like', 'bookmark', 'share'];
+
+/**
+ * Author role in a chat room. A role is not a tier: it says what this person
+ * is doing in the room, so it reads as a marker — quiet neutral chip, 10px
+ * uppercase — beside the tier's tinted chip rather than competing with it.
+ */
+export type ThoughtCommentRole = 'host' | 'moderator';
+
+const roleLabels: Record<ThoughtCommentRole, string> = {
+  host: 'HOST',
+  moderator: 'MOD',
+};
 
 /* ────────────────────────────────────────────────────────────
  * Shared animation variant (matches ThoughtsPanel list item)
@@ -164,6 +210,18 @@ export interface ThoughtCommentProps {
    * (e.g. a lineup) read-only.
    */
   blockRenderers?: React.ComponentProps<typeof ThoughtBody>['blockRenderers'];
+  /**
+   * Row density. Defaults to `comfortable` — the discussion anatomy — so an
+   * existing call site renders exactly what it rendered before the variant
+   * existed. A chat rail passes `compact`.
+   */
+  density?: ThoughtCommentDensity;
+  /**
+   * Which affordances the action row offers, by name. Defaults to today's
+   * full set, so nothing regresses. A chat rail passes `['like']`: bookmark
+   * and share have no handlers there and sit dead. `[]` drops the row.
+   */
+  actions?: ThoughtCommentAction[];
 }
 
 export function ThoughtComment({
@@ -197,10 +255,49 @@ export function ThoughtComment({
   onReport,
   onDelete,
   blockRenderers,
+  density = 'comfortable',
+  actions = DEFAULT_ACTIONS,
 }: ThoughtCommentProps) {
   const Link = useLinkComponent();
   const isOP = thought.isOriginalAuthor;
   const isReplying = replyingTo === thought.id;
+  const isCompact = density === 'compact';
+
+  /* ── Density tokens ───────────────────────────────────────────────
+     Each density spells its whole class string instead of layering an
+     override onto a shared base. That is deliberate: it keeps the
+     `comfortable` markup byte-identical to what this component emitted
+     before the variant existed, which is the property every existing
+     call site is relying on, and it keeps both anatomies readable in
+     one place rather than as a diff you have to run tailwind-merge in
+     your head to resolve. */
+  const avatarClass = isCompact ? (isReply ? 'size-5' : 'size-6') : isReply ? 'size-8' : 'size-10';
+  const nameSizeClass = isCompact ? 'text-[11px]' : isReply ? 'text-xs' : 'text-sm';
+  const badgeSizeClass = isCompact ? 'h-4 px-1.5 text-[10px]' : undefined;
+  const opNameClass = isCompact
+    ? 'font-content text-[11px] font-normal leading-none tracking-[-0.36px] text-white'
+    : 'font-content text-xs font-normal leading-none tracking-[-0.36px] text-white';
+  const opNameLinkClass = `${opNameClass} transition-colors hover:text-red-100`;
+  const metaLinkClass = isCompact
+    ? 'whitespace-nowrap font-content text-[11px] leading-none tracking-[-0.36px] text-[#807c7c] transition-colors hover:text-white'
+    : 'whitespace-nowrap font-content text-xs leading-none tracking-[-0.36px] text-[#807c7c] transition-colors hover:text-white';
+  const metaTextClass = isCompact
+    ? 'whitespace-nowrap font-content text-[11px] leading-none tracking-[-0.36px] text-[#807c7c]'
+    : 'whitespace-nowrap font-content text-xs leading-none tracking-[-0.36px] text-[#807c7c]';
+  const bodyClass = isCompact
+    ? 'font-content text-[12.5px] font-normal leading-[17px] tracking-[-0.126px] text-white'
+    : cn(
+        'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
+        isReply ? 'text-xs' : 'text-sm'
+      );
+  const replyButtonClass = isCompact
+    ? 'cursor-pointer font-content text-[11px] font-normal leading-none tracking-[-0.36px] text-white transition-colors hover:text-red-100'
+    : 'cursor-pointer font-content text-xs font-normal leading-[18px] tracking-[-0.36px] text-white transition-colors hover:text-red-100';
+  const actionMetaClass = isCompact
+    ? 'font-content text-[11px] leading-none tracking-[-0.36px] text-[#807c7c]'
+    : 'font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]';
+  const actionIconSize = isCompact ? 12 : 14;
+  const indentClass = isCompact ? 'pl-8' : 'pl-[52px]';
   const replyEditorRef = React.useRef<MiniEditorHandle>(null);
   const [replyHasText, setReplyHasText] = React.useState(false);
 
@@ -266,6 +363,16 @@ export function ThoughtComment({
   const replyCount = thought.replyCount ?? 0;
   const hasUnloadedReplies = replyCount > 0 && replies.length === 0;
   const thoughtIsBookmarked = getBookmarkState?.(thought.id) ?? isBookmarked;
+
+  /* Which affordances this row offers. Bookmark and share used to render
+     unconditionally, which is right in the thoughts panel and wrong in a
+     chat rail, where neither has a handler and both are just noise. The
+     caller names what it wants; the default is today's full set. */
+  const showsReply = actions.includes('reply') && !isReply && (!!user || replyCount > 0);
+  const showsLike = actions.includes('like');
+  const showsBookmark = actions.includes('bookmark');
+  const showsShare = actions.includes('share');
+  const showsActionRow = showsReply || showsLike || showsBookmark || showsShare;
   const handleShare = React.useCallback(
     (event?: React.MouseEvent<HTMLElement>) => {
       event?.stopPropagation();
@@ -294,7 +401,7 @@ export function ThoughtComment({
   // idiom threaded UIs (Reddit, Twitter replies) use.
   return (
     <motion.div
-      className={cn('flex flex-col', isReply && 'pl-[52px]')}
+      className={cn('flex flex-col', isReply && indentClass)}
       variants={itemVariants}
       data-thought-id={thought.id}
     >
@@ -303,8 +410,11 @@ export function ThoughtComment({
           actions. The body used to sit beside a persistent avatar in a
           `flex-1` content column (an outer gap-3 nested around an inner
           gap-4); now the avatar appears once, in the identity row, and
-          every row below it runs full width, exactly like the card. */}
-      <div className="flex flex-col gap-3">
+          every row below it runs full width, exactly like the card.
+
+          Compact tightens that rhythm to 6px: at chat density the three rows
+          are one utterance, not three sections. */}
+      <div className={cn('flex flex-col', isCompact ? 'gap-1.5' : 'gap-3')}>
         {/* Pinned indicator */}
         {thought.pinnedBy && (
           <div className="flex items-center gap-1">
@@ -326,8 +436,8 @@ export function ThoughtComment({
             double-signalling the same fact with a second variable. A reply
             drops to 32px; that is what marks it one level down from its
             parent, same as before this pass. */}
-        <div className="flex items-center gap-3">
-          <Avatar className={cn(isReply ? 'size-8' : 'size-10', 'shrink-0')}>
+        <div className={cn('flex items-center', isCompact ? 'gap-2' : 'gap-3')}>
+          <Avatar className={cn(avatarClass, 'shrink-0')}>
             {thought.author.avatarUrl && (
               <AvatarImage src={thought.author.avatarUrl} alt={thought.author.name} />
             )}
@@ -341,19 +451,22 @@ export function ThoughtComment({
               <div className="flex min-w-0 items-center gap-1">
                 {isOP ? (
                   /* Original author: grey pill + regular weight + verified badge */
-                  <span className="inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c] px-2 py-1">
+                  <span
+                    className={cn(
+                      'inline-flex items-center gap-1 rounded-[25px] bg-[#807c7c]',
+                      isCompact ? 'px-1.5 py-0.5' : 'px-2 py-1'
+                    )}
+                  >
                     {thought.author.handle ? (
                       <Link
                         href={`/@${thought.author.handle}`}
-                        className="font-content text-xs font-normal leading-none tracking-[-0.36px] text-white transition-colors hover:text-red-100"
+                        className={opNameLinkClass}
                         onClick={(e: React.MouseEvent) => e.stopPropagation()}
                       >
                         {thought.author.name}
                       </Link>
                     ) : (
-                      <span className="font-content text-xs font-normal leading-none tracking-[-0.36px] text-white">
-                        {thought.author.name}
-                      </span>
+                      <span className={opNameClass}>{thought.author.name}</span>
                     )}
                     {thought.author.verified && <VerifiedBadge size="sm" />}
                   </span>
@@ -361,7 +474,7 @@ export function ThoughtComment({
                   <span
                     className={cn(
                       'inline-flex items-center gap-1 truncate font-content font-semibold leading-none tracking-[-0.42px] text-white',
-                      isReply ? 'text-xs' : 'text-sm'
+                      nameSizeClass
                     )}
                   >
                     {thought.author.handle ? (
@@ -384,9 +497,49 @@ export function ThoughtComment({
                     surface, `ml-1` matches the card's extra breathing room
                     ahead of the badge. */}
                 {thought.author.tier && thought.author.tier !== 'Free' && (
-                  <Badge variant={tierVariantMap[thought.author.tier]} className="dark ml-1">
+                  <Badge
+                    variant={tierVariantMap[thought.author.tier]}
+                    className={cn('dark ml-1', badgeSizeClass)}
+                  >
                     {thought.author.tier}
                   </Badge>
+                )}
+                {/* Role badge — HOST / MOD. Beside the tier chip, never in
+                    place of it: a Line Breaker who hosts the show is both.
+                    Same Badge primitive as the tier, one step quieter in
+                    colour (neutral tint, not brand red) and one step
+                    sharper in letterform (10px uppercase), so it reads as
+                    "what this person is doing here" rather than as a
+                    louder tier. */}
+                {thought.authorRole && (
+                  <Badge
+                    variant="tintedNeutral"
+                    className={cn(
+                      'ml-1 text-[10px] font-semibold tracking-[0.04em]',
+                      badgeSizeClass
+                    )}
+                  >
+                    {roleLabels[thought.authorRole]}
+                  </Badge>
+                )}
+                {/* Compact carries the time on the identity line — one line
+                    is the whole point of the chat anatomy, and a rail this
+                    narrow cannot spend a row on metadata. */}
+                {isCompact && thought.createdAt && (
+                  <>
+                    <span className="size-0.5 shrink-0 rounded-full bg-[#807c7c]" />
+                    {thought.permalinkHref ? (
+                      <Link
+                        href={thought.permalinkHref}
+                        className={metaLinkClass}
+                        onClick={(e: React.MouseEvent) => e.stopPropagation()}
+                      >
+                        {thought.createdAt}
+                      </Link>
+                    ) : (
+                      <span className={metaTextClass}>{thought.createdAt}</span>
+                    )}
+                  </>
                 )}
               </div>
               {/* Overflow `…` — pinned right of the name row, level with
@@ -400,7 +553,10 @@ export function ThoughtComment({
                 onReport={onReport ? () => onReport(thought) : undefined}
                 onDelete={onDelete ? () => onDelete(thought) : undefined}
                 tone="dark"
-                className="ml-auto"
+                /* Compact shrinks the trigger to the avatar's own 24px so
+                   the identity line is not set by a control that is taller
+                   than everything beside it. */
+                className={cn('ml-auto', isCompact && 'size-6 [&>svg]:size-4')}
               />
             </div>
 
@@ -417,12 +573,12 @@ export function ThoughtComment({
                 half-leading either side of a non-`none` leading sets a
                 floor gap-0 cannot go under, so both lines need
                 leading-none before removing the gap does anything. */}
-            {(thought.author.handle || thought.createdAt) && (
+            {!isCompact && (thought.author.handle || thought.createdAt) && (
               <div className="flex items-center gap-2">
                 {thought.author.handle && (
                   <Link
                     href={`/@${thought.author.handle}`}
-                    className="whitespace-nowrap font-content text-xs leading-none tracking-[-0.36px] text-[#807c7c] transition-colors hover:text-white"
+                    className={metaLinkClass}
                     onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   >
                     @{thought.author.handle}
@@ -435,15 +591,13 @@ export function ThoughtComment({
                   (thought.permalinkHref ? (
                     <Link
                       href={thought.permalinkHref}
-                      className="whitespace-nowrap font-content text-xs leading-none tracking-[-0.36px] text-[#807c7c] transition-colors hover:text-white"
+                      className={metaLinkClass}
                       onClick={(e: React.MouseEvent) => e.stopPropagation()}
                     >
                       {thought.createdAt}
                     </Link>
                   ) : (
-                    <span className="whitespace-nowrap font-content text-xs leading-none tracking-[-0.36px] text-[#807c7c]">
-                      {thought.createdAt}
-                    </span>
+                    <span className={metaTextClass}>{thought.createdAt}</span>
                   ))}
               </div>
             )}
@@ -499,10 +653,7 @@ export function ThoughtComment({
             body={thought.body}
             bodyJson={thought.bodyJson}
             blockRenderers={blockRenderers}
-            className={cn(
-              'font-content font-normal leading-[18px] tracking-[-0.126px] text-white',
-              isReply ? 'text-xs' : 'text-sm'
-            )}
+            className={bodyClass}
           />
         )}
 
@@ -519,69 +670,77 @@ export function ThoughtComment({
           </div>
         )}
 
-        {/* Actions: Reply + ThumbsUp + utility icons */}
-        <div className="flex items-center gap-4">
-          {!isReply && user && (
-            <button
-              type="button"
-              onClick={() => onStartReply(thought.id)}
-              className="cursor-pointer font-content text-xs font-normal leading-[18px] tracking-[-0.36px] text-white transition-colors hover:text-red-100"
-            >
-              Reply{replyCount > 0 ? ` (${replyCount})` : ''}
-            </button>
-          )}
-          {!isReply && !user && replyCount > 0 && (
-            <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-              {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
-            </span>
-          )}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => (thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id))}
-              className={cn(
-                'cursor-pointer transition-colors',
-                thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white'
-              )}
-            >
-              <ThumbsUp size={14} weight={thought.liked ? 'fill' : 'regular'} />
-            </button>
-            {(thought.stats.likes ?? 0) > 0 && (
-              <span className="font-content text-xs leading-[18px] tracking-[-0.36px] text-[#807c7c]">
-                {thought.stats.likes}
+        {/* Actions: Reply + ThumbsUp + utility icons — each one only when
+            the caller asked for it. The row itself disappears when nothing
+            is left, so an empty set costs no gap. */}
+        {showsActionRow && (
+          <div className={cn('flex items-center', isCompact ? 'gap-3' : 'gap-4')}>
+            {showsReply && user && (
+              <button
+                type="button"
+                onClick={() => onStartReply(thought.id)}
+                className={replyButtonClass}
+              >
+                Reply{replyCount > 0 ? ` (${replyCount})` : ''}
+              </button>
+            )}
+            {showsReply && !user && replyCount > 0 && (
+              <span className={actionMetaClass}>
+                {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
               </span>
             )}
-          </div>
-          <button
-            type="button"
-            onClick={() =>
-              thoughtIsBookmarked ? onUnbookmark?.(thought.id) : onBookmark?.(thought.id)
-            }
-            className={cn(
-              'cursor-pointer transition-colors',
-              thoughtIsBookmarked ? 'text-white' : 'text-[#807c7c] hover:text-white'
+            {showsLike && (
+              <div className={cn('flex items-center', isCompact ? 'gap-1.5' : 'gap-2')}>
+                <button
+                  type="button"
+                  onClick={() => (thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id))}
+                  className={cn(
+                    'cursor-pointer transition-colors',
+                    thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white'
+                  )}
+                >
+                  <ThumbsUp size={actionIconSize} weight={thought.liked ? 'fill' : 'regular'} />
+                </button>
+                {(thought.stats.likes ?? 0) > 0 && (
+                  <span className={actionMetaClass}>{thought.stats.likes}</span>
+                )}
+              </div>
             )}
-            aria-label="Bookmark"
-            aria-pressed={thoughtIsBookmarked}
-          >
-            <Bookmark size={14} weight={thoughtIsBookmarked ? 'fill' : 'regular'} />
-          </button>
-          <button
-            type="button"
-            onClick={handleShare}
-            className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
-            aria-label="Share"
-          >
-            <UploadSimple size={14} weight="regular" />
-          </button>
-        </div>
+            {showsBookmark && (
+              <button
+                type="button"
+                onClick={() =>
+                  thoughtIsBookmarked ? onUnbookmark?.(thought.id) : onBookmark?.(thought.id)
+                }
+                className={cn(
+                  'cursor-pointer transition-colors',
+                  thoughtIsBookmarked ? 'text-white' : 'text-[#807c7c] hover:text-white'
+                )}
+                aria-label="Bookmark"
+                aria-pressed={thoughtIsBookmarked}
+              >
+                <Bookmark size={actionIconSize} weight={thoughtIsBookmarked ? 'fill' : 'regular'} />
+              </button>
+            )}
+            {showsShare && (
+              <button
+                type="button"
+                onClick={handleShare}
+                className="cursor-pointer text-[#807c7c] transition-colors hover:text-white"
+                aria-label="Share"
+              >
+                <UploadSimple size={actionIconSize} weight="regular" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Inline reply composer — shown when replying to this thought */}
       {isReplying && user && (
-        <div className="mt-4 pl-[52px] flex flex-col gap-2">
+        <div className={cn(isCompact ? 'mt-2 pl-8' : 'mt-4 pl-[52px]', 'flex flex-col gap-2')}>
           <div className="flex items-start gap-3">
-            <Avatar className="size-8 shrink-0">
+            <Avatar className={cn(isCompact ? 'size-6' : 'size-8', 'shrink-0')}>
               {user.avatarUrl && <AvatarImage src={user.avatarUrl} alt="You" />}
               <AvatarFallback>{user.initials ?? '?'}</AvatarFallback>
             </Avatar>
@@ -627,7 +786,7 @@ export function ThoughtComment({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden pl-11"
+                className={cn('overflow-hidden', isCompact ? 'pl-8' : 'pl-11')}
               >
                 <div className="relative inline-block max-w-[160px] overflow-hidden rounded-[6px] border border-white/[0.06]">
                   <img
@@ -655,7 +814,7 @@ export function ThoughtComment({
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="overflow-hidden pl-11"
+                className={cn('overflow-hidden', isCompact ? 'pl-8' : 'pl-11')}
               >
                 <div className="relative inline-block max-w-[160px] overflow-hidden rounded-[6px] border border-white/[0.06]">
                   <img
@@ -681,7 +840,7 @@ export function ThoughtComment({
             )}
           </AnimatePresence>
 
-          <div className="flex items-center justify-between pl-11">
+          <div className={cn('flex items-center justify-between', isCompact ? 'pl-8' : 'pl-11')}>
             <div className="flex items-center gap-1">
               {showReplyGifBtn && (
                 <button
@@ -797,7 +956,7 @@ export function ThoughtComment({
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.2 }}
-                className="overflow-hidden pl-11"
+                className={cn('overflow-hidden', isCompact ? 'pl-8' : 'pl-11')}
               >
                 {replyPicker === 'gif' && gifs !== undefined && (
                   <GifPicker
@@ -834,7 +993,10 @@ export function ThoughtComment({
         <button
           type="button"
           onClick={() => onLoadReplies?.(thought.id)}
-          className="mt-2 pl-[52px] cursor-pointer font-content text-xs font-medium text-red-100 transition-colors hover:text-red-300 text-left"
+          className={cn(
+            isCompact ? 'mt-1 pl-8' : 'mt-2 pl-[52px]',
+            'cursor-pointer font-content text-xs font-medium text-red-100 transition-colors hover:text-red-300 text-left'
+          )}
         >
           View {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
         </button>
@@ -842,7 +1004,13 @@ export function ThoughtComment({
 
       {/* Replies — flat, 1 level deep, no nested reply button */}
       {replies.length > 0 && (
-        <div className="mt-4 flex flex-col gap-4">
+        <div
+          className={cn(
+            isCompact ? 'mt-2' : 'mt-4',
+            'flex flex-col',
+            isCompact ? 'gap-2' : 'gap-4'
+          )}
+        >
           {replies.map((reply) => (
             <ThoughtComment
               key={reply.id}
@@ -875,6 +1043,8 @@ export function ThoughtComment({
               onReport={onReport}
               onDelete={onDelete}
               blockRenderers={blockRenderers}
+              density={density}
+              actions={actions}
             />
           ))}
         </div>
