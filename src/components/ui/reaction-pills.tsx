@@ -10,13 +10,20 @@ import { Popover, PopoverContent, PopoverTrigger } from '#/components/ui/popover
 import type { ThoughtReaction } from '#/types/content';
 
 /* ────────────────────────────────────────────────────────────
- * ReactionPills — the stacked emoji row under a thought body
+ * ReactionPills — the engagement row under a thought body
  *
  * One pill per distinct emoji: the emoji, then its count, marked when the
  * viewer is in it. Tapping toggles. A trailing control opens the same
  * {@link EmojiPicker} the composer uses, in a Popover so a 320px panel
  * never widens the row that owns it — the chat rail is 332px and the row
  * has to stay inside the board anatomy.
+ *
+ * The host's own affordance shares the row rather than sitting above it:
+ * `leading` takes it, and it flows in the same wrap context as the pills,
+ * so like, the stacks and the add control are ONE band that wraps as a
+ * unit instead of two horizontal bands stacked on each other. What goes
+ * there stays the host's — this row neither owns it nor folds it into the
+ * reaction data model.
  *
  * The row owns no fetching and no cap arithmetic. The server orders the
  * stack (highest count first, emoji as tiebreak), normalises each emoji,
@@ -48,7 +55,32 @@ export interface ReactionPillsProps {
   notice?: string;
   /** Matches the host row's density. */
   density?: ReactionPillsDensity;
+  /**
+   * The host's own affordance, rendered FIRST in this row — the like button
+   * and its count, where the host offers one. It is a node rather than a
+   * reaction: nothing here reads it, counts it or toggles it.
+   *
+   * A row that has only this and no stack still renders, so a caller that
+   * hands one over gets its band either way. A row with neither renders
+   * nothing at all (see {@link hasReactionRow}).
+   */
+  leading?: React.ReactNode;
   className?: string;
+}
+
+/**
+ * Whether a row built from these inputs draws anything. ReactionPills asks
+ * it before rendering, and a host asks it before spending a gap on the row
+ * — one answer, so the two cannot disagree about an empty band.
+ */
+export function hasReactionRow({
+  reactions,
+  onReact,
+  disabled = false,
+  notice,
+  leading,
+}: Pick<ReactionPillsProps, 'reactions' | 'onReact' | 'disabled' | 'notice' | 'leading'>): boolean {
+  return (reactions?.length ?? 0) > 0 || (!disabled && !!onReact) || !!notice || leading != null;
 }
 
 export function ReactionPills({
@@ -58,6 +90,7 @@ export function ReactionPills({
   disabled = false,
   notice,
   density = 'comfortable',
+  leading,
   className,
 }: ReactionPillsProps) {
   const [pickerOpen, setPickerOpen] = React.useState(false);
@@ -67,7 +100,7 @@ export function ReactionPills({
 
   // Nothing to show and nothing to offer: render no element at all, so the
   // parent's flex gap does not pay for an empty row.
-  if (stack.length === 0 && !canAdd && !notice) return null;
+  if (!hasReactionRow({ reactions, onReact, disabled, notice, leading })) return null;
 
   const pillClass = isCompact
     ? 'h-[18px] gap-1 rounded-full px-1.5 text-[10px]'
@@ -79,6 +112,15 @@ export function ReactionPills({
       data-slot="reaction-pills"
       className={cn('flex flex-wrap items-center', isCompact ? 'gap-1' : 'gap-1.5', className)}
     >
+      {leading != null && (
+        <span
+          data-slot="reaction-leading"
+          className={cn('inline-flex items-center', isCompact ? 'mr-0.5' : 'mr-1')}
+        >
+          {leading}
+        </span>
+      )}
+
       {stack.map((reaction) => {
         const mine = !!reaction.viewerHasReacted;
         return (

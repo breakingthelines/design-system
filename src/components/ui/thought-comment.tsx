@@ -32,7 +32,7 @@ import {
 } from '#/components/ui/mini-editor/index';
 import { EmojiPicker } from '#/components/ui/emoji-picker';
 import { GifPicker, type GifSelection, type GifItem } from '#/components/ui/gif-picker';
-import { ReactionPills } from '#/components/ui/reaction-pills';
+import { ReactionPills, hasReactionRow } from '#/components/ui/reaction-pills';
 import type { ThoughtItem, ThoughtAnchor } from '#/types/content';
 
 /* ────────────────────────────────────────────────────────────
@@ -438,7 +438,46 @@ export function ThoughtComment({
   const showsLike = actions.includes('like');
   const showsBookmark = actions.includes('bookmark');
   const showsShare = actions.includes('share');
-  const showsActionRow = showsReply || showsLike || showsBookmark || showsShare;
+
+  /* One object, so the pill row and the question "does the pill row draw
+     anything" are answered from exactly the same inputs. */
+  const reactionProps = {
+    reactions: thought.reactions,
+    onReact: onReact ? (emoji: string) => onReact(thought.id, emoji) : undefined,
+    onUnreact: onUnreact ? (emoji: string) => onUnreact(thought.id, emoji) : undefined,
+    disabled: reactionsDisabled,
+    notice: thoughtReactionNotice,
+    density,
+  };
+  const showsReactions = hasReactionRow(reactionProps);
+  const showsActionRow = showsReply || showsLike || showsBookmark || showsShare || showsReactions;
+
+  /* Like and the reaction stacks are ONE band, not two: like first, then the
+     emoji stacks, then the add control, wrapping together.
+
+     The affordance is the same node in both places. Where there is a pill row
+     to share it goes in as ReactionPills' `leading`, so it flows in that row's
+     wrap context; where there is not, it renders bare in the action row
+     exactly as it did in 0.103.0. That second path is the point — a caller
+     that knows nothing about reactions still emits the markup it always did,
+     and a row with neither reactions nor like still emits no row at all. */
+  const likeAffordance = showsLike ? (
+    <div className={cn('flex items-center', isCompact ? 'gap-1.5' : 'gap-2')}>
+      <button
+        type="button"
+        onClick={() => (thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id))}
+        className={cn(
+          'cursor-pointer transition-colors',
+          thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white'
+        )}
+      >
+        <ThumbsUp size={actionIconSize} weight={thought.liked ? 'fill' : 'regular'} />
+      </button>
+      {(thought.stats.likes ?? 0) > 0 && (
+        <span className={actionMetaClass}>{thought.stats.likes}</span>
+      )}
+    </div>
+  ) : null;
   const handleShare = React.useCallback(
     (event?: React.MouseEvent<HTMLElement>) => {
       event?.stopPropagation();
@@ -763,24 +802,16 @@ export function ThoughtComment({
           </div>
         )}
 
-        {/* Reactions — under the body, above the actions. The stack is
-            thought data (the server hydrates it on every read), so a
-            nested reply carries its own; the callbacks come from the
-            host. At compact the pills wrap inside the rail column and
-            the picker opens in a portal, so a long stack lengthens the
-            row without widening it. */}
-        <ReactionPills
-          reactions={thought.reactions}
-          onReact={onReact ? (emoji) => onReact(thought.id, emoji) : undefined}
-          onUnreact={onUnreact ? (emoji) => onUnreact(thought.id, emoji) : undefined}
-          disabled={reactionsDisabled}
-          notice={thoughtReactionNotice}
-          density={density}
-        />
+        {/* Actions: Reply, then the engagement band — like and the reaction
+            stacks together — then the utility icons. Each one only when the
+            caller asked for it, and the row itself disappears when nothing
+            is left, so an empty set costs no gap.
 
-        {/* Actions: Reply + ThumbsUp + utility icons — each one only when
-            the caller asked for it. The row itself disappears when nothing
-            is left, so an empty set costs no gap. */}
+            The stack is thought data (the server hydrates it on every read),
+            so a nested reply carries its own; the callbacks come from the
+            host. The band is the only part that wraps: at compact it wraps
+            inside the rail column and the picker opens in a portal, so a long
+            stack lengthens the message without widening it. */}
         {showsActionRow && (
           <div className={cn('flex items-center', isCompact ? 'gap-3' : 'gap-4')}>
             {showsReply && user && (
@@ -797,22 +828,10 @@ export function ThoughtComment({
                 {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
               </span>
             )}
-            {showsLike && (
-              <div className={cn('flex items-center', isCompact ? 'gap-1.5' : 'gap-2')}>
-                <button
-                  type="button"
-                  onClick={() => (thought.liked ? onUnlike?.(thought.id) : onLike?.(thought.id))}
-                  className={cn(
-                    'cursor-pointer transition-colors',
-                    thought.liked ? 'text-white' : 'text-[#807c7c] hover:text-white'
-                  )}
-                >
-                  <ThumbsUp size={actionIconSize} weight={thought.liked ? 'fill' : 'regular'} />
-                </button>
-                {(thought.stats.likes ?? 0) > 0 && (
-                  <span className={actionMetaClass}>{thought.stats.likes}</span>
-                )}
-              </div>
+            {showsReactions ? (
+              <ReactionPills {...reactionProps} leading={likeAffordance} />
+            ) : (
+              likeAffordance
             )}
             {showsBookmark && (
               <button

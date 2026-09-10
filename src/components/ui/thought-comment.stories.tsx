@@ -598,3 +598,122 @@ export const ReactionsToggle = meta.story({
     );
   },
 });
+
+/* ── One row ───────────────────────────────────────────────────────────
+   Like and the stacks share a band: like first, then the emoji stacks,
+   then the add control. The band is the only part of the row that wraps,
+   so a long stack makes a message taller and never wider.
+   ──────────────────────────────────────────────────────────────────── */
+
+export const OneRowLikeAlone = meta.story({
+  name: 'One row — like alone',
+  render: () => (
+    <Rail>
+      {/* No stack and no handler: like renders on its own, exactly as it
+          did before the band existed. */}
+      <Row thought={host} density="compact" actions={['like']} />
+      <Row thought={viewerTwo} density="compact" actions={['like']} />
+    </Rail>
+  ),
+});
+
+export const OneRowLikeAndPills = meta.story({
+  name: 'One row — like and the stacks',
+  render: () => (
+    <Rail>
+      <Row
+        thought={{ ...host, reactions: stack }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+      <Row
+        thought={{ ...viewerTwo, reactions: [{ emoji: '👏', count: 1 }] }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+    </Rail>
+  ),
+});
+
+export const OneRowPillsAlone = meta.story({
+  name: 'One row — the stacks alone',
+  render: () => (
+    <Rail>
+      {/* Like withheld by the caller. The band is the stacks and the add
+          control, and nothing shifts to fill the space like left. */}
+      <Row
+        thought={{ ...host, reactions: stack }}
+        density="compact"
+        actions={[]}
+        onReact={noop}
+        onUnreact={noop}
+      />
+      <Row thought={mod} density="compact" actions={[]} onReact={noop} />
+    </Rail>
+  ),
+});
+
+export const OneRowWrapping = meta.story({
+  name: 'One row — wrapping at 332px',
+  render: () => (
+    <Rail>
+      {/* Twenty distinct emoji behind a like, in the real rail width. Like
+          leads the band and the stacks wrap after it. */}
+      <Row
+        thought={{ ...host, reactions: fullStack }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+      <Row
+        thought={{ ...viewerTwo, reactions: stack }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+    </Rail>
+  ),
+});
+
+export const OneRowDensities = meta.story({
+  name: 'One row — both densities',
+  render: () => (
+    <div className="flex items-start gap-6">
+      <div>
+        <p className="mb-2 font-content text-xs text-[#807c7c]">comfortable</p>
+        <Panel width={520}>
+          <div className="flex flex-col gap-8">
+            {/* The discussion row keeps reply, bookmark and share around the
+                band; the band sits where like always sat. */}
+            <Row
+              thought={{ ...host, authorRole: undefined, reactions: stack }}
+              user={{ initials: 'TA' }}
+              onReact={noop}
+              onUnreact={noop}
+            />
+            <Row thought={{ ...viewerTwo, authorRole: undefined }} user={{ initials: 'TA' }} />
+          </div>
+        </Panel>
+      </div>
+      <div>
+        <p className="mb-2 font-content text-xs text-[#807c7c]">compact</p>
+        <Rail>
+          <Row
+            thought={{ ...host, reactions: stack }}
+            density="compact"
+            actions={['like']}
+            onReact={noop}
+            onUnreact={noop}
+          />
+          <Row thought={viewerTwo} density="compact" actions={['like']} />
+        </Rail>
+      </div>
+    </div>
+  ),
+});
