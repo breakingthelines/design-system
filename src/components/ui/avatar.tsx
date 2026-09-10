@@ -7,6 +7,7 @@ import { motion, type HTMLMotionProps } from 'framer-motion';
 
 import { BtlPlaceholder } from '#/components/ui/btl-placeholder';
 import { cn } from '#/lib/utils';
+import { useSourceChain } from '#/components/ui/entity-asset-image';
 import { motion as motionTokens } from '#/tokens/motion';
 import type { VariantFn } from '#/lib/cva';
 
@@ -117,6 +118,51 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
     <AvatarPrimitive.Image
       data-slot="avatar-image"
       className={cn('aspect-square size-full rounded-full object-cover', className)}
+      {...props}
+    />
+  );
+}
+
+export interface ChainedAvatarImageProps extends Omit<AvatarPrimitive.Image.Props, 'src'> {
+  /**
+   * Candidate addresses in probe order — typically `entityAssetCandidates(...)`.
+   * The first address that loads renders; when every address has failed the
+   * component renders nothing and the surrounding `AvatarFallback` shows.
+   */
+  sources: readonly string[];
+}
+
+/**
+ * An AvatarImage that walks an address chain itself, so callers cannot get the
+ * failure wiring wrong.
+ *
+ * base-ui's Avatar.Image preloads its src on a DETACHED window.Image and only
+ * mounts the rendered <img> once that preloader reports loaded — on a 404
+ * there is never an element in the DOM, so the `onError`/`imgRef` contract
+ * that `useSourceChain` documents is silently unsatisfiable here. Every
+ * consumer that hand-wired a chain through AvatarImage shipped the same bug
+ * (platform#948, the Arena club pill stuck on initials with the provider
+ * crest at 200): the walk never advanced past its first dead address.
+ *
+ * `onLoadingStatusChange` is the callback base-ui actually fires for the
+ * preloader's failure, and it is what advances the walk. `onError` and the
+ * mount ref stay wired for the one narrow case where a mounted <img> can
+ * still fail independently (preloader satisfied from cache, real fetch
+ * evicted between). This component is the Avatar counterpart of
+ * `EntityAssetImage`: pass `sources`, keep your `AvatarFallback`, done.
+ */
+function ChainedAvatarImage({ sources, ...props }: ChainedAvatarImageProps) {
+  const { src, onError, imgRef } = useSourceChain(sources);
+  if (!src) return null;
+  return (
+    <AvatarImage
+      key={src}
+      ref={imgRef}
+      src={src}
+      onError={onError}
+      onLoadingStatusChange={(status) => {
+        if (status === 'error') onError();
+      }}
       {...props}
     />
   );
@@ -233,6 +279,7 @@ function AnimatedAvatar({ children, ...props }: AnimatedAvatarProps) {
 export {
   Avatar,
   AvatarImage,
+  ChainedAvatarImage,
   AvatarFallback,
   AvatarGroup,
   AvatarGroupCount,
