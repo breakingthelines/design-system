@@ -126,19 +126,20 @@ describe('assetMonogram', () => {
 });
 
 describe('entityAssetCandidates — the btl layer and the chain order', () => {
-  it('gives a mark ONE btl candidate (svg) before the provider crest', () => {
-    // Two, until content-service stopped accepting a raster mark. The second
-    // address can no longer be written, so probing it was a guaranteed 404 in
-    // front of every badge on the page.
+  it('gives a mark its RESOLVED address first, extensionless, then the provider tail', () => {
+    // The resolved object always carries the winning image (bespoke when one
+    // exists, else the provider copy — content-service#248), so after the
+    // backfill this first address answers 200 for every known mark and the
+    // provider tail is a rollout safety net, not a probe.
     expect(entityAssetCandidates('team', 'crest', TEAM, BASE)).toEqual([
-      `${BASE}/btl/crest/${TEAM}.svg`,
+      `${BASE}/resolved/crest/${TEAM}`,
       `${BASE}/provider/crest/${TEAM}.png`,
     ]);
   });
 
   it('addresses a competition badge at btl/competition/, not btl/badge/', () => {
     expect(entityAssetCandidates('competition', 'crest', COMP, BASE)).toEqual([
-      `${BASE}/btl/competition/${COMP}.svg`,
+      `${BASE}/resolved/competition/${COMP}`,
       `${BASE}/provider/competition/${COMP}.png`,
     ]);
   });
@@ -150,7 +151,11 @@ describe('entityAssetCandidates — the btl layer and the chain order', () => {
     ]);
   });
 
-  it('bespoke art wins: the btl candidate is ALWAYS ahead of the provider layer', () => {
+  it('the BTL-owned candidate is ALWAYS ahead of the provider layer', () => {
+    // For a mark that candidate is the resolved object (which carries the
+    // bespoke art whenever it exists); for a photo it is the bespoke btl/
+    // address. Either way, ours leads and the raw provider layer trails.
+    const isOurs = (url: string) => url.includes('/btl/') || url.includes('/resolved/');
     for (const chain of [
       entityAssetCandidates('team', 'crest', TEAM, BASE),
       entityAssetCandidates('competition', 'crest', COMP, BASE),
@@ -158,10 +163,10 @@ describe('entityAssetCandidates — the btl layer and the chain order', () => {
       entityAssetCandidates('player', 'hero', PLAYER, BASE),
       entityAssetCandidates('manager', 'hero', COACH, BASE),
     ]) {
-      const firstProvider = chain.findIndex((url) => !url.includes('/btl/'));
-      const lastBespoke = chain.map((url) => url.includes('/btl/')).lastIndexOf(true);
-      expect(lastBespoke).toBeGreaterThanOrEqual(0);
-      expect(lastBespoke).toBeLessThan(firstProvider);
+      const firstProvider = chain.findIndex((url) => !isOurs(url));
+      const lastOurs = chain.map(isOurs).lastIndexOf(true);
+      expect(lastOurs).toBeGreaterThanOrEqual(0);
+      expect(lastOurs).toBeLessThan(firstProvider);
     }
   });
 
@@ -222,7 +227,7 @@ describe('entityAssetCandidates — the btl layer and the chain order', () => {
       imageUrl: 'https://media.api-sports.io/football/teams/42.png',
     });
     expect(chain.some((url) => url.includes('api-sports.io'))).toBe(false);
-    expect(chain).toEqual([`${BASE}/btl/crest/${TEAM}.svg`, `${BASE}/provider/crest/${TEAM}.png`]);
+    expect(chain).toEqual([`${BASE}/resolved/crest/${TEAM}`, `${BASE}/provider/crest/${TEAM}.png`]);
   });
 
   it('is empty with no id and with no cdnBase', () => {
@@ -234,7 +239,7 @@ describe('entityAssetCandidates — the btl layer and the chain order', () => {
     const chain = entityAssetCandidates('team', 'crest', TEAM, BASE, {
       imageUrl: `media/provider/crest/${TEAM}.png`,
     });
-    expect(chain).toEqual([`${BASE}/btl/crest/${TEAM}.svg`, `${BASE}/provider/crest/${TEAM}.png`]);
+    expect(chain).toEqual([`${BASE}/resolved/crest/${TEAM}`, `${BASE}/provider/crest/${TEAM}.png`]);
   });
 });
 
