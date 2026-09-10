@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, screen, userEvent, within } from 'storybook/test';
 
 import preview from '#.storybook/preview';
 import {
@@ -447,6 +447,40 @@ function ToggleHarness() {
     </Rail>
   );
 }
+
+/**
+ * The add control opens the composer's own EmojiPicker, in a Popover. The
+ * play function pins two things a chat rail depends on: that the picker
+ * actually mounts from this trigger, and that it is portalled out of the
+ * 332px column rather than laid out inside it.
+ */
+export const ReactionsPicker = meta.story({
+  name: 'Reactions — the picker',
+  render: () => (
+    <Rail>
+      <Row
+        thought={{ ...host, reactions: [{ emoji: '🔥', count: 2 }] }}
+        density="compact"
+        actions={['like']}
+        onReact={noop}
+        onUnreact={noop}
+      />
+    </Rail>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Add reaction' }));
+
+    // The picker is the one the reply composer already ships, so it is found
+    // by its own search field rather than by anything this row invented.
+    const search = await screen.findByPlaceholderText('Search emoji…');
+    await expect(search).toBeVisible();
+
+    // Portalled: the panel is 320px and the rail is 332px, so it must not be
+    // laid out inside the message row that opened it.
+    await expect(canvasElement.contains(search)).toBe(false);
+  },
+});
 
 export const ReactionsToggle = meta.story({
   name: 'Reactions — toggle',
