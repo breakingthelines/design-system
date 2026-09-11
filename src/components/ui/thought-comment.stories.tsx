@@ -717,3 +717,55 @@ export const OneRowDensities = meta.story({
     </div>
   ),
 });
+
+/* ── Stacked row (reactionsRow="stacked") ─────────────────────────────
+   Right when the action row carries MORE than like: Reply/Bookmark/Share
+   are fixed controls, and a variable-width stack sharing their row pushes
+   them sideways as people react. Here the pills get their own row, directly
+   under the body, and the action row keeps its width regardless of the
+   stack. Discussion density only in these stories — the chat rail has
+   nothing beside like to push, which is why `'combined'` stays its default.
+   ──────────────────────────────────────────────────────────────────── */
+
+export const StackedRowDiscussion = meta.story({
+  name: 'Stacked row — reply, bookmark and share stay put',
+  render: () => (
+    <Panel width={520}>
+      <div className="flex flex-col gap-8">
+        <Row
+          thought={{ ...host, authorRole: undefined, reactions: stack }}
+          user={{ initials: 'TA' }}
+          onReact={noop}
+          onUnreact={noop}
+          onBookmark={noop}
+          onShare={noop}
+          reactionsRow="stacked"
+        />
+        <Row
+          thought={{ ...viewerTwo, authorRole: undefined }}
+          user={{ initials: 'TA' }}
+          onBookmark={noop}
+          onShare={noop}
+          reactionsRow="stacked"
+        />
+      </div>
+    </Panel>
+  ),
+});
+
+export const StackedRowWrapping = meta.story({
+  name: 'Stacked row — a full stack still does not move Bookmark or Share',
+  render: () => (
+    <Panel width={520}>
+      <Row
+        thought={{ ...host, authorRole: undefined, reactions: fullStack }}
+        user={{ initials: 'TA' }}
+        onReact={noop}
+        onUnreact={noop}
+        onBookmark={noop}
+        onShare={noop}
+        reactionsRow="stacked"
+      />
+    </Panel>
+  ),
+});
