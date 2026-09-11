@@ -101,6 +101,26 @@ export type ThoughtCommentAction = 'reply' | 'like' | 'bookmark' | 'share';
 const DEFAULT_ACTIONS: ThoughtCommentAction[] = ['reply', 'like', 'bookmark', 'share'];
 
 /**
+ * Where the reaction stack sits relative to the action row.
+ *
+ * `'combined'` (default, 0.104.0's shape) — like leads the pill row, and
+ * the whole band sits INSIDE the action row, wrapping together with
+ * Reply/Bookmark/Share. Right when the action row has nothing else beside
+ * like (the chat rail passes `actions={['like']}`): one band, one row, and
+ * a stack that grows without anything to push. Wrong when the row also
+ * carries Reply/Bookmark/Share — a variable-width stack between them slides
+ * the fixed controls sideways as people react.
+ *
+ * `'stacked'` — the pills are their OWN row, directly under the body (and
+ * above the action row), and like stays in the action row bare, beside
+ * Reply/Bookmark/Share exactly as it sat before 0.104.0. The Discord/Slack
+ * pattern. Threaded through the reply recursion below like `density` and
+ * `actions` are, so a threaded caller gets it on every reply too, not only
+ * the top-level row.
+ */
+export type ThoughtCommentReactionsRow = 'combined' | 'stacked';
+
+/**
  * Author role in a chat room. A role is not a tier: it says what this person
  * is doing in the room, so it reads as a marker — quiet neutral chip, 10px
  * uppercase — beside the tier's tinted chip rather than competing with it.
@@ -244,6 +264,11 @@ export interface ThoughtCommentProps {
   /** Same, resolved by id, so a threaded caller can mark one reply's row. */
   getReactionNotice?: (id: string) => string | undefined;
   /**
+   * `'combined'` (default) or `'stacked'` — see {@link ThoughtCommentReactionsRow}.
+   * Defaults to `'combined'`, so no existing call site changes.
+   */
+  reactionsRow?: ThoughtCommentReactionsRow;
+  /**
    * This message is the viewer's own. The author's display NAME renders in
    * brand red instead of white, and nothing else moves: no stripe, no badge,
    * no rename. In a room running at a message a second, colour on the name
@@ -316,6 +341,7 @@ export function ThoughtComment({
   reactionsDisabled = false,
   reactionNotice,
   getReactionNotice,
+  reactionsRow = 'combined',
   isOwn = false,
   getIsOwn,
   ownRowTint = false,
@@ -324,6 +350,7 @@ export function ThoughtComment({
   const isOP = thought.isOriginalAuthor;
   const isReplying = replyingTo === thought.id;
   const isCompact = density === 'compact';
+  const stackedReactions = reactionsRow === 'stacked';
 
   /* ── Density tokens ───────────────────────────────────────────────
      Each density spells its whole class string instead of layering an
@@ -450,7 +477,13 @@ export function ThoughtComment({
     density,
   };
   const showsReactions = hasReactionRow(reactionProps);
-  const showsActionRow = showsReply || showsLike || showsBookmark || showsShare || showsReactions;
+  /* In 'stacked' mode the pills are their own element (below), so their
+     presence does not by itself require the action row — a stacked row
+     with reactions and nothing else (no reply, no like, no bookmark, no
+     share) draws the pills alone and no empty action row beneath them. */
+  const showsActionRow = stackedReactions
+    ? showsReply || showsLike || showsBookmark || showsShare
+    : showsReply || showsLike || showsBookmark || showsShare || showsReactions;
 
   /* Like and the reaction stacks are ONE band, not two: like first, then the
      emoji stacks, then the add control, wrapping together.
@@ -802,16 +835,27 @@ export function ThoughtComment({
           </div>
         )}
 
+        {/* The reaction row, on its OWN line — 'stacked' mode only. Directly
+            under the body/attachment and above the action row, so a stack
+            that grows never pushes Reply/Bookmark/Share sideways: the
+            Discord/Slack pattern. Threaded through the reply recursion below
+            exactly like `density`, so a nested reply gets the same row
+            rather than falling back to the combined band. */}
+        {stackedReactions && showsReactions && <ReactionPills {...reactionProps} />}
+
         {/* Actions: Reply, then the engagement band — like and the reaction
-            stacks together — then the utility icons. Each one only when the
-            caller asked for it, and the row itself disappears when nothing
-            is left, so an empty set costs no gap.
+            stacks together in 'combined' mode, like alone in 'stacked' mode
+            (the pills already had their own row above) — then the utility
+            icons. Each one only when the caller asked for it, and the row
+            itself disappears when nothing is left, so an empty set costs no
+            gap.
 
             The stack is thought data (the server hydrates it on every read),
             so a nested reply carries its own; the callbacks come from the
-            host. The band is the only part that wraps: at compact it wraps
-            inside the rail column and the picker opens in a portal, so a long
-            stack lengthens the message without widening it. */}
+            host. In 'combined' mode the band is the only part that wraps: at
+            compact it wraps inside the rail column and the picker opens in a
+            portal, so a long stack lengthens the message without widening
+            it. */}
         {showsActionRow && (
           <div className={cn('flex items-center', isCompact ? 'gap-3' : 'gap-4')}>
             {showsReply && user && (
@@ -828,7 +872,7 @@ export function ThoughtComment({
                 {replyCount} {replyCount === 1 ? 'reply' : 'replies'}
               </span>
             )}
-            {showsReactions ? (
+            {!stackedReactions && showsReactions ? (
               <ReactionPills {...reactionProps} leading={likeAffordance} />
             ) : (
               likeAffordance
@@ -1176,6 +1220,7 @@ export function ThoughtComment({
               onUnreact={onUnreact}
               reactionsDisabled={reactionsDisabled}
               getReactionNotice={getReactionNotice}
+              reactionsRow={reactionsRow}
               /* Never `isOwn` — the parent's ownership says nothing about
                  who wrote the reply. Same shape as the bookmark state
                  above: resolved per reply, or not marked at all. */
