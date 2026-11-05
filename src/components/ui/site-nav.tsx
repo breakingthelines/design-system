@@ -1717,10 +1717,22 @@ function SiteNav({
           )
         ) : (
           /* Logged-out (public) actions cluster: text controls + a solid-red
-             Sign Up button. "Search" is desktop-only text now (mobile reaches
-             it via the hamburger, alongside "Learn" — see the hamburger panel
-             below); "Log in" then Sign Up show at ALL sizes. */
-          <div className="flex items-center gap-6">
+             Sign Up button. "Search" is text on desktop and the 32px icon slot
+             on mobile, so a phone reaches search in one tap (it is also the
+             hamburger's first item); "Learn" is desktop-only; "Log in" then
+             Sign Up show at ALL sizes. The mobile gap is 16px so the icon fits
+             at 320px. */
+          <div className="flex items-center gap-4 sm:gap-6">
+            {onSearchClick && (
+              <button
+                type="button"
+                aria-label="Search"
+                onClick={onSearchClick}
+                className="flex size-8 cursor-pointer items-center justify-center rounded-[4px] bg-white/5 text-grey-500 transition-colors hover:bg-white/10 hover:text-white sm:hidden"
+              >
+                <SearchIcon className="size-[14px]" />
+              </button>
+            )}
             {onSearchClick && (
               <button
                 type="button"

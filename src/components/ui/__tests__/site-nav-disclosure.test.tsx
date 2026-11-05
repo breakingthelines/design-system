@@ -137,3 +137,32 @@ describe('SiteNav dropdowns are disclosures, not CSS hover', () => {
     expect(sliceSlot(markup, 'site-nav')).toContain('href="/"');
   });
 });
+
+describe('SiteNav signed-out search', () => {
+  function publicNav(onSearchClick?: () => void) {
+    return render(
+      <SiteNav
+        tabs={tabs}
+        onSearchClick={onSearchClick}
+        onLoginClick={() => undefined}
+        signUpHref="/register"
+        learnHref="https://docs.example"
+      />
+    );
+  }
+
+  it('has a search icon button on mobile next to the desktop text control', () => {
+    const tags = buttonTags(publicNav(() => undefined));
+    const icon = tags.filter((tag) => tag.includes('aria-label="Search"'));
+    expect(icon).toHaveLength(1);
+    // Phone only: desktop keeps the "Search" text control.
+    expect(icon[0]).toMatch(/\bsm:hidden\b/);
+    expect(icon[0]).toMatch(/\bsize-8\b/);
+    expect(tags.some((tag) => /\bhidden\b[^"]*\bsm:block\b/.test(tag))).toBe(true);
+  });
+
+  it('has no search icon without a search handler', () => {
+    const tags = buttonTags(publicNav());
+    expect(tags.some((tag) => tag.includes('aria-label="Search"'))).toBe(false);
+  });
+});
