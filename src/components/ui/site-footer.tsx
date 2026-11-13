@@ -20,7 +20,7 @@ interface FooterSocialLink {
 }
 
 interface SiteFooterProps extends React.ComponentProps<'footer'> {
-  /** Navigation links. Defaults to ARENA, THOUGHTS, MEDIA (BTL TV, PODCASTS, ZINE), ABOUT */
+  /** Navigation links. Defaults to Arena, Thoughts, Media (BTL TV, BTL podcasts, Zine), About */
   links?: FooterLink[];
   /** Legal bar links (Terms, Privacy, Cookies, RSS, Sitemap) */
   legalLinks?: LegalLink[];
@@ -39,25 +39,25 @@ interface SiteFooterProps extends React.ComponentProps<'footer'> {
 }
 
 const defaultLinks: FooterLink[] = [
-  { label: 'ARENA', href: '/arena' },
-  { label: 'THOUGHTS', href: '/thoughts' },
+  { label: 'Arena', href: '/arena' },
+  { label: 'Thoughts', href: '/thoughts' },
   {
-    label: 'MEDIA',
+    label: 'Media',
     href: '/media',
     children: [
       { label: 'BTL TV', href: '/tv' },
-      { label: 'BTL PODCASTS', href: '/podcasts' },
-      { label: 'ZINE', href: '/zine' },
+      { label: 'BTL podcasts', href: '/podcasts' },
+      { label: 'Zine', href: '/zine' },
     ],
   },
   {
-    label: 'ABOUT',
+    label: 'About',
     href: '/credo',
     children: [
-      { label: 'CREDO', href: '/credo' },
-      { label: 'PRICING', href: '/pricing' },
-      { label: 'CONTACT', href: '/contact' },
-      { label: 'CAREERS', href: '/careers' },
+      { label: 'Credo', href: '/credo' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'Contact', href: '/contact' },
+      { label: 'Careers', href: '/careers' },
     ],
   },
 ];
@@ -86,7 +86,7 @@ function FooterNavItem({ link }: { link: FooterLink }) {
     return (
       <LinkComponent
         href={link.href}
-        className="cursor-pointer text-xs tracking-[0.1em] text-muted-text transition-colors hover:text-white"
+        className="cursor-pointer text-xs text-muted-text transition-colors hover:text-white"
       >
         {link.label}
       </LinkComponent>
@@ -107,7 +107,7 @@ function FooterNavItem({ link }: { link: FooterLink }) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'inline-flex cursor-pointer items-center gap-1 text-xs tracking-[0.1em] transition-colors',
+          'inline-flex cursor-pointer items-center gap-1 text-xs transition-colors',
           open ? 'text-white' : 'text-muted-text hover:text-white'
         )}
         aria-expanded={open}
@@ -141,7 +141,7 @@ function FooterNavItem({ link }: { link: FooterLink }) {
                 key={child.href}
                 href={child.href}
                 onClick={() => setOpen(false)}
-                className="block rounded-[4px] px-4 py-2.5 text-xs tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                className="block rounded-[4px] px-4 py-2.5 text-xs text-muted-text transition-colors hover:bg-white/5 hover:text-white"
               >
                 {child.label}
               </LinkComponent>

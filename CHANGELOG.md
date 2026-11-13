@@ -5,6 +5,17 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.108.0]
+
+### Changed: footer links in sentence case
+
+The `SiteFooter` nav read "ARENA THOUGHTS MEDIA ABOUT" in tracked caps. The
+default labels are now sentence case at normal letter-spacing: Arena,
+Thoughts, Media, About, and in the submenus BTL TV, BTL podcasts, Zine,
+Credo, Pricing, Contact, Careers. Size and colour are unchanged (`text-xs`,
+`text-muted-text`). Consumers passing their own `links` keep their labels;
+the `tracking-[...]` classes are gone from the links either way.
+
 ## [0.107.0]
 
 ### Changed: no reds in the collaborator cursor palette
