@@ -36,13 +36,13 @@ export type Colors = typeof colors;
 // Assigned per user to avoid collisions
 // ─────────────────────────────────────────────────
 export const cursorPalette = [
-  { name: 'coral', hex: '#E57373' },
+  { name: 'indigo', hex: '#7986CB' },
   { name: 'sky', hex: '#64B5F6' },
   { name: 'mint', hex: '#81C784' },
   { name: 'gold', hex: '#FFD54F' },
   { name: 'violet', hex: '#BA68C8' },
   { name: 'teal', hex: '#4DB6AC' },
-  { name: 'peach', hex: '#FF8A65' },
+  { name: 'lime', hex: '#D4E157' },
   { name: 'lavender', hex: '#9575CD' },
 ] as const;
 
