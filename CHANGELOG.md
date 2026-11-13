@@ -5,6 +5,24 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.107.0]
+
+### Changed: no reds in the collaborator cursor palette
+
+Coral and peach sat too close to BTL red (`#EF233C`), so a co-author's cursor
+could read as an error or a brand accent. Both are replaced in place:
+
+| Index | Before            | After              |
+| ----- | ----------------- | ------------------ |
+| 0     | `coral` `#E57373` | `indigo` `#7986CB` |
+| 6     | `peach` `#FF8A65` | `lime` `#D4E157`   |
+
+The palette keeps 8 entries, so `getCursorColor` gives every other user the
+same colour as before. The `--color-cursor-coral` and `--color-cursor-peach`
+CSS variables become `--color-cursor-indigo` and `--color-cursor-lime`, and
+`CursorColor` drops `'coral'` and `'peach'` for `'indigo'` and `'lime'`.
+Nothing in the org references the old names.
+
 ## [0.97.0]
 
 ### Fixed: the entity-image chain recovers from a failure that happened before hydration

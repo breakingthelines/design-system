@@ -111,13 +111,13 @@
   --ease-snappy: cubic-bezier(0.25, 0.1, 0.25, 1);
 
   /* Cursor palette colors for collaboration */
-  --color-cursor-coral: #e57373;
+  --color-cursor-indigo: #7986cb;
   --color-cursor-sky: #64b5f6;
   --color-cursor-mint: #81c784;
   --color-cursor-gold: #ffd54f;
   --color-cursor-violet: #ba68c8;
   --color-cursor-teal: #4db6ac;
-  --color-cursor-peach: #ff8a65;
+  --color-cursor-lime: #d4e157;
   --color-cursor-lavender: #9575cd;
 
   /* BTL Brand Colors */
