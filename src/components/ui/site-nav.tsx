@@ -685,9 +685,9 @@ const CREATE_PILL_TEXT_CLASSNAME = 'hidden min-[375px]:inline';
  *  the owner flagged. */
 /** Rows in the header's menus (avatar menu, mobile hamburger): sentence case
  *  at the nav's own 12px/18px size and tracking, so they read like the tab
- *  labels. `normal-case` overrides the uppercase in DropdownMenuItem's chrome. */
+ *  labels. */
 const NAV_MENU_ITEM_CLASSNAME =
-  'rounded-[4px] px-4 py-2.5 text-[12px] leading-[18px] normal-case tracking-[-0.36px] text-muted-text transition-colors hover:bg-white/5 hover:text-white';
+  'rounded-[4px] px-4 py-2.5 text-[12px] leading-[18px] tracking-[-0.36px] text-muted-text transition-colors hover:bg-white/5 hover:text-white';
 
 const ACCOUNT_TRIGGER_CLASSNAME =
   'flex h-8 cursor-pointer items-center gap-[8px] rounded-[4px] border border-white/5 bg-white/10 px-[8px] backdrop-blur-[15px]';
@@ -1623,9 +1623,8 @@ function SiteNav({
                   </button>
                 )}
               >
-                {/* Dropdown — same pattern as Media dropdown */}
+                {/* Dropdown: flat panel, hairline border */}
                 <div className="relative min-w-[160px] overflow-hidden rounded-[8px] border border-white/10 bg-grey-200 p-1 shadow-xl">
-                  <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                   <nav className="flex flex-col gap-0.5">
                     {avatarMenu.map((item) =>
                       item.href ? (
@@ -1687,7 +1686,6 @@ function SiteNav({
                     sideOffset={8}
                     className="relative min-w-[160px] overflow-hidden !bg-grey-200 backdrop-blur-none"
                   >
-                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
                     {avatarMenu.map((item) =>
                       item.href ? (
                         <DropdownMenuItem
@@ -1808,7 +1806,6 @@ function SiteNav({
               sideOffset={8}
               className="relative min-w-[180px] overflow-hidden rounded-[8px] border-white/10 !bg-grey-200 p-1 shadow-xl"
             >
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
               {/* Search moved in from the mobile top bar (was crammed in
                   alongside Log in / Sign Up / this hamburger — see
                   `onSearchClick` above, now `hidden sm:block`). Logged-out

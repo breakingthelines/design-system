@@ -5,6 +5,33 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.110.0]
+
+### Changed: header dropdowns are flat
+
+The `SiteNav` avatar menu (both the legacy panel and the `DropdownMenu`
+one) and the mobile hamburger menu no longer draw a red gradient line along
+the bottom. `DropdownMenuContent` drops its top gradient line as well, so
+every dropdown is a flat panel with its hairline border.
+
+### Changed: menu rows and labels in sentence case
+
+`DropdownMenuItem`, `DropdownMenuSubTrigger`, `DropdownMenuCheckboxItem` and
+`DropdownMenuRadioItem` were `uppercase tracking-[0.08em]`; `DropdownMenuLabel`
+was 10px `uppercase tracking-[0.12em]`. All of them now render text as given
+at normal letter-spacing, `text-xs`. The same goes for the `PageHeader`
+kicker and the `StudioCockpitSidebar` section labels and identity line.
+Consumers that passed `normal-case` to undo the old default can drop it.
+
+### Fixed: footer submenu closed on the click after a hover
+
+Hovering a `SiteFooter` caret link opened its submenu and the click that
+followed toggled it shut. Hover now previews the menu and a click pins it
+open; a click on a pinned menu closes it. Enter and Space toggle it, Escape
+and a click outside close it, and picking a link closes it. Each trigger
+names its panel with `aria-controls`, and a closed panel is `invisible`, so
+its links leave the tab order.
+
 ## [0.109.0]
 
 ### Changed: header menu rows in sentence case

@@ -64,4 +64,14 @@ describe('SiteFooter', () => {
     }
     expect(markup).not.toMatch(/<div class="relative">/);
   });
+
+  it('ties each caret trigger to its closed, hidden panel', () => {
+    const carets = markup.match(/<button[^>]*aria-expanded="false"[^>]*>/g) ?? [];
+    expect(carets).toHaveLength(2);
+    for (const tag of carets) {
+      const id = tag.match(/aria-controls="([^"]+)"/)?.[1];
+      expect(id).toBeTruthy();
+      expect(markup).toMatch(new RegExp(`id="${id}" class="[^"]*\\binvisible\\b`));
+    }
+  });
 });

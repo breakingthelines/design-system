@@ -40,3 +40,66 @@ export const SubmenuOpen = meta.story({
     );
   },
 });
+
+/**
+ * Hover opened the submenu and the click that followed closed it. A click on
+ * a hover-opened menu now pins it: it stays open when the pointer leaves, and
+ * a second click closes it.
+ */
+export const SubmenuHoverThenClick = meta.story({
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: 'Media' });
+
+    await userEvent.hover(trigger);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.click(trigger);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    await userEvent.unhover(trigger);
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+
+    await userEvent.click(trigger);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  },
+});
+
+/** Escape and a click outside both close a pinned submenu. */
+export const SubmenuDismiss = meta.story({
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: 'About' });
+
+    await userEvent.click(trigger);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.keyboard('{Escape}');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(trigger);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.click(canvasElement.ownerDocument.body);
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  },
+});
+
+/** Enter and Space on the focused trigger toggle the submenu. */
+export const SubmenuKeyboard = meta.story({
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const trigger = canvas.getByRole('button', { name: 'About' });
+
+    trigger.focus();
+    await userEvent.keyboard('{Enter}');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.keyboard('{Enter}');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.keyboard(' ');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'true');
+    await userEvent.keyboard(' ');
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  },
+});

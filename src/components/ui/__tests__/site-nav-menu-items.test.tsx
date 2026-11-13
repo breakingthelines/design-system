@@ -41,4 +41,9 @@ describe('SiteNav menu rows', () => {
       expect(row).not.toMatch(/\buppercase\b/);
     }
   });
+
+  it('draws the avatar menu flat, with no gradient accent line', () => {
+    expect(markup).not.toMatch(/bg-gradient/);
+    expect(markup).not.toContain('via-red-100');
+  });
 });

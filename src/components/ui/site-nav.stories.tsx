@@ -453,5 +453,9 @@ export const AvatarMenuOpen = meta.story({
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await userEvent.hover(canvas.getAllByRole('button', { name: 'Account' })[0]);
+    // Flat panel: no gradient accent line under the rows.
+    const profile = await canvas.findByRole('link', { name: 'Profile' });
+    const panel = profile.closest('[data-slot="site-nav-disclosure"]');
+    await expect(panel?.querySelector('[class*="gradient"]')).toBeNull();
   },
 });

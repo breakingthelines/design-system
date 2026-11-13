@@ -1,5 +1,6 @@
 import preview from '#.storybook/preview';
 import { useState } from 'react';
+import { expect, screen, userEvent, within } from 'storybook/test';
 import { Copy, Gear, SignOut, Trash, User } from '@phosphor-icons/react';
 import {
   DropdownMenu,
@@ -162,4 +163,37 @@ export const WithGroups = meta.story({
       </DropdownMenuContent>
     </DropdownMenu>
   ),
+});
+
+/**
+ * Rows and labels are sentence case at normal letter-spacing, and the panel
+ * is flat: a hairline border, no gradient accent line.
+ */
+export const SentenceCaseFlat = meta.story({
+  render: () => (
+    <DropdownMenu>
+      <DropdownMenuTrigger render={<Button variant="outline">Account</Button>} />
+      <DropdownMenuContent>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Signed in as Zach</DropdownMenuLabel>
+          <DropdownMenuItem>Profile</DropdownMenuItem>
+          <DropdownMenuItem>Settings</DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem>Log out</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.click(canvas.getByRole('button', { name: 'Account' }));
+    const menu = await screen.findByRole('menu');
+    await expect(menu.querySelector('[class*="gradient"]')).toBeNull();
+    for (const item of screen.getAllByRole('menuitem')) {
+      await expect(item.className).not.toMatch(/\buppercase\b|tracking-/);
+    }
+    await expect(screen.getByText('Signed in as Zach').className).not.toMatch(
+      /\buppercase\b|tracking-/
+    );
+  },
 });
