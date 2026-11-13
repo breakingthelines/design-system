@@ -122,7 +122,7 @@ export function StudioCockpitSidebar({
             {identity.secondary ? (
               <span
                 data-slot="studio-cockpit-sidebar-identity-secondary"
-                className="truncate text-[10px] tracking-[0.04em] uppercase text-[var(--color-grey-500)]"
+                className="truncate text-[11px] text-[var(--color-grey-500)]"
               >
                 {identity.secondary}
               </span>
@@ -146,7 +146,7 @@ export function StudioCockpitSidebar({
             <h4
               id={`studio-cockpit-sidebar-${section.id}-label`}
               data-slot="studio-cockpit-sidebar-section-label"
-              className="px-2 text-[9px] tracking-[0.16em] uppercase text-[var(--color-grey-500)]"
+              className="px-2 text-[11px] text-[var(--color-grey-500)]"
             >
               {section.label}
             </h4>

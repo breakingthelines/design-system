@@ -6,6 +6,7 @@ import { CaretUp, XLogo, YoutubeLogo, LinkedinLogo, DiscordLogo } from '@phospho
 import { cn } from '#/lib/utils';
 import { BtlLogo } from '#/components/ui/btl-logo';
 import { useLinkComponent } from '#/components/ui/link-context';
+import { CLOSED_FOOTER_MENU, footerMenuReducer } from '#/components/ui/site-footer-menu';
 
 interface FooterLink {
   label: string;
@@ -79,8 +80,36 @@ const defaultLegalLinks: LegalLink[] = [
 /* ── Footer link with optional submenu popover ─────────────────────────── */
 function FooterNavItem({ link }: { link: FooterLink }) {
   const LinkComponent = useLinkComponent();
-  const [open, setOpen] = React.useState(false);
+  const [{ open }, dispatch] = React.useReducer(footerMenuReducer, CLOSED_FOOTER_MENU);
   const closeTimer = React.useRef<ReturnType<typeof setTimeout>>(null);
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
+  const menuId = React.useId();
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (e: PointerEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) dispatch('dismiss');
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      dispatch('dismiss');
+      if (rootRef.current?.contains(document.activeElement)) triggerRef.current?.focus();
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [open]);
+
+  React.useEffect(
+    () => () => {
+      if (closeTimer.current) clearTimeout(closeTimer.current);
+    },
+    []
+  );
 
   if (!link.children?.length) {
     return (
@@ -95,10 +124,10 @@ function FooterNavItem({ link }: { link: FooterLink }) {
 
   const handleEnter = () => {
     if (closeTimer.current) clearTimeout(closeTimer.current);
-    setOpen(true);
+    dispatch('enter');
   };
   const handleLeave = () => {
-    closeTimer.current = setTimeout(() => setOpen(false), 150);
+    closeTimer.current = setTimeout(() => dispatch('leave'), 150);
   };
 
   return (
@@ -106,18 +135,23 @@ function FooterNavItem({ link }: { link: FooterLink }) {
     // on a line box sized by the inherited 16px/24px body text, which sat the
     // caret links about 2px below the plain ones.
     <div
+      ref={rootRef}
       className="relative flex items-center"
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
     >
       <button
+        ref={triggerRef}
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        // Enter and Space fire a click with `detail === 0`; a pointer click
+        // has a click count of 1 or more.
+        onClick={(e) => dispatch(e.detail === 0 ? 'toggle' : 'click')}
         className={cn(
           'inline-flex cursor-pointer items-center gap-1 text-xs leading-4 transition-colors',
           open ? 'text-white' : 'text-muted-text hover:text-white'
         )}
         aria-expanded={open}
+        aria-controls={menuId}
       >
         {link.label}
         <CaretUp
@@ -131,11 +165,12 @@ function FooterNavItem({ link }: { link: FooterLink }) {
 
       {/* Popover — opens upward from footer */}
       <div
+        id={menuId}
         className={cn(
           'absolute bottom-full left-1/2 z-50 mb-3 -translate-x-1/2',
-          'pointer-events-none opacity-0 translate-y-2',
+          'pointer-events-none invisible opacity-0 translate-y-2',
           'transition-all duration-200 ease-out',
-          open && 'pointer-events-auto opacity-100 translate-y-0'
+          open && 'pointer-events-auto visible opacity-100 translate-y-0'
         )}
       >
         {/* Flat panel with a hairline edge */}
@@ -145,7 +180,7 @@ function FooterNavItem({ link }: { link: FooterLink }) {
               <LinkComponent
                 key={child.href}
                 href={child.href}
-                onClick={() => setOpen(false)}
+                onClick={() => dispatch('dismiss')}
                 className="block rounded-[4px] px-4 py-2.5 text-xs text-muted-text transition-colors hover:bg-white/5 hover:text-white"
               >
                 {child.label}

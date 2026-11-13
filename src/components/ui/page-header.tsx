@@ -76,7 +76,7 @@ export interface PageHeaderProps
   /** One line under the title saying what the page is for. */
   description?: React.ReactNode;
   /**
-   * Small uppercase line above the title — a product or section name. There is
+   * Small line above the title, a product or section name, in sentence case. There is
    * no default: a header that does not need one must not be given one.
    */
   kicker?: React.ReactNode;
@@ -119,10 +119,7 @@ function PageHeader({
     >
       <div data-slot="page-header-titles" className="flex min-w-0 flex-col gap-1.5">
         {kicker ? (
-          <p
-            data-slot="page-header-kicker"
-            className="text-[10px] tracking-[0.4em] uppercase text-muted-foreground"
-          >
+          <p data-slot="page-header-kicker" className="text-xs text-muted-foreground">
             {kicker}
           </p>
         ) : null}
