@@ -46,6 +46,16 @@ const DEFAULT_ANALYSIS: ImageAnalysis = {
 const analysisCache = new Map<string, ImageAnalysis>();
 const clampColorChannel = (v: number) => Math.min(255, Math.max(0, Math.round(v)));
 
+/**
+ * The URL the colour sample is taken from: the small `analysisSrc` copy when
+ * given, else `src`, with the probe param that gives the CORS request its own
+ * cache entry. Exported for tests.
+ */
+export function ambientSampleUrl(src?: string, analysisSrc?: string): string | undefined {
+  const key = analysisSrc || src;
+  return key ? appendAmbientProbeParam(safeYtThumbnail(key)) : undefined;
+}
+
 function appendAmbientProbeParam(src: string): string {
   if (src.includes('__ambient_probe=1')) return src;
   return `${src}${src.includes('?') ? '&' : '?'}__ambient_probe=1`;
@@ -61,9 +71,13 @@ function appendAmbientProbeParam(src: string): string {
  * Results are cached by URL. Cached values initialise synchronously (no flash).
  * Fresh URLs compute asynchronously; CSS transitions smooth the visual change.
  */
-function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
+function useImageAnalysis(src?: string, analysisSrc?: string): ImageAnalysis & { src?: string } {
+  // The 4x4 sample is taken from analysisSrc when given (a small copy of the
+  // same image), so the CORS probe does not download the full-size image a
+  // second time. Cached by the URL actually sampled.
+  const sampleKey = analysisSrc || src;
   const [analysis, setAnalysis] = React.useState<ImageAnalysis>(() => {
-    if (src) return analysisCache.get(src) ?? DEFAULT_ANALYSIS;
+    if (sampleKey) return analysisCache.get(sampleKey) ?? DEFAULT_ANALYSIS;
     return DEFAULT_ANALYSIS;
   });
   const [thumbSrc, setThumbSrc] = React.useState(() => (src ? safeYtThumbnail(src) : src));
@@ -73,17 +87,17 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
   }, [src]);
 
   React.useEffect(() => {
-    if (!src) return;
+    if (!sampleKey) return;
 
     // Cache hit — apply synchronously (covers src changes after mount)
-    const cached = analysisCache.get(src);
+    const cached = analysisCache.get(sampleKey);
     if (cached) {
       setAnalysis(cached);
       return;
     }
 
     let cancelled = false;
-    const safeSrc = safeYtThumbnail(src);
+
     const img = new Image();
     img.crossOrigin = 'anonymous';
     const handleLoad = () => {
@@ -124,7 +138,7 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
           dominantColor: `${clampColorChannel(gray + (avgR - gray) * colorBoost)}, ${clampColorChannel(gray + (avgG - gray) * colorBoost)}, ${clampColorChannel(gray + (avgB - gray) * colorBoost)}`,
         };
 
-        analysisCache.set(src, result);
+        analysisCache.set(sampleKey, result);
         if (!cancelled) setAnalysis(result);
       } catch {
         // CORS or canvas taint — defaults remain
@@ -133,12 +147,12 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
     img.addEventListener('load', handleLoad);
     // Give the anonymous analysis fetch its own cache key so it doesn't reuse a
     // plain <img> response that was cached without CORS metadata.
-    img.src = appendAmbientProbeParam(safeSrc);
+    img.src = ambientSampleUrl(sampleKey) ?? sampleKey;
     return () => {
       cancelled = true;
       img.removeEventListener('load', handleLoad);
     };
-  }, [src]);
+  }, [sampleKey]);
 
   return { ...analysis, src: thumbSrc };
 }
@@ -150,6 +164,12 @@ function useImageAnalysis(src?: string): ImageAnalysis & { src?: string } {
 interface AmbientEmitterProps extends React.ComponentProps<'div'> {
   /** Image URL to sample colours from. Preferred — creates a natural, content-aware glow. */
   src?: string;
+  /**
+   * Smaller copy of `src` used only to measure brightness and colour. The
+   * measurement needs its own CORS request, so without this the full-size
+   * image downloads twice. Defaults to `src`.
+   */
+  analysisSrc?: string;
   /**
    * Fallback colour when no image is available — e.g. `"#B48228"`.
    * Rendered as a radial gradient. Ignored when `src` is provided.
@@ -192,6 +212,7 @@ const TRANSITION =
  */
 function AmbientEmitter({
   src,
+  analysisSrc,
   color,
   size = 'md',
   opacity,
@@ -209,7 +230,7 @@ function AmbientEmitter({
     saturation,
     dominantColor,
     src: thumbSrc,
-  } = useImageAnalysis(src);
+  } = useImageAnalysis(src, analysisSrc);
   const finalOpacity = Math.min(1, (opacity ?? preset.opacity) * opacityMultiplier);
 
   // Fade in from opacity 0 on mount so the blurred image doesn't flash bright
