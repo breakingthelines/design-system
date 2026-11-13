@@ -30,9 +30,43 @@ const avatarBorderVariants: VariantFn<{ borderColor?: AvatarBorderColor | null }
 
 export type AvatarStatus = 'active' | 'typing' | 'idle';
 
+export type AvatarSize = 'default' | 'sm' | 'lg' | 'xl' | 'xxl';
+
+/**
+ * Maps an avatar image address to the addresses to try, in order, for an
+ * avatar of `size`. Return `[src]` (or anything of length 1) to leave it
+ * alone. A typical resolver puts a small resized copy first and the original
+ * second, so a copy that does not exist falls back to the original before the
+ * initials.
+ */
+export type AvatarSourceResolver = (src: string, size: AvatarSize) => readonly string[];
+
+const AvatarSourceResolverContext = React.createContext<AvatarSourceResolver | null>(null);
+const AvatarSizeContext = React.createContext<AvatarSize>('default');
+
+interface AvatarSourceProviderProps {
+  /** Keep this stable (module level or memoised): it is a render dependency. */
+  resolve: AvatarSourceResolver;
+  children?: React.ReactNode;
+}
+
+/**
+ * Gives every `AvatarImage` below it a source resolver, including the ones
+ * inside composite components (bylines, thought rows, the nav avatar), so an
+ * app can serve resized avatars without threading a prop through each one.
+ * `ChainedAvatarImage` is not affected: its `sources` are already a chain.
+ */
+function AvatarSourceProvider({ resolve, children }: AvatarSourceProviderProps) {
+  return (
+    <AvatarSourceResolverContext.Provider value={resolve}>
+      {children}
+    </AvatarSourceResolverContext.Provider>
+  );
+}
+
 interface AvatarProps
   extends AvatarPrimitive.Root.Props, VariantProps<typeof avatarBorderVariants> {
-  size?: 'default' | 'sm' | 'lg' | 'xl' | 'xxl';
+  size?: AvatarSize;
   /** Collaboration cursor color - overrides borderColor when provided */
   cursorColor?: string;
   /** Background color for fallback initials */
@@ -93,7 +127,7 @@ function Avatar({
       style={{ ...style, ...ringStyle }}
       {...props}
     >
-      {children}
+      <AvatarSizeContext.Provider value={size}>{children}</AvatarSizeContext.Provider>
     </AvatarPrimitive.Root>
   );
 
@@ -113,7 +147,7 @@ function Avatar({
   return content;
 }
 
-function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
+function BaseAvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
@@ -121,6 +155,25 @@ function AvatarImage({ className, ...props }: AvatarPrimitive.Image.Props) {
       {...props}
     />
   );
+}
+
+/**
+ * The avatar photo. Under an `AvatarSourceProvider`, `src` goes through the
+ * provider's resolver with the enclosing `Avatar`'s size; when that yields
+ * more than one address they are tried in order, as `ChainedAvatarImage`
+ * does, and the `AvatarFallback` shows only once every address has failed.
+ */
+function AvatarImage({ src, ...props }: AvatarPrimitive.Image.Props) {
+  const resolve = React.useContext(AvatarSourceResolverContext);
+  const size = React.useContext(AvatarSizeContext);
+  const sources = React.useMemo(
+    () => (resolve && src ? resolve(src, size) : undefined),
+    [resolve, src, size]
+  );
+  if (sources && sources.length > 1) {
+    return <ChainedAvatarImage sources={sources} {...props} />;
+  }
+  return <BaseAvatarImage src={sources?.[0] ?? src} {...props} />;
 }
 
 export interface ChainedAvatarImageProps extends Omit<AvatarPrimitive.Image.Props, 'src'> {
@@ -151,19 +204,31 @@ export interface ChainedAvatarImageProps extends Omit<AvatarPrimitive.Image.Prop
  * evicted between). This component is the Avatar counterpart of
  * `EntityAssetImage`: pass `sources`, keep your `AvatarFallback`, done.
  */
-function ChainedAvatarImage({ sources, ...props }: ChainedAvatarImageProps) {
+function ChainedAvatarImage({
+  sources,
+  onError: callerOnError,
+  onLoadingStatusChange: callerOnStatus,
+  ...props
+}: ChainedAvatarImageProps) {
   const { src, onError, imgRef } = useSourceChain(sources);
   if (!src) return null;
+  // A caller hears about a failure only when the last address fails: an
+  // earlier one just moves the walk on.
+  const isLast = src === sources[sources.length - 1];
   return (
-    <AvatarImage
+    <BaseAvatarImage
       key={src}
       ref={imgRef}
+      {...props}
       src={src}
-      onError={onError}
+      onError={(event) => {
+        onError();
+        if (isLast) callerOnError?.(event);
+      }}
       onLoadingStatusChange={(status) => {
         if (status === 'error') onError();
+        if (status !== 'error' || isLast) callerOnStatus?.(status);
       }}
-      {...props}
     />
   );
 }
@@ -279,6 +344,7 @@ function AnimatedAvatar({ children, ...props }: AnimatedAvatarProps) {
 export {
   Avatar,
   AvatarImage,
+  AvatarSourceProvider,
   ChainedAvatarImage,
   AvatarFallback,
   AvatarGroup,

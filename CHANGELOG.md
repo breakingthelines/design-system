@@ -5,6 +5,27 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.112.0]
+
+### Added: `AvatarSourceProvider`
+
+`AvatarSourceProvider` takes a `resolve(src, size)` function that maps an
+avatar address to the addresses to try, in order. Under it, every
+`AvatarImage` resolves its `src` with the enclosing `Avatar`'s `size`,
+including the avatars inside `AuthorLine`, `ThoughtCard`, `ThoughtComment`,
+`SiteNav` and the other composite components. When the resolver returns more
+than one address, the image walks them as `ChainedAvatarImage` does, and
+`AvatarFallback` shows only after the last one fails. Without a provider,
+`AvatarImage` behaves exactly as before. `AvatarSize` and
+`AvatarSourceResolver` are exported types.
+
+### Changed: `ChainedAvatarImage` keeps caller handlers
+
+A caller's `onError` or `onLoadingStatusChange` used to replace the handlers
+that advance the walk, so passing one stopped the chain at its first
+address. Both now run alongside the walk. A caller hears `error` only when the
+last address fails.
+
 ## [0.110.0]
 
 ### Changed: header dropdowns are flat
