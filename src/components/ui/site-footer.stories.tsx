@@ -17,10 +17,10 @@ export const Default = meta.story({
 export const CustomLinks = meta.story({
   args: {
     links: [
-      { label: 'HOME', href: '/' },
-      { label: 'ARTICLES', href: '/articles' },
-      { label: 'THOUGHTS', href: '/thoughts' },
-      { label: 'MEDIA', href: '/media' },
+      { label: 'Home', href: '/' },
+      { label: 'Articles', href: '/articles' },
+      { label: 'Thoughts', href: '/thoughts' },
+      { label: 'Media', href: '/media' },
     ],
     copyright: '© 2013–2026',
   },
