@@ -95,7 +95,7 @@ interface SiteNavProps extends React.ComponentProps<'header'> {
   onNotificationsClick?: () => void;
   /** @deprecated Use avatarMenu instead */
   onAvatarClick?: () => void;
-  /** Dropdown menu items shown on avatar hover (legacy uppercase menu).
+  /** Dropdown menu items shown on avatar hover.
    *  Superseded by the Account dropdown when `profileHref`/`studioHref`/
    *  `onLogout` are supplied. */
   avatarMenu?: AvatarMenuItem[];
@@ -683,6 +683,12 @@ const CREATE_PILL_TEXT_CLASSNAME = 'hidden min-[375px]:inline';
  *  previously rendered a bare, unboxed 34px avatar here — taller than the
  *  cluster's other 32px buttons and one of the mismatched-looking controls
  *  the owner flagged. */
+/** Rows in the header's menus (avatar menu, mobile hamburger): sentence case
+ *  at the nav's own 12px/18px size and tracking, so they read like the tab
+ *  labels. `normal-case` overrides the uppercase in DropdownMenuItem's chrome. */
+const NAV_MENU_ITEM_CLASSNAME =
+  'rounded-[4px] px-4 py-2.5 text-[12px] leading-[18px] normal-case tracking-[-0.36px] text-muted-text transition-colors hover:bg-white/5 hover:text-white';
+
 const ACCOUNT_TRIGGER_CLASSNAME =
   'flex h-8 cursor-pointer items-center gap-[8px] rounded-[4px] border border-white/5 bg-white/10 px-[8px] backdrop-blur-[15px]';
 
@@ -1629,7 +1635,7 @@ function SiteNav({
                             href={item.href}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            className={cn('block', NAV_MENU_ITEM_CLASSNAME)}
                           >
                             {item.label}
                           </a>
@@ -1637,7 +1643,7 @@ function SiteNav({
                           <LinkComponent
                             key={item.label}
                             href={item.href}
-                            className="block rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                            className={cn('block', NAV_MENU_ITEM_CLASSNAME)}
                           >
                             {item.label}
                           </LinkComponent>
@@ -1648,7 +1654,10 @@ function SiteNav({
                           type="button"
                           onClick={item.onClick}
                           data-nav-dismiss=""
-                          className="block w-full cursor-pointer rounded-[4px] px-4 py-2.5 text-left text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                          className={cn(
+                            'block w-full cursor-pointer text-left',
+                            NAV_MENU_ITEM_CLASSNAME
+                          )}
                         >
                           {item.label}
                         </button>
@@ -1690,11 +1699,16 @@ function SiteNav({
                               <LinkComponent href={item.href} />
                             )
                           }
+                          className={NAV_MENU_ITEM_CLASSNAME}
                         >
                           {item.label}
                         </DropdownMenuItem>
                       ) : (
-                        <DropdownMenuItem key={item.label} onClick={item.onClick}>
+                        <DropdownMenuItem
+                          key={item.label}
+                          onClick={item.onClick}
+                          className={NAV_MENU_ITEM_CLASSNAME}
+                        >
                           {item.label}
                         </DropdownMenuItem>
                       )
@@ -1803,17 +1817,14 @@ function SiteNav({
                   duplicate it. First item, un-headered like the flat tab
                   rows below. */}
               {isLoggedOut && onSearchClick && (
-                <DropdownMenuItem
-                  onClick={onSearchClick}
-                  className="rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
-                >
+                <DropdownMenuItem onClick={onSearchClick} className={NAV_MENU_ITEM_CLASSNAME}>
                   Search
                 </DropdownMenuItem>
               )}
               {tabs.map((tab) =>
                 tab.children ? (
                   <React.Fragment key={tab.label}>
-                    <div className="px-4 pt-2.5 pb-1 text-[10px] font-medium uppercase tracking-[0.08em] text-white/30">
+                    <div className="px-4 pt-2.5 pb-1 text-[12px] leading-[18px] font-medium tracking-[-0.36px] text-white/30">
                       {tab.label}
                     </div>
                     {tab.children.map((child) => (
@@ -1826,7 +1837,7 @@ function SiteNav({
                             <LinkComponent href={child.href} />
                           )
                         }
-                        className="rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                        className={NAV_MENU_ITEM_CLASSNAME}
                       >
                         {child.label}
                       </DropdownMenuItem>
@@ -1836,7 +1847,7 @@ function SiteNav({
                   <DropdownMenuItem
                     key={getNavTabKey(tab)}
                     render={<LinkComponent href={tab.href ?? '#'} />}
-                    className="rounded-[4px] px-4 py-2.5 text-xs uppercase tracking-[0.08em] text-muted-text transition-colors hover:bg-white/5 hover:text-white"
+                    className={NAV_MENU_ITEM_CLASSNAME}
                   >
                     {tab.label}
                   </DropdownMenuItem>
