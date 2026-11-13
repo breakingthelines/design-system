@@ -12,10 +12,10 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 Coral and peach sat too close to BTL red (`#EF233C`), so a co-author's cursor
 could read as an error or a brand accent. Both are replaced in place:
 
-| Index | Before              | After              |
-| ----- | ------------------- | ------------------ |
-| 0     | `coral` `#E57373`   | `indigo` `#7986CB` |
-| 6     | `peach` `#FF8A65`   | `lime` `#D4E157`   |
+| Index | Before            | After              |
+| ----- | ----------------- | ------------------ |
+| 0     | `coral` `#E57373` | `indigo` `#7986CB` |
+| 6     | `peach` `#FF8A65` | `lime` `#D4E157`   |
 
 The palette keeps 8 entries, so `getCursorColor` gives every other user the
 same colour as before. The `--color-cursor-coral` and `--color-cursor-peach`
