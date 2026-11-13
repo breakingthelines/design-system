@@ -86,7 +86,7 @@ function FooterNavItem({ link }: { link: FooterLink }) {
     return (
       <LinkComponent
         href={link.href}
-        className="cursor-pointer text-xs text-muted-text transition-colors hover:text-white"
+        className="inline-flex cursor-pointer items-center text-xs leading-4 text-muted-text transition-colors hover:text-white"
       >
         {link.label}
       </LinkComponent>
@@ -102,12 +102,19 @@ function FooterNavItem({ link }: { link: FooterLink }) {
   };
 
   return (
-    <div className="relative" onMouseEnter={handleEnter} onMouseLeave={handleLeave}>
+    // A flex wrapper, not a block one: a block div puts the inline-flex button
+    // on a line box sized by the inherited 16px/24px body text, which sat the
+    // caret links about 2px below the plain ones.
+    <div
+      className="relative flex items-center"
+      onMouseEnter={handleEnter}
+      onMouseLeave={handleLeave}
+    >
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'inline-flex cursor-pointer items-center gap-1 text-xs transition-colors',
+          'inline-flex cursor-pointer items-center gap-1 text-xs leading-4 transition-colors',
           open ? 'text-white' : 'text-muted-text hover:text-white'
         )}
         aria-expanded={open}
@@ -131,10 +138,8 @@ function FooterNavItem({ link }: { link: FooterLink }) {
           open && 'pointer-events-auto opacity-100 translate-y-0'
         )}
       >
-        {/* Glass panel */}
+        {/* Flat panel with a hairline edge */}
         <div className="relative min-w-[160px] overflow-hidden rounded-[4px] border border-white/10 bg-grey-200/90 p-1 shadow-xl backdrop-blur-xl">
-          {/* Subtle top accent line */}
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-red-100/50 to-transparent" />
           <nav className="flex flex-col gap-0.5">
             {link.children.map((child) => (
               <LinkComponent
@@ -238,32 +243,27 @@ function SiteFooter({
         {legalLinks.length > 0 && (
           <div className="border-t border-white/10 pt-6">
             <nav className="flex flex-wrap items-center gap-x-6 gap-y-2">
-              {legalLinks.map((link, i) => (
-                <React.Fragment key={link.href}>
-                  {i > 0 && (
-                    <span className="text-white/20 text-xs select-none" aria-hidden>
-                      ·
-                    </span>
-                  )}
-                  {link.external ? (
-                    <a
-                      href={link.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-xs text-white/40 transition-colors hover:text-white/70"
-                    >
-                      {link.label}
-                    </a>
-                  ) : (
-                    <LinkComponent
-                      href={link.href}
-                      className="text-xs text-white/40 transition-colors hover:text-white/70"
-                    >
-                      {link.label}
-                    </LinkComponent>
-                  )}
-                </React.Fragment>
-              ))}
+              {legalLinks.map((link) =>
+                link.external ? (
+                  <a
+                    key={link.href}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-white/40 transition-colors hover:text-white/70"
+                  >
+                    {link.label}
+                  </a>
+                ) : (
+                  <LinkComponent
+                    key={link.href}
+                    href={link.href}
+                    className="text-xs text-white/40 transition-colors hover:text-white/70"
+                  >
+                    {link.label}
+                  </LinkComponent>
+                )
+              )}
             </nav>
           </div>
         )}

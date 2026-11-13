@@ -1,3 +1,5 @@
+import { expect, userEvent, within } from 'storybook/test';
+
 import preview from '#.storybook/preview';
 import { SiteFooter } from './site-footer';
 
@@ -23,5 +25,18 @@ export const CustomLinks = meta.story({
       { label: 'Media', href: '/media' },
     ],
     copyright: '© 2013–2026',
+  },
+});
+
+/** Media submenu open: a flat panel with a hairline border, no accent line. */
+export const SubmenuOpen = meta.story({
+  args: {},
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.hover(canvas.getByRole('button', { name: 'Media' }));
+    await expect(canvas.getByRole('button', { name: 'Media' })).toHaveAttribute(
+      'aria-expanded',
+      'true'
+    );
   },
 });

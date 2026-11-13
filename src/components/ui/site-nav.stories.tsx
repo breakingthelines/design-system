@@ -435,3 +435,23 @@ export const WithGoBack = meta.story({
     onGoBack: () => {},
   },
 });
+
+/** Legacy avatar menu pinned open: sentence-case rows in the nav's 12px/18px
+ *  label style. */
+export const AvatarMenuOpen = meta.story({
+  args: {
+    tabs,
+    avatarUrl: 'https://i.pravatar.cc/150?u=zach',
+    initials: 'ZL',
+    onSearchClick: () => {},
+    avatarMenu: [
+      { label: 'Profile', href: '#' },
+      { label: 'Settings', href: '#' },
+      { label: 'Log out', onClick: () => {} },
+    ],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await userEvent.hover(canvas.getAllByRole('button', { name: 'Account' })[0]);
+  },
+});

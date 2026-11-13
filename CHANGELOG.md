@@ -5,6 +5,26 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.109.0]
+
+### Changed: header menu rows in sentence case
+
+The `SiteNav` avatar menu and mobile hamburger rows were `uppercase
+tracking-[0.08em]`. They now use the nav's own label style, 12px/18px at
+`tracking-[-0.36px]`, in sentence case, with the same muted colour and hover.
+The hamburger group headings get the same treatment.
+
+### Changed: footer legal bar, submenu and link alignment
+
+- The legal bar has no middle-dot separators; the links are spaced by the
+  row's flex gap.
+- The submenu popover has no gradient accent line; it is a flat panel with
+  its hairline border.
+- Arena and Thoughts sat about 2px above Media and About. The caret triggers'
+  wrapper was a block box sized by the inherited body line height; it is now
+  a flex box, and every footer link uses `items-center` with `leading-4`, so
+  all four share one line box.
+
 ## [0.108.0]
 
 ### Changed: footer links in sentence case
