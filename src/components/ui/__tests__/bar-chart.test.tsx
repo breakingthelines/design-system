@@ -227,8 +227,8 @@ describe('BarChart with series', () => {
     );
 
     expect(barChartSeriesColor(0)).not.toBe(barChartSeriesColor(1));
-    expect(markup).toContain('var(--color-foreground) 72%');
-    expect(markup).toContain('var(--color-foreground) 46%');
+    expect(markup).toContain('var(--color-foreground) 78%');
+    expect(markup).toContain('var(--color-foreground) 58%');
     expect(markup).toContain('background-color:var(--color-primary)');
     expect(markup).not.toMatch(/gradient|#[0-9a-fA-F]{3,8}\b|rgba?\(/);
   });

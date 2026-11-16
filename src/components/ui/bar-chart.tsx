@@ -80,10 +80,10 @@ export function barHeightPercents(bars: number[]): number[] {
 
 /**
  * The foreground share of each stacked layer's fill, foot first. Steps far
- * enough apart to tell adjacent layers apart on either theme; a fifth series
+ * enough apart to tell adjacent layers apart on either theme; a sixth series
  * and beyond reuse the scale from the top.
  */
-export const BAR_CHART_SERIES_TONES = [72, 46, 26, 12] as const;
+export const BAR_CHART_SERIES_TONES = [78, 58, 40, 24, 12] as const;
 
 /** The fill of the stacked layer at `index`, from tokens only. */
 export function barChartSeriesColor(index: number): string {
