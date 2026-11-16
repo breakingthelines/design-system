@@ -5,6 +5,33 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.114.0]
+
+### Added: `MatchStrip`
+
+The match page timeline from platform (platform#1096), moved here so the
+match page, game blocks and other surfaces draw one primitive. One line from
+0' to the end of the match with a half-time tick, home marks above and away
+below in the side colours, goal dots with scorer labels, card glyphs, sub
+ticks and a detail line that opens on the latest goal. Every mark is a button
+with a 24px hit area; a second click on overlapping marks steps to the next.
+
+- `events` takes `MatchStripEvent`s, the shape platform's `matchStripEvents`
+  projection already produces.
+- `extraTime` draws the strip to 120'. Left out, an event labelled past 90
+  before its stoppage ("105", "120+1") counts as extra time.
+- Stoppage time sits on its period's boundary with its own label: a 90+6'
+  goal is drawn at 90' on a 90' strip, a 45+2' card at 45'. Before, any
+  minute over 90 stretched the strip to 120'.
+- `interactive={false}` draws spans instead of buttons and fixes the detail
+  line on the latest goal, for image export. `showDetail={false}` leaves the
+  detail line out.
+- `homeLabel` and `awayLabel` name the teams over and under the line, for a
+  surface with no page header.
+- `renderPlayerName` and `renderHeadshot` let the host supply player links
+  and headshots. The defaults are plain text and an empty circle.
+- The detail line's score reads "1-0 to 2-0", with hyphens.
+
 ## [0.113.0]
 
 ### Changed: `BarChart` bars are flat

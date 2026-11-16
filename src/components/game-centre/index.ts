@@ -61,6 +61,22 @@ export type {
   MatchTimelineSide,
 } from './match-timeline';
 
+export {
+  MatchStrip,
+  matchStripEnd,
+  matchStripPosition,
+  isMatchStripGoal,
+  MATCH_STRIP_HOME_COLOR,
+  MATCH_STRIP_AWAY_COLOR,
+} from './match-strip';
+export type {
+  MatchStripProps,
+  MatchStripEvent,
+  MatchStripEventKind,
+  MatchStripSide,
+  MatchStripPlayer,
+} from './match-strip';
+
 export { MatchShell, MatchAdRail, MatchAdSlot, MatchRecapStrip } from './match-shell';
 export type {
   MatchShellProps,
