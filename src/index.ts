@@ -342,7 +342,11 @@ export {
   BarChart,
   barChartBarVariants,
   barHeightPercents,
+  barChartSeriesColor,
+  stackTotals,
+  BAR_CHART_SERIES_TONES,
   type BarChartProps,
+  type BarChartSeries,
   type BarChartLabel,
   type BarChartBarState,
 } from './components/ui/bar-chart';

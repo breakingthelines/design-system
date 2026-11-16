@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { BarChart, barHeightPercents } from '../bar-chart';
+import { BarChart, barChartSeriesColor, barHeightPercents, stackTotals } from '../bar-chart';
 import { countSlot, getSlotAttr, hasSlot, render, sliceSlot, slotText } from './test-utils';
 
 describe('barHeightPercents', () => {
@@ -153,5 +153,112 @@ describe('BarChart', () => {
     expect(getSlotAttr(markup, 'bar-chart-labels', 'class')).toContain('text-muted-foreground');
     expect(markup).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(markup).not.toMatch(/rgba?\(/);
+  });
+
+  it('paints flat bars, with no gradient toward the foot', () => {
+    const markup = render(<BarChart bars={[1, 2]} activeIndex={1} />);
+
+    expect(markup).not.toMatch(/gradient|bg-linear|from-\[|to-muted/);
+    expect(getSlotAttr(markup, 'bar-chart-bar', 'class')).toContain(
+      'bg-[color-mix(in_oklab,var(--color-foreground)_18%,var(--color-muted))]'
+    );
+  });
+});
+
+describe('stackTotals', () => {
+  it('sums each bucket across the series, reading a short series as zero', () => {
+    expect(
+      stackTotals([
+        { key: 'a', label: 'A', values: [1, 2, 3] },
+        { key: 'b', label: 'B', values: [4, 5] },
+      ])
+    ).toEqual([5, 7, 3]);
+  });
+
+  it('ignores negative values rather than shrinking the stack', () => {
+    expect(stackTotals([{ key: 'a', label: 'A', values: [2, -3] }])).toEqual([2, 0]);
+  });
+});
+
+describe('BarChart with series', () => {
+  const series = [
+    { key: 'chat', label: 'Chat', values: [3, 1, 0] },
+    { key: 'eval', label: 'Eval', values: [1, 1, 0] },
+  ];
+
+  it('scales each bar to its bucket total', () => {
+    const markup = render(<BarChart series={series} />);
+    const bars = markup.split('data-slot="bar-chart-bar"');
+
+    expect(countSlot(markup, 'bar-chart-bar')).toBe(3);
+    expect(getSlotAttr(markup, 'bar-chart', 'style')).toContain('--bar-chart-count:3');
+    expect(bars[1]).toContain('height:100%');
+    expect(bars[2]).toContain('height:50%');
+    expect(bars[3]).toContain('height:0%');
+  });
+
+  it('splits each bar into layers by share of its total, first series at the foot', () => {
+    const markup = render(<BarChart series={series} />);
+    const first = sliceSlot(markup, 'bar-chart-bar') ?? '';
+
+    expect(getSlotAttr(markup, 'bar-chart-bar', 'class')).toContain('flex-col-reverse');
+    expect(first.split('data-slot="bar-chart-segment"')).toHaveLength(3);
+    expect(first).toMatch(/data-series="chat"[^>]*height:75%/);
+    expect(first).toMatch(/data-series="eval"[^>]*height:25%/);
+  });
+
+  it('draws no layer for a zero value or an empty bucket', () => {
+    const markup = render(<BarChart series={series} />);
+    const bars = markup.split('data-slot="bar-chart-bar"');
+
+    expect(countSlot(markup, 'bar-chart-segment')).toBe(4);
+    expect(bars[3]).not.toContain('bar-chart-segment');
+  });
+
+  it('gives each layer its own token-derived tone unless the caller names one', () => {
+    const markup = render(
+      <BarChart
+        series={[
+          { key: 'a', label: 'A', values: [1] },
+          { key: 'b', label: 'B', values: [1] },
+          { key: 'c', label: 'C', values: [1], color: 'var(--color-primary)' },
+        ]}
+      />
+    );
+
+    expect(barChartSeriesColor(0)).not.toBe(barChartSeriesColor(1));
+    expect(markup).toContain('var(--color-foreground) 72%');
+    expect(markup).toContain('var(--color-foreground) 46%');
+    expect(markup).toContain('background-color:var(--color-primary)');
+    expect(markup).not.toMatch(/gradient|#[0-9a-fA-F]{3,8}\b|rgba?\(/);
+  });
+
+  it('names the layers in a legend, in stack order', () => {
+    const markup = render(<BarChart series={series} />);
+
+    expect(countSlot(markup, 'bar-chart-legend-item')).toBe(2);
+    expect(slotText(markup, 'bar-chart-legend')).toBe('Chat Eval');
+  });
+
+  it('has no legend for a single series or a plain chart', () => {
+    expect(hasSlot(render(<BarChart series={[series[0]]} />), 'bar-chart-legend')).toBe(false);
+    expect(hasSlot(render(<BarChart bars={[1, 2]} />), 'bar-chart-legend')).toBe(false);
+  });
+
+  it('keeps the pressable form and its labels', () => {
+    const markup = render(
+      <BarChart
+        series={series}
+        activeIndex={0}
+        onSelect={() => {}}
+        barLabel={(index) => `Day ${index + 1}`}
+      />
+    );
+    const first = sliceSlot(markup, 'bar-chart-bar') ?? '';
+
+    expect(first.startsWith('<button')).toBe(true);
+    expect(first).toContain('aria-pressed="true"');
+    expect(first).toContain('bar-chart-segment');
+    expect(markup).toContain('aria-label="Day 3"');
   });
 });

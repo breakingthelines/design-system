@@ -93,3 +93,30 @@ export const Unlabelled = meta.story({
   name: 'No labels',
   args: { labels: undefined, height: 120 },
 });
+
+const STACK_DAYS = ['Dec 11', 'Dec 12', 'Dec 13', 'Dec 14', 'Dec 15', 'Dec 16', 'Dec 17'];
+const STACK_SERIES = [
+  { key: 'chat', label: 'Chat', values: [4.1, 5.3, 3.8, 6.2, 7.0, 2.4, 3.1] },
+  { key: 'prompts', label: 'Article prompts', values: [1.2, 0.8, 1.6, 1.1, 2.3, 0.6, 0.9] },
+  { key: 'eval', label: 'Eval', values: [0, 0, 2.5, 0, 0, 0, 2.5] },
+];
+
+export const Stacked = meta.story({
+  name: 'Stacked',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Pass series instead of bars and each bar stacks one layer per series, the first at the foot. The bar is the bucket total; the legend names the layers.',
+      },
+    },
+  },
+  args: {
+    bars: undefined,
+    series: STACK_SERIES,
+    labels: STACK_DAYS.map((day, index) => ({
+      top: STACK_SERIES.reduce((sum, entry) => sum + entry.values[index], 0).toFixed(1),
+      bottom: day,
+    })),
+  },
+});

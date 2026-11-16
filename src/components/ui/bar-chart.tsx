@@ -32,7 +32,13 @@ import type { VariantFn } from '#/lib/cva';
  *
  * The palette is derived, not painted. Both bar tones are `--color-foreground`
  * mixed toward `--color-muted`, the same idiom as `MetricCard`'s delta tones,
- * so the bars sit above the panel under `:root` and under `.dark` alike.
+ * so the bars sit above the panel under `:root` and under `.dark` alike. The
+ * fills are flat: the bars used to fade to `--color-muted` at the foot, and
+ * the design rules allow no gradients.
+ *
+ * `series` stacks the bars. Each series is one layer, first at the foot, in
+ * its own step of the same foreground-to-muted mix, and a legend names them.
+ * The bar's height is the bucket's total, scaled like `bars`.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export type BarChartLabel = {
@@ -45,13 +51,13 @@ export type BarChartLabel = {
 export type BarChartBarState = 'idle' | 'active';
 
 const barChartBarVariants: VariantFn<{ state?: BarChartBarState | null }> = cva(
-  'relative box-border max-h-full rounded-btl-sm border bg-linear-to-b to-muted p-0',
+  'relative box-border max-h-full rounded-btl-sm border p-0',
   {
     variants: {
       state: {
-        idle: 'border-transparent from-[color-mix(in_oklab,var(--color-foreground)_18%,var(--color-muted))] opacity-60',
+        idle: 'border-transparent bg-[color-mix(in_oklab,var(--color-foreground)_18%,var(--color-muted))] opacity-60',
         active:
-          'border-border from-[color-mix(in_oklab,var(--color-foreground)_60%,var(--color-muted))] opacity-100',
+          'border-border bg-[color-mix(in_oklab,var(--color-foreground)_60%,var(--color-muted))] opacity-100',
       } satisfies Record<BarChartBarState, string>,
     },
     defaultVariants: {
@@ -72,12 +78,53 @@ export function barHeightPercents(bars: number[]): number[] {
   return bars.map((value) => Math.max((value / max) * 100, 0));
 }
 
+/**
+ * The foreground share of each stacked layer's fill, foot first. Steps far
+ * enough apart to tell adjacent layers apart on either theme; a fifth series
+ * and beyond reuse the scale from the top.
+ */
+export const BAR_CHART_SERIES_TONES = [72, 46, 26, 12] as const;
+
+/** The fill of the stacked layer at `index`, from tokens only. */
+export function barChartSeriesColor(index: number): string {
+  const share = BAR_CHART_SERIES_TONES[index % BAR_CHART_SERIES_TONES.length];
+  return `color-mix(in oklab, var(--color-foreground) ${share}%, var(--color-muted))`;
+}
+
+export type BarChartSeries = {
+  /** Stable identity for the layer, e.g. `"chat"`. */
+  key: string;
+  /** What the layer is, shown in the legend. */
+  label: React.ReactNode;
+  /** One value per bucket, in the same order as every other series. */
+  values: number[];
+  /** Overrides the derived fill. Any CSS colour; tokens keep both themes right. */
+  color?: string;
+};
+
+/**
+ * Per-bucket totals of a stacked chart. A series shorter than the longest one
+ * counts as zero in the buckets it does not reach.
+ */
+export function stackTotals(series: BarChartSeries[]): number[] {
+  const length = Math.max(0, ...series.map((entry) => entry.values.length));
+  return Array.from({ length }, (_, index) =>
+    series.reduce((sum, entry) => sum + Math.max(entry.values[index] ?? 0, 0), 0)
+  );
+}
+
 export interface BarChartProps extends Omit<React.ComponentProps<'div'>, 'onSelect'> {
   /**
    * The values, in order, one per bucket. Scaled to the plot — do not
-   * pre-convert them to pixels.
+   * pre-convert them to pixels. Ignored when `series` is given.
    */
-  bars: number[];
+  bars?: number[];
+  /**
+   * Stacks the bars: one layer per series, the first at the foot. The bar's
+   * height is the bucket's total. With more than one series a legend names
+   * the layers.
+   */
+  series?: BarChartSeries[];
   /**
    * Which bar reads as selected. Leave it out, or pass a negative index, and
    * every bar reads as selected: a chart with no selection is not a chart with
@@ -99,7 +146,8 @@ export interface BarChartProps extends Omit<React.ComponentProps<'div'>, 'onSele
 }
 
 function BarChart({
-  bars,
+  bars: barsProp,
+  series,
   activeIndex = -1,
   onSelect,
   labels,
@@ -110,6 +158,11 @@ function BarChart({
   ...props
 }: BarChartProps) {
   const isAllActive = activeIndex < 0;
+  const stacked = Array.isArray(series) && series.length > 0;
+  const bars = React.useMemo(
+    () => (stacked ? stackTotals(series) : (barsProp ?? [])),
+    [stacked, series, barsProp]
+  );
   const percents = React.useMemo(() => barHeightPercents(bars), [bars]);
   const selectable = typeof onSelect === 'function';
 
@@ -161,6 +214,30 @@ function BarChart({
           const isActive = index === activeIndex || isAllActive;
           const state: BarChartBarState = isActive ? 'active' : 'idle';
           const barStyle: React.CSSProperties = { height: `${percent}%` };
+          const total = bars[index] ?? 0;
+          const segments =
+            stacked && total > 0
+              ? series.map((entry, seriesIndex) => {
+                  const value = Math.max(entry.values[index] ?? 0, 0);
+                  return value > 0 ? (
+                    <span
+                      key={entry.key}
+                      data-slot="bar-chart-segment"
+                      data-series={entry.key}
+                      className="block w-full shrink-0"
+                      style={{
+                        height: `${(value / total) * 100}%`,
+                        backgroundColor: entry.color ?? barChartSeriesColor(seriesIndex),
+                      }}
+                    />
+                  ) : null;
+                })
+              : null;
+          const barClass = cn(
+            barChartBarVariants({ state }),
+            // The layers paint the bar; the column only clips them to its corners.
+            stacked && 'flex flex-col-reverse overflow-hidden bg-transparent'
+          );
 
           return selectable ? (
             <button
@@ -170,23 +247,27 @@ function BarChart({
               data-slot="bar-chart-bar"
               data-active={isActive ? 'true' : 'false'}
               className={cn(
-                barChartBarVariants({ state }),
+                barClass,
                 'cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring'
               )}
               style={barStyle}
               onClick={() => onSelect(index)}
               aria-pressed={isActive}
               aria-label={barLabel ? barLabel(index) : `Select bar ${index + 1}`}
-            />
+            >
+              {segments}
+            </button>
           ) : (
             <div
               key={index}
               data-slot="bar-chart-bar"
               data-active={isActive ? 'true' : 'false'}
               aria-hidden="true"
-              className={barChartBarVariants({ state })}
+              className={barClass}
               style={barStyle}
-            />
+            >
+              {segments}
+            </div>
           );
         })}
       </div>
@@ -224,6 +305,28 @@ function BarChart({
             );
           })}
         </div>
+      ) : null}
+      {stacked && series.length > 1 ? (
+        <ul
+          data-slot="bar-chart-legend"
+          // Sticky, so it stays in view while the bars scroll below md.
+          className="sticky left-0 m-0 flex w-max list-none flex-wrap gap-x-4 gap-y-1 p-0 text-xs text-muted-foreground md:w-auto md:px-4"
+        >
+          {series.map((entry, seriesIndex) => (
+            <li
+              key={entry.key}
+              data-slot="bar-chart-legend-item"
+              className="flex items-center gap-1.5"
+            >
+              <span
+                aria-hidden="true"
+                className="size-2.5 shrink-0 rounded-btl-sm"
+                style={{ backgroundColor: entry.color ?? barChartSeriesColor(seriesIndex) }}
+              />
+              {entry.label}
+            </li>
+          ))}
+        </ul>
       ) : null}
     </div>
   );
