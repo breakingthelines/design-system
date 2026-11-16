@@ -12,6 +12,13 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 The bars used to fade from their tone to `--color-muted` at the foot. They
 are now one flat fill, the same foreground-to-muted mix as before.
 
+### Changed: `LineChart` area is flat
+
+The area under the line used to fade from the foreground to transparent
+through an SVG gradient. It is now one flat fill, the foreground at 12%
+mixed toward transparent (`LINE_CHART_AREA_FILL`), so it reads on any panel.
+The line itself is unchanged.
+
 ### Added: stacked `BarChart`
 
 `series` takes one `{ key, label, values }` per layer and stacks them, the

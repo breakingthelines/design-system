@@ -333,6 +333,7 @@ export {
   getLinePoints,
   buildSmoothLinePath,
   buildAreaPath,
+  LINE_CHART_AREA_FILL,
   type LineChartProps,
   type LineChartTooltip,
   type LineChartPoint,
