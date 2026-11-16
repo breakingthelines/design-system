@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   MatchStrip,
   matchStripEnd,
+  matchStripLabelRows,
   matchStripPosition,
   type MatchStripEvent,
 } from '../match-strip';
@@ -154,5 +155,92 @@ describe('MatchStrip', () => {
     const markup = render(<MatchStrip events={events} homeLabel="Arsenal" awayLabel="Chelsea" />);
     expect(slotText(markup, 'match-strip-home')).toBe('Arsenal');
     expect(slotText(markup, 'match-strip-away')).toBe('Chelsea');
+  });
+});
+
+const goal = (id: string, side: 'home' | 'away', minute: number, playerName: string) =>
+  ({ id, kind: 'goal', side, minute, minuteLabel: `${minute}`, playerName }) as const;
+
+describe('matchStripLabelRows', () => {
+  it('staggers labels a few minutes apart on a phone, not on a large strip', () => {
+    const rows = matchStripLabelRows(
+      [goal('a', 'away', 42, 'Gabriel Jesus'), goal('b', 'away', 52, 'Noni Madueke')],
+      90
+    );
+    expect(rows.base).toEqual({ a: 0, b: 1 });
+    expect(rows['@4xl']).toEqual({ a: 0, b: 0 });
+  });
+
+  it('keeps sides apart and labels far apart by the line', () => {
+    const rows = matchStripLabelRows(
+      [
+        goal('a', 'home', 10, 'Bukayo Saka'),
+        goal('b', 'away', 12, 'Cole Palmer'),
+        goal('c', 'home', 70, 'Declan Rice'),
+      ],
+      90
+    );
+    expect(rows.base).toEqual({ a: 0, b: 0, c: 0 });
+  });
+
+  it('returns to the first row once it is clear', () => {
+    const rows = matchStripLabelRows(
+      [
+        goal('a', 'home', 20, 'Cunha'),
+        goal('b', 'home', 24, 'Sesko'),
+        goal('c', 'home', 60, 'Mainoo'),
+      ],
+      90
+    );
+    expect(rows.base).toEqual({ a: 0, b: 1, c: 0 });
+  });
+});
+
+describe('goal labels', () => {
+  it('clamps a late goal label inside the strip', () => {
+    const markup = render(
+      <MatchStrip
+        events={[
+          {
+            id: 'g',
+            kind: 'goal',
+            side: 'home',
+            minute: 89,
+            minuteLabel: '89',
+            playerName: 'Mateta',
+          },
+        ]}
+      />
+    );
+    const left = getSlotAttr(markup, 'match-strip-goal-label', 'style') ?? '';
+    expect(left).toContain('clamp(0px,');
+    expect(left).toContain('calc(100% - ');
+  });
+
+  it('puts a staggered label one row out', () => {
+    const markup = render(
+      <MatchStrip
+        events={[
+          {
+            id: 'a',
+            kind: 'goal',
+            side: 'away',
+            minute: 42,
+            minuteLabel: '42',
+            playerName: 'Jesus',
+          },
+          {
+            id: 'b',
+            kind: 'goal',
+            side: 'away',
+            minute: 48,
+            minuteLabel: '48',
+            playerName: 'Madueke',
+          },
+        ]}
+      />
+    );
+    expect(markup).toContain('data-row="1"');
+    expect(markup).toContain('top-[100px]');
   });
 });

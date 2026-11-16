@@ -65,6 +65,10 @@ export {
   MatchStrip,
   matchStripEnd,
   matchStripPosition,
+  matchStripGoalLabel,
+  matchStripLabelRows,
+  matchStripLabelWidth,
+  MATCH_STRIP_LABEL_TIERS,
   isMatchStripGoal,
   MATCH_STRIP_HOME_COLOR,
   MATCH_STRIP_AWAY_COLOR,
@@ -75,6 +79,8 @@ export type {
   MatchStripEventKind,
   MatchStripSide,
   MatchStripPlayer,
+  MatchStripLabelRows,
+  MatchStripLabelTier,
 } from './match-strip';
 
 export { MatchShell, MatchAdRail, MatchAdSlot, MatchRecapStrip } from './match-shell';

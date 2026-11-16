@@ -180,3 +180,79 @@ export const Phone = meta.story({
     </div>
   ),
 });
+
+const crowded: MatchStripEvent[] = [
+  {
+    id: 'a',
+    kind: 'goal',
+    side: 'away',
+    minute: 42,
+    minuteLabel: '42',
+    playerName: 'Gabriel Jesus',
+    scoreAfter: [0, 1],
+  },
+  {
+    id: 'b',
+    kind: 'goal',
+    side: 'away',
+    minute: 48,
+    minuteLabel: '48',
+    playerName: 'Noni Madueke',
+    scoreAfter: [0, 2],
+  },
+  {
+    id: 'c',
+    kind: 'goal',
+    side: 'home',
+    minute: 6,
+    minuteLabel: '6',
+    playerName: 'Matheus Cunha',
+    scoreAfter: [1, 2],
+  },
+  {
+    id: 'd',
+    kind: 'goal',
+    side: 'home',
+    minute: 9,
+    minuteLabel: '9',
+    playerName: 'Benjamin Sesko',
+    scoreAfter: [2, 2],
+  },
+  {
+    id: 'e',
+    kind: 'goal',
+    side: 'home',
+    minute: 89,
+    minuteLabel: '89',
+    playerName: 'Jean-Philippe Mateta',
+    scoreAfter: [3, 2],
+  },
+];
+
+/** Goals a few minutes apart stagger, and edge labels stay inside the strip. */
+export const CrowdedPhone = meta.story({
+  args: { events: crowded },
+  render: (args) => (
+    <div className="w-[358px] bg-[#0d0d0d]">
+      <MatchStrip {...args} />
+    </div>
+  ),
+  play: async ({ canvasElement }) => {
+    const strip = canvasElement.querySelector('[data-slot="match-strip"]')!.getBoundingClientRect();
+    const labels = [...canvasElement.querySelectorAll('[data-slot="match-strip-goal-label"]')];
+    for (const label of labels) {
+      const box = label.getBoundingClientRect();
+      await expect(box.left).toBeGreaterThanOrEqual(strip.left - 0.5);
+      await expect(box.right).toBeLessThanOrEqual(strip.right + 0.5);
+    }
+    const rects = labels.map((l) => l.getBoundingClientRect());
+    for (let i = 0; i < rects.length; i += 1) {
+      for (let j = i + 1; j < rects.length; j += 1) {
+        const [p, q] = [rects[i]!, rects[j]!];
+        const overlap =
+          p.left < q.right && q.left < p.right && p.top < q.bottom && q.top < p.bottom;
+        await expect(overlap).toBe(false);
+      }
+    }
+  },
+});

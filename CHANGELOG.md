@@ -5,6 +5,23 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.114.1]
+
+### Fixed: `MatchStrip` goal labels collide and run off the edge
+
+- Labels a few minutes apart on one side used to draw over each other at
+  phone width. A label that would overlap the one before it now moves one row
+  out (18px further from the line). The rows are worked out for the narrowest
+  strip of each container size (`MATCH_STRIP_LABEL_TIERS`: 300px below `@xl`,
+  then `@xl` to `@6xl`), and the strip is its own `@container`, so a strip in
+  a narrow block on a wide screen staggers like a phone.
+- A label is centred on its mark and clamped inside the strip, so a late or
+  early goal's label no longer runs past the end.
+- `matchStripGoalLabel`, `matchStripLabelWidth`, `matchStripLabelRows` and
+  `MATCH_STRIP_LABEL_TIERS` are exported. Label widths are estimated from the
+  text, so no measuring is needed and server and static renders match the
+  browser.
+
 ## [0.114.0]
 
 ### Added: `MatchStrip`
