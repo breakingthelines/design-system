@@ -137,14 +137,22 @@ describe('LineChart', () => {
       />
     );
 
-    // The stroke and both gradient stops are the foreground, which flips with
-    // the theme. The local version drew #ffffff over a #bfbfbf-to-#2B2B2B fade,
-    // which was legible on a dark panel only.
+    // The stroke and the area are the foreground, which flips with the theme.
+    // The local version drew #ffffff over a #bfbfbf-to-#2B2B2B fade, which was
+    // legible on a dark panel only.
     expect(getSlotAttr(markup, 'line-chart-line', 'class')).toContain('stroke-foreground');
-    expect(markup).toContain('var(--color-foreground)');
-    expect(markup).toContain('var(--color-muted)');
+    expect(getSlotAttr(markup, 'line-chart-area', 'fill')).toBe(
+      'color-mix(in oklab, var(--color-foreground) 12%, transparent)'
+    );
     expect(getSlotAttr(markup, 'line-chart-tooltip', 'class')).toContain('bg-popover');
     expect(markup).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
     expect(markup).not.toMatch(/rgba?\(/);
+  });
+
+  it('fills the area flat, with no gradient', () => {
+    const markup = render(<LineChart series={[1, 5, 3]} />);
+
+    expect(markup).not.toMatch(/gradient|url\(#/i);
+    expect(markup).not.toContain('<defs');
   });
 });

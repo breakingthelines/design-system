@@ -8,7 +8,7 @@ import { cn } from '#/lib/utils';
  * LineChart — a smoothed series over a filled area, with an optional readout.
  *
  * Promoted from admin-dashboard, where it was the analytics page's traffic
- * chart. Nothing about it was admin-specific: a series, a fade underneath it
+ * chart. Nothing about it was admin-specific: a series, a wash underneath it
  * and a labelled point is what any trend line needs.
  *
  * It draws no axes and no grid. The plot is a 0–100 viewBox stretched to the
@@ -19,8 +19,8 @@ import { cn } from '#/lib/utils';
  * The palette is derived, not painted. The local version drew a `#bfbfbf` to
  * `#2B2B2B` gradient under a `#ffffff` stroke, which is legible on one surface
  * only: on a light one the line disappeared and the area went to a grey slab.
- * Here the stroke is `--color-foreground` and the area is a mix of it toward
- * `--color-muted`, following `MetricCard`'s delta tones — one definition, and
+ * Here the stroke is `--color-foreground` and the area is a flat, low-opacity
+ * wash of it (no gradient: the design rules allow none). One definition, and
  * it flips with the theme instead of needing a second.
  *
  * The axis is as wide as its labels. The local grid was pinned to eight
@@ -30,6 +30,13 @@ import { cn } from '#/lib/utils';
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export type LineChartPoint = { x: number; y: number };
+
+/**
+ * The area under the line: the foreground at low opacity, flat. Mixed toward
+ * transparent rather than toward a surface token, so it reads on whatever
+ * panel the chart sits on.
+ */
+export const LINE_CHART_AREA_FILL = 'color-mix(in oklab, var(--color-foreground) 12%, transparent)';
 
 export type LineChartTooltip = {
   /** The figure. Pre-formatted by the caller. */
@@ -120,7 +127,6 @@ function LineChart({
   style,
   ...props
 }: LineChartProps) {
-  const areaGradientId = React.useId();
   const containerRef = React.useRef<HTMLDivElement | null>(null);
   const points = React.useMemo(() => (series.length ? getLinePoints(series) : []), [series]);
   const [hoverIndex, setHoverIndex] = React.useState<number | null>(null);
@@ -223,33 +229,8 @@ function LineChart({
           aria-hidden="true"
           className="h-full w-full"
         >
-          <defs>
-            {/*
-             * Both stops are the foreground mixed toward the panel, so the fade
-             * runs from the line's own colour into the surface under it. Under
-             * `:root` that is dark-into-light and under `.dark` light-into-dark,
-             * from one definition, with no literal colour to keep in step.
-             */}
-            <linearGradient id={areaGradientId} x1="0.5" y1="0" x2="0.5" y2="1">
-              <stop
-                offset="0"
-                stopColor="color-mix(in oklab, var(--color-foreground) 75%, var(--color-muted))"
-                stopOpacity="1"
-              />
-              <stop
-                offset="1"
-                stopColor="color-mix(in oklab, var(--color-foreground) 20%, var(--color-muted))"
-                stopOpacity="0"
-              />
-            </linearGradient>
-          </defs>
           {areaPath ? (
-            <path
-              data-slot="line-chart-area"
-              d={areaPath}
-              className="opacity-65"
-              fill={`url(#${areaGradientId})`}
-            />
+            <path data-slot="line-chart-area" d={areaPath} fill={LINE_CHART_AREA_FILL} />
           ) : null}
           <path
             data-slot="line-chart-line"

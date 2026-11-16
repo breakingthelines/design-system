@@ -17,7 +17,7 @@ const meta = preview.meta({
     docs: {
       description: {
         component:
-          'A smoothed series over a filled area, with an optional readout at one point. There is no axis and no grid: the shape of the series is what reads, and the figures belong beside it in a MetricCard. Stroke and fill are both derived from the foreground token, so the chart is legible on a light surface and a dark one.',
+          'A smoothed series over a filled area, with an optional readout at one point. There is no axis and no grid: the shape of the series is what reads, and the figures belong beside it in a MetricCard. Stroke and the flat area fill are both derived from the foreground token, so the chart is legible on a light surface and a dark one.',
       },
     },
   },

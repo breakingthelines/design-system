@@ -5,6 +5,30 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.113.0]
+
+### Changed: `BarChart` bars are flat
+
+The bars used to fade from their tone to `--color-muted` at the foot. They
+are now one flat fill, the same foreground-to-muted mix as before.
+
+### Changed: `LineChart` area is flat
+
+The area under the line used to fade from the foreground to transparent
+through an SVG gradient. It is now one flat fill, the foreground at 12%
+mixed toward transparent (`LINE_CHART_AREA_FILL`), so it reads on any panel.
+The line itself is unchanged.
+
+### Added: stacked `BarChart`
+
+`series` takes one `{ key, label, values }` per layer and stacks them, the
+first at the foot. The bar's height is the bucket's total, scaled like
+`bars`. Each layer takes its own step of the foreground-to-muted mix
+(`BAR_CHART_SERIES_TONES`, `barChartSeriesColor`) unless it passes `color`.
+With more than one series a legend names the layers. `stackTotals` returns
+the per-bucket totals. `bars` keeps working unchanged and is ignored when
+`series` is given.
+
 ## [0.112.0]
 
 ### Added: `AvatarSourceProvider`
