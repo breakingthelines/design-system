@@ -309,8 +309,9 @@ function BarChart({
       {stacked && series.length > 1 ? (
         <ul
           data-slot="bar-chart-legend"
-          // Sticky, so it stays in view while the bars scroll below md.
-          className="sticky left-0 m-0 flex w-max list-none flex-wrap gap-x-4 gap-y-1 p-0 text-xs text-muted-foreground md:w-auto md:px-4"
+          // Sticky and as wide as the visible plot, so below md it wraps in view
+          // while the bars scroll beneath it.
+          className="sticky left-0 m-0 flex w-full list-none flex-wrap gap-x-4 gap-y-1 p-0 text-xs text-muted-foreground md:px-4"
         >
           {series.map((entry, seriesIndex) => (
             <li
