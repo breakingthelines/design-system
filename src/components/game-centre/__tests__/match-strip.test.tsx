@@ -167,8 +167,8 @@ describe('matchStripLabelRows', () => {
       [goal('a', 'away', 42, 'Gabriel Jesus'), goal('b', 'away', 52, 'Noni Madueke')],
       90
     );
-    expect(rows.narrow).toEqual({ a: 0, b: 1 });
-    expect(rows.large).toEqual({ a: 0, b: 0 });
+    expect(rows.base).toEqual({ a: 0, b: 1 });
+    expect(rows['@4xl']).toEqual({ a: 0, b: 0 });
   });
 
   it('keeps sides apart and labels far apart by the line', () => {
@@ -180,7 +180,7 @@ describe('matchStripLabelRows', () => {
       ],
       90
     );
-    expect(rows.narrow).toEqual({ a: 0, b: 0, c: 0 });
+    expect(rows.base).toEqual({ a: 0, b: 0, c: 0 });
   });
 
   it('returns to the first row once it is clear', () => {
@@ -192,7 +192,7 @@ describe('matchStripLabelRows', () => {
       ],
       90
     );
-    expect(rows.narrow).toEqual({ a: 0, b: 1, c: 0 });
+    expect(rows.base).toEqual({ a: 0, b: 1, c: 0 });
   });
 });
 

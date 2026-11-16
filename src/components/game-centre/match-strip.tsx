@@ -163,24 +163,25 @@ export function matchStripLabelWidth(label: string): number {
 }
 
 /**
- * The narrowest strip each container size draws: below `@xl` (36rem) a strip
- * is assumed 300px wide, then 576px from `@xl` and 896px from `@4xl` (56rem).
+ * Container sizes the label rows are worked out for, each at its narrowest
+ * width: below `@xl` a strip is taken as 300px, then each size's own floor.
  * The strip is its own container, so the rows follow the strip's width
  * whether it fills a page or sits in a narrow block on a wide screen.
  */
-const NARROW_WIDTH = 300;
-const WIDE_WIDTH = 576;
-const LARGE_WIDTH = 896;
+export const MATCH_STRIP_LABEL_TIERS = [
+  { tier: 'base', width: 300 },
+  { tier: '@xl', width: 576 },
+  { tier: '@2xl', width: 672 },
+  { tier: '@3xl', width: 768 },
+  { tier: '@4xl', width: 896 },
+  { tier: '@5xl', width: 1024 },
+  { tier: '@6xl', width: 1152 },
+] as const;
+export type MatchStripLabelTier = (typeof MATCH_STRIP_LABEL_TIERS)[number]['tier'];
 const LABEL_GAP = 6;
 
-export interface MatchStripLabelRows {
-  /** Row per goal id below `sm` (0 by the line, 1 further out). */
-  narrow: Record<string, 0 | 1>;
-  /** Row per goal id from `@xl` up. */
-  wide: Record<string, 0 | 1>;
-  /** Row per goal id from `@4xl` up. */
-  large: Record<string, 0 | 1>;
-}
+/** Row per goal id (0 by the line, 1 further out), per container size. */
+export type MatchStripLabelRows = Record<MatchStripLabelTier, Record<string, 0 | 1>>;
 
 /**
  * Staggers goal labels that would collide. Labels on one side are laid left
@@ -217,20 +218,30 @@ export function matchStripLabelRows(
     }
     return rows;
   };
-  return { narrow: rowsAt(NARROW_WIDTH), wide: rowsAt(WIDE_WIDTH), large: rowsAt(LARGE_WIDTH) };
+  const out = {} as MatchStripLabelRows;
+  for (const { tier, width } of MATCH_STRIP_LABEL_TIERS) out[tier] = rowsAt(width);
+  return out;
 }
 
-/** Literal classes, so the host's Tailwind build finds them. */
-const LABEL_TOP: Record<MatchStripSide, Record<keyof MatchStripLabelRows, [string, string]>> = {
+/** Literal classes, so the host's Tailwind build finds them. Row 0, row 1. */
+const LABEL_TOP: Record<MatchStripSide, Record<MatchStripLabelTier, readonly [string, string]>> = {
   home: {
-    narrow: ['top-[20px]', 'top-[2px]'],
-    wide: ['@xl:top-[20px]', '@xl:top-[2px]'],
-    large: ['@4xl:top-[20px]', '@4xl:top-[2px]'],
+    base: ['top-[20px]', 'top-[2px]'],
+    '@xl': ['@xl:top-[20px]', '@xl:top-[2px]'],
+    '@2xl': ['@2xl:top-[20px]', '@2xl:top-[2px]'],
+    '@3xl': ['@3xl:top-[20px]', '@3xl:top-[2px]'],
+    '@4xl': ['@4xl:top-[20px]', '@4xl:top-[2px]'],
+    '@5xl': ['@5xl:top-[20px]', '@5xl:top-[2px]'],
+    '@6xl': ['@6xl:top-[20px]', '@6xl:top-[2px]'],
   },
   away: {
-    narrow: ['top-[82px]', 'top-[100px]'],
-    wide: ['@xl:top-[82px]', '@xl:top-[100px]'],
-    large: ['@4xl:top-[82px]', '@4xl:top-[100px]'],
+    base: ['top-[82px]', 'top-[100px]'],
+    '@xl': ['@xl:top-[82px]', '@xl:top-[100px]'],
+    '@2xl': ['@2xl:top-[82px]', '@2xl:top-[100px]'],
+    '@3xl': ['@3xl:top-[82px]', '@3xl:top-[100px]'],
+    '@4xl': ['@4xl:top-[82px]', '@4xl:top-[100px]'],
+    '@5xl': ['@5xl:top-[82px]', '@5xl:top-[100px]'],
+    '@6xl': ['@6xl:top-[82px]', '@6xl:top-[100px]'],
   },
 };
 
@@ -446,14 +457,10 @@ export function MatchStrip({
               key={`label-${e.id}`}
               aria-hidden
               data-slot="match-strip-goal-label"
-              data-row={labelRows.narrow[e.id]}
-              data-row-wide={labelRows.wide[e.id]}
-              data-row-large={labelRows.large[e.id]}
+              data-row={labelRows.base[e.id]}
               className={cn(
                 'pointer-events-none absolute flex justify-center text-[12px] font-semibold whitespace-nowrap text-white',
-                top.narrow[labelRows.narrow[e.id] ?? 0],
-                top.wide[labelRows.wide[e.id] ?? 0],
-                top.large[labelRows.large[e.id] ?? 0]
+                MATCH_STRIP_LABEL_TIERS.map(({ tier }) => top[tier][labelRows[tier][e.id] ?? 0])
               )}
               style={{ left: labelLeft(at(e), end, width), width }}
             >
