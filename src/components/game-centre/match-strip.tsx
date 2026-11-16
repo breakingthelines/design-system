@@ -147,6 +147,99 @@ function stripLeft(minute: number, end: number): string {
   return `calc(24px + (100% - 48px) * ${(Math.min(minute, end) / end).toFixed(4)})`;
 }
 
+/** The text on a goal's label: "Saka 90+6' pen". */
+export function matchStripGoalLabel(event: MatchStripEvent): string {
+  const suffix = event.kind === 'penalty' ? ' pen' : event.kind === 'own_goal' ? ' og' : '';
+  return `${surname(event.playerName)} ${event.minuteLabel}'${suffix}`;
+}
+
+/**
+ * A goal label's box width in px, estimated from its text at 12px semibold.
+ * Generous on purpose: the text is centred in the box, so a box a little wide
+ * only moves an edge label a few px further in.
+ */
+export function matchStripLabelWidth(label: string): number {
+  return Math.ceil(label.length * 6.6) + 4;
+}
+
+/**
+ * The narrowest strip each container size draws: below `@xl` (36rem) a strip
+ * is assumed 300px wide, then 576px from `@xl` and 896px from `@4xl` (56rem).
+ * The strip is its own container, so the rows follow the strip's width
+ * whether it fills a page or sits in a narrow block on a wide screen.
+ */
+const NARROW_WIDTH = 300;
+const WIDE_WIDTH = 576;
+const LARGE_WIDTH = 896;
+const LABEL_GAP = 6;
+
+export interface MatchStripLabelRows {
+  /** Row per goal id below `sm` (0 by the line, 1 further out). */
+  narrow: Record<string, 0 | 1>;
+  /** Row per goal id from `@xl` up. */
+  wide: Record<string, 0 | 1>;
+  /** Row per goal id from `@4xl` up. */
+  large: Record<string, 0 | 1>;
+}
+
+/**
+ * Staggers goal labels that would collide. Labels on one side are laid left
+ * to right, each clamped inside the strip, and a label that would overlap the
+ * one before it in the row by the line moves one row out. Rows are worked
+ * out for the narrowest width of each container size, so they hold at any width
+ * in that size without measuring the page.
+ */
+export function matchStripLabelRows(
+  goals: readonly MatchStripEvent[],
+  end: number
+): MatchStripLabelRows {
+  const rowsAt = (width: number): Record<string, 0 | 1> => {
+    const rows: Record<string, 0 | 1> = {};
+    for (const side of ['home', 'away'] as const) {
+      const laid = goals
+        .filter((g) => g.side === side)
+        .map((g) => {
+          const w = matchStripLabelWidth(matchStripGoalLabel(g));
+          const x = 24 + ((width - 48) * matchStripPosition(g, end)) / end;
+          const left = Math.max(0, Math.min(x - w / 2, width - w));
+          return { id: g.id, left, right: left + w };
+        })
+        // A fresh array, so sorting in place is safe; the ES2022 lib has no toSorted.
+        // oxlint-disable-next-line unicorn/no-array-sort
+        .sort((a, b) => a.left - b.left);
+      const rowEnds = [-Infinity, -Infinity];
+      for (const label of laid) {
+        const free = rowEnds.findIndex((r) => label.left >= r + LABEL_GAP);
+        const row = (free >= 0 ? free : rowEnds[0]! <= rowEnds[1]! ? 0 : 1) as 0 | 1;
+        rows[label.id] = row;
+        rowEnds[row] = label.right;
+      }
+    }
+    return rows;
+  };
+  return { narrow: rowsAt(NARROW_WIDTH), wide: rowsAt(WIDE_WIDTH), large: rowsAt(LARGE_WIDTH) };
+}
+
+/** Literal classes, so the host's Tailwind build finds them. */
+const LABEL_TOP: Record<MatchStripSide, Record<keyof MatchStripLabelRows, [string, string]>> = {
+  home: {
+    narrow: ['top-[20px]', 'top-[2px]'],
+    wide: ['@xl:top-[20px]', '@xl:top-[2px]'],
+    large: ['@4xl:top-[20px]', '@4xl:top-[2px]'],
+  },
+  away: {
+    narrow: ['top-[82px]', 'top-[100px]'],
+    wide: ['@xl:top-[82px]', '@xl:top-[100px]'],
+    large: ['@4xl:top-[82px]', '@4xl:top-[100px]'],
+  },
+};
+
+/** A label box centred on its mark and clamped inside the strip. */
+function labelLeft(minute: number, end: number, width: number): string {
+  const centre = `24px + (100% - 48px) * ${(Math.min(minute, end) / end).toFixed(4)}`;
+  return `clamp(0px, calc(${centre} - ${width / 2}px), calc(100% - ${width}px))`;
+}
+
 function surname(name: string | undefined): string {
   const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
   return parts[parts.length - 1] ?? '';
@@ -317,13 +410,14 @@ export function MatchStrip({
   if (events.length === 0) return null;
   const end = matchStripEnd(events, extraTime);
   const at = (e: MatchStripEvent) => matchStripPosition(e, end);
+  const labelRows = matchStripLabelRows(goals, end);
   const colorOf = (e: MatchStripEvent) => (e.side === 'home' ? homeColor : awayColor);
   return (
     <section
       data-slot="match-strip"
       data-end={end}
       data-interactive={interactive ? undefined : 'false'}
-      className={cn('flex flex-col gap-2', className)}
+      className={cn('@container flex flex-col gap-2', className)}
     >
       {homeLabel ? <SideLabel name={homeLabel} color={homeColor} slot="match-strip-home" /> : null}
       <div className="relative h-[124px] sm:h-[118px]">
@@ -344,17 +438,24 @@ export function MatchStrip({
           {end}&apos;
         </span>
         {goals.map((e) => {
-          const home = e.side === 'home';
-          const label = `${surname(e.playerName)} ${e.minuteLabel}'${
-            e.kind === 'penalty' ? ' pen' : e.kind === 'own_goal' ? ' og' : ''
-          }`;
+          const label = matchStripGoalLabel(e);
+          const width = matchStripLabelWidth(label);
+          const top = LABEL_TOP[e.side];
           return (
             <span
               key={`label-${e.id}`}
               aria-hidden
               data-slot="match-strip-goal-label"
-              className="pointer-events-none absolute -translate-x-1/2 text-[12px] font-semibold whitespace-nowrap text-white"
-              style={{ left: stripLeft(at(e), end), top: home ? LINE_Y - 40 : LINE_Y + 22 }}
+              data-row={labelRows.narrow[e.id]}
+              data-row-wide={labelRows.wide[e.id]}
+              data-row-large={labelRows.large[e.id]}
+              className={cn(
+                'pointer-events-none absolute flex justify-center text-[12px] font-semibold whitespace-nowrap text-white',
+                top.narrow[labelRows.narrow[e.id] ?? 0],
+                top.wide[labelRows.wide[e.id] ?? 0],
+                top.large[labelRows.large[e.id] ?? 0]
+              )}
+              style={{ left: labelLeft(at(e), end, width), width }}
             >
               {label}
             </span>
