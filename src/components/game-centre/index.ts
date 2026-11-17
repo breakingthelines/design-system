@@ -63,13 +63,21 @@ export type {
 
 export {
   MatchStrip,
+  MatchEventList,
+  MatchTimelineStack,
   matchStripEnd,
   matchStripPosition,
-  matchStripGoalLabel,
-  matchStripLabelRows,
-  matchStripLabelWidth,
-  MATCH_STRIP_LABEL_TIERS,
+  matchStripMinute,
+  matchStripPhase,
+  matchStripLayout,
+  matchStripOffset,
+  matchStripDotLabel,
+  matchStripSurname,
+  matchEventListRows,
+  sortMatchStripEvents,
   isMatchStripGoal,
+  isMatchStripDot,
+  MATCH_STRIP_PHASE_LABEL,
   MATCH_STRIP_HOME_COLOR,
   MATCH_STRIP_AWAY_COLOR,
 } from './match-strip';
@@ -79,8 +87,13 @@ export type {
   MatchStripEventKind,
   MatchStripSide,
   MatchStripPlayer,
-  MatchStripLabelRows,
-  MatchStripLabelTier,
+  MatchStripMinute,
+  MatchStripPhase,
+  MatchStripSegment,
+  MatchStripLayout,
+  MatchEventListProps,
+  MatchEventListRow,
+  MatchTimelineStackProps,
 } from './match-strip';
 
 export { MatchShell, MatchAdRail, MatchAdSlot, MatchRecapStrip } from './match-shell';
