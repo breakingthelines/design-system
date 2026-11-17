@@ -727,14 +727,14 @@ export function MatchTimelineStack({
   if (strip.events.length === 0) return null;
   const select = (event: MatchStripEvent) => {
     setPinned(event.id);
-    const row = listRef.current?.querySelector<HTMLElement>(
-      `[data-event-id="${CSS.escape(event.id)}"]`
+    const row = [...(listRef.current?.querySelectorAll<HTMLElement>('[data-event-id]') ?? [])].find(
+      (el) => el.dataset.eventId === event.id
     );
     if (!row) return;
     const box = row.getBoundingClientRect();
     if (box.top >= 0 && box.bottom <= window.innerHeight) return;
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    row.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+    row.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
   };
   return (
     <div data-slot="match-timeline-stack" className={cn('flex flex-col gap-6', className)}>
