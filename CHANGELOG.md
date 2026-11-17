@@ -24,7 +24,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - `playerShortName(name, providerShort?)` keeps compound surnames whole:
   "Di María", "Mac Allister", "van Dijk", "De Bruyne", "ter Stegen",
   "Al-Dawsari". The provider's abbreviated form ("R. Kolo Muani") wins when
-  given. viz mirrors the rule with the same test table.
+  given, and an unabbreviated provider form ("João Pedro") stays whole.
+  viz mirrors the rule with the same test table.
 - `matchStripSurname` now uses it, so the match event list, the assist line
   and the dot labels stop cutting "Ángel Di María" to "María".
 - `MatchStripEvent` takes `playerShort` and `otherShort`, the provider's short

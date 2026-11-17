@@ -34,6 +34,8 @@ const SHORT_NAME_TABLE: readonly (readonly [string, string | undefined, string])
   ['Ángel Di María', 'Á. Di María', 'Di María'],
   ['Alexis Mac Allister', 'A. Mac Allister', 'Mac Allister'],
   ['Rodri', 'Rodri', 'Rodri'],
+  ['João Pedro Junqueira de Jesus', 'João Pedro', 'João Pedro'],
+  ['Vinícius José Paixão de Oliveira Júnior', 'Vinícius Júnior', 'Vinícius Júnior'],
   [' Lionel  Messi ', undefined, 'Messi'],
   ['', 'K. Mbappé', 'Mbappé'],
   ['', undefined, ''],

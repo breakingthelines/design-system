@@ -3,11 +3,12 @@
  * (timeline rows, assists, strip dot labels).
  *
  * In order:
- *  1. The provider's short form wins when given and abbreviated. API-Football
- *     writes "Á. Di María", "R. Kolo Muani", "V. van Dijk": the leading
- *     initials are its own mark of the disposable forename, so they go and
- *     the rest stays whole. That is the only way to keep a compound surname
- *     with no particle ("Kolo Muani").
+ *  1. The provider's short form wins when given. API-Football writes
+ *     "Á. Di María", "R. Kolo Muani", "V. van Dijk": the leading initials are
+ *     its own mark of the disposable forename, so they go and the rest stays
+ *     whole. That is the only way to keep a compound surname with no particle
+ *     ("Kolo Muani"). A short form with no initials is the name the player
+ *     goes by ("João Pedro", "Vinícius Júnior") and stays whole.
  *  2. A name with leading initials is treated the same way.
  *  3. A single token is the name ("Rodri", "Marquinhos").
  *  4. Otherwise the last token, with any particles directly before it
@@ -95,10 +96,10 @@ function afterInitials(parts: readonly string[]): string[] | undefined {
  * provider's "R. Kolo Muani" is given as `providerShort`.
  */
 export function playerShortName(name: string | undefined, providerShort?: string): string {
-  const short = afterInitials(tokens(providerShort));
-  if (short) return short.join(' ');
+  const given = tokens(providerShort);
+  if (given.length > 0) return (afterInitials(given) ?? given).join(' ');
   const parts = tokens(name);
-  if (parts.length === 0) return tokens(providerShort).join(' ');
+  if (parts.length === 0) return '';
   const rest = afterInitials(parts);
   if (rest) return rest.join(' ');
   if (parts.length === 1) return parts[0]!;
