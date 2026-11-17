@@ -5,6 +5,17 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.117.1]
+
+### Fixed: `ThoughtComposer` placeholder no longer doubles its ellipsis
+
+- The composer (expanded editor and collapsed prompt) and the reply box in
+  `ThoughtComment` appended "..." to every placeholder, so a full-sentence
+  placeholder ("Liverpool 2-1 Arsenal. Who stood out?") rendered as
+  "...Who stood out?...". Both now go through `withEllipsis`, which appends
+  "..." only when the text does not already end in `.`, `?`, `!`, `…` or `:`.
+  Short placeholders ("What's happening") keep their ellipsis.
+
 ## [0.117.0]
 
 ### Added: stored short names on match events
