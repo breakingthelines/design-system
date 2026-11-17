@@ -12,6 +12,7 @@ import {
   matchStripMinute,
   matchStripOffset,
   matchStripPhase,
+  matchStripSurname,
   sortMatchStripEvents,
   type MatchStripEvent,
 } from '../match-strip';
@@ -22,6 +23,7 @@ import {
   QUIET_GAME,
   RED_CARDS_GAME,
   SHOOTOUT_GAME,
+  STORED_SHORT_NAMES_GAME,
 } from '../match-strip.fixtures';
 import { countSlot, getSlotAttr, render, slotText } from './test-utils';
 
@@ -292,5 +294,41 @@ describe('penalty shootout', () => {
     const markup = render(<MatchEventList events={SHOOTOUT_GAME} />);
     expect(markup).toContain('>Di María<');
     expect(markup).not.toContain('>María<');
+  });
+});
+
+describe('stored short names', () => {
+  it('prefers the stored short name, else the rule', () => {
+    expect(matchStripSurname('Randal Kolo Muani', 'R. Kolo Muani', 'Kolo Muani')).toBe(
+      'Kolo Muani'
+    );
+    expect(matchStripSurname('Rodrigo Hernández Cascante', undefined, 'Rodri')).toBe('Rodri');
+    expect(matchStripSurname('Rodrigo Hernández Cascante', undefined, ' ')).toBe('Cascante');
+    expect(matchStripSurname('Randal Kolo Muani', 'R. Kolo Muani')).toBe('Kolo Muani');
+    expect(matchStripSurname('Alexis Mac Allister')).toBe('Mac Allister');
+  });
+
+  it('prints them in rows, assists and dot labels', () => {
+    const rows = matchEventListRows(STORED_SHORT_NAMES_GAME);
+    expect(rows.map((r) => r.how)).toEqual([
+      'Assist Bruno Fernandes',
+      'Assist Di María',
+      'Penalty',
+      'Assist Rodri',
+      'Red card',
+      'Assist Kolo Muani',
+    ]);
+    expect(rows.map(matchStripDotLabel)).toEqual([
+      "Kolo Muani 12', 1-0",
+      "Mac Allister 27', 1-1",
+      "Bruno Fernandes 41', Penalty, 2-1",
+      "Son 58', 2-2",
+      "Rodri 73', Red card",
+      "Di María 88', 3-2",
+    ]);
+    const markup = render(<MatchEventList events={STORED_SHORT_NAMES_GAME} />);
+    expect(markup).toContain('match-event-name" class="truncate">Bruno Fernandes<');
+    expect(markup).toContain('match-event-name" class="truncate">Son<');
+    expect(markup).not.toContain('Heung-min<');
   });
 });

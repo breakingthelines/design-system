@@ -73,6 +73,8 @@ export {
   matchStripOffset,
   matchStripDotLabel,
   matchStripSurname,
+  matchEventPlayer,
+  matchEventOther,
   matchEventListRows,
   matchShootoutRows,
   sortMatchStripEvents,

@@ -16,6 +16,7 @@ import {
   OWN_GOAL_GAME,
   QUIET_GAME,
   RED_CARDS_GAME,
+  STORED_SHORT_NAMES_GAME,
 } from './match-strip.fixtures';
 
 const meta = preview.meta({
@@ -138,6 +139,12 @@ export const ExtraTime = meta.story({
 export const PenaltyShootout = meta.story({
   args: { events: SHOOTOUT_GAME, extraTime: true },
   render: () => stack(SHOOTOUT_GAME, 390, true),
+});
+
+/** Identity's stored short names win: "Kolo Muani", "Bruno Fernandes", "Son", "Rodri". */
+export const StoredShortNames = meta.story({
+  args: { events: STORED_SHORT_NAMES_GAME },
+  render: () => stack(STORED_SHORT_NAMES_GAME, 390),
 });
 
 /** The list alone, with no links. */

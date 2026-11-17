@@ -109,3 +109,35 @@ export const SHOOTOUT_GAME: MatchStripEvent[] = [
   ev('120+6', 'home', 'shootout_scored', 'Leandro Paredes'),
   ev('120+7', 'away', 'shootout_scored', 'Randal Kolo Muani', { playerShort: 'R. Kolo Muani' }),
 ];
+
+/**
+ * Not a real game: six players whose short name the rule cannot know, each
+ * with identity's stored short name. Without it they read "Muani", "Fernandes",
+ * "Heung-min" and "Cascante".
+ */
+export const STORED_SHORT_NAMES_GAME: MatchStripEvent[] = [
+  ev('12', 'home', 'goal', 'Randal Kolo Muani', {
+    playerShortName: 'Kolo Muani',
+    otherName: 'Bruno Miguel Borges Fernandes',
+    otherShortName: 'Bruno Fernandes',
+  }),
+  ev('27', 'away', 'goal', 'Alexis Mac Allister', {
+    playerShortName: 'Mac Allister',
+    otherName: 'Ángel Di María',
+    otherShortName: 'Di María',
+  }),
+  ev('41', 'home', 'penalty', 'Bruno Miguel Borges Fernandes', {
+    playerShortName: 'Bruno Fernandes',
+  }),
+  ev('58', 'away', 'goal', 'Son Heung-min', {
+    playerShortName: 'Son',
+    otherName: 'Rodrigo Hernández Cascante',
+    otherShortName: 'Rodri',
+  }),
+  ev('73', 'away', 'red', 'Rodrigo Hernández Cascante', { playerShortName: 'Rodri' }),
+  ev('88', 'home', 'goal', 'Ángel Di María', {
+    playerShortName: 'Di María',
+    otherName: 'Randal Kolo Muani',
+    otherShortName: 'Kolo Muani',
+  }),
+];

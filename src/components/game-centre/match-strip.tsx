@@ -32,8 +32,10 @@ import { playerShortName } from './player-short-name';
  * `shootout_missed` events; they are never on the strip, never in the match
  * score and never stretch the extra time segments.
  *
- * Names are short names from `playerShortName` ("Di María", "Mac Allister"),
- * from the provider's short form when the event carries one.
+ * Names are the event's stored short name (`playerShortName` on the event,
+ * identity's: "Kolo Muani", "Rodri") when it carries one, else
+ * `playerShortName` ("Di María", "Mac Allister"), from the provider's short
+ * form when the event carries one.
  *
  * Both take the same `MatchStripEvent`s, in any order: they sort by minute and
  * stoppage minute. The running score is counted in that order, so it does not
@@ -73,11 +75,18 @@ export interface MatchStripEvent {
    * for the short name when it is abbreviated.
    */
   playerShort?: string;
+  /**
+   * The player's stored short name (identity's, "Kolo Muani", "Bruno
+   * Fernandes", "Rodri"). Wins over `playerShort` and the rule when given.
+   */
+  playerShortName?: string;
   /** The assist provider, or the player going off. */
   otherId?: string;
   otherName?: string;
   /** The provider's short form of `otherName`. */
   otherShort?: string;
+  /** The stored short name of `otherName`. */
+  otherShortName?: string;
   /** Goals only: the score after this goal, home first. */
   scoreAfter?: readonly [number, number];
   /** The provider's reason, for a VAR check or a card ("Goal cancelled", "Foul"). */
@@ -337,7 +346,7 @@ function dotNudges(
 /** A dot's name for screen readers: "Dorgu 90+6', 4-4", "Janelt 90+2', Second yellow". */
 export function matchStripDotLabel(row: MatchEventListRow): string {
   const e = row.event;
-  const who = e.playerName ? playerShortName(e.playerName, e.playerShort) : 'Goal';
+  const who = matchEventPlayer(e) || 'Goal';
   const how = row.how && !row.how.startsWith('Assist') ? row.how : undefined;
   return [`${who} ${e.minuteLabel}'`, how, row.score].filter(Boolean).join(', ');
 }
@@ -510,11 +519,26 @@ function isSecondYellow(e: MatchStripEvent): boolean {
 }
 
 /**
- * A player's short name: "Fernandes" for "Bruno Fernandes", "Di María" for
- * "Ángel Di María". See `playerShortName`.
+ * A player's short name: the stored one when given ("Bruno Fernandes",
+ * "Kolo Muani"), else `playerShortName` ("Fernandes" for "Bruno Fernandes",
+ * "Di María" for "Ángel Di María").
  */
-export function matchStripSurname(name: string | undefined, providerShort?: string): string {
-  return playerShortName(name, providerShort);
+export function matchStripSurname(
+  name: string | undefined,
+  providerShort?: string,
+  shortName?: string
+): string {
+  return shortName?.trim() || playerShortName(name, providerShort);
+}
+
+/** The event's player as a row prints him, or empty when there is none. */
+export function matchEventPlayer(e: MatchStripEvent): string {
+  return matchStripSurname(e.playerName, e.playerShort, e.playerShortName);
+}
+
+/** The event's other player (assist, player going off), or empty. */
+export function matchEventOther(e: MatchStripEvent): string {
+  return matchStripSurname(e.otherName, e.otherShort, e.otherShortName);
 }
 
 export interface MatchEventListRow {
@@ -550,7 +574,7 @@ export function matchEventListRows(
     else away += 1;
     const assist =
       event.kind === 'goal' && event.otherName && event.otherName !== event.playerName
-        ? `Assist ${playerShortName(event.otherName, event.otherShort)}`
+        ? `Assist ${matchEventOther(event)}`
         : undefined;
     const how =
       event.kind === 'penalty' ? 'Penalty' : event.kind === 'own_goal' ? 'Own goal' : assist;
@@ -638,7 +662,7 @@ function EventRowBody({
       <span className="flex min-w-0 flex-col @lg:flex-row @lg:items-baseline @lg:gap-3">
         <span className="flex min-w-0 items-center text-[15px] leading-snug font-medium text-foreground @lg:text-[16px]">
           <span data-slot="match-event-name" className="truncate">
-            {event.playerName ? playerShortName(event.playerName, event.playerShort) : 'Goal'}
+            {matchEventPlayer(event) || 'Goal'}
           </span>
           {event.kind === 'red' ? (
             <span

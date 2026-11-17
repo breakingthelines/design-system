@@ -5,6 +5,18 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.117.0]
+
+### Added: stored short names on match events
+
+- `MatchStripEvent.playerShortName` and `otherShortName` carry the player's
+  stored short name (identity's `short_name`: "Kolo Muani", "Bruno
+  Fernandes", "Son", "Rodri"). `MatchEventList`, `MatchTimelineStack`, the
+  assist line and the dot labels prefer it, and fall back to
+  `playerShortName` when it is empty.
+- `matchStripSurname(name, providerShort?, shortName?)` takes it as a third
+  argument. `matchEventPlayer` and `matchEventOther` read an event's two names.
+
 ## [0.116.0]
 
 ### Added: penalty shootouts in `MatchEventList`
