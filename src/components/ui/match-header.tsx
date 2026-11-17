@@ -108,6 +108,11 @@ export interface MatchHeaderProps {
    * (e.g. `1–1ᵖ`), with the full "won on penalties" wording in the aria-label.
    */
   penaltyWinner?: 'home' | 'away';
+  /**
+   * The shootout score, home first. When set, a line "4–2 on penalties" sits
+   * under the score in place of the "p" marker.
+   */
+  penaltyScore?: { home: number; away: number };
   /** Kickoff ISO. Drives both pre-match clock display and "Tue 19 May 2026" caption. */
   kickoffIso?: string;
   /** Optional clock label for in-play games ("78'", "HT"). */
@@ -142,6 +147,7 @@ export function MatchHeader({
   scoreHome,
   scoreAway,
   penaltyWinner,
+  penaltyScore,
   kickoffIso,
   clockLabel,
   competitionLabel,
@@ -221,6 +227,7 @@ export function MatchHeader({
           scoreHome={scoreHome}
           scoreAway={scoreAway}
           penaltyWinner={penaltyWinner}
+          penaltyScore={penaltyScore}
           penaltyWinnerName={
             penaltyWinner === 'home'
               ? home.label
@@ -411,6 +418,7 @@ function ScoreStack({
   scoreHome,
   scoreAway,
   penaltyWinner,
+  penaltyScore,
   penaltyWinnerName,
   statusLabel,
   status,
@@ -421,6 +429,7 @@ function ScoreStack({
   scoreHome?: number;
   scoreAway?: number;
   penaltyWinner?: 'home' | 'away';
+  penaltyScore?: { home: number; away: number };
   penaltyWinnerName?: string;
   statusLabel: string;
   status: MatchHeaderStatus;
@@ -428,9 +437,16 @@ function ScoreStack({
 }) {
   // Spell out the shootout result for assistive tech — the visual is a bare red
   // "p", which a screen reader would otherwise read as a stray letter.
+  const pens = !isScheduled ? penaltyScore : undefined;
+  const pensLine = pens ? `${pens.home}–${pens.away} on penalties` : undefined;
+  // The "p" marker only stands in when the shootout score is not given.
+  const marker = pens ? undefined : penaltyWinner;
+  const winnerName =
+    penaltyWinnerName ??
+    (penaltyWinner === 'home' ? 'home' : penaltyWinner === 'away' ? 'away' : '');
   const scoreAria =
     !isScheduled && penaltyWinner
-      ? `${scoreHome ?? 0}–${scoreAway ?? 0}, ${penaltyWinnerName ?? (penaltyWinner === 'home' ? 'home' : 'away')} won on penalties`
+      ? `${scoreHome ?? 0}–${scoreAway ?? 0}, ${winnerName} won ${pens ? `${pens.home}–${pens.away} ` : ''}on penalties`
       : undefined;
   return (
     <div className="flex w-[88px] flex-col items-stretch gap-1.5 sm:w-[120px]">
@@ -454,16 +470,25 @@ function ScoreStack({
           >
             <span className="inline-flex items-start">
               {scoreHome ?? 0}
-              {penaltyWinner === 'home' ? <HeaderPenaltyMarker /> : null}
+              {marker === 'home' ? <HeaderPenaltyMarker /> : null}
             </span>
             <span className="text-white/45">–</span>
             <span className="inline-flex items-start">
               {scoreAway ?? 0}
-              {penaltyWinner === 'away' ? <HeaderPenaltyMarker /> : null}
+              {marker === 'away' ? <HeaderPenaltyMarker /> : null}
             </span>
           </div>
         )}
       </div>
+      {pensLine ? (
+        <span
+          data-slot="match-header-penalties"
+          aria-hidden={scoreAria ? 'true' : undefined}
+          className="self-center text-xs whitespace-nowrap text-white/80 tabular-nums"
+        >
+          {pensLine}
+        </span>
+      ) : null}
       {statusLabel ? (
         <span
           data-slot="match-header-status"

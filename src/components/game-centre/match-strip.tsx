@@ -5,6 +5,8 @@ import * as React from 'react';
 import { useLinkComponent } from '#/components/ui/link-context';
 import { cn } from '#/lib/utils';
 
+import { playerShortName } from './player-short-name';
+
 /* ─────────────────────────────────────────────────────────────────────────────
  * MatchStrip and MatchEventList
  *
@@ -24,6 +26,15 @@ import { cn } from '#/lib/utils';
  * the name, a quiet second line ("Assist Rice", "Penalty", "Own goal", "Second
  * yellow", "Red card") and, for goals, the running score ("2-2").
  *
+ * A match decided on penalties adds a "Penalty shootout" section after the
+ * last phase: one row per kick in order, with the taker, "Scored" or "Missed"
+ * and the running shootout score. Kicks are `shootout_scored` and
+ * `shootout_missed` events; they are never on the strip, never in the match
+ * score and never stretch the extra time segments.
+ *
+ * Names are short names from `playerShortName` ("Di María", "Mac Allister"),
+ * from the provider's short form when the event carries one.
+ *
  * Both take the same `MatchStripEvent`s, in any order: they sort by minute and
  * stoppage minute. The running score is counted in that order, so it does not
  * depend on `scoreAfter`. An own goal's `side` is the side it counts for.
@@ -39,7 +50,9 @@ export type MatchStripEventKind =
   | 'yellow'
   | 'red'
   | 'sub'
-  | 'var';
+  | 'var'
+  | 'shootout_scored'
+  | 'shootout_missed';
 
 export type MatchStripSide = 'home' | 'away';
 
@@ -55,9 +68,16 @@ export interface MatchStripEvent {
   /** The scorer, the booked player, or the player coming on. */
   playerId?: string;
   playerName?: string;
+  /**
+   * The provider's short form of `playerName` ("R. Kolo Muani"). Preferred
+   * for the short name when it is abbreviated.
+   */
+  playerShort?: string;
   /** The assist provider, or the player going off. */
   otherId?: string;
   otherName?: string;
+  /** The provider's short form of `otherName`. */
+  otherShort?: string;
   /** Goals only: the score after this goal, home first. */
   scoreAfter?: readonly [number, number];
   /** The provider's reason, for a VAR check or a card ("Goal cancelled", "Foul"). */
@@ -123,6 +143,11 @@ export function isMatchStripGoal(event: MatchStripEvent): boolean {
   return event.kind === 'goal' || event.kind === 'penalty' || event.kind === 'own_goal';
 }
 
+/** A penalty shootout kick, scored or missed. Never a goal and never on the strip. */
+export function isMatchStripShootout(event: MatchStripEvent): boolean {
+  return event.kind === 'shootout_scored' || event.kind === 'shootout_missed';
+}
+
 /* ── minutes ─────────────────────────────────────────────────────────────── */
 
 export interface MatchStripMinute {
@@ -146,7 +171,7 @@ export function matchStripMinute(event: MatchStripEvent): MatchStripMinute {
  */
 export function matchStripEnd(events: readonly MatchStripEvent[], extraTime?: boolean): number {
   if (extraTime !== undefined) return extraTime ? 120 : 90;
-  return events.some((e) => matchStripMinute(e).base > 90) ? 120 : 90;
+  return events.some((e) => !isMatchStripShootout(e) && matchStripMinute(e).base > 90) ? 120 : 90;
 }
 
 /** 1 and 2 are the halves, 3 and 4 the halves of extra time. */
@@ -226,7 +251,7 @@ export function matchStripLayout(
     const end = p.start + p.length;
     let stoppage = 0;
     for (const e of events) {
-      if (matchStripPhase(e, et) !== p.phase) continue;
+      if (isMatchStripShootout(e) || matchStripPhase(e, et) !== p.phase) continue;
       const { base, added } = matchStripMinute(e);
       stoppage = Math.max(stoppage, base - end + added);
     }
@@ -312,7 +337,7 @@ function dotNudges(
 /** A dot's name for screen readers: "Dorgu 90+6', 4-4", "Janelt 90+2', Second yellow". */
 export function matchStripDotLabel(row: MatchEventListRow): string {
   const e = row.event;
-  const who = e.playerName ? matchStripSurname(e.playerName) : 'Goal';
+  const who = e.playerName ? playerShortName(e.playerName, e.playerShort) : 'Goal';
   const how = row.how && !row.how.startsWith('Assist') ? row.how : undefined;
   return [`${who} ${e.minuteLabel}'`, how, row.score].filter(Boolean).join(', ');
 }
@@ -484,10 +509,12 @@ function isSecondYellow(e: MatchStripEvent): boolean {
   return Boolean(e.secondYellow) || /second yellow/i.test(e.reason ?? '');
 }
 
-/** The last word of a name: "Fernandes" for "Bruno Fernandes". */
-export function matchStripSurname(name: string | undefined): string {
-  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
-  return parts[parts.length - 1] ?? '';
+/**
+ * A player's short name: "Fernandes" for "Bruno Fernandes", "Di María" for
+ * "Ángel Di María". See `playerShortName`.
+ */
+export function matchStripSurname(name: string | undefined, providerShort?: string): string {
+  return playerShortName(name, providerShort);
 }
 
 export interface MatchEventListRow {
@@ -523,13 +550,41 @@ export function matchEventListRows(
     else away += 1;
     const assist =
       event.kind === 'goal' && event.otherName && event.otherName !== event.playerName
-        ? `Assist ${matchStripSurname(event.otherName)}`
+        ? `Assist ${playerShortName(event.otherName, event.otherShort)}`
         : undefined;
     const how =
       event.kind === 'penalty' ? 'Penalty' : event.kind === 'own_goal' ? 'Own goal' : assist;
     rows.push({ event, phase, how, score: `${home}-${away}` });
   }
   return rows;
+}
+
+export interface MatchShootoutRow {
+  event: MatchStripEvent;
+  /** The kick's place in the shootout: 1 for the first. */
+  order: number;
+  scored: boolean;
+  /** The shootout score after this kick, home first: "4-2". */
+  score: string;
+}
+
+/** The heading over the shootout in `MatchEventList`. */
+export const MATCH_STRIP_SHOOTOUT_LABEL = 'Penalty shootout';
+
+/**
+ * The shootout kicks in order (minute, stoppage minute, then as given), each
+ * with the running shootout score. Only kicks count; the match score is not
+ * touched.
+ */
+export function matchShootoutRows(events: readonly MatchStripEvent[]): MatchShootoutRow[] {
+  let home = 0;
+  let away = 0;
+  return sortMatchStripEvents(events.filter(isMatchStripShootout)).map((event, index) => {
+    const scored = event.kind === 'shootout_scored';
+    if (scored && event.side === 'home') home += 1;
+    else if (scored) away += 1;
+    return { event, order: index + 1, scored, score: `${home}-${away}` };
+  });
 }
 
 export interface MatchEventListProps {
@@ -556,16 +611,22 @@ const ROW_GRID =
 
 function EventRowBody({
   row,
+  lead,
   renderHeadshot,
 }: {
-  row: MatchEventListRow;
+  row: Pick<MatchEventListRow, 'event' | 'how' | 'score'>;
+  /** The first column: the minute, or a shootout kick's number. */
+  lead: string;
   renderHeadshot?: (event: MatchStripEvent) => React.ReactNode;
 }) {
   const { event, how, score } = row;
   return (
     <>
-      <span className="text-[13px] whitespace-nowrap text-muted-foreground tabular-nums @lg:text-[14px]">
-        {event.minuteLabel}&apos;
+      <span
+        data-slot="match-event-lead"
+        className="text-[13px] whitespace-nowrap text-muted-foreground tabular-nums @lg:text-[14px]"
+      >
+        {lead}
       </span>
       <span
         data-slot="match-event-headshot"
@@ -577,7 +638,7 @@ function EventRowBody({
       <span className="flex min-w-0 flex-col @lg:flex-row @lg:items-baseline @lg:gap-3">
         <span className="flex min-w-0 items-center text-[15px] leading-snug font-medium text-foreground @lg:text-[16px]">
           <span data-slot="match-event-name" className="truncate">
-            {event.playerName ? matchStripSurname(event.playerName) : 'Goal'}
+            {event.playerName ? playerShortName(event.playerName, event.playerShort) : 'Goal'}
           </span>
           {event.kind === 'red' ? (
             <span
@@ -622,65 +683,81 @@ export function MatchEventList({
 }: MatchEventListProps) {
   const Link = useLinkComponent();
   const rows = matchEventListRows(events, extraTime);
-  if (rows.length === 0) return null;
+  const kicks = matchShootoutRows(events);
+  if (rows.length === 0 && kicks.length === 0) return null;
   const phases = [...new Set(rows.map((r) => r.phase))];
+  const renderRow = (row: Pick<MatchEventListRow, 'event' | 'how' | 'score'>, lead: string) => {
+    const { event } = row;
+    const on = event.id === selectedId;
+    const href = playerHref?.(event);
+    const hover = {
+      onMouseEnter: () => onHighlightEvent?.(event),
+      onMouseLeave: () => onHighlightEvent?.(undefined),
+    };
+    const tone = cn(
+      ROW_GRID,
+      '-mx-2 rounded-[6px] px-2 transition-colors motion-reduce:transition-none',
+      on && 'bg-white/[0.06]'
+    );
+    const body = <EventRowBody row={row} lead={lead} renderHeadshot={renderHeadshot} />;
+    return (
+      <li
+        key={event.id}
+        data-slot="match-event-row"
+        data-event-id={event.id}
+        data-kind={event.kind}
+        data-selected={on ? 'true' : undefined}
+        className="scroll-mt-24 border-b border-white/10 py-px last:border-b-0"
+      >
+        {href ? (
+          <Link
+            href={href}
+            data-slot="match-event-link"
+            className={cn(
+              tone,
+              'text-inherit no-underline hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-none'
+            )}
+            onFocus={() => onHighlightEvent?.(event)}
+            onBlur={() => onHighlightEvent?.(undefined)}
+            {...hover}
+          >
+            {body}
+          </Link>
+        ) : (
+          <div className={tone} {...hover}>
+            {body}
+          </div>
+        )}
+      </li>
+    );
+  };
+  const heading =
+    'm-0 border-b border-white/25 pb-2 text-[13px] font-normal text-muted-foreground @lg:text-[14px]';
   return (
     <div data-slot="match-event-list" className={cn('@container flex flex-col gap-7', className)}>
       {phases.map((phase) => (
         <section key={phase} data-slot="match-event-phase" data-phase={phase}>
-          <h3 className="m-0 border-b border-white/25 pb-2 text-[13px] font-normal text-muted-foreground @lg:text-[14px]">
-            {MATCH_STRIP_PHASE_LABEL[phase]}
-          </h3>
+          <h3 className={heading}>{MATCH_STRIP_PHASE_LABEL[phase]}</h3>
           <ol className="m-0 list-none p-0">
             {rows
               .filter((r) => r.phase === phase)
-              .map((row) => {
-                const { event } = row;
-                const on = event.id === selectedId;
-                const href = playerHref?.(event);
-                const hover = {
-                  onMouseEnter: () => onHighlightEvent?.(event),
-                  onMouseLeave: () => onHighlightEvent?.(undefined),
-                };
-                const tone = cn(
-                  ROW_GRID,
-                  '-mx-2 rounded-[6px] px-2 transition-colors motion-reduce:transition-none',
-                  on && 'bg-white/[0.06]'
-                );
-                return (
-                  <li
-                    key={event.id}
-                    data-slot="match-event-row"
-                    data-event-id={event.id}
-                    data-kind={event.kind}
-                    data-selected={on ? 'true' : undefined}
-                    className="scroll-mt-24 border-b border-white/10 py-px last:border-b-0"
-                  >
-                    {href ? (
-                      <Link
-                        href={href}
-                        data-slot="match-event-link"
-                        className={cn(
-                          tone,
-                          'text-inherit no-underline hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-none'
-                        )}
-                        onFocus={() => onHighlightEvent?.(event)}
-                        onBlur={() => onHighlightEvent?.(undefined)}
-                        {...hover}
-                      >
-                        <EventRowBody row={row} renderHeadshot={renderHeadshot} />
-                      </Link>
-                    ) : (
-                      <div className={tone} {...hover}>
-                        <EventRowBody row={row} renderHeadshot={renderHeadshot} />
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
+              .map((row) => renderRow(row, `${row.event.minuteLabel}'`))}
           </ol>
         </section>
       ))}
+      {kicks.length > 0 ? (
+        <section data-slot="match-event-shootout">
+          <h3 className={heading}>{MATCH_STRIP_SHOOTOUT_LABEL}</h3>
+          <ol className="m-0 list-none p-0">
+            {kicks.map((kick) =>
+              renderRow(
+                { event: kick.event, how: kick.scored ? 'Scored' : 'Missed', score: kick.score },
+                String(kick.order)
+              )
+            )}
+          </ol>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -84,3 +84,28 @@ export const EXTRA_TIME_GAME: MatchStripEvent[] = [
   ev('112', 'away', 'red', 'Ronald Araujo'),
   ev('120+1', 'home', 'penalty', 'Lautaro Martinez'),
 ];
+
+/**
+ * Argentina 3-3 France, the 2022 World Cup final, won 4-2 on penalties. The
+ * kicks come stamped 120+1' to 120+8', and the winning kick is fed first.
+ */
+export const SHOOTOUT_GAME: MatchStripEvent[] = [
+  ev('23', 'home', 'penalty', 'Lionel Messi', { playerShort: 'L. Messi' }),
+  ev('36', 'home', 'goal', 'Ángel Di María', {
+    playerShort: 'Á. Di María',
+    otherName: 'Alexis Mac Allister',
+    otherShort: 'A. Mac Allister',
+  }),
+  ev('80', 'away', 'penalty', 'Kylian Mbappé'),
+  ev('81', 'away', 'goal', 'Kylian Mbappé', { otherName: 'Marcus Thuram' }),
+  ev('108', 'home', 'goal', 'Lionel Messi'),
+  ev('118', 'away', 'penalty', 'Kylian Mbappé'),
+  ev('120+8', 'home', 'shootout_scored', 'Gonzalo Montiel'),
+  ev('120+1', 'away', 'shootout_scored', 'Kylian Mbappé'),
+  ev('120+2', 'home', 'shootout_scored', 'Lionel Messi'),
+  ev('120+3', 'away', 'shootout_missed', 'Kingsley Coman'),
+  ev('120+4', 'home', 'shootout_scored', 'Paulo Dybala'),
+  ev('120+5', 'away', 'shootout_missed', 'Aurélien Tchouaméni'),
+  ev('120+6', 'home', 'shootout_scored', 'Leandro Paredes'),
+  ev('120+7', 'away', 'shootout_scored', 'Randal Kolo Muani', { playerShort: 'R. Kolo Muani' }),
+];

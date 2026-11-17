@@ -5,6 +5,37 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.116.0]
+
+### Added: penalty shootouts in `MatchEventList`
+
+- Two new `MatchStripEventKind`s, `shootout_scored` and `shootout_missed`, for
+  shootout kicks. `MatchEventList` (and so `MatchTimelineStack`) lists them in
+  a "Penalty shootout" section after the last phase: the kick number, the
+  taker, "Scored" or "Missed" and the running shootout score ("4-2").
+- Kicks are never on the strip, never in the match score and never stretch
+  the extra time segments, however they are stamped (API-Football sends
+  120+1' to 120+8').
+- `matchShootoutRows`, `isMatchStripShootout` and
+  `MATCH_STRIP_SHOOTOUT_LABEL` are exported.
+
+### Added: `playerShortName`, one rule for short names
+
+- `playerShortName(name, providerShort?)` keeps compound surnames whole:
+  "Di María", "Mac Allister", "van Dijk", "De Bruyne", "ter Stegen",
+  "Al-Dawsari". The provider's abbreviated form ("R. Kolo Muani") wins when
+  given, and an unabbreviated provider form ("João Pedro") stays whole.
+  viz mirrors the rule with the same test table.
+- `matchStripSurname` now uses it, so the match event list, the assist line
+  and the dot labels stop cutting "Ángel Di María" to "María".
+- `MatchStripEvent` takes `playerShort` and `otherShort`, the provider's short
+  forms.
+
+### Added: `MatchHeader` `penaltyScore`
+
+- `penaltyScore={{ home: 4, away: 2 }}` writes "4–2 on penalties" under the
+  score in place of the red "p".
+
 ## [0.115.0]
 
 ### Changed: `MatchStrip` is the minimal strip

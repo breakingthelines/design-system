@@ -12,6 +12,7 @@ import {
 import {
   BUSY_GAME,
   EXTRA_TIME_GAME,
+  SHOOTOUT_GAME,
   OWN_GOAL_GAME,
   QUIET_GAME,
   RED_CARDS_GAME,
@@ -131,6 +132,12 @@ export const StoppageTime = meta.story({
 export const ExtraTime = meta.story({
   args: { events: EXTRA_TIME_GAME, extraTime: true },
   render: () => stack(EXTRA_TIME_GAME, 680, true),
+});
+
+/** Argentina 3-3 France, won 4-2 on penalties: the kicks list after extra time. */
+export const PenaltyShootout = meta.story({
+  args: { events: SHOOTOUT_GAME, extraTime: true },
+  render: () => stack(SHOOTOUT_GAME, 390, true),
 });
 
 /** The list alone, with no links. */
