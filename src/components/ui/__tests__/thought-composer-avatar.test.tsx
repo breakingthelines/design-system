@@ -72,3 +72,17 @@ describe('ThoughtComposer — the default is today’s rendering', () => {
     );
   });
 });
+
+describe('ThoughtComposer — the placeholder ellipsis', () => {
+  it('appends an ellipsis to a short placeholder', () => {
+    expect(renderComposer({ placeholder: "What's happening" })).toContain(
+      'What&#x27;s happening...'
+    );
+  });
+
+  it('leaves a full-sentence placeholder alone', () => {
+    const markup = renderComposer({ placeholder: 'Liverpool 2-1 Arsenal. Who stood out?' });
+    expect(markup).toContain('Who stood out?');
+    expect(markup).not.toContain('Who stood out?...');
+  });
+});

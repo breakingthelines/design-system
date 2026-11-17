@@ -16,6 +16,7 @@ import {
 } from '@phosphor-icons/react';
 
 import { cn } from '#/lib/utils';
+import { withEllipsis } from '#/lib/placeholder';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import { VerifiedBadge } from '#/components/ui/verified-badge';
@@ -917,7 +918,7 @@ export function ThoughtComment({
             </Avatar>
             <div className="flex-1 min-w-0 border-b border-[#807c7c]/50 pb-2">
               <MiniEditor
-                placeholder={`Reply to ${thought.author.name}...`}
+                placeholder={withEllipsis(`Reply to ${thought.author.name}`)}
                 submitOn="mod-enter"
                 editorRef={replyEditorRef}
                 onSubmit={(text) => {

@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import type { LexicalEditor } from 'lexical';
 
 import { cn } from '#/lib/utils';
+import { withEllipsis } from '#/lib/placeholder';
 import { Avatar, AvatarImage, AvatarFallback } from '#/components/ui/avatar';
 import { Button } from '#/components/ui/button';
 import {
@@ -462,7 +463,7 @@ function ThoughtComposer({
           <div className="cursor-text" onClick={handleExpand}>
             {expanded ? (
               <MiniEditor
-                placeholder={`${placeholder}...`}
+                placeholder={withEllipsis(placeholder)}
                 submitOn="mod-enter"
                 maxLength={MAX_CHARS}
                 multiline
@@ -492,7 +493,7 @@ function ThoughtComposer({
               // visibly resizes the instant this collapsed prompt is clicked
               // into the real (auto-zoom-safe) editable placeholder.
               <span className="text-base font-medium leading-6 text-white/45 select-none sm:text-sm">
-                {placeholder}...
+                {withEllipsis(placeholder)}
               </span>
             )}
           </div>
