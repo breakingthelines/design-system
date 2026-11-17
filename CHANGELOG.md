@@ -5,6 +5,52 @@ All notable changes to `@breakingthelines/design-system` are documented in this 
 The format is loosely based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.115.0]
+
+### Changed: `MatchStrip` is the minimal strip
+
+The match page strip, redrawn to the approved "strip plus stack" design.
+
+- Dots only, no names. A goal is a filled dot, an own goal a hollow ring and
+  a red card a red card. Yellow cards, substitutions, VAR checks and missed
+  penalties stay off the strip.
+- Home above the line, away below. `homeCrest` and `awayCrest` put a crest at
+  the start of each lane; `homeLabel` and `awayLabel` name them for screen
+  readers. No side colours and no team names.
+- Each half is its own segment and runs on past 45' and 90' by its longest
+  stoppage time as a dotted line, so 45+5' sits in the first half and 90+2'
+  and 90+6' sit apart and in order. A match that went to extra time adds two
+  15 minute segments, each with its own run-on (`extraTime`, or a minute past
+  90 before stoppage). A 90+6' goal never makes the strip 120'.
+- Dots on one side closer than 11px at a 300px strip nudge apart.
+- The dots are buttons only with `onSelectEvent` or `onHighlightEvent`, named
+  "Dorgu 90+6', 4-4". `selectedId` rings a dot.
+- Still accepted and now ignored: `showDetail`, `homeColor`, `awayColor`,
+  `renderPlayerName`, `renderHeadshot`. The detail line is gone; the list
+  below does its job.
+- Removed: `matchStripGoalLabel`, `matchStripLabelRows`,
+  `matchStripLabelWidth`, `MATCH_STRIP_LABEL_TIERS` and their types. No
+  consumer imports them.
+
+### Added: `MatchEventList` and `MatchTimelineStack`
+
+- `MatchEventList` lists goals and red cards under "First half", "Second
+  half" and the extra time halves. A row has the minute, the player's round
+  headshot (`renderHeadshot`, 28px, 32px from a 512px container), the
+  surname, a quiet second line ("Assist Rice", "Penalty", "Own goal", "Second
+  yellow", "Red card") and the running score for goals ("2-2"). With
+  `playerHref`, a row is one link through `LinkProvider`.
+- `MatchTimelineStack` is the strip over the list, linked: hovering or
+  focusing a dot highlights its row and the other way round, and tapping a
+  dot scrolls its row into view when it is off screen (at once under reduced
+  motion).
+- Events may come in any order: both sort by minute, then stoppage minute
+  (`sortMatchStripEvents`). The running score is counted in that order.
+- `MatchStripEvent.secondYellow` marks a red card as a second yellow.
+- Helpers: `matchStripMinute`, `matchStripPhase`, `matchStripLayout`,
+  `matchStripOffset`, `matchEventListRows`, `matchStripDotLabel`,
+  `matchStripSurname`, `isMatchStripDot`, `MATCH_STRIP_PHASE_LABEL`.
+
 ## [0.114.1]
 
 ### Fixed: `MatchStrip` goal labels collide and run off the edge

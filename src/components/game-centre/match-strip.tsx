@@ -2,28 +2,33 @@
 
 import * as React from 'react';
 
+import { useLinkComponent } from '#/components/ui/link-context';
 import { cn } from '#/lib/utils';
 
 /* ─────────────────────────────────────────────────────────────────────────────
- * MatchStrip
+ * MatchStrip and MatchEventList
  *
- * Goals, cards, substitutions and VAR checks as marks on one line from 0' to
- * the end of the match, home above and away below in the side colours. Goals
- * carry the scorer's surname and minute. Every mark is a button with a 24px
- * hit area; the line under the strip names the player and what happened. The
- * latest goal is open to start with.
+ * The match timeline: a minimal strip, then the goals and red cards as a
+ * list under it ("strip plus stack").
  *
- * Moved from platform's match page (platform#1096) at 0.114.0. The consumer
- * projects its timeline into `MatchStripEvent`s; player links and headshots
- * come in through `renderPlayerName` and `renderHeadshot`, so the strip has no
- * router or image-chain knowledge.
+ * MatchStrip draws dots only, no names. Goals are filled dots, an own goal is
+ * a hollow ring and a red card is a red card; yellow cards, substitutions, VAR
+ * checks and missed penalties stay off it. Home sits above the line and away
+ * below, and a crest at the start of each lane names the side. Each half is its
+ * own segment and runs on past 45' and 90' by its stoppage time as a dotted
+ * line, so 45+5' sits in the first half and 90+2' and 90+6' sit apart and in
+ * order. A match that went to extra time adds two 15 minute segments.
  *
- * Length: 90' unless `extraTime` says the match went to extra time, then 120'.
- * Stoppage time sits on its period's boundary with its own label: a 90+6' goal
- * is drawn at 90' and reads "90+6'", a 45+2' card at 45'.
+ * MatchEventList is the list: "First half", "Second half" (and the extra time
+ * halves), one row per goal or red card with the minute, the player's headshot,
+ * the name, a quiet second line ("Assist Rice", "Penalty", "Own goal", "Second
+ * yellow", "Red card") and, for goals, the running score ("2-2").
  *
- * `interactive={false}` draws the marks without buttons or selection, for an
- * image export or any surface that cannot take a click.
+ * Both take the same `MatchStripEvent`s, in any order: they sort by minute and
+ * stoppage minute. The running score is counted in that order, so it does not
+ * depend on `scoreAfter`. An own goal's `side` is the side it counts for.
+ * Cleaning the feed (duplicates, a yellow and a red folded into a second
+ * yellow, bench cards, goals ruled out) is the consumer's job.
  * ──────────────────────────────────────────────────────────────────────────── */
 
 export type MatchStripEventKind =
@@ -41,10 +46,11 @@ export type MatchStripSide = 'home' | 'away';
 export interface MatchStripEvent {
   id: string;
   kind: MatchStripEventKind;
+  /** The side the event belongs to. An own goal: the side it counts for. */
   side: MatchStripSide;
-  /** Absolute minute (91 for 90+1). */
+  /** Absolute minute (91 for 90+1). Used when `minuteLabel` cannot be read. */
   minute: number;
-  /** "45+2", "61". A "+" label places the mark on its period's boundary. */
+  /** "45+2", "61". The minute and its stoppage minute. */
   minuteLabel: string;
   /** The scorer, the booked player, or the player coming on. */
   playerId?: string;
@@ -56,475 +62,698 @@ export interface MatchStripEvent {
   scoreAfter?: readonly [number, number];
   /** The provider's reason, for a VAR check or a card ("Goal cancelled", "Foul"). */
   reason?: string;
+  /** A red card: the player's second yellow. */
+  secondYellow?: boolean;
 }
 
+/** @deprecated The strip has no detail line since 0.115.0. */
 export interface MatchStripPlayer {
   id?: string;
   name?: string;
-  /** The secondary name on the detail line (assist, player going off). */
   muted: boolean;
 }
 
 export interface MatchStripProps {
   events: readonly MatchStripEvent[];
   /**
-   * The match went to extra time (its period or status says so). Draws the
-   * strip to 120'. When left out, an event labelled past 90 that is not
-   * 90+ stoppage (a 105' or 120+1' goal) counts as extra time.
+   * The match went to extra time (its period or status says so): adds the
+   * two extra time segments. When left out, an event labelled past 90 that is
+   * not 90+ stoppage (a 105' or 120+1' goal) counts as extra time.
    */
   extraTime?: boolean;
-  /** False draws spans instead of buttons and fixes the detail line. Default true. */
-  interactive?: boolean;
-  /** Show the detail line under the strip. Default true. */
-  showDetail?: boolean;
-  /** Team names at the strip's ends, home over the line and away under it. */
+  /** The home crest at the start of the upper lane. */
+  homeCrest?: React.ReactNode;
+  /** The away crest at the start of the lower lane. */
+  awayCrest?: React.ReactNode;
+  /** The team names, read to screen readers with each lane. */
   homeLabel?: string;
   awayLabel?: string;
-  homeColor?: string;
-  awayColor?: string;
-  /** A player's name on the detail line. Default: plain text. */
-  renderPlayerName?: (player: MatchStripPlayer) => React.ReactNode;
-  /** The 24px headshot on the detail line. Default: an empty circle. */
-  renderHeadshot?: (playerId: string | undefined) => React.ReactNode;
+  /**
+   * Called with a dot's event when it is clicked or tapped, so the host can
+   * scroll to its row. With this or `onHighlightEvent` the dots are buttons.
+   */
+  onSelectEvent?: (event: MatchStripEvent) => void;
+  /** Called on hover and focus with the dot's event, and with undefined on leave. */
+  onHighlightEvent?: (event: MatchStripEvent | undefined) => void;
+  /** The event whose dot is ringed. */
+  selectedId?: string;
+  /** False draws spans instead of buttons, whatever the handlers say. */
+  interactive?: boolean;
   className?: string;
+  /** @deprecated Ignored since 0.115.0: the strip has no detail line. */
+  showDetail?: boolean;
+  /** @deprecated Ignored since 0.115.0: the strip has no side colours. */
+  homeColor?: string;
+  /** @deprecated Ignored since 0.115.0: the strip has no side colours. */
+  awayColor?: string;
+  /** @deprecated Ignored since 0.115.0: names are in `MatchEventList`. */
+  renderPlayerName?: (player: MatchStripPlayer) => React.ReactNode;
+  /** @deprecated Ignored since 0.115.0: headshots are in `MatchEventList`. */
+  renderHeadshot?: (playerId: string | undefined) => React.ReactNode;
 }
 
+/** @deprecated The strip no longer uses side colours. */
 export const MATCH_STRIP_HOME_COLOR = '#eb0000';
+/** @deprecated The strip no longer uses side colours. */
 export const MATCH_STRIP_AWAY_COLOR = '#0091eb';
-const MUTED = '#a29e9e';
-const LINE = 'rgba(255,255,255,0.08)';
-const LINE_Y = 60;
 
-const KIND_LABEL: Record<MatchStripEventKind, string> = {
-  goal: 'Goal',
-  penalty: 'Penalty',
-  own_goal: 'Own goal',
-  penalty_missed: 'Penalty missed',
-  yellow: 'Yellow card',
-  red: 'Red card',
-  sub: 'Substitution',
-  var: 'VAR',
-};
+const CARD_RED = '#e5322d';
 
 export function isMatchStripGoal(event: MatchStripEvent): boolean {
   return event.kind === 'goal' || event.kind === 'penalty' || event.kind === 'own_goal';
 }
 
-/** The boundary a "45+2" label sits on, or undefined for a plain minute. */
-function stoppageBoundary(label: string): number | undefined {
-  const match = /^(\d+)\+/.exec(label.trim());
-  return match ? Number(match[1]) : undefined;
+/* ── minutes ─────────────────────────────────────────────────────────────── */
+
+export interface MatchStripMinute {
+  /** The minute before stoppage: 90 for "90+6". */
+  base: number;
+  /** The stoppage minute: 6 for "90+6", 0 for "61". */
+  added: number;
 }
 
-/** The minute a label names before any stoppage: 105 for "105+1", 67 for "67". */
-function labelMinute(label: string): number | undefined {
-  const match = /^(\d+)/.exec(label.trim());
-  return match ? Number(match[1]) : undefined;
+/** An event's minute and stoppage minute, from its label ("90+6"). */
+export function matchStripMinute(event: MatchStripEvent): MatchStripMinute {
+  const match = /^\s*(\d+)(?:\s*\+\s*(\d+))?/.exec(event.minuteLabel ?? '');
+  if (!match) return { base: Math.max(0, event.minute), added: 0 };
+  return { base: Number(match[1]), added: match[2] ? Number(match[2]) : 0 };
 }
 
 /**
- * The strip's last minute: 120 for a match that went to extra time, else 90.
- * With `extraTime` left out, an event whose label is past 90 before its
- * stoppage ("105", "120+1") is the evidence. Elapsed-seconds minutes alone are
- * not: a 90+6' goal has minute 96 and is still normal time.
+ * Whether the strip runs to 120': `extraTime` when given, else an event
+ * labelled past 90 before its stoppage ("105", "120+1"). A 90+6' goal is
+ * still normal time.
  */
 export function matchStripEnd(events: readonly MatchStripEvent[], extraTime?: boolean): number {
   if (extraTime !== undefined) return extraTime ? 120 : 90;
-  return events.some((e) => (labelMinute(e.minuteLabel) ?? 0) > 90) ? 120 : 90;
+  return events.some((e) => matchStripMinute(e).base > 90) ? 120 : 90;
+}
+
+/** 1 and 2 are the halves, 3 and 4 the halves of extra time. */
+export type MatchStripPhase = 1 | 2 | 3 | 4;
+
+const PHASES: readonly { phase: MatchStripPhase; start: number; length: number }[] = [
+  { phase: 1, start: 0, length: 45 },
+  { phase: 2, start: 45, length: 45 },
+  { phase: 3, start: 90, length: 15 },
+  { phase: 4, start: 105, length: 15 },
+];
+
+/** The heading over each phase in `MatchEventList`. */
+export const MATCH_STRIP_PHASE_LABEL: Record<MatchStripPhase, string> = {
+  1: 'First half',
+  2: 'Second half',
+  3: 'Extra time, first half',
+  4: 'Extra time, second half',
+};
+
+/**
+ * The phase an event belongs to. 45+5' is the first half. Without extra time,
+ * a minute past 90 is second half stoppage.
+ */
+export function matchStripPhase(event: MatchStripEvent, extraTime = true): MatchStripPhase {
+  const { base } = matchStripMinute(event);
+  if (base <= 45) return 1;
+  if (base <= 90 || !extraTime) return 2;
+  return base <= 105 ? 3 : 4;
+}
+
+/** The events in match order: minute, then stoppage minute, then as given. */
+export function sortMatchStripEvents(events: readonly MatchStripEvent[]): MatchStripEvent[] {
+  return (
+    events
+      .map((event, index) => ({ event, index, ...matchStripMinute(event) }))
+      // A fresh array, so sorting in place is safe; the ES2022 lib has no toSorted.
+      // oxlint-disable-next-line unicorn/no-array-sort
+      .sort((a, b) => a.base - b.base || a.added - b.added || a.index - b.index)
+      .map((e) => e.event)
+  );
+}
+
+/* ── strip layout ────────────────────────────────────────────────────────── */
+
+export interface MatchStripSegment {
+  phase: MatchStripPhase;
+  /** The minute it starts at: 0, 45, 90, 105. */
+  start: number;
+  /** 45 for a half, 15 for a half of extra time. */
+  length: number;
+  /** Its longest stoppage time among the events, drawn as a dotted run-on. */
+  stoppage: number;
+  /** Where it starts, in minutes along the strip (stoppage counted). */
+  offset: number;
+}
+
+export interface MatchStripLayout {
+  segments: MatchStripSegment[];
+  /** The strip's length in minutes, stoppage counted. */
+  total: number;
 }
 
 /**
- * Where an event sits on the strip, in minutes. Stoppage time sits on its
- * boundary (45 for 45+2, 90 for 90+6), and nothing runs past the end.
+ * The strip's segments. Each half runs on by the longest stoppage time any
+ * event shows (substitutions and yellow cards count, though they are not
+ * drawn), so the dots in stoppage keep their order and spacing.
+ */
+export function matchStripLayout(
+  events: readonly MatchStripEvent[],
+  extraTime?: boolean
+): MatchStripLayout {
+  const et = matchStripEnd(events, extraTime) === 120;
+  const segments: MatchStripSegment[] = [];
+  let offset = 0;
+  for (const p of PHASES.slice(0, et ? 4 : 2)) {
+    const end = p.start + p.length;
+    let stoppage = 0;
+    for (const e of events) {
+      if (matchStripPhase(e, et) !== p.phase) continue;
+      const { base, added } = matchStripMinute(e);
+      stoppage = Math.max(stoppage, base - end + added);
+    }
+    segments.push({ ...p, stoppage, offset });
+    offset += p.length + stoppage;
+  }
+  return { segments, total: offset };
+}
+
+/** Where an event sits, in minutes along the strip with stoppage counted. */
+export function matchStripOffset(
+  event: MatchStripEvent,
+  layout: MatchStripLayout,
+  extraTime = layout.segments.length > 2
+): { segment: number; at: number } {
+  const phase = matchStripPhase(event, extraTime);
+  const index = Math.max(
+    0,
+    layout.segments.findIndex((s) => s.phase === phase)
+  );
+  const seg = layout.segments[index]!;
+  const { base, added } = matchStripMinute(event);
+  const into = Math.max(0, base - seg.start) + added;
+  return { segment: index, at: seg.offset + Math.min(into, seg.length + seg.stoppage) };
+}
+
+/**
+ * Where an event sits on a plain 0' to `end` line: stoppage on its boundary.
+ * @deprecated The strip draws stoppage time since 0.115.0; use `matchStripOffset`.
  */
 export function matchStripPosition(event: MatchStripEvent, end: number): number {
-  const boundary = stoppageBoundary(event.minuteLabel);
-  const minute = boundary ?? event.minute;
+  const { base, added } = matchStripMinute(event);
+  const minute = added > 0 ? base : event.minute;
   return Math.max(0, Math.min(minute, end));
 }
 
-function stripLeft(minute: number, end: number): string {
-  return `calc(24px + (100% - 48px) * ${(Math.min(minute, end) / end).toFixed(4)})`;
+/** Drawn on the strip: goals and red cards. */
+export function isMatchStripDot(event: MatchStripEvent): boolean {
+  return isMatchStripGoal(event) || event.kind === 'red';
 }
 
-/** The text on a goal's label: "Saka 90+6' pen". */
-export function matchStripGoalLabel(event: MatchStripEvent): string {
-  const suffix = event.kind === 'penalty' ? ' pen' : event.kind === 'own_goal' ? ' og' : '';
-  return `${surname(event.playerName)} ${event.minuteLabel}'${suffix}`;
+/** The crest column, the gap between segments and the room after the last dot. */
+const LEAD = 28;
+const GAP = 8;
+const TAIL = 6;
+/** Dots on one side closer than this nudge apart, worked out at a 300px strip. */
+const DOT_SPACING = 11;
+const BASE_WIDTH = 300;
+const LINE_Y = 22;
+const LANE = 10;
+const HEIGHT = 50;
+
+function stripX(at: number, segment: number, layout: MatchStripLayout, nudge = 0): string {
+  const gaps = (layout.segments.length - 1) * GAP;
+  const share = layout.total > 0 ? at / layout.total : 0;
+  return `calc(${LEAD + segment * GAP + nudge}px + (100% - ${LEAD + gaps + TAIL}px) * ${share.toFixed(5)})`;
 }
 
 /**
- * A goal label's box width in px, estimated from its text at 12px semibold.
- * Generous on purpose: the text is centred in the box, so a box a little wide
- * only moves an edge label a few px further in.
+ * px each dot moves right so dots on one side stay `DOT_SPACING` apart at a
+ * 300px strip. Wider strips only spread them further.
  */
-export function matchStripLabelWidth(label: string): number {
-  return Math.ceil(label.length * 6.6) + 4;
-}
-
-/**
- * Container sizes the label rows are worked out for, each at its narrowest
- * width: below `@xl` a strip is taken as 300px, then each size's own floor.
- * The strip is its own container, so the rows follow the strip's width
- * whether it fills a page or sits in a narrow block on a wide screen.
- */
-export const MATCH_STRIP_LABEL_TIERS = [
-  { tier: 'base', width: 300 },
-  { tier: '@xl', width: 576 },
-  { tier: '@2xl', width: 672 },
-  { tier: '@3xl', width: 768 },
-  { tier: '@4xl', width: 896 },
-  { tier: '@5xl', width: 1024 },
-  { tier: '@6xl', width: 1152 },
-] as const;
-export type MatchStripLabelTier = (typeof MATCH_STRIP_LABEL_TIERS)[number]['tier'];
-const LABEL_GAP = 6;
-
-/** Row per goal id (0 by the line, 1 further out), per container size. */
-export type MatchStripLabelRows = Record<MatchStripLabelTier, Record<string, 0 | 1>>;
-
-/**
- * Staggers goal labels that would collide. Labels on one side are laid left
- * to right, each clamped inside the strip, and a label that would overlap the
- * one before it in the row by the line moves one row out. Rows are worked
- * out for the narrowest width of each container size, so they hold at any width
- * in that size without measuring the page.
- */
-export function matchStripLabelRows(
-  goals: readonly MatchStripEvent[],
-  end: number
-): MatchStripLabelRows {
-  const rowsAt = (width: number): Record<string, 0 | 1> => {
-    const rows: Record<string, 0 | 1> = {};
-    for (const side of ['home', 'away'] as const) {
-      const laid = goals
-        .filter((g) => g.side === side)
-        .map((g) => {
-          const w = matchStripLabelWidth(matchStripGoalLabel(g));
-          const x = 24 + ((width - 48) * matchStripPosition(g, end)) / end;
-          const left = Math.max(0, Math.min(x - w / 2, width - w));
-          return { id: g.id, left, right: left + w };
-        })
-        // A fresh array, so sorting in place is safe; the ES2022 lib has no toSorted.
-        // oxlint-disable-next-line unicorn/no-array-sort
-        .sort((a, b) => a.left - b.left);
-      const rowEnds = [-Infinity, -Infinity];
-      for (const label of laid) {
-        const free = rowEnds.findIndex((r) => label.left >= r + LABEL_GAP);
-        const row = (free >= 0 ? free : rowEnds[0]! <= rowEnds[1]! ? 0 : 1) as 0 | 1;
-        rows[label.id] = row;
-        rowEnds[row] = label.right;
-      }
+function dotNudges(
+  dots: readonly MatchStripEvent[],
+  layout: MatchStripLayout
+): Map<string, number> {
+  const width = BASE_WIDTH - LEAD - (layout.segments.length - 1) * GAP - TAIL;
+  const nudges = new Map<string, number>();
+  for (const side of ['home', 'away'] as const) {
+    let last = -Infinity;
+    for (const e of dots) {
+      if (e.side !== side) continue;
+      const { segment, at } = matchStripOffset(e, layout);
+      const x = segment * GAP + (width * at) / Math.max(1, layout.total);
+      const placed = Math.max(x, last + DOT_SPACING);
+      nudges.set(e.id, placed - x);
+      last = placed;
     }
-    return rows;
-  };
-  const out = {} as MatchStripLabelRows;
-  for (const { tier, width } of MATCH_STRIP_LABEL_TIERS) out[tier] = rowsAt(width);
-  return out;
-}
-
-/** Literal classes, so the host's Tailwind build finds them. Row 0, row 1. */
-const LABEL_TOP: Record<MatchStripSide, Record<MatchStripLabelTier, readonly [string, string]>> = {
-  home: {
-    base: ['top-[20px]', 'top-[2px]'],
-    '@xl': ['@xl:top-[20px]', '@xl:top-[2px]'],
-    '@2xl': ['@2xl:top-[20px]', '@2xl:top-[2px]'],
-    '@3xl': ['@3xl:top-[20px]', '@3xl:top-[2px]'],
-    '@4xl': ['@4xl:top-[20px]', '@4xl:top-[2px]'],
-    '@5xl': ['@5xl:top-[20px]', '@5xl:top-[2px]'],
-    '@6xl': ['@6xl:top-[20px]', '@6xl:top-[2px]'],
-  },
-  away: {
-    base: ['top-[82px]', 'top-[100px]'],
-    '@xl': ['@xl:top-[82px]', '@xl:top-[100px]'],
-    '@2xl': ['@2xl:top-[82px]', '@2xl:top-[100px]'],
-    '@3xl': ['@3xl:top-[82px]', '@3xl:top-[100px]'],
-    '@4xl': ['@4xl:top-[82px]', '@4xl:top-[100px]'],
-    '@5xl': ['@5xl:top-[82px]', '@5xl:top-[100px]'],
-    '@6xl': ['@6xl:top-[82px]', '@6xl:top-[100px]'],
-  },
-};
-
-/** A label box centred on its mark and clamped inside the strip. */
-function labelLeft(minute: number, end: number, width: number): string {
-  const centre = `24px + (100% - 48px) * ${(Math.min(minute, end) / end).toFixed(4)}`;
-  return `clamp(0px, calc(${centre} - ${width / 2}px), calc(100% - ${width}px))`;
-}
-
-function surname(name: string | undefined): string {
-  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
-  return parts[parts.length - 1] ?? '';
-}
-
-/** The visible mark of an event, drawn inside its 24px hit area. */
-function StripMark({
-  event,
-  selected,
-  color,
-}: {
-  event: MatchStripEvent;
-  selected: boolean;
-  color: string;
-}) {
-  const ring = selected ? '0 0 0 2px #0d0d0d, 0 0 0 3.5px #fff' : undefined;
-  if (isMatchStripGoal(event) || event.kind === 'penalty_missed') {
-    return (
-      <span
-        className="block h-2.5 w-2.5 rounded-full"
-        style={{
-          background: event.kind === 'penalty_missed' ? 'transparent' : color,
-          border: event.kind === 'penalty_missed' ? `2px solid ${color}` : undefined,
-          boxShadow: ring,
-        }}
-      />
-    );
   }
-  if (event.kind === 'yellow' || event.kind === 'red') {
+  return nudges;
+}
+
+/** A dot's name for screen readers: "Dorgu 90+6', 4-4", "Janelt 90+2', Second yellow". */
+export function matchStripDotLabel(row: MatchEventListRow): string {
+  const e = row.event;
+  const who = e.playerName ? matchStripSurname(e.playerName) : 'Goal';
+  const how = row.how && !row.how.startsWith('Assist') ? row.how : undefined;
+  return [`${who} ${e.minuteLabel}'`, how, row.score].filter(Boolean).join(', ');
+}
+
+function Dot({ event, selected }: { event: MatchStripEvent; selected: boolean }) {
+  const ring = selected
+    ? '0 0 0 2px var(--color-background, #0d0d0d), 0 0 0 3.5px currentColor'
+    : undefined;
+  if (event.kind === 'red') {
     return (
       <span
         className="block h-[9px] w-1.5 rounded-[1px]"
-        style={{ background: event.kind === 'red' ? '#e5322d' : '#f5c518', boxShadow: ring }}
+        style={{ background: CARD_RED, boxShadow: ring }}
       />
     );
   }
-  if (event.kind === 'var') {
+  if (event.kind === 'own_goal') {
     return (
       <span
-        className="block h-2 w-2 rotate-45 rounded-[1px] border border-white/70"
+        className="block h-2 w-2 rounded-full border-[1.5px] border-current"
         style={{ boxShadow: ring }}
       />
     );
   }
-  return <span className="block h-[7px] w-0.5 bg-white/45" style={{ boxShadow: ring }} />;
-}
-
-/** Where each kind sits off the line, home above and away below. */
-function markTop(event: MatchStripEvent): number {
-  const home = event.side === 'home';
-  if (isMatchStripGoal(event) || event.kind === 'penalty_missed')
-    return home ? LINE_Y - 12 : LINE_Y + 12;
-  if (event.kind === 'yellow' || event.kind === 'red') return home ? LINE_Y - 10 : LINE_Y + 10;
-  return home ? LINE_Y - 7 : LINE_Y + 7;
-}
-
-function defaultPlayerName({ name, muted }: MatchStripPlayer): React.ReactNode {
-  if (!name) return null;
-  return <span className={cn(!muted && 'font-semibold', 'whitespace-nowrap')}>{name}</span>;
-}
-
-function defaultHeadshot(): React.ReactNode {
   return (
-    <span
-      aria-hidden
-      className="inline-flex flex-none overflow-hidden rounded-full bg-white/[0.06]"
-      style={{ width: 24, height: 24 }}
-    />
-  );
-}
-
-function StripDetail({
-  event,
-  renderPlayerName,
-  renderHeadshot,
-}: {
-  event: MatchStripEvent;
-  renderPlayerName: (player: MatchStripPlayer) => React.ReactNode;
-  renderHeadshot: (playerId: string | undefined) => React.ReactNode;
-}) {
-  const before = (() => {
-    if (!event.scoreAfter) return undefined;
-    const [h, a] = event.scoreAfter;
-    return event.side === 'home' ? [h - 1, a] : [h, a - 1];
-  })();
-  const other = (prefix: string, fallback: string): React.ReactNode =>
-    event.otherName ? (
-      <>
-        {prefix} {renderPlayerName({ id: event.otherId, name: event.otherName, muted: true })}
-      </>
-    ) : (
-      fallback
-    );
-  let what: React.ReactNode;
-  switch (event.kind) {
-    case 'goal':
-      what = other('Goal, assist', 'Goal');
-      break;
-    case 'sub':
-      what = other('On for', 'On');
-      break;
-    case 'yellow':
-    case 'red':
-    case 'var':
-      what = event.reason ? `${KIND_LABEL[event.kind]}, ${event.reason}` : KIND_LABEL[event.kind];
-      break;
-    default:
-      what = KIND_LABEL[event.kind];
-  }
-  return (
-    <div
-      data-slot="match-strip-detail"
-      data-kind={event.kind}
-      className="flex items-center gap-2.5 border-t pt-2.5 text-[13px] text-white"
-      style={{ borderTopColor: LINE }}
-    >
-      <span className="w-[30px] shrink-0 tabular-nums" style={{ color: MUTED }}>
-        {event.minuteLabel}&apos;
-      </span>
-      {renderHeadshot(event.playerId)}
-      {renderPlayerName({ id: event.playerId, name: event.playerName, muted: false })}
-      <span className="min-w-0 truncate" style={{ color: MUTED }}>
-        {what}
-      </span>
-      {before && event.scoreAfter ? (
-        <span
-          className="ml-auto hidden whitespace-nowrap tabular-nums sm:inline"
-          style={{ color: MUTED }}
-        >
-          {before[0]}-{before[1]} to {event.scoreAfter[0]}-{event.scoreAfter[1]}
-        </span>
-      ) : null}
-    </div>
-  );
-}
-
-function SideLabel({ name, color, slot }: { name: string; color: string; slot: string }) {
-  return (
-    <span
-      data-slot={slot}
-      className="flex items-center gap-1.5 px-6 text-[12px] font-semibold text-white"
-    >
-      <span aria-hidden className="h-2.5 w-[3px] rounded-[1px]" style={{ background: color }} />
-      {name}
-    </span>
+    <span className="block h-[9px] w-[9px] rounded-full bg-current" style={{ boxShadow: ring }} />
   );
 }
 
 export function MatchStrip({
   events,
   extraTime,
-  interactive = true,
-  showDetail = true,
+  homeCrest,
+  awayCrest,
   homeLabel,
   awayLabel,
-  homeColor = MATCH_STRIP_HOME_COLOR,
-  awayColor = MATCH_STRIP_AWAY_COLOR,
-  renderPlayerName = defaultPlayerName,
-  renderHeadshot = defaultHeadshot,
+  onSelectEvent,
+  onHighlightEvent,
+  selectedId,
+  interactive = true,
   className,
 }: MatchStripProps) {
-  const goals = events.filter(isMatchStripGoal);
-  const [selectedId, setSelectedId] = React.useState<string | undefined>(undefined);
-  const selected =
-    (interactive ? events.find((e) => e.id === selectedId) : undefined) ??
-    goals[goals.length - 1] ??
-    events[events.length - 1];
   if (events.length === 0) return null;
-  const end = matchStripEnd(events, extraTime);
-  const at = (e: MatchStripEvent) => matchStripPosition(e, end);
-  const labelRows = matchStripLabelRows(goals, end);
-  const colorOf = (e: MatchStripEvent) => (e.side === 'home' ? homeColor : awayColor);
+  const layout = matchStripLayout(events, extraTime);
+  const et = layout.segments.length > 2;
+  const rows = matchEventListRows(events, extraTime);
+  const dots = rows.map((r) => r.event);
+  const nudges = dotNudges(dots, layout);
+  const clickable = interactive && Boolean(onSelectEvent || onHighlightEvent);
+  const lineX = (at: number, segment: number) => stripX(at, segment, layout);
   return (
     <section
       data-slot="match-strip"
-      data-end={end}
-      data-interactive={interactive ? undefined : 'false'}
-      className={cn('@container flex flex-col gap-2', className)}
+      data-end={et ? 120 : 90}
+      data-interactive={clickable ? undefined : 'false'}
+      aria-label={homeLabel && awayLabel ? `${homeLabel} v ${awayLabel}` : undefined}
+      className={cn('relative text-foreground', className)}
+      style={{ height: HEIGHT }}
     >
-      {homeLabel ? <SideLabel name={homeLabel} color={homeColor} slot="match-strip-home" /> : null}
-      <div className="relative h-[124px] sm:h-[118px]">
+      {homeCrest ? (
         <span
-          className="absolute right-6 left-6 h-px bg-white/[0.18]"
-          style={{ top: LINE_Y }}
-          aria-hidden
-        />
+          data-slot="match-strip-home"
+          aria-label={homeLabel}
+          className="absolute left-0 flex h-4 w-4 -translate-y-1/2 items-center justify-center"
+          style={{ top: LINE_Y - LANE }}
+        >
+          {homeCrest}
+        </span>
+      ) : null}
+      {awayCrest ? (
         <span
-          className="absolute h-[11px] w-px bg-white/35"
-          style={{ left: stripLeft(45, end), top: LINE_Y - 5 }}
-          aria-hidden
-        />
-        <span className="absolute left-0 text-[11px]" style={{ top: LINE_Y - 8, color: MUTED }}>
-          0&apos;
+          data-slot="match-strip-away"
+          aria-label={awayLabel}
+          className="absolute left-0 flex h-4 w-4 -translate-y-1/2 items-center justify-center"
+          style={{ top: LINE_Y + LANE }}
+        >
+          {awayCrest}
         </span>
-        <span className="absolute right-0 text-[11px]" style={{ top: LINE_Y - 8, color: MUTED }}>
-          {end}&apos;
-        </span>
-        {goals.map((e) => {
-          const label = matchStripGoalLabel(e);
-          const width = matchStripLabelWidth(label);
-          const top = LABEL_TOP[e.side];
-          return (
+      ) : null}
+      {layout.segments.map((s, i) => {
+        const end = s.start + s.length;
+        const from = lineX(s.offset, i);
+        const mid = lineX(s.offset + s.length, i);
+        const to = lineX(s.offset + s.length + s.stoppage, i);
+        return (
+          <React.Fragment key={s.phase}>
             <span
-              key={`label-${e.id}`}
+              data-slot="match-strip-segment"
+              data-phase={s.phase}
               aria-hidden
-              data-slot="match-strip-goal-label"
-              data-row={labelRows.base[e.id]}
-              className={cn(
-                'pointer-events-none absolute flex justify-center text-[12px] font-semibold whitespace-nowrap text-white',
-                MATCH_STRIP_LABEL_TIERS.map(({ tier }) => top[tier][labelRows[tier][e.id] ?? 0])
-              )}
-              style={{ left: labelLeft(at(e), end, width), width }}
+              className="absolute h-px bg-white/25"
+              style={{ left: from, width: `calc(${mid} - ${from})`, top: LINE_Y }}
+            />
+            {s.stoppage > 0 ? (
+              <span
+                data-slot="match-strip-stoppage"
+                aria-hidden
+                className="absolute h-0 border-t border-dotted border-white/35"
+                style={{ left: mid, width: `calc(${to} - ${mid})`, top: LINE_Y }}
+              />
+            ) : null}
+            <span
+              aria-hidden
+              className="absolute h-[7px] w-px bg-white/35"
+              style={{ left: mid, top: LINE_Y - 3 }}
+            />
+            <span
+              data-slot="match-strip-tick"
+              aria-hidden
+              className="absolute -translate-x-1/2 text-[11px] leading-none text-muted-foreground tabular-nums"
+              style={{ left: mid, top: HEIGHT - 11 }}
             >
-              {label}
+              {end}&apos;
+            </span>
+          </React.Fragment>
+        );
+      })}
+      {rows.map((row) => {
+        const e = row.event;
+        const { segment, at } = matchStripOffset(e, layout, et);
+        const on = e.id === selectedId;
+        const style = {
+          left: stripX(at, segment, layout, nudges.get(e.id) ?? 0),
+          top: e.side === 'home' ? LINE_Y - LANE : LINE_Y + LANE,
+        };
+        const common = {
+          'data-slot': 'match-strip-mark',
+          'data-kind': e.kind,
+          'data-side': e.side,
+          'aria-label': matchStripDotLabel(row),
+          style,
+        };
+        const box =
+          'absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center';
+        if (!clickable) {
+          return (
+            <span key={e.id} role="img" className={box} {...common}>
+              <Dot event={e} selected={on} />
             </span>
           );
-        })}
-        {events.map((e) => {
-          const on = interactive && e.id === selected?.id;
-          const label = `${e.minuteLabel}' ${KIND_LABEL[e.kind]}${e.playerName ? `, ${e.playerName}` : ''}`;
-          const style = { left: stripLeft(at(e), end), top: markTop(e) };
-          const mark = <StripMark event={e} selected={on} color={colorOf(e)} />;
-          if (!interactive) {
-            return (
-              <span
-                key={e.id}
-                data-slot="match-strip-mark"
-                data-kind={e.kind}
-                role="img"
-                aria-label={label}
-                className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center"
-                style={style}
-              >
-                {mark}
-              </span>
-            );
-          }
-          return (
-            <button
-              key={e.id}
-              type="button"
-              data-slot="match-strip-mark"
-              data-kind={e.kind}
-              aria-pressed={on}
-              aria-label={label}
-              onClick={(click) => {
-                // Marks closer than a hit area overlap (three subs at 68', or
-                // any few minutes apart at phone width): a click on an
-                // already open mark steps to the next one under the finger.
-                const width = click.currentTarget.parentElement?.clientWidth ?? 0;
-                const pxPerMinute = Math.max(1, (width - 48) / end);
-                const under = events.filter(
-                  (o) => o.side === e.side && Math.abs(at(o) - at(e)) * pxPerMinute < 24
-                );
-                const index = under.findIndex((o) => o.id === selected?.id);
-                const next = index >= 0 ? under[(index + 1) % under.length] : e;
-                setSelectedId((next ?? e).id);
-              }}
-              className="absolute flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border-0 bg-transparent p-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70"
-              style={style}
-            >
-              {mark}
-            </button>
-          );
-        })}
-      </div>
-      {awayLabel ? <SideLabel name={awayLabel} color={awayColor} slot="match-strip-away" /> : null}
-      {showDetail && selected ? (
-        <StripDetail
-          event={selected}
-          renderPlayerName={renderPlayerName}
-          renderHeadshot={renderHeadshot}
-        />
-      ) : null}
+        }
+        return (
+          <button
+            key={e.id}
+            type="button"
+            aria-pressed={on}
+            onClick={() => onSelectEvent?.(e)}
+            onMouseEnter={() => onHighlightEvent?.(e)}
+            onMouseLeave={() => onHighlightEvent?.(undefined)}
+            onFocus={() => onHighlightEvent?.(e)}
+            onBlur={() => onHighlightEvent?.(undefined)}
+            className={cn(
+              box,
+              'cursor-pointer rounded-full border-0 bg-transparent p-0 text-foreground focus-visible:outline focus-visible:outline-2 focus-visible:outline-white/70'
+            )}
+            {...common}
+          >
+            <Dot event={e} selected={on} />
+          </button>
+        );
+      })}
     </section>
+  );
+}
+
+/* ── the list ────────────────────────────────────────────────────────────── */
+
+function isSecondYellow(e: MatchStripEvent): boolean {
+  return Boolean(e.secondYellow) || /second yellow/i.test(e.reason ?? '');
+}
+
+/** The last word of a name: "Fernandes" for "Bruno Fernandes". */
+export function matchStripSurname(name: string | undefined): string {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean);
+  return parts[parts.length - 1] ?? '';
+}
+
+export interface MatchEventListRow {
+  event: MatchStripEvent;
+  phase: MatchStripPhase;
+  /** The quiet second line: "Assist Rice", "Penalty", "Own goal", "Second yellow", "Red card". */
+  how?: string;
+  /** Goals: the running score, "2-2". */
+  score?: string;
+}
+
+/**
+ * The list's rows in match order: goals and red cards, with the second line
+ * and the running score. Substitutions, yellow cards, VAR checks and missed
+ * penalties are left out.
+ */
+export function matchEventListRows(
+  events: readonly MatchStripEvent[],
+  extraTime?: boolean
+): MatchEventListRow[] {
+  const et = matchStripEnd(events, extraTime) === 120;
+  let home = 0;
+  let away = 0;
+  const rows: MatchEventListRow[] = [];
+  for (const event of sortMatchStripEvents(events)) {
+    if (!isMatchStripDot(event)) continue;
+    const phase = matchStripPhase(event, et);
+    if (event.kind === 'red') {
+      rows.push({ event, phase, how: isSecondYellow(event) ? 'Second yellow' : 'Red card' });
+      continue;
+    }
+    if (event.side === 'home') home += 1;
+    else away += 1;
+    const assist =
+      event.kind === 'goal' && event.otherName && event.otherName !== event.playerName
+        ? `Assist ${matchStripSurname(event.otherName)}`
+        : undefined;
+    const how =
+      event.kind === 'penalty' ? 'Penalty' : event.kind === 'own_goal' ? 'Own goal' : assist;
+    rows.push({ event, phase, how, score: `${home}-${away}` });
+  }
+  return rows;
+}
+
+export interface MatchEventListProps {
+  events: readonly MatchStripEvent[];
+  /** As `MatchStrip`'s `extraTime`. */
+  extraTime?: boolean;
+  /**
+   * The player's round headshot, drawn in a 28px circle (32px from a 512px
+   * wide container). The host fills it and brings its own fallback, such as
+   * the crest. Default: an empty circle.
+   */
+  renderHeadshot?: (event: MatchStripEvent) => React.ReactNode;
+  /** The player's page. A row with an href is one link, through `LinkProvider`. */
+  playerHref?: (event: MatchStripEvent) => string | undefined;
+  /** The highlighted row, as from a dot on the strip. */
+  selectedId?: string;
+  /** Called on a row's hover and focus, and with undefined on leave. */
+  onHighlightEvent?: (event: MatchStripEvent | undefined) => void;
+  className?: string;
+}
+
+const ROW_GRID =
+  'grid grid-cols-[44px_28px_minmax(0,1fr)_auto] items-center gap-x-2.5 py-2 @lg:grid-cols-[56px_32px_minmax(0,1fr)_auto] @lg:gap-x-3';
+
+function EventRowBody({
+  row,
+  renderHeadshot,
+}: {
+  row: MatchEventListRow;
+  renderHeadshot?: (event: MatchStripEvent) => React.ReactNode;
+}) {
+  const { event, how, score } = row;
+  return (
+    <>
+      <span className="text-[13px] whitespace-nowrap text-muted-foreground tabular-nums @lg:text-[14px]">
+        {event.minuteLabel}&apos;
+      </span>
+      <span
+        data-slot="match-event-headshot"
+        aria-hidden
+        className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-white/[0.06] @lg:h-8 @lg:w-8 [&>*]:!h-full [&>*]:!w-full"
+      >
+        {renderHeadshot ? renderHeadshot(event) : null}
+      </span>
+      <span className="flex min-w-0 flex-col @lg:flex-row @lg:items-baseline @lg:gap-3">
+        <span className="flex min-w-0 items-center text-[15px] leading-snug font-medium text-foreground @lg:text-[16px]">
+          <span data-slot="match-event-name" className="truncate">
+            {event.playerName ? matchStripSurname(event.playerName) : 'Goal'}
+          </span>
+          {event.kind === 'red' ? (
+            <span
+              aria-hidden
+              className="ml-2 inline-block h-2.5 w-[7px] flex-none rounded-[1px]"
+              style={{ background: CARD_RED }}
+            />
+          ) : null}
+        </span>
+        {how ? (
+          <span
+            data-slot="match-event-how"
+            className="truncate text-[12px] leading-snug text-muted-foreground @lg:text-[13px]"
+          >
+            {how}
+          </span>
+        ) : null}
+      </span>
+      <span
+        data-slot="match-event-score"
+        className="text-right text-[15px] font-semibold whitespace-nowrap text-foreground tabular-nums @lg:text-[16px]"
+      >
+        {score ?? ''}
+      </span>
+    </>
+  );
+}
+
+/**
+ * Goals and red cards under "First half" and "Second half". Each row carries
+ * `data-event-id`, so a host can scroll to the row a strip dot names. A row
+ * whose player has a page is one link to it.
+ */
+export function MatchEventList({
+  events,
+  extraTime,
+  renderHeadshot,
+  playerHref,
+  selectedId,
+  onHighlightEvent,
+  className,
+}: MatchEventListProps) {
+  const Link = useLinkComponent();
+  const rows = matchEventListRows(events, extraTime);
+  if (rows.length === 0) return null;
+  const phases = [...new Set(rows.map((r) => r.phase))];
+  return (
+    <div data-slot="match-event-list" className={cn('@container flex flex-col gap-7', className)}>
+      {phases.map((phase) => (
+        <section key={phase} data-slot="match-event-phase" data-phase={phase}>
+          <h3 className="m-0 border-b border-white/25 pb-2 text-[13px] font-normal text-muted-foreground @lg:text-[14px]">
+            {MATCH_STRIP_PHASE_LABEL[phase]}
+          </h3>
+          <ol className="m-0 list-none p-0">
+            {rows
+              .filter((r) => r.phase === phase)
+              .map((row) => {
+                const { event } = row;
+                const on = event.id === selectedId;
+                const href = playerHref?.(event);
+                const hover = {
+                  onMouseEnter: () => onHighlightEvent?.(event),
+                  onMouseLeave: () => onHighlightEvent?.(undefined),
+                };
+                const tone = cn(
+                  ROW_GRID,
+                  '-mx-2 rounded-[6px] px-2 transition-colors motion-reduce:transition-none',
+                  on && 'bg-white/[0.06]'
+                );
+                return (
+                  <li
+                    key={event.id}
+                    data-slot="match-event-row"
+                    data-event-id={event.id}
+                    data-kind={event.kind}
+                    data-selected={on ? 'true' : undefined}
+                    className="scroll-mt-24 border-b border-white/10 py-px last:border-b-0"
+                  >
+                    {href ? (
+                      <Link
+                        href={href}
+                        data-slot="match-event-link"
+                        className={cn(
+                          tone,
+                          'text-inherit no-underline hover:bg-white/[0.06] focus-visible:bg-white/[0.06] focus-visible:outline-none'
+                        )}
+                        onFocus={() => onHighlightEvent?.(event)}
+                        onBlur={() => onHighlightEvent?.(undefined)}
+                        {...hover}
+                      >
+                        <EventRowBody row={row} renderHeadshot={renderHeadshot} />
+                      </Link>
+                    ) : (
+                      <div className={tone} {...hover}>
+                        <EventRowBody row={row} renderHeadshot={renderHeadshot} />
+                      </div>
+                    )}
+                  </li>
+                );
+              })}
+          </ol>
+        </section>
+      ))}
+    </div>
+  );
+}
+
+/* ── strip plus stack ────────────────────────────────────────────────────── */
+
+export interface MatchTimelineStackProps
+  extends
+    Omit<
+      MatchStripProps,
+      | 'onSelectEvent'
+      | 'onHighlightEvent'
+      | 'selectedId'
+      | 'className'
+      | 'renderHeadshot'
+      | 'renderPlayerName'
+      | 'showDetail'
+      | 'homeColor'
+      | 'awayColor'
+    >,
+    Pick<MatchEventListProps, 'renderHeadshot' | 'playerHref'> {
+  className?: string;
+  /** Classes for the list, such as a width cap on a wide page. */
+  listClassName?: string;
+}
+
+/**
+ * The strip over the list, linked: hovering or focusing a dot highlights its
+ * row and the other way round, and tapping a dot scrolls its row into view
+ * when it is off screen (at once under reduced motion).
+ */
+export function MatchTimelineStack({
+  className,
+  listClassName,
+  renderHeadshot,
+  playerHref,
+  ...strip
+}: MatchTimelineStackProps) {
+  // A tapped dot stays highlighted; hover and focus show over it meanwhile.
+  const [pinned, setPinned] = React.useState<string | undefined>(undefined);
+  const [hovered, setHovered] = React.useState<string | undefined>(undefined);
+  const highlighted = hovered ?? pinned;
+  const listRef = React.useRef<HTMLDivElement>(null);
+  if (strip.events.length === 0) return null;
+  const select = (event: MatchStripEvent) => {
+    setPinned(event.id);
+    const row = [...(listRef.current?.querySelectorAll<HTMLElement>('[data-event-id]') ?? [])].find(
+      (el) => el.dataset.eventId === event.id
+    );
+    if (!row) return;
+    const box = row.getBoundingClientRect();
+    if (box.top >= 0 && box.bottom <= window.innerHeight) return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    row.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'center' });
+  };
+  return (
+    <div data-slot="match-timeline-stack" className={cn('flex flex-col gap-6', className)}>
+      <MatchStrip
+        {...strip}
+        selectedId={highlighted}
+        onSelectEvent={select}
+        onHighlightEvent={(e) => setHovered(e?.id)}
+      />
+      <div ref={listRef} className={listClassName}>
+        <MatchEventList
+          events={strip.events}
+          extraTime={strip.extraTime}
+          renderHeadshot={renderHeadshot}
+          playerHref={playerHref}
+          selectedId={highlighted}
+          onHighlightEvent={(e) => setHovered(e?.id)}
+        />
+      </div>
+    </div>
   );
 }
