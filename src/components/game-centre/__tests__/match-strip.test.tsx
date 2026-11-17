@@ -5,6 +5,7 @@ import {
   MatchStrip,
   MatchTimelineStack,
   matchEventListRows,
+  matchShootoutRows,
   matchStripDotLabel,
   matchStripEnd,
   matchStripLayout,
@@ -20,6 +21,7 @@ import {
   OWN_GOAL_GAME,
   QUIET_GAME,
   RED_CARDS_GAME,
+  SHOOTOUT_GAME,
 } from '../match-strip.fixtures';
 import { countSlot, getSlotAttr, render, slotText } from './test-utils';
 
@@ -240,5 +242,55 @@ describe('MatchEventList', () => {
     const markup = render(<MatchTimelineStack events={BUSY_GAME} />);
     expect(markup).not.toMatch(/[–—]/);
     expect(markup).toContain('4-4');
+  });
+});
+
+describe('penalty shootout', () => {
+  it('lists the kicks in order with the running shootout score', () => {
+    const kicks = matchShootoutRows(SHOOTOUT_GAME);
+    expect(kicks.map((k) => [k.order, k.event.playerName, k.scored, k.score])).toEqual([
+      [1, 'Kylian Mbappé', true, '0-1'],
+      [2, 'Lionel Messi', true, '1-1'],
+      [3, 'Kingsley Coman', false, '1-1'],
+      [4, 'Paulo Dybala', true, '2-1'],
+      [5, 'Aurélien Tchouaméni', false, '2-1'],
+      [6, 'Leandro Paredes', true, '3-1'],
+      [7, 'Randal Kolo Muani', true, '3-2'],
+      [8, 'Gonzalo Montiel', true, '4-2'],
+    ]);
+  });
+
+  it('keeps the kicks out of the match score and off the strip', () => {
+    const rows = matchEventListRows(SHOOTOUT_GAME);
+    expect(rows.map((r) => r.score)).toEqual(['1-0', '2-0', '2-1', '2-2', '3-2', '3-3']);
+    const markup = render(<MatchStrip events={SHOOTOUT_GAME} />);
+    expect(countSlot(markup, 'match-strip-mark')).toBe(6);
+    expect(markup).not.toContain('data-kind="shootout');
+  });
+
+  it('does not stretch extra time with the kicks', () => {
+    const layout = matchStripLayout(SHOOTOUT_GAME);
+    expect(layout.segments.map((s) => s.stoppage)).toEqual([0, 0, 0, 0]);
+    expect(matchStripEnd(SHOOTOUT_GAME.filter((e) => e.kind.startsWith('shootout')))).toBe(90);
+  });
+
+  it('adds a Penalty shootout section after extra time', () => {
+    const markup = render(<MatchEventList events={SHOOTOUT_GAME} />);
+    expect(countSlot(markup, 'match-event-shootout')).toBe(1);
+    expect(markup.indexOf('Extra time, second half')).toBeLessThan(
+      markup.indexOf('Penalty shootout')
+    );
+    expect(countSlot(markup, 'match-event-row')).toBe(14);
+    expect(markup).toContain('>Missed<');
+    expect(markup).toContain('>Kolo Muani<');
+    expect(markup).not.toMatch(/[–—]/);
+  });
+
+  it('names compound surnames whole, the assist line too', () => {
+    const rows = matchEventListRows(SHOOTOUT_GAME);
+    expect(rows[1]!.how).toBe('Assist Mac Allister');
+    const markup = render(<MatchEventList events={SHOOTOUT_GAME} />);
+    expect(markup).toContain('>Di María<');
+    expect(markup).not.toContain('>María<');
   });
 });

@@ -74,13 +74,17 @@ export {
   matchStripDotLabel,
   matchStripSurname,
   matchEventListRows,
+  matchShootoutRows,
   sortMatchStripEvents,
   isMatchStripGoal,
+  isMatchStripShootout,
+  MATCH_STRIP_SHOOTOUT_LABEL,
   isMatchStripDot,
   MATCH_STRIP_PHASE_LABEL,
   MATCH_STRIP_HOME_COLOR,
   MATCH_STRIP_AWAY_COLOR,
 } from './match-strip';
+export { playerShortName, PLAYER_NAME_PARTICLES } from './player-short-name';
 export type {
   MatchStripProps,
   MatchStripEvent,
@@ -93,6 +97,7 @@ export type {
   MatchStripLayout,
   MatchEventListProps,
   MatchEventListRow,
+  MatchShootoutRow,
   MatchTimelineStackProps,
 } from './match-strip';
 

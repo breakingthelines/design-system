@@ -106,6 +106,26 @@ describe('MatchHeader', () => {
     expect(markup).toContain('Manchester United won on penalties');
   });
 
+  it('writes the shootout score under the score in place of the marker', () => {
+    const markup = render(
+      <MatchHeader
+        home={{ label: 'Argentina' }}
+        away={{ label: 'France' }}
+        status="finished"
+        scoreHome={3}
+        scoreAway={3}
+        penaltyWinner="home"
+        penaltyScore={{ home: 4, away: 2 }}
+        clockLabel="Pens"
+      />
+    );
+    expect(hasSlot(markup, 'match-header-penalty-marker')).toBe(false);
+    expect(slotText(markup, 'match-header-score')).toMatch(/^3\s*–\s*3$/);
+    expect(slotText(markup, 'match-header-penalties')).toBe('4–2 on penalties');
+    expect(slotText(markup, 'match-header-status')).toBe('Pens');
+    expect(markup).toContain('Argentina won 4–2 on penalties');
+  });
+
   it('omits the penalty marker for a normal finished result', () => {
     const markup = render(
       <MatchHeader home={baseHome} away={baseAway} status="finished" scoreHome={2} scoreAway={1} />
